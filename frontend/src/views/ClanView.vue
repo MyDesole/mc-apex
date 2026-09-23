@@ -1,11 +1,12 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useRoute, RouterLink } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { clansApi } from '@/services/clans.js'
 import { useAuthStore } from '@/stores/auth'
 import ClanMembers from '@/components/clan/ClanMembers.vue'
 import ClanEvents from '@/components/clan/ClanEvents.vue'
 import ClanWars from '@/components/clan/ClanWars.vue'
+import ClanApplications from '@/components/clan/ClanApplications.vue'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -13,15 +14,38 @@ const auth = useAuthStore()
 const data = ref(null)
 const loading = ref(true)
 const tab = ref('members')
+const applicationsCount = ref(0)
 
 const clan = computed(() => data.value?.clan)
 const isMember = computed(() => data.value?.is_member)
 const isLeader = computed(() => clan.value?.leader_id === auth.user?.id)
 
+/**
+ * Может ли текущий юзер управлять кланом:
+ * лидер или офицер.
+ */
+const canManage = computed(() => {
+  if (!isMember.value) return false
+  if (isLeader.value) return true
+
+  const me = clan.value?.members?.find(m => m.user_id === auth.user?.id)
+  return me?.role === 'officer'
+})
+
 async function load() {
   loading.value = true
   try {
     data.value = await clansApi.show(route.params.id)
+
+    // Если лидер/офицер — тянем количество заявок
+    if (canManage.value) {
+      try {
+        const apps = await clansApi.applications(route.params.id)
+        applicationsCount.value = apps.applications?.length ?? 0
+      } catch {
+        applicationsCount.value = 0
+      }
+    }
   } finally {
     loading.value = false
   }
@@ -40,6 +64,11 @@ async function leave() {
   await load()
 }
 
+function onApplicationsChanged() {
+  applicationsCount.value = 0
+  load()
+}
+
 onMounted(load)
 </script>
 
@@ -48,8 +77,14 @@ onMounted(load)
 
   <div v-else-if="clan" class="clan-page">
     <!-- HEADER -->
-    <header class="clan-header" :style="{ borderColor: clan.banner_color }">
-      <div class="banner" :style="{ background: clan.banner_color }">
+    <header class="clan-header">
+      <div
+          class="banner"
+          :style="{
+                    background: clan.banner_color,
+                    boxShadow: `0 8px 30px ${clan.banner_color}50`,
+                }"
+      >
         {{ clan.tag?.charAt(0) }}
       </div>
 
@@ -59,22 +94,48 @@ onMounted(load)
           {{ clan.name }}
         </h1>
         <p v-if="clan.description">{{ clan.description }}</p>
+
         <div class="stats">
-          <div class="stat"><b>{{ clan.power }}</b><span>сила</span></div>
-          <div class="stat"><b>{{ data.members_count }}</b><span>участников</span></div>
-          <div class="stat"><b class="win">{{ clan.wins }}</b><span>побед</span></div>
-          <div class="stat"><b class="loss">{{ clan.losses }}</b><span>поражений</span></div>
+          <div class="stat">
+            <b class="power">{{ clan.power }}</b>
+            <span>сила</span>
+          </div>
+          <div class="stat">
+            <b>{{ data.members_count }}</b>
+            <span>участников</span>
+          </div>
+          <div class="stat">
+            <b class="win">{{ clan.wins }}</b>
+            <span>побед</span>
+          </div>
+          <div class="stat">
+            <b class="loss">{{ clan.losses }}</b>
+            <span>поражений</span>
+          </div>
         </div>
       </div>
 
       <div class="header-actions">
-        <button v-if="!isMember && !data.application" class="btn-apply" @click="apply">
+        <button
+            v-if="!isMember && !data.application"
+            class="btn-apply"
+            @click="apply"
+        >
           Подать заявку
         </button>
+
         <div v-else-if="data.application" class="applied">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
           Заявка отправлена
         </div>
-        <button v-if="isMember && !isLeader" class="btn-leave" @click="leave">
+
+        <button
+            v-if="isMember && !isLeader"
+            class="btn-leave"
+            @click="leave"
+        >
           Покинуть клан
         </button>
       </div>
@@ -82,38 +143,69 @@ onMounted(load)
 
     <!-- TABS -->
     <nav class="tabs">
-      <button :class="{ active: tab === 'members' }" @click="tab = 'members'">
+      <button
+          :class="{ active: tab === 'members' }"
+          @click="tab = 'members'"
+      >
         Участники
       </button>
-      <button :class="{ active: tab === 'events' }" @click="tab = 'events'">
+
+      <button
+          :class="{ active: tab === 'events' }"
+          @click="tab = 'events'"
+      >
         Мероприятия
       </button>
-      <button :class="{ active: tab === 'wars' }" @click="tab = 'wars'">
+
+      <button
+          :class="{ active: tab === 'wars' }"
+          @click="tab = 'wars'"
+      >
         Войны
+      </button>
+
+      <button
+          v-if="canManage"
+          :class="{ active: tab === 'applications' }"
+          @click="tab = 'applications'"
+      >
+        Заявки
+        <span v-if="applicationsCount > 0" class="tab-badge">
+                    {{ applicationsCount }}
+                </span>
       </button>
     </nav>
 
+    <!-- CONTENT -->
     <ClanMembers
         v-if="tab === 'members'"
         :clan="clan"
         :is-leader="isLeader"
+        :can-manage="canManage"
         @refresh="load"
     />
 
     <ClanEvents
         v-else-if="tab === 'events'"
         :clan="clan"
-        :can-manage="isLeader || isMember"
+        :can-manage="canManage"
     />
 
     <ClanWars
-        v-else
+        v-else-if="tab === 'wars'"
         :clan="clan"
         :incoming="data.incoming_wars"
         :outgoing="data.outgoing_wars"
         :is-member="isMember"
         :is-leader="isLeader"
         @refresh="load"
+    />
+
+    <ClanApplications
+        v-else-if="tab === 'applications'"
+        :clan="clan"
+        :can-manage="canManage"
+        @refresh="onApplicationsChanged"
     />
   </div>
 </template>
@@ -130,13 +222,15 @@ onMounted(load)
   color: var(--text-dim);
 }
 
+/* === HEADER === */
+
 .clan-header {
   display: flex;
   align-items: center;
   gap: 24px;
   padding: 28px;
   background: var(--bg-card);
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 18px;
   margin-bottom: 28px;
 }
@@ -152,22 +246,31 @@ onMounted(load)
   font-size: 36px;
   font-weight: 900;
   flex-shrink: 0;
+  transition: box-shadow 0.3s ease;
 }
 
-.clan-title { flex: 1; }
+.clan-title {
+  flex: 1;
+  min-width: 0;
+}
 
 .clan-title h1 {
   margin: 0 0 8px;
   font-size: 26px;
   font-weight: 900;
+  letter-spacing: -0.5px;
 }
 
-.tag { color: var(--accent-light); }
+.tag {
+  color: var(--accent-light);
+  margin-right: 4px;
+}
 
 .clan-title p {
   margin: 0 0 12px;
   color: var(--text-dim);
   font-size: 13px;
+  line-height: 1.5;
 }
 
 .stats {
@@ -183,21 +286,30 @@ onMounted(load)
 .stat b {
   font-size: 18px;
   font-weight: 900;
-  color: var(--accent-light);
+  color: var(--text);
+  letter-spacing: -0.5px;
 }
 
-.stat b.win { color: #22c55e; }
-.stat b.loss { color: #ef4444; }
+.stat b.power { color: #a78bfa; }
+.stat b.win { color: #4ade80; }
+.stat b.loss { color: #f87171; }
 
 .stat span {
   font-size: 10px;
-  color: var(--text-dim);
+  color: var(--text-muted);
   text-transform: uppercase;
   font-weight: 700;
   letter-spacing: 0.5px;
+  margin-top: 2px;
 }
 
-.header-actions { display: flex; gap: 10px; }
+/* === ACTIONS === */
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
 
 .btn-apply,
 .btn-leave {
@@ -207,6 +319,8 @@ onMounted(load)
   font-weight: 700;
   cursor: pointer;
   border: 0;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .btn-apply {
@@ -215,31 +329,57 @@ onMounted(load)
   box-shadow: 0 4px 15px rgba(124, 58, 237, 0.25);
 }
 
+.btn-apply:hover {
+  background: var(--accent-light);
+  transform: translateY(-1px);
+  box-shadow: 0 7px 25px rgba(124, 58, 237, 0.35);
+}
+
 .btn-leave {
   color: var(--text-dim);
   background: transparent;
   border: 1px solid var(--border);
 }
 
-.btn-leave:hover { color: #f87171; border-color: rgba(239, 68, 68, 0.3); }
+.btn-leave:hover {
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.05);
+}
 
 .applied {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 11px 20px;
   color: #fbbf24;
   background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.2);
   border-radius: 10px;
   font-size: 13px;
   font-weight: 700;
+  white-space: nowrap;
 }
+
+/* === TABS === */
 
 .tabs {
   display: flex;
   gap: 6px;
   margin-bottom: 20px;
   border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tabs button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
   padding: 12px 20px;
   color: var(--text-dim);
   background: transparent;
@@ -248,10 +388,77 @@ onMounted(load)
   cursor: pointer;
   font-weight: 600;
   font-size: 14px;
+  white-space: nowrap;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.tabs button:hover {
+  color: var(--text);
 }
 
 .tabs button.active {
   color: var(--text);
   border-bottom-color: var(--accent);
+}
+
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 8px;
+  padding: 0 5px;
+  background: #ef4444;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+/* === АДАПТИВ === */
+
+@media (max-width: 700px) {
+  .clan-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .banner {
+    width: 64px;
+    height: 64px;
+    font-size: 28px;
+    border-radius: 14px;
+  }
+
+  .clan-title h1 {
+    font-size: 20px;
+  }
+
+  .stats {
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .btn-apply,
+  .btn-leave,
+  .applied {
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .tabs button {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
 }
 </style>

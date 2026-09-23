@@ -53,4 +53,7 @@ export const clansApi = {
     completeWar(warId, payload) {
         return api.post(`/wars/${warId}/complete`, payload)
     },
+    applications(clanId) {
+        return api.get(`/clans/${clanId}/applications`)
+    },
 }

@@ -26,12 +26,17 @@ async function open(n) {
     await notificationsApi.markAsRead(n.id)
   }
 
-  // навигация по типу
   const d = n.data
+
   if (d.type === 'friend_request' || d.type === 'friend_accepted') {
     router.push('/friends')
   } else if (d.type === 'tier_test_request' || d.type === 'tier_test_completed') {
     router.push('/profile')
+  } else if (d.type === 'clan_application') {
+    // лидер → сразу на заявки клана
+    router.push(`/clans/${d.clan_id}`)
+  } else if (d.type === 'clan_application_accepted' || d.type === 'clan_application_declined') {
+    router.push(`/clans/${d.clan_id}`)
   }
 
   await load()

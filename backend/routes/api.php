@@ -52,7 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/clans/{clan}/applications/{application}/decline', [ClanController::class, 'declineApplication']);
     Route::post('/clans/{clan}/leave', [ClanController::class, 'leave']);
     Route::delete('/clans/{clan}/members/{user}', [ClanController::class, 'kick']);
-
+    Route::get('/clans/{clan}/applications', [ClanController::class, 'applications']);
     // Мероприятия
     Route::get('/clans/{clan}/events', [ClanEventController::class, 'index']);
     Route::post('/clans/{clan}/events', [ClanEventController::class, 'store']);

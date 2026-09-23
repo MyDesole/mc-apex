@@ -156,14 +156,40 @@ class ClanController extends Controller
             'message' => ['nullable', 'string', 'max:500'],
         ]);
 
+        $existing = ClanApplication::where('clan_id', $clan->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if ($existing && $existing->status === 'pending') {
+            return response()->json(['message' => 'Заявка уже отправлена.'], 422);
+        }
+
         $application = ClanApplication::updateOrCreate(
             ['clan_id' => $clan->id, 'user_id' => $user->id],
             ['message' => $validated['message'] ?? null, 'status' => 'pending']
         );
 
+        // Уведомляем лидера
+        $clan->leader->notify(new \App\Notifications\ClanApplicationNotification($clan, $user));
+
         return response()->json(['application' => $application], 201);
     }
 
+    public function applications(Request $request, Clan $clan): JsonResponse
+    {
+        abort_unless(
+            $clan->isLeader($request->user()->id) || $this->isOfficer($clan, $request->user()->id),
+            403
+        );
+
+        $applications = ClanApplication::where('clan_id', $clan->id)
+            ->where('status', 'pending')
+            ->with('user:id,username,avatar,tier,tier_score')
+            ->latest()
+            ->get();
+
+        return response()->json(['applications' => $applications]);
+    }
     public function acceptApplication(Request $request, Clan $clan, ClanApplication $application): JsonResponse
     {
         abort_unless($clan->isLeader($request->user()->id) || $this->isOfficer($clan, $request->user()->id), 403);
@@ -185,6 +211,9 @@ class ClanController extends Controller
             $clan->recalculatePower();
         });
 
+        // уведомляем заявителя
+        $application->user->notify(new \App\Notifications\ClanApplicationAcceptedNotification($clan));
+
         return response()->json(['ok' => true]);
     }
 
@@ -194,6 +223,8 @@ class ClanController extends Controller
         abort_if($application->clan_id !== $clan->id, 404);
 
         $application->update(['status' => 'declined']);
+
+        $application->user->notify(new \App\Notifications\ClanApplicationDeclinedNotification($clan));
 
         return response()->json(['ok' => true]);
     }
