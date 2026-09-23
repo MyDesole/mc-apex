@@ -109,8 +109,33 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
-        return response()->json([
-            'user' => $request->user(),
+        $user = $request->user()->load([
+            'aspects',
+            'clanMember.clan' => fn ($q) => $q->withCount('members'),
         ]);
+
+        return response()->json([
+            'user' => $user,
+            'rank' => $this->getUserRank($user),
+        ]);
+    }
+
+    /**
+     * Место в общем топе по tier_score.
+     */
+    private function getUserRank(\App\Models\User $user): array
+    {
+        if ($user->tier_score <= 0) {
+            return ['position' => null, 'total' => 0];
+        }
+
+        $position = \App\Models\User::where('tier_score', '>', $user->tier_score)->count() + 1;
+
+        $total = \App\Models\User::where('tier_score', '>', 0)->count();
+
+        return [
+            'position' => $position,
+            'total' => $total,
+        ];
     }
 }

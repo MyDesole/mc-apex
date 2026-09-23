@@ -64,6 +64,7 @@ class PlayerController extends Controller
         $user->load([
             'aspects',
             'tierTests' => fn ($q) => $q->latest()->limit(10),
+            'clanMember.clan' => fn ($q) => $q->withCount('members'),
         ]);
 
         $me = $request->user();
@@ -74,12 +75,24 @@ class PlayerController extends Controller
             $q->where('user_id', $user->id)->where('friend_id', $me->id);
         })->first();
 
+        $position = null;
+        $total = 0;
+
+        if ($user->tier_score > 0) {
+            $position = User::where('tier_score', '>', $user->tier_score)->count() + 1;
+            $total = User::where('tier_score', '>', 0)->count();
+        }
+
         return response()->json([
             'user' => $user,
             'friendship' => $friendship ? [
                 'status' => $friendship->status,
                 'initiated_by_me' => $friendship->user_id === $me->id,
             ] : null,
+            'rank' => [
+                'position' => $position,
+                'total' => $total,
+            ],
         ]);
     }
 

@@ -64,6 +64,16 @@ class User extends Authenticatable
             ->where('status', 'pending');
     }
 
+    public function clanMember(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(ClanMember::class);
+    }
+
+    public function clan(): ?Clan
+    {
+        return $this->clanMember?->clan;
+    }
+
     public function isFriendsWith(int $userId): bool
     {
         return Friendship::where(function ($q) use ($userId) {

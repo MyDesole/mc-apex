@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\ClanController;
+use App\Http\Controllers\ClanEventController;
+use App\Http\Controllers\ClanWarController;
 use App\Http\Controllers\FriendController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PlayerController;
@@ -39,6 +42,29 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 
+    Route::get('/clans', [ClanController::class, 'index']);
+    Route::get('/clans/top', [ClanController::class, 'top']);
+    Route::post('/clans', [ClanController::class, 'store']);
+    Route::get('/clans/{clan}', [ClanController::class, 'show']);
+    Route::put('/clans/{clan}', [ClanController::class, 'update']);
+    Route::post('/clans/{clan}/apply', [ClanController::class, 'apply']);
+    Route::post('/clans/{clan}/applications/{application}/accept', [ClanController::class, 'acceptApplication']);
+    Route::post('/clans/{clan}/applications/{application}/decline', [ClanController::class, 'declineApplication']);
+    Route::post('/clans/{clan}/leave', [ClanController::class, 'leave']);
+    Route::delete('/clans/{clan}/members/{user}', [ClanController::class, 'kick']);
 
+    // Мероприятия
+    Route::get('/clans/{clan}/events', [ClanEventController::class, 'index']);
+    Route::post('/clans/{clan}/events', [ClanEventController::class, 'store']);
+    Route::delete('/clans/{clan}/events/{event}', [ClanEventController::class, 'destroy']);
+
+    // Войны
+    Route::post('/clans/{clan}/wars', [ClanWarController::class, 'store']);
+    Route::post('/wars/{war}/accept', [ClanWarController::class, 'accept']);
+    Route::post('/wars/{war}/decline', [ClanWarController::class, 'decline']);
+    Route::post('/wars/{war}/complete', [ClanWarController::class, 'complete']);
+
+
+    Route::get('/top', [\App\Http\Controllers\HomeController::class, 'top']);
 
 });

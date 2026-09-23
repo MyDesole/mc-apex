@@ -35,7 +35,9 @@ const router = createRouter({
       meta: { auth: true },
     },
 
-
+    { path: '/clans', name: 'clans', component: () => import('@/views/ClansView.vue') },
+    { path: '/clans/create', name: 'clan-create', component: () => import('@/views/ClanCreateView.vue'), meta: { auth: true } },
+    { path: '/clans/:id', name: 'clan', component: () => import('@/views/ClanView.vue') },
     { path: '/players/:id', name: 'player', component: PlayerView, meta: { auth: true } },
   ],
 })

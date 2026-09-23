@@ -4,6 +4,7 @@ import { api, getCsrfCookie } from '../services/api'
 
 export const useAuthStore = defineStore('auth', () => {
     const user = ref(null)
+    const rank = ref({ position: null, total: 0 })
     const loading = ref(false)
     const initialized = ref(false)
 
@@ -13,12 +14,14 @@ export const useAuthStore = defineStore('auth', () => {
         try {
             const response = await api.get('/auth/me')
             user.value = response.user
+            rank.value = response.rank ?? { position: null, total: 0 }
         } catch (error) {
             if (error.status !== 401) {
                 console.error(error)
             }
 
             user.value = null
+            rank.value = { position: null, total: 0 }
         } finally {
             initialized.value = true
         }
@@ -37,6 +40,9 @@ export const useAuthStore = defineStore('auth', () => {
             })
 
             user.value = response.user
+
+            // подтянуть rank и полный профиль (clan_member.clan)
+            await fetchMe()
 
             return response
         } finally {
@@ -59,6 +65,9 @@ export const useAuthStore = defineStore('auth', () => {
 
             user.value = response.user
 
+            // подтянуть rank и полный профиль (clan_member.clan)
+            await fetchMe()
+
             return response
         } finally {
             loading.value = false
@@ -71,6 +80,7 @@ export const useAuthStore = defineStore('auth', () => {
         try {
             await api.post('/auth/logout')
             user.value = null
+            rank.value = { position: null, total: 0 }
         } finally {
             loading.value = false
         }
@@ -78,6 +88,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     return {
         user,
+        rank,
         loading,
         initialized,
         isAuthenticated,
