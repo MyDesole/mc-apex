@@ -22,6 +22,20 @@ const router = createRouter({
       component: PlayersView,
       meta: { auth: true },
     },
+    {
+      path: '/friends',
+      name: 'friends',
+      component: () => import('@/views/FriendsView.vue'),
+      meta: { auth: true },
+    },
+    {
+      path: '/notifications',
+      name: 'notifications',
+      component: () => import('@/views/NotificationsView.vue'),
+      meta: { auth: true },
+    },
+
+
     { path: '/players/:id', name: 'player', component: PlayerView, meta: { auth: true } },
   ],
 })

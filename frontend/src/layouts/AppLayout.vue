@@ -1,7 +1,8 @@
 <script setup>
-import { ref } from 'vue'
+import {onMounted, ref} from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import {notificationsApi} from "@/services/notification.js";
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -13,6 +14,21 @@ async function logout() {
   await auth.logout()
   router.push('/')
 }
+
+const unreadCount = ref(0)
+
+async function loadUnread() {
+  if (!auth.isAuthenticated) return
+  try {
+    const data = await notificationsApi.list()
+    unreadCount.value = data.unread_count || 0
+  } catch (e) { /* ignore */ }
+}
+
+onMounted(loadUnread)
+
+// периодически обновлять
+setInterval(loadUnread, 30000)
 </script>
 
 <template>
@@ -48,8 +64,17 @@ async function logout() {
             <div v-if="menuOpen" class="dropdown">
               <RouterLink to="/profile" class="dropdown-item" @click="menuOpen = false">Профиль</RouterLink>
               <RouterLink to="/friends" class="dropdown-item" @click="menuOpen = false">Друзья</RouterLink>
-              <RouterLink to="/notifications" class="dropdown-item" @click="menuOpen = false">Уведомления</RouterLink>
-              <div class="dropdown-divider"></div>
+              <RouterLink
+                  v-if="auth.isAuthenticated"
+                  to="/notifications"
+                  class="notif-bell"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                  <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                  <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                </svg>
+                <span v-if="unreadCount > 0" class="notif-badge">{{ unreadCount }}</span>
+              </RouterLink>              <div class="dropdown-divider"></div>
               <button class="dropdown-item danger" @click="logout">Выйти</button>
             </div>
           </div>
@@ -62,3 +87,40 @@ async function logout() {
     </main>
   </div>
 </template>
+
+<style scoped>
+
+.notif-bell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  color: var(--text-dim);
+  border-radius: 9px;
+  transition: all 0.2s;
+}
+
+.notif-bell:hover {
+  color: var(--text);
+  background: var(--bg-card);
+}
+
+.notif-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ef4444;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+}
+</style>

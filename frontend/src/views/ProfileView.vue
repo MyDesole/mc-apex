@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import PlayerCard from '../components/PlayerCard.vue'
 import { useAuthStore } from '../stores/auth'
+import TierTestHistory from "@/components/TierTestHistory.vue";
 
 const auth = useAuthStore()
 
@@ -16,6 +17,9 @@ const aspects = computed(() => auth.user?.aspects ?? [])
         :user="user"
         :aspects="aspects"
     />
+    <TierTestHistory         v-if="user"
+    />
+
     <div v-else>Загрузка...</div>
   </div>
 </template>
