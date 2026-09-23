@@ -1,52 +1,512 @@
 @import './base.css';
 
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
+/* =========================================================
+   APEX — GLOBAL STYLES
+   ========================================================= */
+
+:root {
+    --bg: #0a0a0f;
+    --bg-header: rgba(10, 10, 15, 0.88);
+
+    --bg-card: #12121a;
+    --bg-card-hover: #1a1a26;
+
+    --border: #22222e;
+    --border-hover: #343443;
+
+    --accent: #7c3aed;
+    --accent-light: #8b5cf6;
+    --accent-glow: rgba(124, 58, 237, 0.3);
+
+    --accent2: #06b6d4;
+
+    --text: #e2e2e8;
+    --text-dim: #8888a0;
+    --text-muted: #5e5e70;
+
+    --danger: #ef4444;
+
+    --header-height: 72px;
 }
 
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+/* =========================================================
+   RESET
+   ========================================================= */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
+html {
+    width: 100%;
+    min-height: 100%;
+    background: var(--bg);
+    color-scheme: dark;
 }
 
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
-
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
-}
-.auth-page {
+body {
+    width: 100%;
+    min-width: 320px;
     min-height: 100vh;
+
+    margin: 0;
+    padding: 0;
+
+    background: var(--bg);
+    color: var(--text);
+
+    font-family:
+            Inter,
+            ui-sans-serif,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif;
+
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/*
+ * КРИТИЧЕСКИ ВАЖНО:
+ * #app должен занимать весь экран.
+ * Никакого max-width, margin: auto, padding или flex
+ * от стандартного Vue starter.
+ */
+#app {
+    width: 100%;
+    min-height: 100vh;
+
+    margin: 0;
+    padding: 0;
+}
+
+body,
+button,
+input,
+textarea,
+select {
+    font: inherit;
+}
+
+button {
+    border: 0;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* =========================================================
+   APEX APP
+   ========================================================= */
+
+.app {
+    width: 100%;
+    min-height: 100vh;
+
+    background:
+            radial-gradient(
+                    circle at 50% -20%,
+                    rgba(124, 58, 237, 0.08),
+                    transparent 40%
+            ),
+            var(--bg);
+}
+
+.page {
+    width: 100%;
+    min-height: calc(100vh - var(--header-height));
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+
+    width: 100%;
+    height: var(--header-height);
+
+    background: var(--bg-header);
+
+    border-bottom: 1px solid rgba(34, 34, 46, 0.85);
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+.header-inner {
+    width: min(1200px, calc(100% - 40px));
+    height: 100%;
+
+    margin: 0 auto;
+
+    display: flex;
+    align-items: center;
+}
+
+/* =========================================================
+   BRAND
+   ========================================================= */
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+
+    flex-shrink: 0;
+
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: -1px;
+
+    transition: opacity 0.2s ease;
+}
+
+.brand:hover {
+    opacity: 0.85;
+}
+
+.brand-main {
+    background:
+            linear-gradient(
+                    135deg,
+                    #c4b5fd 0%,
+                    #8b5cf6 45%,
+                    #7c3aed 100%
+            );
+
+    -webkit-background-clip: text;
+    background-clip: text;
+
+    color: transparent;
+}
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+
+.main-nav {
+    display: flex;
+    align-items: center;
+
+    gap: 4px;
+
+    margin-left: 48px;
+}
+
+.nav-link {
+    position: relative;
+
+    padding: 9px 13px;
+
+    color: var(--text-dim);
+
+    font-size: 14px;
+    font-weight: 500;
+
+    border-radius: 8px;
+
+    transition:
+            color 0.2s ease,
+            background 0.2s ease;
+}
+
+.nav-link:hover {
+    color: var(--text);
+
+    background: rgba(255, 255, 255, 0.035);
+}
+
+.nav-link.router-link-exact-active {
+    color: #fff;
+}
+
+.nav-link.router-link-exact-active::after {
+    content: "";
+
+    position: absolute;
+
+    left: 13px;
+    right: 13px;
+    bottom: 2px;
+
+    height: 2px;
+
+    background: var(--accent);
+
+    border-radius: 999px;
+
+    box-shadow: 0 0 10px var(--accent-glow);
+}
+
+/* =========================================================
+   HEADER ACTIONS
+   ========================================================= */
+
+.header-actions {
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    margin-left: auto;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 38px;
+
+    padding: 0 15px;
+
+    border-radius: 8px;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    transition:
+            transform 0.2s ease,
+            background 0.2s ease,
+            border-color 0.2s ease,
+            box-shadow 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    color: var(--text);
+
+    background: transparent;
+
+    border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-card);
+    border-color: var(--border-hover);
+}
+
+.btn-primary {
+    color: #fff;
+
+    background: var(--accent);
+
+    border: 1px solid var(--accent);
+
+    box-shadow:
+            0 5px 20px rgba(124, 58, 237, 0.2);
+}
+
+.btn-primary:hover {
+    background: var(--accent-light);
+
+    box-shadow:
+            0 7px 25px rgba(124, 58, 237, 0.3);
+}
+
+/* =========================================================
+   USER MENU
+   ========================================================= */
+
+.user-menu {
+    position: relative;
+}
+
+.user-button {
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    padding: 5px 9px 5px 5px;
+
+    color: var(--text);
+
+    background: transparent;
+
+    border: 1px solid transparent;
+    border-radius: 9px;
+
+    cursor: pointer;
+
+    transition:
+            background 0.2s ease,
+            border-color 0.2s ease;
+}
+
+.user-button:hover,
+.user-button:focus-visible {
+    background: var(--bg-card);
+    border-color: var(--border);
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 32px 20px;
+
+    flex-shrink: 0;
+
+    color: #fff;
 
     background:
-        radial-gradient(
-            circle at 50% 0%,
-            rgba(124, 58, 237, 0.14),
-            transparent 38%
-        ),
-        #0a0a0f;
+            linear-gradient(
+                    135deg,
+                    #8b5cf6,
+                    #6d28d9
+            );
+
+    border-radius: 8px;
+
+    font-size: 13px;
+    font-weight: 800;
+
+    box-shadow:
+            0 3px 12px rgba(124, 58, 237, 0.25);
+}
+
+.username {
+    max-width: 140px;
+
+    overflow: hidden;
+
+    color: var(--text);
+
+    font-size: 13px;
+    font-weight: 600;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.chevron {
+    width: 15px;
+    height: 15px;
+
+    color: var(--text-dim);
+
+    transition: transform 0.2s ease;
+}
+
+.chevron.open {
+    transform: rotate(180deg);
+}
+
+/* =========================================================
+   DROPDOWN
+   ========================================================= */
+
+.dropdown {
+    position: absolute;
+
+    top: calc(100% + 8px);
+    right: 0;
+
+    width: 190px;
+
+    padding: 6px;
+
+    background: rgba(18, 18, 26, 0.97);
+
+    border: 1px solid var(--border);
+    border-radius: 11px;
+
+    box-shadow:
+            0 18px 50px rgba(0, 0, 0, 0.45);
+
+    backdrop-filter: blur(16px);
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+
+    padding: 10px 11px;
+
+    color: var(--text-dim);
+
+    background: transparent;
+
+    border-radius: 7px;
+
+    font-size: 13px;
+    font-weight: 500;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+            color 0.2s ease,
+            background 0.2s ease;
+}
+
+.dropdown-item:hover {
+    color: var(--text);
+
+    background: rgba(255, 255, 255, 0.045);
+}
+
+.dropdown-item.danger {
+    color: #f87171;
+}
+
+.dropdown-item.danger:hover {
+    color: #fca5a5;
+
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.dropdown-divider {
+    height: 1px;
+
+    margin: 5px 4px;
+
+    background: var(--border);
+}
+
+/* =========================================================
+   AUTH PAGES
+   ========================================================= */
+
+.auth-page {
+    width: 100%;
+    min-height: calc(100vh - var(--header-height));
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 48px 20px;
+
+    background:
+            radial-gradient(
+                    circle at 50% 0%,
+                    rgba(124, 58, 237, 0.14),
+                    transparent 38%
+            ),
+            var(--bg);
 }
 
 .auth-card {
@@ -55,44 +515,48 @@ a,
 
     padding: 38px;
 
-    background: rgba(18, 18, 26, 0.92);
-    border: 1px solid #22222e;
+    background: rgba(18, 18, 26, 0.94);
+
+    border: 1px solid var(--border);
     border-radius: 18px;
 
     box-shadow:
-        0 25px 80px rgba(0, 0, 0, 0.45),
-        0 0 50px rgba(124, 58, 237, 0.08);
+            0 25px 80px rgba(0, 0, 0, 0.45),
+            0 0 50px rgba(124, 58, 237, 0.08);
 }
 
 .auth-logo {
-    text-align: center;
-
     margin-bottom: 30px;
+
+    text-align: center;
 
     font-size: 30px;
     font-weight: 900;
     letter-spacing: -1px;
 
-    background: linear-gradient(
-        135deg,
-        #a78bfa,
-        #7c3aed
-    );
+    background:
+            linear-gradient(
+                    135deg,
+                    #a78bfa,
+                    #7c3aed
+            );
 
     -webkit-background-clip: text;
     background-clip: text;
+
     color: transparent;
 }
 
 .auth-heading {
     margin-bottom: 28px;
+
     text-align: center;
 }
 
 .auth-heading h1 {
     margin: 0 0 8px;
 
-    color: #e2e2e8;
+    color: var(--text);
 
     font-size: 25px;
     font-weight: 800;
@@ -101,13 +565,14 @@ a,
 .auth-heading p {
     margin: 0;
 
-    color: #8888a0;
+    color: var(--text-dim);
 
     font-size: 14px;
 }
 
 .field {
     display: block;
+
     margin-bottom: 18px;
 }
 
@@ -124,11 +589,13 @@ a,
 
 .field input {
     width: 100%;
+    min-height: 46px;
+
     box-sizing: border-box;
 
     padding: 13px 14px;
 
-    color: #e2e2e8;
+    color: var(--text);
     background: #0d0d14;
 
     border: 1px solid #292936;
@@ -137,8 +604,8 @@ a,
     outline: none;
 
     transition:
-        border-color .2s,
-        box-shadow .2s;
+            border-color 0.2s,
+            box-shadow 0.2s;
 }
 
 .field input::placeholder {
@@ -146,10 +613,10 @@ a,
 }
 
 .field input:focus {
-    border-color: #7c3aed;
+    border-color: var(--accent);
 
     box-shadow:
-        0 0 0 3px rgba(124, 58, 237, 0.12);
+            0 0 0 3px rgba(124, 58, 237, 0.12);
 }
 
 .auth-options {
@@ -165,13 +632,14 @@ a,
 .checkbox {
     display: flex;
     align-items: center;
+
     gap: 7px;
 
-    color: #8888a0;
+    color: var(--text-dim);
 }
 
 .checkbox input {
-    accent-color: #7c3aed;
+    accent-color: var(--accent);
 }
 
 .auth-options a,
@@ -189,15 +657,18 @@ a,
 .auth-submit {
     width: 100%;
 
+    min-height: 46px;
+
     padding: 13px 18px;
 
     color: white;
 
-    background: linear-gradient(
-        135deg,
-        #8b5cf6,
-        #7c3aed
-    );
+    background:
+            linear-gradient(
+                    135deg,
+                    #8b5cf6,
+                    #7c3aed
+            );
 
     border: 0;
     border-radius: 10px;
@@ -208,33 +679,35 @@ a,
     cursor: pointer;
 
     box-shadow:
-        0 8px 25px rgba(124, 58, 237, 0.25);
+            0 8px 25px rgba(124, 58, 237, 0.25);
 
     transition:
-        transform .2s,
-        box-shadow .2s,
-        opacity .2s;
+            transform 0.2s,
+            box-shadow 0.2s,
+            opacity 0.2s;
 }
 
 .auth-submit:hover:not(:disabled) {
     transform: translateY(-1px);
 
     box-shadow:
-        0 12px 32px rgba(124, 58, 237, 0.35);
+            0 12px 32px rgba(124, 58, 237, 0.35);
 }
 
 .auth-submit:disabled {
-    opacity: .6;
+    opacity: 0.6;
     cursor: not-allowed;
 }
 
 .auth-error {
     margin-bottom: 16px;
+
     padding: 11px 13px;
 
     color: #fca5a5;
 
     background: rgba(239, 68, 68, 0.08);
+
     border: 1px solid rgba(239, 68, 68, 0.2);
 
     border-radius: 9px;
@@ -250,4 +723,71 @@ a,
     text-align: center;
 
     font-size: 13px;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 800px) {
+    .header-inner {
+        width: min(100% - 24px, 1200px);
+    }
+
+    .main-nav {
+        margin-left: 20px;
+    }
+
+    .nav-link {
+        padding-left: 9px;
+        padding-right: 9px;
+    }
+
+    .btn-secondary {
+        display: none;
+    }
+}
+
+@media (max-width: 650px) {
+    :root {
+        --header-height: 64px;
+    }
+
+    .header-inner {
+        width: calc(100% - 20px);
+    }
+
+    .brand {
+        font-size: 21px;
+    }
+
+    .main-nav {
+        display: none;
+    }
+
+    .btn {
+        min-height: 36px;
+        padding: 0 12px;
+        font-size: 12px;
+    }
+
+    .username {
+        display: none;
+    }
+
+    .user-button {
+        padding-right: 5px;
+    }
+
+    .auth-page {
+        min-height: calc(100vh - var(--header-height));
+
+        padding: 28px 16px;
+    }
+
+    .auth-card {
+        padding: 28px 22px;
+
+        border-radius: 15px;
+    }
 }
