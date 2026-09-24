@@ -179,8 +179,15 @@ onMounted(load)
 .date { color: var(--text-dim); font-size: 12px; }
 
 .event h3 { margin: 0 0 6px; font-size: 16px; }
-.event p { margin: 0 0 12px; color: var(--text-dim); font-size: 13px; }
-
+.event p {
+  margin: 0 0 12px;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: inherit;
+}
 .event footer {
   display: flex;
   justify-content: space-between;
