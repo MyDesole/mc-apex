@@ -7,6 +7,7 @@ use App\Models\PlayerAspect;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class PlayerController extends Controller
 {
@@ -15,7 +16,6 @@ class PlayerController extends Controller
         $me = $request->user();
 
         $query = User::query()
-            ->select(['id', 'username', 'avatar', 'tier', 'tier_score', 'bio'])
             ->where('id', '!=', $me->id);
 
         if ($search = $request->query('search')) {
@@ -32,7 +32,7 @@ class PlayerController extends Controller
         $players = $query->orderByDesc('tier_score')
             ->paginate(20);
 
-        // Подтягиваем статусы дружбы одним запросом
+        // статусы дружбы (как у тебя было)
         $ids = collect($players->items())->pluck('id')->all();
 
         $friendships = Friendship::where(function ($q) use ($me, $ids) {
@@ -41,7 +41,6 @@ class PlayerController extends Controller
             $q->where('friend_id', $me->id)->whereIn('user_id', $ids);
         })->get();
 
-        // Мапа: id другого юзера → статус
         $statusMap = [];
         foreach ($friendships as $f) {
             $otherId = $f->user_id === $me->id ? $f->friend_id : $f->user_id;
@@ -98,14 +97,72 @@ class PlayerController extends Controller
 
     public function updateMe(Request $request): JsonResponse
     {
+        $user = $request->user();
+
         $validated = $request->validate([
             'bio' => ['nullable', 'string', 'max:500'],
-            'avatar' => ['nullable', 'string', 'max:255'],
+            'banner_color' => ['nullable', 'string', 'max:16'],
+
+            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
+            'cover' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+
+            'socials' => ['nullable', 'array'],
+            'socials.discord' => ['nullable', 'string', 'max:255'],
+            'socials.telegram' => ['nullable', 'string', 'max:255'],
+            'socials.youtube' => ['nullable', 'string', 'max:255'],
+            'socials.vk' => ['nullable', 'string', 'max:255'],
+            'socials.website' => ['nullable', 'string', 'max:255'],  // ← без 'url', чтобы не резало
         ]);
 
-        $request->user()->update($validated);
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar) {
+                Storage::disk('public')->delete($user->avatar);
+            }
 
-        return response()->json(['user' => $request->user()]);
+            $validated['avatar'] = $request
+                ->file('avatar')
+                ->store("users/{$user->id}", 'public');
+        }
+
+        if ($request->hasFile('cover')) {
+            if ($user->cover_path) {
+                Storage::disk('public')->delete($user->cover_path);
+            }
+
+            $validated['cover_path'] = $request
+                ->file('cover')
+                ->store("users/{$user->id}/covers", 'public');
+        }
+
+        unset($validated['cover']);
+
+        $user->update($validated);
+
+        return response()->json(['user' => $user->fresh()]);
+    }
+
+    public function removeAvatar(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->avatar) {
+            Storage::disk('public')->delete($user->avatar);
+            $user->update(['avatar' => null]);
+        }
+
+        return response()->json(['user' => $user->fresh()]);
+    }
+
+    public function removeCover(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->cover_path) {
+            Storage::disk('public')->delete($user->cover_path);
+            $user->update(['cover_path' => null]);
+        }
+
+        return response()->json(['user' => $user->fresh()]);
     }
 
     public function updateAspects(Request $request): JsonResponse

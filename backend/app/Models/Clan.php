@@ -10,12 +10,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Clan extends Model
 {
     protected $fillable = [
-        'name', 'tag', 'description', 'avatar', 'banner_color',
-        'leader_id', 'power', 'wins', 'losses', 'is_open', 'max_members',
+        'name', 'tag', 'description', 'avatar', 'cover_path',
+        'banner_color', 'leader_id', 'power', 'wins', 'losses',
+        'is_open', 'is_highlighted', 'socials', 'max_members',
     ];
+
 
     protected $casts = [
         'is_open' => 'boolean',
+        'is_highlighted' => 'boolean',
+        'socials' => 'array',
     ];
 
     public function leader(): BelongsTo
@@ -49,6 +53,19 @@ class Clan extends Model
     {
         return $this->hasMany(ClanApplication::class)->where('status', 'pending');
     }
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return $this->avatar ? asset('storage/' . $this->avatar) : null;
+    }
+
+    public function getCoverUrlAttribute(): ?string
+    {
+        return $this->cover_path ? asset('storage/' . $this->cover_path) : null;
+    }
+
+    protected $appends = ['avatar_url', 'cover_url'];
+
 
     public function recalculatePower(): void
     {

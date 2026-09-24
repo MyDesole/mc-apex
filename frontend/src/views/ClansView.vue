@@ -49,9 +49,16 @@ onMounted(load)
           :key="clan.id"
           :to="`/clans/${clan.id}`"
           class="clan-card"
+          :class="{ highlighted: clan.is_highlighted }"
       >
         <div class="avatar" :style="{ background: clan.banner_color }">
-          {{ clan.tag?.charAt(0) || 'C' }}
+          <img
+              v-if="clan.avatar_url"
+              :src="clan.avatar_url"
+              :alt="clan.name"
+              class="avatar-img"
+          />
+          <template v-else>{{ clan.tag?.charAt(0) || 'C' }}</template>
         </div>
 
         <div class="info">
@@ -91,7 +98,19 @@ h1 {
   font-size: 28px;
   font-weight: 800;
 }
+.clan-card.highlighted {
+  border-color: rgba(250, 204, 21, 0.5);
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.08), var(--bg-card) 50%);
+  box-shadow: 0 0 30px rgba(250, 204, 21, 0.08);
+}
 
+.clan-card.highlighted::before {
+  content: '⭐';
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 14px;
+}
 .btn-create {
   padding: 10px 18px;
   color: #fff;
@@ -140,6 +159,7 @@ h1 {
 }
 
 .avatar {
+  position: relative;      /* ← чтобы img позиционировался внутри */
   width: 52px;
   height: 52px;
   display: flex;
@@ -150,6 +170,17 @@ h1 {
   font-size: 22px;
   font-weight: 900;
   flex-shrink: 0;
+  overflow: hidden;        /* ← обрезает картинку по радиусу */
+}
+
+.avatar-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }
 
 .info { flex: 1; }

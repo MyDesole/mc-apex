@@ -48,11 +48,6 @@ async function kick(user) {
       </button>
     </div>
 
-    <!-- Заявки (только лидеру) -->
-    <div v-if="isLeader" class="applications">
-      <h3>Заявки на вступление</h3>
-      <!-- тут запрашивай отдельно /clans/{id}/applications -->
-    </div>
   </div>
 </template>
 

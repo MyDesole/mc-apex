@@ -7,6 +7,7 @@ import ClanMembers from '@/components/clan/ClanMembers.vue'
 import ClanEvents from '@/components/clan/ClanEvents.vue'
 import ClanWars from '@/components/clan/ClanWars.vue'
 import ClanApplications from '@/components/clan/ClanApplications.vue'
+import ClanEditModal from "@/components/clan/ClanEditModal.vue";
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -15,6 +16,7 @@ const data = ref(null)
 const loading = ref(true)
 const tab = ref('members')
 const applicationsCount = ref(0)
+const showEdit = ref(false)
 
 const clan = computed(() => data.value?.clan)
 const isMember = computed(() => data.value?.is_member)
@@ -63,7 +65,17 @@ async function leave() {
   await clansApi.leave(route.params.id)
   await load()
 }
+const hasSocials = computed(() => {
+  return clan.value?.socials && Object.values(clan.value.socials).some(v => v)
+})
 
+const socialLabels = {
+  discord: 'Discord',
+  telegram: 'Telegram',
+  youtube: 'YouTube',
+  vk: 'VK',
+  website: 'Сайт',
+}
 function onApplicationsChanged() {
   applicationsCount.value = 0
   load()
@@ -77,15 +89,28 @@ onMounted(load)
 
   <div v-else-if="clan" class="clan-page">
     <!-- HEADER -->
-    <header class="clan-header">
+    <header
+        class="clan-header"
+        :style="clan.cover_url ? {
+        backgroundImage: `linear-gradient(rgba(10,10,15,0.75), rgba(10,10,15,0.9)), url(${clan.cover_url})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+    } : {}"
+    >
       <div
           class="banner"
           :style="{
-                    background: clan.banner_color,
-                    boxShadow: `0 8px 30px ${clan.banner_color}50`,
-                }"
+            background: clan.banner_color,
+            boxShadow: `0 8px 30px ${clan.banner_color}50`,
+        }"
       >
-        {{ clan.tag?.charAt(0) }}
+        <img
+            v-if="clan.avatar_url"
+            :src="clan.avatar_url"
+            alt=""
+            class="banner-img"
+        />
+        <template v-else>{{ clan.tag?.charAt(0) }}</template>
       </div>
 
       <div class="clan-title">
@@ -93,6 +118,7 @@ onMounted(load)
           <span class="tag">[{{ clan.tag }}]</span>
           {{ clan.name }}
         </h1>
+
         <p v-if="clan.description">{{ clan.description }}</p>
 
         <div class="stats">
@@ -113,9 +139,30 @@ onMounted(load)
             <span>поражений</span>
           </div>
         </div>
+
+        <div v-if="hasSocials" class="clan-socials">
+          <a
+              v-for="(url, key) in clan.socials"
+              :key="key"
+              v-show="url"
+              :href="url"
+              target="_blank"
+              rel="noopener"
+              class="social-link"
+              :class="key"
+              :title="socialLabels[key]"
+          >
+            <span class="social-label">{{ socialLabels[key] }}</span>
+          </a>
+        </div>
       </div>
 
       <div class="header-actions">
+
+        <button v-if="isLeader" class="btn-settings" @click="showEdit = true">
+          Настройки
+        </button>
+
         <button
             v-if="!isMember && !data.application"
             class="btn-apply"
@@ -123,6 +170,8 @@ onMounted(load)
         >
           Подать заявку
         </button>
+
+
 
         <div v-else-if="data.application" class="applied">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -184,7 +233,12 @@ onMounted(load)
         :can-manage="canManage"
         @refresh="load"
     />
-
+    <ClanEditModal
+        v-if="showEdit"
+        :clan="clan"
+        @close="showEdit = false"
+        @updated="load"
+    />
     <ClanEvents
         v-else-if="tab === 'events'"
         :clan="clan"
@@ -236,6 +290,7 @@ onMounted(load)
 }
 
 .banner {
+  position: relative;          /* ← для абсолютного позиционирования img */
   width: 84px;
   height: 84px;
   display: flex;
@@ -246,9 +301,19 @@ onMounted(load)
   font-size: 36px;
   font-weight: 900;
   flex-shrink: 0;
+  overflow: hidden;
   transition: box-shadow 0.3s ease;
 }
 
+.banner-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
 .clan-title {
   flex: 1;
   min-width: 0;
@@ -289,7 +354,67 @@ onMounted(load)
   color: var(--text);
   letter-spacing: -0.5px;
 }
+.clan-socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
 
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.social-link:hover {
+  transform: translateY(-1px);
+  color: #fff;
+}
+
+/* Цвета под каждую соцсеть */
+.social-link.discord:hover {
+  background: #5865f2;
+  border-color: #5865f2;
+  box-shadow: 0 4px 15px rgba(88, 101, 242, 0.35);
+}
+
+.social-link.telegram:hover {
+  background: #229ed9;
+  border-color: #229ed9;
+  box-shadow: 0 4px 15px rgba(34, 158, 217, 0.35);
+}
+
+.social-link.youtube:hover {
+  background: #ff0000;
+  border-color: #ff0000;
+  box-shadow: 0 4px 15px rgba(255, 0, 0, 0.35);
+}
+
+.social-link.vk:hover {
+  background: #0077ff;
+  border-color: #0077ff;
+  box-shadow: 0 4px 15px rgba(0, 119, 255, 0.35);
+}
+
+.social-link.website:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.35);
+}
+
+.social-label {
+  line-height: 1;
+}
 .stat b.power { color: #a78bfa; }
 .stat b.win { color: #4ade80; }
 .stat b.loss { color: #f87171; }
@@ -322,7 +447,22 @@ onMounted(load)
   transition: all 0.2s ease;
   white-space: nowrap;
 }
+.btn-settings {
+  padding: 11px 20px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
 
+.btn-settings:hover {
+  border-color: var(--accent);
+  color: var(--accent-light);
+}
 .btn-apply {
   color: #fff;
   background: var(--accent);
@@ -455,7 +595,16 @@ onMounted(load)
     justify-content: center;
     text-align: center;
   }
+  .banner {
+    position: relative;
+    overflow: hidden;
+  }
 
+  .banner-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
   .tabs button {
     padding: 10px 14px;
     font-size: 13px;

@@ -8,6 +8,8 @@ use App\Models\ClanMember;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ClanController extends Controller
 {
@@ -139,9 +141,68 @@ class ClanController extends Controller
             'description' => ['nullable', 'string', 'max:1000'],
             'banner_color' => ['nullable', 'string', 'max:16'],
             'is_open' => ['boolean'],
+            'is_highlighted' => ['boolean'],
+
+            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
+            'cover' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+
+            'socials' => ['nullable', 'array'],
+            'socials.discord' => ['nullable', 'string', 'max:255'],
+            'socials.telegram' => ['nullable', 'string', 'max:255'],
+            'socials.youtube' => ['nullable', 'string', 'max:255'],
+            'socials.vk' => ['nullable', 'string', 'max:255'],
+            'socials.website' => ['nullable', 'url', 'max:255'],
         ]);
 
+        // Файлы — заменяем значение поля на путь в storage
+        if ($request->hasFile('avatar')) {
+            if ($clan->avatar) {
+                Storage::disk('public')->delete($clan->avatar);
+            }
+
+            $validated['avatar'] = $request
+                ->file('avatar')
+                ->store("clans/{$clan->id}", 'public');
+        }
+
+        if ($request->hasFile('cover')) {
+            if ($clan->cover_path) {
+                Storage::disk('public')->delete($clan->cover_path);
+            }
+
+            $validated['cover_path'] = $request
+                ->file('cover')
+                ->store("clans/{$clan->id}/covers", 'public');
+        }
+
+        // Удаляем только ключ 'cover' — его нет в БД, есть 'cover_path'
+        unset($validated['cover']);
+
         $clan->update($validated);
+
+        return response()->json(['clan' => $clan->fresh()]);
+    }
+
+    public function removeCover(Request $request, Clan $clan): JsonResponse
+    {
+        abort_unless($clan->isLeader($request->user()->id), 403);
+
+        if ($clan->cover_path) {
+            Storage::disk('public')->delete($clan->cover_path);
+            $clan->update(['cover_path' => null]);
+        }
+
+        return response()->json(['clan' => $clan->fresh()]);
+    }
+
+    public function removeAvatar(Request $request, Clan $clan): JsonResponse
+    {
+        abort_unless($clan->isLeader($request->user()->id), 403);
+
+        if ($clan->avatar) {
+            Storage::disk('public')->delete($clan->avatar);
+            $clan->update(['avatar' => null]);
+        }
 
         return response()->json(['clan' => $clan->fresh()]);
     }

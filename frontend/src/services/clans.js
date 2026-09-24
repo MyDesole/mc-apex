@@ -15,7 +15,32 @@ export const clansApi = {
         return api.post('/clans', payload)
     },
     update(id, payload) {
-        return api.put(`/clans/${id}`, payload)
+        const fd = new FormData()
+        fd.append('_method', 'PUT')
+
+        for (const [key, value] of Object.entries(payload)) {
+            if (value === undefined || value === null) continue
+
+            if (key === 'socials') {
+                for (const [k, v] of Object.entries(value)) {
+                    if (v) fd.append(`socials[${k}]`, v)
+                }
+            } else if (key === 'is_highlighted' || key === 'is_open') {
+                fd.append(key, value ? '1' : '0')
+            } else {
+                fd.append(key, value)
+            }
+        }
+
+        return api.post(`/clans/${id}`, fd)
+    },
+
+    removeCover(id) {
+        return api.post(`/clans/${id}/cover/remove`)
+    },
+
+    removeAvatar(id) {
+        return api.post(`/clans/${id}/avatar/remove`)
     },
     apply(id, message) {
         return api.post(`/clans/${id}/apply`, { message })
@@ -56,4 +81,5 @@ export const clansApi = {
     applications(clanId) {
         return api.get(`/clans/${clanId}/applications`)
     },
+
 }

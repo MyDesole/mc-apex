@@ -23,6 +23,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/players', [PlayerController::class, 'index']);
     Route::get('/players/{user}', [PlayerController::class, 'show']);
     Route::put('/players/me', [PlayerController::class, 'updateMe']);
+    Route::post('/players/me/avatar/remove', [PlayerController::class, 'removeAvatar']);
+    Route::post('/players/me/cover/remove', [PlayerController::class, 'removeCover']);
+    Route::match(['put', 'post'], '/players/me', [PlayerController::class, 'updateMe']);
     Route::put('/players/me/aspects', [PlayerController::class, 'updateAspects']);
 
     // Тир-тесты
@@ -46,13 +49,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/clans/top', [ClanController::class, 'top']);
     Route::post('/clans', [ClanController::class, 'store']);
     Route::get('/clans/{clan}', [ClanController::class, 'show']);
-    Route::put('/clans/{clan}', [ClanController::class, 'update']);
+    Route::match(['put', 'post'], '/clans/{clan}', [ClanController::class, 'update']);
     Route::post('/clans/{clan}/apply', [ClanController::class, 'apply']);
     Route::post('/clans/{clan}/applications/{application}/accept', [ClanController::class, 'acceptApplication']);
     Route::post('/clans/{clan}/applications/{application}/decline', [ClanController::class, 'declineApplication']);
     Route::post('/clans/{clan}/leave', [ClanController::class, 'leave']);
     Route::delete('/clans/{clan}/members/{user}', [ClanController::class, 'kick']);
     Route::get('/clans/{clan}/applications', [ClanController::class, 'applications']);
+    Route::post('/clans/{clan}/cover/remove', [ClanController::class, 'removeCover']);
+    Route::post('/clans/{clan}/avatar/remove', [ClanController::class, 'removeAvatar']);
     // Мероприятия
     Route::get('/clans/{clan}/events', [ClanEventController::class, 'index']);
     Route::post('/clans/{clan}/events', [ClanEventController::class, 'store']);

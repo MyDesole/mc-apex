@@ -1,10 +1,11 @@
 <script setup>
-import { computed } from 'vue'
-import PlayerCard from '../components/PlayerCard.vue'
+import { computed, ref } from 'vue'
+import PlayerCard from '@/components/PlayerCard.vue'
 import TierTestHistory from '@/components/TierTestHistory.vue'
 import ClanBadge from '@/components/ClanBadge.vue'
 import RankBadge from '@/components/RankBadge.vue'
-import { useAuthStore } from '../stores/auth'
+import ProfileEditModal from '@/components/ProfileEditModal.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
 
@@ -12,6 +13,12 @@ const user = computed(() => auth.user)
 const aspects = computed(() => auth.user?.aspects ?? [])
 const clanMember = computed(() => auth.user?.clan_member ?? null)
 const rank = computed(() => auth.rank ?? { position: null, total: 0 })
+
+const showEdit = ref(false)
+
+function onUpdated() {
+  auth.fetchMe()
+}
 </script>
 
 <template>
@@ -20,6 +27,8 @@ const rank = computed(() => auth.rank ?? { position: null, total: 0 })
       <PlayerCard
           :user="user"
           :aspects="aspects"
+          editable
+          @edit="showEdit = true"
       />
 
       <section class="blocks">
@@ -30,14 +39,18 @@ const rank = computed(() => auth.rank ?? { position: null, total: 0 })
 
         <div class="block-col">
           <h3 class="block-title">Место в топе</h3>
-          <RankBadge
-              :position="rank.position"
-              :total="rank.total"
-          />
+          <RankBadge :position="rank.position" :total="rank.total" />
         </div>
       </section>
 
       <TierTestHistory />
+
+      <ProfileEditModal
+          v-if="showEdit"
+          :user="user"
+          @close="showEdit = false"
+          @updated="onUpdated"
+      />
     </template>
 
     <div v-else class="loading">Загрузка...</div>
@@ -52,19 +65,16 @@ const rank = computed(() => auth.rank ?? { position: null, total: 0 })
   flex-direction: column;
   gap: 24px;
 }
-
 .blocks {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
-
 .block-col {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-
 .block-title {
   margin: 0;
   font-size: 12px;
@@ -73,16 +83,8 @@ const rank = computed(() => auth.rank ?? { position: null, total: 0 })
   text-transform: uppercase;
   letter-spacing: 1px;
 }
-
-.loading {
-  padding: 80px;
-  text-align: center;
-  color: var(--text-dim);
-}
-
+.loading { padding: 80px; text-align: center; color: var(--text-dim); }
 @media (max-width: 700px) {
-  .blocks {
-    grid-template-columns: 1fr;
-  }
+  .blocks { grid-template-columns: 1fr; }
 }
 </style>

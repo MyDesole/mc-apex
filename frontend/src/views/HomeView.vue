@@ -154,14 +154,14 @@ onMounted(async () => {
               <span v-else class="rank-num">#{{ i + 1 }}</span>
             </div>
 
-            <div
-                class="clan-avatar"
-                :style="{
-                                background: clan.banner_color,
-                                boxShadow: `0 4px 20px ${clan.banner_color}40`,
-                            }"
-            >
-              {{ (clan.tag || 'C').charAt(0) }}
+            <div class="clan-avatar" :style="{ background: clan.banner_color }">
+              <img
+                  v-if="clan.avatar_url"
+                  :src="clan.avatar_url"
+                  :alt="clan.name"
+                  class="avatar-img"
+              />
+              <template v-else>{{ clan.tag?.charAt(0) || 'C' }}</template>
             </div>
 
             <div class="clan-info">
@@ -606,16 +606,28 @@ onMounted(async () => {
 }
 
 .clan-avatar {
-  width: 50px;
-  height: 50px;
+  position: relative;      /* ← чтобы img позиционировался внутри */
+  width: 52px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 12px;
   color: #fff;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 900;
   flex-shrink: 0;
+  overflow: hidden;        /* ← обрезает картинку по радиусу */
+}
+
+.avatar-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }
 
 .clan-info {
@@ -703,7 +715,19 @@ onMounted(async () => {
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
+.clan-card.highlighted {
+  border-color: rgba(250, 204, 21, 0.5);
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.08), var(--bg-card) 50%);
+  box-shadow: 0 0 30px rgba(250, 204, 21, 0.08);
+}
 
+.clan-card.highlighted::before {
+  content: '⭐';
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 14px;
+}
 .empty {
   padding: 48px;
   text-align: center;

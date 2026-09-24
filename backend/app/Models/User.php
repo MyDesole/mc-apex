@@ -18,9 +18,12 @@ class User extends Authenticatable
         'email',
         'password',
         'avatar',
+        'cover_path',
+        'banner_color',
         'bio',
         'tier',
         'tier_score',
+        'socials',
     ];
 
     protected $hidden = [
@@ -28,13 +31,23 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'tier_score' => 'decimal:2',
+        'socials' => 'array',
+    ];
+
+    protected $appends = ['avatar_url', 'cover_url'];
+
+    public function getAvatarUrlAttribute(): ?string
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'tier_score' => 'decimal:2',
-        ];
+        return $this->avatar ? asset('storage/' . $this->avatar) : null;
+    }
+
+    public function getCoverUrlAttribute(): ?string
+    {
+        return $this->cover_path ? asset('storage/' . $this->cover_path) : null;
     }
 
     public function aspects(): HasMany
