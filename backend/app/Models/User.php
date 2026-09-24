@@ -44,7 +44,22 @@ class User extends Authenticatable
     {
         return $this->avatar ? asset('storage/' . $this->avatar) : null;
     }
+    public function achievements(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Achievement::class, 'user_achievements')
+            ->withPivot('earned_at')
+            ->withTimestamps();
+    }
 
+    public function hasAchievement(string $code): bool
+    {
+        return $this->achievements()->where('code', $code)->exists();
+    }
+
+    public function achievementPoints(): int
+    {
+        return (int) $this->achievements()->sum('points');
+    }
     public function getCoverUrlAttribute(): ?string
     {
         return $this->cover_path ? asset('storage/' . $this->cover_path) : null;

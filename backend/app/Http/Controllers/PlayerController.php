@@ -136,7 +136,7 @@ class PlayerController extends Controller
         unset($validated['cover']);
 
         $user->update($validated);
-
+        \App\Services\AchievementService::check($user);
         return response()->json(['user' => $user->fresh()]);
     }
 

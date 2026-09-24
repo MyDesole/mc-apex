@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AchievementController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClanEventCommentController;
 use App\Http\Controllers\ClanController;
@@ -63,7 +64,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/clans/{clan}/events', [ClanEventController::class, 'index']);
     Route::post('/clans/{clan}/events', [ClanEventController::class, 'store']);
     Route::delete('/clans/{clan}/events/{event}', [ClanEventController::class, 'destroy']);
-
+    Route::get('/achievements', [AchievementController::class, 'index']);
+    Route::get('/players/{user}/achievements', [AchievementController::class, 'user']);
     // Войны
     Route::post('/clans/{clan}/wars', [ClanWarController::class, 'store']);
     Route::post('/wars/{war}/accept', [ClanWarController::class, 'accept']);

@@ -84,7 +84,8 @@ class FriendController extends Controller
             ->firstOrFail();
 
         $friendship->update(['status' => 'accepted']);
-
+        \App\Services\AchievementService::check($request->user());
+        \App\Services\AchievementService::check($user);
         $user->notify(new FriendAcceptedNotification($request->user()));
 
         return response()->json(['friendship' => $friendship]);

@@ -124,6 +124,7 @@ class ClanController extends Controller
                 'role' => 'leader',
                 'joined_at' => now(),
             ]);
+            \App\Services\AchievementService::check($request->user());
 
             return $clan;
         });
@@ -267,6 +268,7 @@ class ClanController extends Controller
                 'role' => 'member',
                 'joined_at' => now(),
             ]);
+            \App\Services\AchievementService::check($application->user);
 
             $application->update(['status' => 'accepted']);
             $clan->recalculatePower();

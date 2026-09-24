@@ -97,6 +97,8 @@ class TierTestController extends Controller
             $user->tier_score = $tierTest->result_score ?? 0;
             $user->save();
 
+            \App\Services\AchievementService::check($user);
+
             $user->notify(new \App\Notifications\TierTestCompletedNotification($tierTest));
         }
 

@@ -91,7 +91,8 @@ class ClanWarController extends Controller
                 'status' => 'completed',
                 'winner_clan_id' => $winnerId,
             ]);
-
+            \App\Services\AchievementService::check($war->challenger->leader);
+            \App\Services\AchievementService::check($war->opponent->leader);
             $challenger = Clan::find($war->challenger_clan_id);
             $opponent = Clan::find($war->opponent_clan_id);
 

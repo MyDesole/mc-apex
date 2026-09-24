@@ -6,9 +6,24 @@ import ClanBadge from '@/components/ClanBadge.vue'
 import RankBadge from '@/components/RankBadge.vue'
 import ProfileEditModal from '@/components/ProfileEditModal.vue'
 import { useAuthStore } from '@/stores/auth'
+import AchievementsGrid from "@/components/AchievementsGrid.vue";
 
 const auth = useAuthStore()
+import { onMounted } from 'vue'
+import { achievementsApi } from '@/services/achievements.js'
 
+const achievements = ref([])
+const earnedCount = ref(0)
+const totalCount = ref(0)
+const points = ref(0)
+
+onMounted(async () => {
+  const data = await achievementsApi.list()
+  achievements.value = data.achievements
+  earnedCount.value = data.earned_count
+  totalCount.value = data.total_count
+  points.value = data.points
+})
 const user = computed(() => auth.user)
 const aspects = computed(() => auth.user?.aspects ?? [])
 const clanMember = computed(() => auth.user?.clan_member ?? null)
@@ -42,7 +57,17 @@ function onUpdated() {
           <RankBadge :position="rank.position" :total="rank.total" />
         </div>
       </section>
+      <section class="achievements-section">
+        <header class="section-head">
+          <h3>Ачивки</h3>
+          <span class="section-count">
+            {{ earnedCount }} / {{ totalCount }}
+            · <b>{{ points }}</b> очков
+        </span>
+        </header>
 
+        <AchievementsGrid :achievements="achievements" />
+      </section>
       <TierTestHistory />
 
       <ProfileEditModal
@@ -64,6 +89,35 @@ function onUpdated() {
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+.achievements-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.section-head h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.2px;
+}
+
+.section-count {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.section-count b {
+  color: var(--accent-light);
+  font-weight: 900;
 }
 .blocks {
   display: grid;
