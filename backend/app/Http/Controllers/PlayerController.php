@@ -16,6 +16,7 @@ class PlayerController extends Controller
         $me = $request->user();
 
         $query = User::query()
+            ->with('clanMember.clan:id,name,tag,banner_color')
             ->where('id', '!=', $me->id);
 
         if ($search = $request->query('search')) {
@@ -62,7 +63,8 @@ class PlayerController extends Controller
         $user->load([
             'aspects',
             'tierTests' => fn ($q) => $q->latest()->limit(10),
-            'clanMember.clan' => fn ($q) => $q->withCount('members'),
+            'clanMember.clan',
+            'achievements',
         ]);
 
         $me = $request->user();

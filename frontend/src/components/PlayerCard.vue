@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import UserName from "@/components/UserName.vue";
 
 const props = defineProps({
   user: { type: Object, required: true },
@@ -139,7 +140,7 @@ function totalScore(aspect) {
         </div>
 
         <div class="player-card__info">
-          <h2>{{ user.username }}</h2>
+          <UserName :user="user" />
           <p v-if="user.bio" class="bio">{{ user.bio }}</p>
           <div v-if="user.achievements?.length" class="player-card__achievements">
             <span

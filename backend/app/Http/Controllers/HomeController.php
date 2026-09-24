@@ -11,6 +11,7 @@ class HomeController extends Controller
     public function top(): JsonResponse
     {
         $players = User::query()
+            ->with('clanMember.clan:id,name,tag,banner_color')   // ← добавь
             ->orderByDesc('tier_score')
             ->limit(10)
             ->get()
@@ -18,10 +19,11 @@ class HomeController extends Controller
                 return [
                     'id' => $user->id,
                     'username' => $user->username,
-                    'avatar' => $user->avatar,
-                    'avatar_url' => $user->avatar_url,       // ← accessor
+                    'avatar_url' => $user->avatar_url,
                     'tier' => $user->tier,
                     'tier_score' => $user->tier_score,
+                    'clan_tag' => $user->clan_tag,
+                    'clan_color' => $user->clan_color,
                 ];
             });
 

@@ -65,7 +65,19 @@ class User extends Authenticatable
         return true;
     }
 
-    protected $appends = ['avatar_url', 'cover_url'];
+    protected $appends = ['avatar_url', 'cover_url', 'clan_tag'];
+
+    public function getClanTagAttribute(): ?string
+    {
+        if (!$this->relationLoaded('clanMember')) return null;
+        return $this->clanMember?->clan?->tag;
+    }
+
+    public function getClanColorAttribute(): ?string
+    {
+        if (!$this->relationLoaded('clanMember')) return null;
+        return $this->clanMember?->clan?->banner_color;
+    }
 
     public function getAvatarUrlAttribute(): ?string
     {

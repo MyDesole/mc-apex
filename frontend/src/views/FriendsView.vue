@@ -2,6 +2,7 @@
 import { onMounted, ref, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { friendsApi } from '@/services/friends.js'
+import UserName from "@/components/UserName.vue";
 
 const loading = ref(true)
 const tab = ref('friends')
@@ -69,7 +70,9 @@ const currentList = computed(() => {
         <RouterLink :to="`/players/${user.id}`" class="friend-main">
           <div class="avatar">{{ (user.username || 'И').charAt(0).toUpperCase() }}</div>
           <div>
-            <div class="name">{{ user.username }}</div>
+            <div class="name">
+              <UserName :user="user" />
+            </div>
             <div class="tier">Тир: {{ user.tier || '—' }}</div>
           </div>
         </RouterLink>

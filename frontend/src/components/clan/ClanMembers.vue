@@ -1,6 +1,7 @@
 <script setup>
 import { RouterLink } from 'vue-router'
 import { clansApi } from '@/services/clans.js'
+import UserName from "@/components/UserName.vue";
 
 const props = defineProps({
   clan: Object,
@@ -28,7 +29,9 @@ async function kick(user) {
           {{ (m.user.username || 'И').charAt(0).toUpperCase() }}
         </div>
         <div>
-          <div class="name">{{ m.user.username }}</div>
+          <div class="name">
+            <UserName :user="m.user" />
+          </div>
           <div class="meta">
             Тир: {{ m.user.tier || '—' }} · Вклад: {{ m.contribution }}
           </div>

@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { homeApi } from '@/services/home.js'
+import UserName from "@/components/UserName.vue";
 
 const loading = ref(true)
 const players = ref([])
@@ -106,7 +107,9 @@ onMounted(async () => {
             </div>
 
             <div class="row-info">
-              <div class="row-name">{{ player.username }}</div>
+              <div class="row-name">
+                <UserName :user="player" />
+              </div>
               <div class="row-bar">
                 <div
                     class="row-bar-fill"

@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { api } from '@/services/api.js'
 import FriendButton from '@/components/FriendButton.vue'
+import UserName from "@/components/UserName.vue";
 
 const players = ref([])
 const loading = ref(true)
@@ -113,8 +114,9 @@ onMounted(load)
             </template>
           </div>
           <div class="player-info">
-            <div class="player-name">{{ player.username }}</div>
-            <div class="player-bio">
+            <div class="player-name">
+              <UserName :user="player" />
+            </div>            <div class="player-bio">
               {{ player.bio || 'Без описания' }}
             </div>
           </div>

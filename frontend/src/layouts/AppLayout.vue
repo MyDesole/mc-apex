@@ -3,6 +3,7 @@ import {onMounted, ref} from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import {notificationsApi} from "@/services/notification.js";
+import UserName from "@/components/UserName.vue";
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -72,7 +73,10 @@ setInterval(loadUnread, 30000)
                 <template v-else>
                     {{ (auth.user?.username || 'И').charAt(0).toUpperCase() }}
                 </template>
-            </span>              <span class="username">{{ auth.user?.username }}</span>
+            </span>
+              <span class="username">
+                  <UserName :user="auth.user" compact />
+              </span>
               <svg class="chevron" :class="{ open: menuOpen }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
