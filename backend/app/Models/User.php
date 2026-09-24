@@ -14,16 +14,9 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
-        'username',
-        'email',
-        'password',
-        'avatar',
-        'cover_path',
-        'banner_color',
-        'bio',
-        'tier',
-        'tier_score',
-        'socials',
+        'username', 'email', 'password', 'avatar', 'cover_path',
+        'banner_color', 'bio', 'tier', 'tier_score', 'socials',
+        'role', 'is_banned', 'ban_reason', 'banned_until', 'banned_by',
     ];
 
     protected $hidden = [
@@ -36,7 +29,41 @@ class User extends Authenticatable
         'password' => 'hashed',
         'tier_score' => 'decimal:2',
         'socials' => 'array',
+        'is_banned' => 'boolean',
+        'banned_until' => 'datetime',
+
     ];
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isModerator(): bool
+    {
+        return in_array($this->role, ['moderator', 'admin']);
+    }
+
+    public function isTester(): bool
+    {
+        return in_array($this->role, ['tester', 'admin']);
+    }
+
+    public function hasRole(string ...$roles): bool
+    {
+        return in_array($this->role, $roles);
+    }
+
+    public function isBanned(): bool
+    {
+        if (!$this->is_banned) return false;
+
+        if ($this->banned_until && $this->banned_until->isPast()) {
+            return false;
+        }
+
+        return true;
+    }
 
     protected $appends = ['avatar_url', 'cover_url'];
 

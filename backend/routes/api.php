@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\AchievementController;
+use App\Http\Controllers\Api\Admin\ClanStatsController;
+use App\Http\Controllers\Api\Admin\CommentController;
+use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClanEventCommentController;
 use App\Http\Controllers\ClanController;
@@ -72,7 +75,52 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/wars/{war}/decline', [ClanWarController::class, 'decline']);
     Route::post('/wars/{war}/complete', [ClanWarController::class, 'complete']);
 
+    Route::middleware('role:moderator,admin')->prefix('admin')->group(function () {
+        Route::get('/clans', [\App\Http\Controllers\Api\Admin\ClanController::class, 'index']);
 
+        // Статистика клана
+        Route::get('/clans/{clan}/stats/logs', [ClanStatsController::class, 'logs']);
+        Route::post('/clans/{clan}/stats', [ClanStatsController::class, 'update']);
+        Route::put('/clans/{clan}/stats', [ClanStatsController::class, 'set']);
+
+        // Комментарии
+        Route::get('/comments', [CommentController::class, 'index']);
+        Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
+
+        // Клан-посты
+        Route::get('/clan-events', [CommentController::class, 'events']);
+        Route::delete('/clan-events/{event}', [CommentController::class, 'destroyEvent']);
+
+        // Снять баннер
+        Route::post('/clans/{clan}/avatar/remove', [\App\Http\Controllers\Api\Admin\ClanController::class, 'removeAvatar']);
+        Route::post('/clans/{clan}/cover/remove', [\App\Http\Controllers\Api\Admin\ClanController::class, 'removeCover']);
+    });
+
+    Route::middleware('role:admin')->prefix('admin')->group(function () {
+        // Юзеры
+        Route::get('/users', [\App\Http\Controllers\Api\Admin\UserController::class, 'index']);
+        Route::get('/users/{user}', [UserController::class, 'show']);
+        Route::post('/users/{user}/ban', [UserController::class, 'ban']);
+        Route::post('/users/{user}/unban', [UserController::class, 'unban']);
+
+        // Роли
+        Route::post('/users/{user}/role', [\App\Http\Controllers\Api\Admin\RoleController::class, 'update']);
+
+        // Ачивки
+        Route::post('/users/{user}/achievements/{achievement}', [\App\Http\Controllers\Api\Admin\AchievementController::class, 'grant']);
+        Route::delete('/users/{user}/achievements/{achievement}', [\App\Http\Controllers\Api\Admin\AchievementController::class, 'revoke']);
+
+        // Аспекты
+        Route::put('/users/{user}/aspects', [\App\Http\Controllers\Api\Admin\AspectController::class, 'update']);
+
+        // Тир-тесты — админ проводит вручную
+        Route::post('/users/{user}/tier-test', [\App\Http\Controllers\Api\Admin\AspectController::class, 'conductTierTest']);
+
+        // Кланы
+        Route::post('/clans/{clan}/ban', [\App\Http\Controllers\Api\Admin\ClanController::class, 'ban']);
+        Route::post('/clans/{clan}/unban', [\App\Http\Controllers\Api\Admin\ClanController::class, 'unban']);
+        Route::delete('/clans/{clan}', [\App\Http\Controllers\Api\Admin\ClanController::class, 'destroy']);
+    });
     Route::get('/clans/{clan}/events/{event}/comments', [ClanEventCommentController::class, 'index']);
     Route::post('/clans/{clan}/events/{event}/comments', [ClanEventCommentController::class, 'store']);
     Route::delete('/clans/{clan}/events/{event}/comments/{comment}', [ClanEventCommentController::class, 'destroy']);

@@ -44,6 +44,14 @@ setInterval(loadUnread, 30000)
           <RouterLink to="/players" class="nav-link">Игроки</RouterLink>
           <RouterLink to="/clans" class="nav-link">Кланы</RouterLink>
           <RouterLink to="/tournaments" class="nav-link">Турниры</RouterLink>
+          <RouterLink
+              v-if="auth.user && ['moderator', 'admin'].includes(auth.user.role)"
+              to="/admin"
+              class="dropdown-item"
+              @click="menuOpen = false"
+          >
+            ⚙️ Админка
+          </RouterLink>
         </nav>
 
         <div class="header-actions">

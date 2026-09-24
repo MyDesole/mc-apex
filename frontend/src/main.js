@@ -27,18 +27,15 @@ await auth.fetchMe()
 
 router.beforeEach((to) => {
     if (to.meta.auth && !auth.isAuthenticated) {
-        return {
-            name: 'login',
-            query: {
-                redirect: to.fullPath,
-            },
-        }
+        return { name: 'login', query: { redirect: to.fullPath } }
+    }
+
+    if (to.meta.role && !to.meta.role.includes(auth.user?.role)) {
+        return { name: 'home' }
     }
 
     if (to.meta.guest && auth.isAuthenticated) {
-        return {
-            name: 'home',
-        }
+        return { name: 'home' }
     }
 })
 

@@ -76,6 +76,12 @@ const router = createRouter({
       meta: { title: 'Создать клан', auth: true },
     },
     {
+      path: '/admin',
+      name: 'admin',
+      component: () => import('@/views/AdminView.vue'),
+      meta: { auth: true, role: ['moderator', 'admin'] },
+    },
+    {
       path: '/clans/:id',
       name: 'clan',
       component: ClanView,

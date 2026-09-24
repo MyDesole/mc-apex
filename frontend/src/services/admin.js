@@ -1,0 +1,80 @@
+import { api } from './api.js'
+
+export const adminApi = {
+    // Юзеры
+    users(params = {}) {
+        const q = new URLSearchParams(params).toString()
+        return api.get(`/admin/users${q ? '?' + q : ''}`)
+    },
+    user(id) {
+        return api.get(`/admin/users/${id}`)
+    },
+    ban(id, payload) {
+        return api.post(`/admin/users/${id}/ban`, payload)
+    },
+    unban(id) {
+        return api.post(`/admin/users/${id}/unban`)
+    },
+    setRole(id, role) {
+        return api.post(`/admin/users/${id}/role`, { role })
+    },
+
+    // Ачивки
+    grantAchievement(userId, achievementId) {
+        return api.post(`/admin/users/${userId}/achievements/${achievementId}`)
+    },
+    revokeAchievement(userId, achievementId) {
+        return api.delete(`/admin/users/${userId}/achievements/${achievementId}`)
+    },
+
+    // Аспекты
+    updateAspects(userId, payload) {
+        return api.put(`/admin/users/${userId}/aspects`, payload)
+    },
+    conductTierTest(userId, payload) {
+        return api.post(`/admin/users/${userId}/tier-test`, payload)
+    },
+
+    // Кланы
+    banClan(id, reason) {
+        return api.post(`/admin/clans/${id}/ban`, { reason })
+    },
+    unbanClan(id) {
+        return api.post(`/admin/clans/${id}/unban`)
+    },
+    removeClanAvatar(id) {
+        return api.post(`/admin/clans/${id}/avatar/remove`)
+    },
+    removeClanCover(id) {
+        return api.post(`/admin/clans/${id}/cover/remove`)
+    },
+    destroyClan(id) {
+        return api.delete(`/admin/clans/${id}`)
+    },
+
+    // Комментарии
+    comments(params = {}) {
+        const q = new URLSearchParams(params).toString()
+        return api.get(`/admin/comments${q ? '?' + q : ''}`)
+    },
+    deleteComment(id) {
+        return api.delete(`/admin/comments/${id}`)
+    },
+    events(params = {}) {
+        const q = new URLSearchParams(params).toString()
+        return api.get(`/admin/clan-events${q ? '?' + q : ''}`)
+    },
+    deleteEvent(id) {
+        return api.delete(`/admin/clan-events/${id}`)
+    },
+    clanStats(clanId, payload) {
+        return api.post(`/admin/clans/${clanId}/stats`, payload)
+    },
+    setClanStats(clanId, payload) {
+        return api.put(`/admin/clans/${clanId}/stats`, payload)
+    },
+    clans(params = {}) {
+        const q = new URLSearchParams(params).toString()
+        return api.get(`/admin/clans${q ? '?' + q : ''}`)
+    },
+}
