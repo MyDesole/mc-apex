@@ -3,6 +3,7 @@ import { onMounted, ref, computed } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { tournamentsApi } from '@/services/tournaments.js'
 import { useAuthStore } from '@/stores/auth'
+import AdminTournamentBracket from "@/components/admin/AdminTournamentBracket.vue";
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -169,11 +170,18 @@ onMounted(load)
     </section>
 
     <!-- СЕТКА -->
-    <section v-if="tournament.matches?.length" class="block">
-      <h2>Сетка турнира</h2>
-      <div class="bracket-info">
-        Сетка доступна на странице турнира. Раундов: {{ Math.max(...tournament.matches.map(m => m.round)) }}
-      </div>
+    <section class="block">
+      <header class="block-head">
+        <h2>Турнирная сетка</h2>
+        <span v-if="tournament.matches?.length" class="block-count">
+            {{ tournament.matches.length }} матчей
+        </span>
+      </header>
+
+      <AdminTournamentBracket
+          :matches="tournament.matches ?? []"
+          :tournament-type="tournament.type"
+      />
     </section>
   </div>
 </template>
@@ -260,7 +268,24 @@ onMounted(load)
   font-weight: 600;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
 }
+.block-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+}
 
+.block-head h2 {
+  margin: 0;
+}
+
+.block-count {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
 .block {
   padding: 20px 24px;
   background: var(--bg-card);
