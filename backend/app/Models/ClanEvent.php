@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ClanEvent extends Model
 {
@@ -17,7 +18,10 @@ class ClanEvent extends Model
     {
         return $this->belongsTo(Clan::class);
     }
-
+    public function comments(): HasMany
+    {
+        return $this->hasMany(ClanEventComment::class)->latest();
+    }
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'author_id');

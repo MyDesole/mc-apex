@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ClanEventCommentController;
 use App\Http\Controllers\ClanController;
 use App\Http\Controllers\ClanEventController;
 use App\Http\Controllers\ClanWarController;
@@ -69,6 +70,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/wars/{war}/decline', [ClanWarController::class, 'decline']);
     Route::post('/wars/{war}/complete', [ClanWarController::class, 'complete']);
 
+
+    Route::get('/clans/{clan}/events/{event}/comments', [ClanEventCommentController::class, 'index']);
+    Route::post('/clans/{clan}/events/{event}/comments', [ClanEventCommentController::class, 'store']);
+    Route::delete('/clans/{clan}/events/{event}/comments/{comment}', [ClanEventCommentController::class, 'destroy']);
 
     Route::get('/top', [\App\Http\Controllers\HomeController::class, 'top']);
 

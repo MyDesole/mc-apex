@@ -38,7 +38,18 @@ export const clansApi = {
     removeCover(id) {
         return api.post(`/clans/${id}/cover/remove`)
     },
-
+    eventComments(clanId, eventId) {
+        return api.get(`/clans/${clanId}/events/${eventId}/comments`)
+    },
+    createEventComment(clanId, eventId, body, parentId = null) {
+        return api.post(`/clans/${clanId}/events/${eventId}/comments`, {
+            body,
+            parent_id: parentId,
+        })
+    },
+    deleteEventComment(clanId, eventId, commentId) {
+        return api.delete(`/clans/${clanId}/events/${eventId}/comments/${commentId}`)
+    },
     removeAvatar(id) {
         return api.post(`/clans/${id}/avatar/remove`)
     },

@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { clansApi } from '@/services/clans.js'
+import ClanEventComments from './ClanEventComments.vue'
 
 const props = defineProps({
   clan: Object,
@@ -21,7 +22,11 @@ async function load() {
     loading.value = false
   }
 }
+const openComments = ref({})
 
+function toggleComments(id) {
+  openComments.value[id] = !openComments.value[id]
+}
 async function submit() {
   await clansApi.createEvent(props.clan.id, {
     ...form.value,
@@ -93,6 +98,21 @@ onMounted(load)
           <span>Автор: {{ e.author?.username }}</span>
           <button v-if="canManage" class="btn-del" @click="remove(e)">Удалить</button>
         </footer>
+        <button
+            class="comments-toggle"
+            @click="toggleComments(e.id)"
+        >
+          💬 Комментарии
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" :style="{ transform: openComments[e.id] ? 'rotate(180deg)' : 'none' }">
+            <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+
+        <ClanEventComments
+            v-if="openComments[e.id]"
+            :clan-id="clan.id"
+            :event-id="e.id"
+        />
       </article>
     </div>
   </div>
@@ -113,7 +133,28 @@ onMounted(load)
   font-weight: 700;
   cursor: pointer;
 }
+.comments-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 6px 0;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.2s;
+}
 
+.comments-toggle:hover {
+  color: var(--accent-light);
+}
+
+.comments-toggle svg {
+  transition: transform 0.2s;
+}
 .form {
   display: flex;
   flex-direction: column;
