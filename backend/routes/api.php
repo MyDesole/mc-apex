@@ -189,6 +189,9 @@ Route::middleware('auth:sanctum')->group(function () {
     |----------------------------------------------------------------------
     */
     Route::prefix('wars')->group(function () {
+        Route::get('/{war}', [ClanWarController::class, 'show'])->whereNumber('war');
+        Route::post('/{war}/join', [ClanWarController::class, 'join'])->whereNumber('war');
+        Route::post('/{war}/leave', [ClanWarController::class, 'leave'])->whereNumber('war');
         Route::post('/{war}/accept', [ClanWarController::class, 'accept'])->whereNumber('war');
         Route::post('/{war}/decline', [ClanWarController::class, 'decline'])->whereNumber('war');
         Route::post('/{war}/complete', [ClanWarController::class, 'complete'])->whereNumber('war');
@@ -350,4 +353,6 @@ Route::middleware(['auth:sanctum', 'clan.member'])->prefix('my-clan')->group(fun
     Route::post('/roles/{user}', [\App\Http\Controllers\Api\ClanRoleController::class, 'update']);
     Route::delete('/members/{user}', [\App\Http\Controllers\Api\ClanRoleController::class, 'kick']);
     Route::post('/transfer/{user}', [\App\Http\Controllers\Api\ClanRoleController::class, 'transferLeadership']);
+
+
 });

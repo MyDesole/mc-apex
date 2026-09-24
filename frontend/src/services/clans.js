@@ -93,4 +93,16 @@ export const clansApi = {
         return api.get(`/clans/${clanId}/applications`)
     },
 
+
+    war(warId) {
+        return api.get(`/wars/${warId}`)
+    },
+    joinWar(warId) {
+        return api.post(`/wars/${warId}/join`)
+    },
+    leaveWar(warId) {
+        return api.post(`/wars/${warId}/leave`)
+    },
+
+
 }

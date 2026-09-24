@@ -118,4 +118,72 @@ class ClanWarController extends Controller
             ->whereIn('role', ['leader', 'officer'])
             ->exists();
     }
+
+    public function join(Request $request, ClanWar $war): JsonResponse
+    {
+        $user = $request->user();
+        $myClan = $user->clanMember?->clan;
+
+        abort_if(!$myClan, 403, 'Вы не в клане.');
+        abort_if(
+            !in_array($myClan->id, [$war->challenger_clan_id, $war->opponent_clan_id]),
+            403,
+            'Вы не участвуете в этой войне.'
+        );
+        abort_if(
+            in_array($war->status, ['completed', 'cancelled', 'declined']),
+            422,
+            'Война уже завершена.'
+        );
+
+        $exists = \App\Models\ClanWarParticipant::where('clan_war_id', $war->id)
+            ->where('user_id', $user->id)
+            ->exists();
+
+        abort_if($exists, 422, 'Вы уже участвуете.');
+
+        \App\Models\ClanWarParticipant::create([
+            'clan_war_id' => $war->id,
+            'user_id' => $user->id,
+            'clan_id' => $myClan->id,
+        ]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function leave(Request $request, ClanWar $war): JsonResponse
+    {
+        $user = $request->user();
+
+        \App\Models\ClanWarParticipant::where('clan_war_id', $war->id)
+            ->where('user_id', $user->id)
+            ->delete();
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function show(Request $request, ClanWar $war): JsonResponse
+    {
+        $user = $request->user();
+        $myClan = $user->clanMember?->clan;
+
+        abort_if(!$myClan, 403);
+        abort_if(
+            !in_array($myClan->id, [$war->challenger_clan_id, $war->opponent_clan_id]),
+            403
+        );
+
+        $war->load([
+            'challenger:id,name,tag,power,banner_color,avatar',
+            'opponent:id,name,tag,power,banner_color,avatar',
+            'participants.user:id,username,avatar,tier',
+            'participants.clan:id,name,tag,banner_color',
+        ]);
+
+        return response()->json([
+            'war' => $war,
+            'my_clan_id' => $myClan->id,
+            'is_participant' => $war->participants->contains('user_id', $user->id),
+        ]);
+    }
 }

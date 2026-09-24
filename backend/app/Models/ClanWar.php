@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ClanWar extends Model
 {
@@ -17,7 +18,10 @@ class ClanWar extends Model
     protected $casts = [
         'scheduled_at' => 'datetime',
     ];
-
+    public function participants(): HasMany
+    {
+        return $this->hasMany(ClanWarParticipant::class);
+    }
     public function challenger(): BelongsTo
     {
         return $this->belongsTo(Clan::class, 'challenger_clan_id');

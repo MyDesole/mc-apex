@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Clan;
 use App\Models\ClanApplication;
 use App\Models\ClanMember;
+use App\Models\ClanWar;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -68,7 +69,7 @@ class ClanController extends Controller
         ]);
 
         $me = $request->user();
-        $myClan = $me->clanMember?->clan_id;
+        $myClanId = $me->clanMember?->clan_id;
         $isMember = $clan->isMember($me->id);
 
         $application = ClanApplication::where('clan_id', $clan->id)
@@ -76,21 +77,34 @@ class ClanController extends Controller
             ->where('status', 'pending')
             ->first();
 
-        $incomingWars = \App\Models\ClanWar::where('opponent_clan_id', $clan->id)
-            ->where('status', 'pending')
-            ->with(['challenger:id,name,tag,power,banner_color', 'opponent:id,name,tag,power,banner_color'])
+        // ВХОДЯЩИЕ — где этот клан opponent
+        $incomingWars = ClanWar::where('opponent_clan_id', $clan->id)
+            ->whereIn('status', ['pending', 'accepted'])
+            ->with([
+                'challenger:id,name,tag,power,banner_color,avatar',
+                'opponent:id,name,tag,power,banner_color,avatar',
+                'participants.user:id,username,avatar,tier',
+                'participants.clan:id,name,tag,banner_color',
+            ])
             ->latest()
             ->get();
 
-        $outgoingWars = \App\Models\ClanWar::where('challenger_clan_id', $clan->id)
-            ->with(['challenger:id,name,tag,power,banner_color', 'opponent:id,name,tag,power,banner_color'])
+        // ИСХОДЯЩИЕ — где этот клан challenger
+        $outgoingWars = ClanWar::where('challenger_clan_id', $clan->id)
+            ->whereIn('status', ['pending', 'accepted'])
+            ->with([
+                'challenger:id,name,tag,power,banner_color,avatar',
+                'opponent:id,name,tag,power,banner_color,avatar',
+                'participants.user:id,username,avatar,tier',
+                'participants.clan:id,name,tag,banner_color',
+            ])
             ->latest()
             ->get();
 
         return response()->json([
             'clan' => $clan,
             'is_member' => $isMember,
-            'my_clan_id' => $myClan,
+            'my_clan_id' => $myClanId,
             'application' => $application,
             'members_count' => $clan->members()->count(),
             'incoming_wars' => $incomingWars,

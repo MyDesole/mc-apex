@@ -26,24 +26,29 @@ const tabs = computed(() => {
     { id: 'forum', label: 'Форум', show: true },
     { id: 'resources', label: 'Ресурсы', show: true },
     { id: 'members', label: 'Участники', show: true },
-    { id: 'news', label: 'Новости', show: true },
-    { id: 'wars', label: 'Кв', show: true },
   ]
 
   if (permissions.value.applications) {
     base.splice(1, 0, {
       id: 'applications',
-      label: '📋 Заявки',
+      label: 'Заявки',
       badge: data.value?.stats?.applications,
+      show: true
     })
   }
 
   if (permissions.value.wars) {
-    base.push({ id: 'wars', label: '⚔️ Войны' })
+    base.push({
+      id: 'wars',
+      label: 'Войны',
+      badge: data.value?.stats?.wars_active || null,
+      highlight: (data.value?.stats?.wars_active || 0) > 0,
+      show: true
+    })
   }
 
   if (permissions.value.news) {
-    base.unshift({ id: 'news', label: '📰 Новости' })
+    base.push({ id: 'news', label: 'Новости' , show: true})
   }
 
   return base.filter(t => t.show)
@@ -127,7 +132,10 @@ onMounted(load)
       <button
           v-for="t in tabs"
           :key="t.id"
-          :class="{ active: tab === t.id }"
+          :class="{
+        active: tab === t.id,
+        'tab--highlight': t.highlight,
+    }"
           @click="tab = t.id"
       >
         {{ t.label }}
@@ -225,7 +233,31 @@ onMounted(load)
   border-radius: 18px;
   overflow: hidden;
 }
+.tabs button {
+  position: relative;
+}
 
+.tabs button.tab--highlight:not(.active) {
+  color: #fbbf24;
+}
+
+.tabs button.tab--highlight:not(.active)::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 6px;
+  height: 6px;
+  background: #ef4444;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #ef4444;
+  animation: pulseDot 1.5s infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
 /* Цветная полоска слева в цвет клана */
 .clan-header::before {
   content: '';
