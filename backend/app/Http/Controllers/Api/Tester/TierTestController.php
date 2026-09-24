@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\Tester;
 
 use App\Http\Controllers\Controller;
 use App\Models\PlayerAspect;
+use App\Models\PlayerAspectBedwars;
+use App\Models\PlayerAspectPvp;
 use App\Models\TierTest;
 use App\Models\User;
 use App\Services\AchievementService;
@@ -171,7 +173,6 @@ class TierTestController extends Controller
                 'result_score' => $percent,
                 'aspects' => $validated,
                 'notes' => $validated['notes'] ?? null,
-                ...$validated,   // раскладываем поля
             ]);
 
             if ($tierTest->mode === 'pvp') {
