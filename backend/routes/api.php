@@ -1,178 +1,321 @@
 <?php
 
-use App\Http\Controllers\Api\AchievementController;
-use App\Http\Controllers\Api\Admin\ClanStatsController;
-use App\Http\Controllers\Api\Admin\CommentController;
-use App\Http\Controllers\Api\Admin\UserController;
+use Illuminate\Support\Facades\Route;
+
+// === Публичные контроллеры ===
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\ClanEventCommentController;
+use App\Http\Controllers\Api\PlayerController;
+use App\Http\Controllers\Api\AchievementController;
 use App\Http\Controllers\Api\TournamentController;
+use App\Http\Controllers\Api\NewsController;
+use App\Http\Controllers\Api\HomeController;
+use App\Http\Controllers\Api\TierTestController;
+use App\Http\Controllers\Api\ClanEventCommentController;
 use App\Http\Controllers\ClanController;
 use App\Http\Controllers\ClanEventController;
 use App\Http\Controllers\ClanWarController;
 use App\Http\Controllers\FriendController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\PlayerController;
-use App\Http\Controllers\TierTestController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
+
+// === Tester ===
 use App\Http\Controllers\Api\Tester\TierTestController as TesterTierTestController;
 
+// === Admin ===
+use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Api\Admin\RoleController as AdminRoleController;
+use App\Http\Controllers\Api\Admin\AchievementController as AdminAchievementController;
+use App\Http\Controllers\Api\Admin\AspectController as AdminAspectController;
+use App\Http\Controllers\Api\Admin\ClanController as AdminClanController;
+use App\Http\Controllers\Api\Admin\ClanStatsController as AdminClanStatsController;
+use App\Http\Controllers\Api\Admin\CommentController as AdminCommentController;
+use App\Http\Controllers\Api\Admin\TournamentController as AdminTournamentController;
+use App\Http\Controllers\Api\Admin\SiteSettingsController;
+use App\Http\Controllers\Api\Admin\NewsController as AdminNewsController;
+
+/*
+|--------------------------------------------------------------------------
+| ПУБЛИЧНЫЕ РОУТЫ (без авторизации)
+|--------------------------------------------------------------------------
+*/
+
+// Auth
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-    Route::get('/me', [AuthController::class, 'me'])->middleware('auth:sanctum');
 });
 
+// Home (главная)
+Route::get('/home', [HomeController::class, 'index']);
+Route::get('/top', [HomeController::class, 'top']);
+
+// Новости
+Route::get('/news', [NewsController::class, 'index']);
+Route::get('/news/{news}', [NewsController::class, 'show'])->whereNumber('news');
+
+// Турниры (просмотр)
+Route::get('/tournaments', [TournamentController::class, 'index']);
+Route::get('/tournaments/{tournament}', [TournamentController::class, 'show'])->whereNumber('tournament');
+
+// Кланы (просмотр)
+Route::get('/clans', [ClanController::class, 'index']);
+Route::get('/clans/top', [ClanController::class, 'top']);
+
+// Игроки (просмотр)
+Route::get('/players', [PlayerController::class, 'index']);
+Route::get('/players/{user}', [PlayerController::class, 'show'])->whereNumber('user');
+
+/*
+|--------------------------------------------------------------------------
+| АВТОРИЗОВАННЫЕ РОУТЫ
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware('auth:sanctum')->group(function () {
-    // Игроки
-    Route::get('/players', [PlayerController::class, 'index']);
-    Route::get('/players/{user}', [PlayerController::class, 'show']);
-    Route::put('/players/me', [PlayerController::class, 'updateMe']);
-    Route::post('/players/me/avatar/remove', [PlayerController::class, 'removeAvatar']);
-    Route::post('/players/me/cover/remove', [PlayerController::class, 'removeCover']);
-    Route::match(['put', 'post'], '/players/me', [PlayerController::class, 'updateMe']);
-    Route::put('/players/me/aspects', [PlayerController::class, 'updateAspects']);
 
-    // Тир-тесты
-    Route::get('/tier-tests', [TierTestController::class, 'index']);
-    Route::post('/tier-tests', [TierTestController::class, 'store']);
-    Route::get('/tier-tests/{tierTest}', [TierTestController::class, 'show']);
-    Route::put('/tier-tests/{tierTest}', [TierTestController::class, 'update']);
+    /*
+    |----------------------------------------------------------------------
+    | AUTH
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('auth')->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::get('/me', [AuthController::class, 'me']);
+    });
 
-    // Друзья
-    Route::get('/friends', [FriendController::class, 'index']);
-    Route::post('/friends/{user}', [FriendController::class, 'store']);
-    Route::post('/friends/{user}/accept', [FriendController::class, 'accept']);
-    Route::delete('/friends/{user}', [FriendController::class, 'destroy']);
-    Route::get('/home', [\App\Http\Controllers\HomeController::class, 'index']);
+    /*
+    |----------------------------------------------------------------------
+    | ПРОФИЛЬ (я)
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('players/me')->group(function () {
+        Route::match(['put', 'post'], '/', [PlayerController::class, 'updateMe']);
+        Route::match(['put', 'post'], '/profile', [PlayerController::class, 'updateProfile']);
+        Route::put('/aspects', [PlayerController::class, 'updateAspects']);
 
-    // Уведомления
-    Route::get('/notifications', [NotificationController::class, 'index']);
-    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
-    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::post('/avatar/remove', [PlayerController::class, 'removeAvatar']);
+        Route::post('/cover/remove', [PlayerController::class, 'removeCover']);
+        Route::post('/card-background/remove', [PlayerController::class, 'removeCardBackground']);
+    });
 
-    Route::get('/clans', [ClanController::class, 'index']);
-    Route::get('/clans/top', [ClanController::class, 'top']);
-    Route::post('/clans', [ClanController::class, 'store']);
-    Route::get('/clans/{clan}', [ClanController::class, 'show']);
-    Route::match(['put', 'post'], '/clans/{clan}', [ClanController::class, 'update']);
-    Route::post('/clans/{clan}/apply', [ClanController::class, 'apply']);
-    Route::post('/clans/{clan}/applications/{application}/accept', [ClanController::class, 'acceptApplication']);
-    Route::post('/clans/{clan}/applications/{application}/decline', [ClanController::class, 'declineApplication']);
-    Route::post('/clans/{clan}/leave', [ClanController::class, 'leave']);
-    Route::delete('/clans/{clan}/members/{user}', [ClanController::class, 'kick']);
-    Route::get('/clans/{clan}/applications', [ClanController::class, 'applications']);
-    Route::post('/clans/{clan}/cover/remove', [ClanController::class, 'removeCover']);
-    Route::post('/clans/{clan}/avatar/remove', [ClanController::class, 'removeAvatar']);
-    // Мероприятия
-    Route::get('/clans/{clan}/events', [ClanEventController::class, 'index']);
-    Route::post('/clans/{clan}/events', [ClanEventController::class, 'store']);
-    Route::delete('/clans/{clan}/events/{event}', [ClanEventController::class, 'destroy']);
+    /*
+    |----------------------------------------------------------------------
+    | ИГРОКИ
+    |----------------------------------------------------------------------
+    */
+    Route::get('/players/{user}/achievements', [AchievementController::class, 'user'])->whereNumber('user');
+    Route::get('/players/{user}/tier-history', [TierTestController::class, 'history'])->whereNumber('user');
+
+    /*
+    |----------------------------------------------------------------------
+    | АЧИВКИ (мои)
+    |----------------------------------------------------------------------
+    */
     Route::get('/achievements', [AchievementController::class, 'index']);
-    Route::get('/players/{user}/achievements', [AchievementController::class, 'user']);
-    // Войны
-    Route::get('/players/{user}/tier-history', [TierTestController::class, 'history']);
-    Route::post('/clans/{clan}/wars', [ClanWarController::class, 'store']);
-    Route::post('/wars/{war}/accept', [ClanWarController::class, 'accept']);
-    Route::post('/wars/{war}/decline', [ClanWarController::class, 'decline']);
-    Route::post('/wars/{war}/complete', [ClanWarController::class, 'complete']);
-    Route::get('/tournaments', [TournamentController::class, 'index']);
-    Route::get('/tournaments/{tournament}', [TournamentController::class, 'show']);
-    Route::post('/tournaments/{tournament}/register', [TournamentController::class, 'register']);
-    Route::post('/tournaments/{tournament}/withdraw', [TournamentController::class, 'withdraw']);
-    Route::middleware('role:moderator,admin')->prefix('admin')->group(function () {
-        Route::get('/achievements', [\App\Http\Controllers\Api\Admin\AchievementController::class, 'index']);
-        Route::post('/achievements', [\App\Http\Controllers\Api\Admin\AchievementController::class, 'store']);
-        Route::put('/achievements/{achievement}', [\App\Http\Controllers\Api\Admin\AchievementController::class, 'update']);
-        Route::delete('/achievements/{achievement}', [\App\Http\Controllers\Api\Admin\AchievementController::class, 'destroy']);
 
-        Route::post('/users/{user}/achievements/{achievement}', [\App\Http\Controllers\Api\Admin\AchievementController::class, 'grant']);
-        Route::delete('/users/{user}/achievements/{achievement}', [\App\Http\Controllers\Api\Admin\AchievementController::class, 'revoke']);
-        Route::get('/clans', [\App\Http\Controllers\Api\Admin\ClanController::class, 'index']);
-        Route::get('/tournaments', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'index']);
-        Route::post('/tournaments', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'store']);
-        Route::put('/tournaments/{tournament}', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'update']);
-        Route::delete('/tournaments/{tournament}', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'destroy']);
-
-        Route::get('/tournaments/{tournament}/participants', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'participants']);
-        Route::post('/tournaments/{tournament}/participants/{participant}/approve', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'approveParticipant']);
-        Route::post('/tournaments/{tournament}/participants/{participant}/reject', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'rejectParticipant']);
-        Route::post('/tournaments/{tournament}/seeds', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'setSeeds']);
-
-        Route::get('/tournaments/{tournament}/matches', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'matches']);
-        Route::post('/tournaments/{tournament}/bracket/generate', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'generateBracket']);
-        Route::put('/tournaments/{tournament}/matches/{match}', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'updateMatch']);
-        // Статистика клана
-        Route::get('/clans/{clan}/stats/logs', [ClanStatsController::class, 'logs']);
-        Route::post('/clans/{clan}/stats', [ClanStatsController::class, 'update']);
-        Route::put('/clans/{clan}/stats', [ClanStatsController::class, 'set']);
-
-        // Комментарии
-        Route::get('/comments', [CommentController::class, 'index']);
-        Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
-
-        // Клан-посты
-        Route::get('/clan-events', [CommentController::class, 'events']);
-        Route::delete('/clan-events/{event}', [CommentController::class, 'destroyEvent']);
-
-        // Снять баннер
-        Route::post('/clans/{clan}/avatar/remove', [\App\Http\Controllers\Api\Admin\ClanController::class, 'removeAvatar']);
-        Route::post('/clans/{clan}/cover/remove', [\App\Http\Controllers\Api\Admin\ClanController::class, 'removeCover']);
+    /*
+    |----------------------------------------------------------------------
+    | ТИР-ТЕСТЫ
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('tier-tests')->group(function () {
+        Route::get('/', [TierTestController::class, 'index']);
+        Route::post('/', [TierTestController::class, 'store']);
+        Route::get('/{tierTest}', [TierTestController::class, 'show'])->whereNumber('tierTest');
+        Route::put('/{tierTest}', [TierTestController::class, 'update'])->whereNumber('tierTest');
     });
 
-    Route::middleware('role:admin')->prefix('admin')->group(function () {
-        // Юзеры
-        Route::get('/users', [\App\Http\Controllers\Api\Admin\UserController::class, 'index']);
-        Route::get('/users/{user}', [UserController::class, 'show']);
-        Route::post('/users/{user}/ban', [UserController::class, 'ban']);
-        Route::post('/users/{user}/unban', [UserController::class, 'unban']);
-        Route::get('/users/verified', [UserController::class, 'verified']);
-        Route::post('/users/{user}/verify', [UserController::class, 'verify']);
-        Route::post('/users/{user}/unverify', [UserController::class, 'unverify']);
-        Route::get('/site-settings', [\App\Http\Controllers\Api\Admin\SiteSettingsController::class, 'index']);
-        Route::put('/site-settings', [\App\Http\Controllers\Api\Admin\SiteSettingsController::class, 'update']);
-
-        Route::get('/news', [\App\Http\Controllers\Api\Admin\NewsController::class, 'index']);
-        Route::post('/news', [\App\Http\Controllers\Api\Admin\NewsController::class, 'store']);
-        Route::match(['put', 'post'], '/news/{news}', [\App\Http\Controllers\Api\Admin\NewsController::class, 'update']);
-        Route::delete('/news/{news}', [\App\Http\Controllers\Api\Admin\NewsController::class, 'destroy']);
-
-        // Роли
-        Route::post('/users/{user}/role', [\App\Http\Controllers\Api\Admin\RoleController::class, 'update']);
-
-        // Ачивки
-        Route::post('/users/{user}/achievements/{achievement}', [\App\Http\Controllers\Api\Admin\AchievementController::class, 'grant']);
-        Route::delete('/users/{user}/achievements/{achievement}', [\App\Http\Controllers\Api\Admin\AchievementController::class, 'revoke']);
-
-        // Аспекты
-        Route::put('/users/{user}/aspects', [\App\Http\Controllers\Api\Admin\AspectController::class, 'update']);
-
-        // Тир-тесты — админ проводит вручную
-        Route::post('/users/{user}/tier-test', [\App\Http\Controllers\Api\Admin\AspectController::class, 'conductTierTest']);
-
-        // Кланы
-        Route::post('/clans/{clan}/ban', [\App\Http\Controllers\Api\Admin\ClanController::class, 'ban']);
-        Route::post('/clans/{clan}/unban', [\App\Http\Controllers\Api\Admin\ClanController::class, 'unban']);
-        Route::delete('/clans/{clan}', [\App\Http\Controllers\Api\Admin\ClanController::class, 'destroy']);
+    /*
+    |----------------------------------------------------------------------
+    | ДРУЗЬЯ
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('friends')->group(function () {
+        Route::get('/', [FriendController::class, 'index']);
+        Route::post('/{user}', [FriendController::class, 'store'])->whereNumber('user');
+        Route::post('/{user}/accept', [FriendController::class, 'accept'])->whereNumber('user');
+        Route::delete('/{user}', [FriendController::class, 'destroy'])->whereNumber('user');
     });
-    Route::get('/clans/{clan}/events/{event}/comments', [ClanEventCommentController::class, 'index']);
-    Route::post('/clans/{clan}/events/{event}/comments', [ClanEventCommentController::class, 'store']);
-    Route::delete('/clans/{clan}/events/{event}/comments/{comment}', [ClanEventCommentController::class, 'destroy']);
-    Route::post('/players/me/card-background/remove', [PlayerController::class, 'removeCardBackground']);
-    Route::match(['put', 'post'], '/players/me/profile', [PlayerController::class, 'updateProfile']);
 
-    Route::get('/top', [\App\Http\Controllers\HomeController::class, 'top']);
+    /*
+    |----------------------------------------------------------------------
+    | УВЕДОМЛЕНИЯ
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::post('/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::post('/{id}/read', [NotificationController::class, 'markAsRead']);
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | КЛАНЫ (авторизованные действия)
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('clans')->group(function () {
+        // Создание
+        Route::post('/', [ClanController::class, 'store']);
+
+        // Просмотр (динамический — в конце!)
+        Route::get('/{clan}', [ClanController::class, 'show'])->whereNumber('clan');
+        Route::match(['put', 'post'], '/{clan}', [ClanController::class, 'update'])->whereNumber('clan');
+
+        // Заявки
+        Route::post('/{clan}/apply', [ClanController::class, 'apply'])->whereNumber('clan');
+        Route::get('/{clan}/applications', [ClanController::class, 'applications'])->whereNumber('clan');
+        Route::post('/{clan}/applications/{application}/accept', [ClanController::class, 'acceptApplication']);
+        Route::post('/{clan}/applications/{application}/decline', [ClanController::class, 'declineApplication']);
+
+        // Участники
+        Route::post('/{clan}/leave', [ClanController::class, 'leave'])->whereNumber('clan');
+        Route::delete('/{clan}/members/{user}', [ClanController::class, 'kick'])->whereNumber('clan');
+
+        // Медиа
+        Route::post('/{clan}/cover/remove', [ClanController::class, 'removeCover'])->whereNumber('clan');
+        Route::post('/{clan}/avatar/remove', [ClanController::class, 'removeAvatar'])->whereNumber('clan');
+
+        // Мероприятия
+        Route::get('/{clan}/events', [ClanEventController::class, 'index'])->whereNumber('clan');
+        Route::post('/{clan}/events', [ClanEventController::class, 'store'])->whereNumber('clan');
+        Route::delete('/{clan}/events/{event}', [ClanEventController::class, 'destroy']);
+
+        // Войны
+        Route::post('/{clan}/wars', [ClanWarController::class, 'store'])->whereNumber('clan');
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | ВОЙНЫ (действия)
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('wars')->group(function () {
+        Route::post('/{war}/accept', [ClanWarController::class, 'accept'])->whereNumber('war');
+        Route::post('/{war}/decline', [ClanWarController::class, 'decline'])->whereNumber('war');
+        Route::post('/{war}/complete', [ClanWarController::class, 'complete'])->whereNumber('war');
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | КОММЕНТАРИИ К КЛАН-ПОСТАМ
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('clans/{clan}/events/{event}/comments')->group(function () {
+        Route::get('/', [ClanEventCommentController::class, 'index']);
+        Route::post('/', [ClanEventCommentController::class, 'store']);
+        Route::delete('/{comment}', [ClanEventCommentController::class, 'destroy']);
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | ТУРНИРЫ (действия)
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('tournaments')->group(function () {
+        Route::post('/{tournament}/register', [TournamentController::class, 'register'])->whereNumber('tournament');
+        Route::post('/{tournament}/withdraw', [TournamentController::class, 'withdraw'])->whereNumber('tournament');
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | ТЕСТЕР (role: tester, admin)
+    |----------------------------------------------------------------------
+    */
     Route::middleware('role:tester,admin')->prefix('tester')->group(function () {
         Route::get('/tier-tests', [TesterTierTestController::class, 'index']);
         Route::get('/tier-tests/stats', [TesterTierTestController::class, 'stats']);
-        Route::get('/tier-tests/{tierTest}', [TesterTierTestController::class, 'show']);
-        Route::post('/tier-tests/{tierTest}/claim', [TesterTierTestController::class, 'claim']);
-        Route::post('/tier-tests/{tierTest}/unclaim', [TesterTierTestController::class, 'unclaim']);
-        Route::post('/tier-tests/{tierTest}/complete', [TesterTierTestController::class, 'complete']);
-        Route::post('/tier-tests/{tierTest}/cancel', [TesterTierTestController::class, 'cancel']);
+        Route::get('/tier-tests/{tierTest}', [TesterTierTestController::class, 'show'])->whereNumber('tierTest');
+        Route::post('/tier-tests/{tierTest}/claim', [TesterTierTestController::class, 'claim'])->whereNumber('tierTest');
+        Route::post('/tier-tests/{tierTest}/unclaim', [TesterTierTestController::class, 'unclaim'])->whereNumber('tierTest');
+        Route::post('/tier-tests/{tierTest}/complete', [TesterTierTestController::class, 'complete'])->whereNumber('tierTest');
+        Route::post('/tier-tests/{tierTest}/cancel', [TesterTierTestController::class, 'cancel'])->whereNumber('tierTest');
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | АДМИНКА — МОДЕРАТОР + АДМИН (role: moderator, admin)
+    |----------------------------------------------------------------------
+    */
+    Route::middleware('role:moderator,admin')->prefix('admin')->group(function () {
+
+        // --- КЛАНЫ ---
+        Route::get('/clans', [AdminClanController::class, 'index']);
+        Route::post('/clans/{clan}/stats', [AdminClanStatsController::class, 'update'])->whereNumber('clan');
+        Route::put('/clans/{clan}/stats', [AdminClanStatsController::class, 'set'])->whereNumber('clan');
+        Route::get('/clans/{clan}/stats/logs', [AdminClanStatsController::class, 'logs'])->whereNumber('clan');
+        Route::post('/clans/{clan}/avatar/remove', [AdminClanController::class, 'removeAvatar'])->whereNumber('clan');
+        Route::post('/clans/{clan}/cover/remove', [AdminClanController::class, 'removeCover'])->whereNumber('clan');
+
+        // --- КОММЕНТАРИИ ---
+        Route::get('/comments', [AdminCommentController::class, 'index']);
+        Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->whereNumber('comment');
+
+        // --- КЛАН-ПОСТЫ ---
+        Route::get('/clan-events', [AdminCommentController::class, 'events']);
+        Route::delete('/clan-events/{event}', [AdminCommentController::class, 'destroyEvent'])->whereNumber('event');
+
+        // --- ТУРНИРЫ ---
+        Route::get('/tournaments', [AdminTournamentController::class, 'index']);
+        Route::post('/tournaments', [AdminTournamentController::class, 'store']);
+        Route::match(['put', 'post'], '/tournaments/{tournament}', [AdminTournamentController::class, 'update'])->whereNumber('tournament');
+        Route::delete('/tournaments/{tournament}', [AdminTournamentController::class, 'destroy'])->whereNumber('tournament');
+
+        Route::get('/tournaments/{tournament}/participants', [AdminTournamentController::class, 'participants'])->whereNumber('tournament');
+        Route::post('/tournaments/{tournament}/participants/{participant}/approve', [AdminTournamentController::class, 'approveParticipant']);
+        Route::post('/tournaments/{tournament}/participants/{participant}/reject', [AdminTournamentController::class, 'rejectParticipant']);
+        Route::post('/tournaments/{tournament}/seeds', [AdminTournamentController::class, 'setSeeds'])->whereNumber('tournament');
+
+        Route::get('/tournaments/{tournament}/matches', [AdminTournamentController::class, 'matches'])->whereNumber('tournament');
+        Route::post('/tournaments/{tournament}/bracket/generate', [AdminTournamentController::class, 'generateBracket'])->whereNumber('tournament');
+        Route::put('/tournaments/{tournament}/matches/{match}', [AdminTournamentController::class, 'updateMatch']);
+
+        // --- АЧИВКИ (просмотр модератором) ---
+        Route::get('/achievements', [AdminAchievementController::class, 'index']);
+        Route::post('/achievements', [AdminAchievementController::class, 'store']);
+        Route::put('/achievements/{achievement}', [AdminAchievementController::class, 'update'])->whereNumber('achievement');
+        Route::delete('/achievements/{achievement}', [AdminAchievementController::class, 'destroy'])->whereNumber('achievement');
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | АДМИНКА — ТОЛЬКО АДМИН (role: admin)
+    |----------------------------------------------------------------------
+    */
+    Route::middleware('role:admin')->prefix('admin')->group(function () {
+
+        // --- ЮЗЕРЫ ---
+        // СНАЧАЛА статические!
+        Route::get('/users', [AdminUserController::class, 'index']);
+        Route::get('/users/verified', [AdminUserController::class, 'verified']);
+
+        // ПОТОМ динамические
+        Route::get('/users/{user}', [AdminUserController::class, 'show'])->whereNumber('user');
+        Route::post('/users/{user}/ban', [AdminUserController::class, 'ban'])->whereNumber('user');
+        Route::post('/users/{user}/unban', [AdminUserController::class, 'unban'])->whereNumber('user');
+        Route::post('/users/{user}/verify', [AdminUserController::class, 'verify'])->whereNumber('user');
+        Route::post('/users/{user}/unverify', [AdminUserController::class, 'unverify'])->whereNumber('user');
+        Route::post('/users/{user}/role', [AdminRoleController::class, 'update'])->whereNumber('user');
+
+        // --- АЧИВКИ ---
+        Route::post('/users/{user}/achievements/{achievement}', [AdminAchievementController::class, 'grant']);
+        Route::delete('/users/{user}/achievements/{achievement}', [AdminAchievementController::class, 'revoke']);
+
+        // --- АСПЕКТЫ ---
+        Route::put('/users/{user}/aspects', [AdminAspectController::class, 'update'])->whereNumber('user');
+        Route::post('/users/{user}/tier-test', [AdminAspectController::class, 'conductTierTest'])->whereNumber('user');
+
+        // --- КЛАНЫ (бан/удаление) ---
+        Route::post('/clans/{clan}/ban', [AdminClanController::class, 'ban'])->whereNumber('clan');
+        Route::post('/clans/{clan}/unban', [AdminClanController::class, 'unban'])->whereNumber('clan');
+        Route::delete('/clans/{clan}', [AdminClanController::class, 'destroy'])->whereNumber('clan');
+
+        // --- ГЛАВНАЯ ---
+        Route::get('/site-settings', [SiteSettingsController::class, 'index']);
+        Route::put('/site-settings', [SiteSettingsController::class, 'update']);
+
+        // --- НОВОСТИ ---
+        Route::get('/news', [AdminNewsController::class, 'index']);
+        Route::post('/news', [AdminNewsController::class, 'store']);
+        Route::match(['put', 'post'], '/news/{news}', [AdminNewsController::class, 'update'])->whereNumber('news');
+        Route::delete('/news/{news}', [AdminNewsController::class, 'destroy'])->whereNumber('news');
     });
 });
-Route::get('/news', [\App\Http\Controllers\Api\NewsController::class, 'index']);
-Route::get('/news/{news}', [\App\Http\Controllers\Api\NewsController::class, 'show']);
