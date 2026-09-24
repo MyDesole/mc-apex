@@ -162,4 +162,16 @@ export const adminApi = {
     destroyNews(id) {
         return api.delete(`/admin/news/${id}`)
     },
+
+    // Верификация
+    verifiedUsers(params = {}) {
+        const q = new URLSearchParams(params).toString()
+        return api.get(`/admin/users/verified${q ? '?' + q : ''}`)
+    },
+    verifyUser(id, reason = null) {
+        return api.post(`/admin/users/${id}/verify`, { reason })
+    },
+    unverifyUser(id) {
+        return api.post(`/admin/users/${id}/unverify`)
+    },
 }

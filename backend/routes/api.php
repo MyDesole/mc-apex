@@ -124,13 +124,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('role:admin')->prefix('admin')->group(function () {
         // Юзеры
-        Route::post('/users/{user}/verify', [UserController::class, 'verify']);
-        Route::post('/users/{user}/unverify', [UserController::class, 'unverify']);
         Route::get('/users', [\App\Http\Controllers\Api\Admin\UserController::class, 'index']);
         Route::get('/users/{user}', [UserController::class, 'show']);
         Route::post('/users/{user}/ban', [UserController::class, 'ban']);
         Route::post('/users/{user}/unban', [UserController::class, 'unban']);
-
+        Route::get('/users/verified', [UserController::class, 'verified']);
+        Route::post('/users/{user}/verify', [UserController::class, 'verify']);
+        Route::post('/users/{user}/unverify', [UserController::class, 'unverify']);
         Route::get('/site-settings', [\App\Http\Controllers\Api\Admin\SiteSettingsController::class, 'index']);
         Route::put('/site-settings', [\App\Http\Controllers\Api\Admin\SiteSettingsController::class, 'update']);
 

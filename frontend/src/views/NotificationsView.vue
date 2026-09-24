@@ -37,6 +37,9 @@ async function open(n) {
     router.push(`/clans/${d.clan_id}`)
 
   }
+   else if (d.type === 'verified') {
+    router.push('/profile')
+  }
   else if (d.type === 'tier_test_request') {
   // тестер → панель тестера, юзер → свой профиль
   if (['tester', 'admin'].includes(auth.user?.role)) {

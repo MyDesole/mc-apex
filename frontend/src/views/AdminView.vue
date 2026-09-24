@@ -11,6 +11,7 @@ import AdminTournaments from '@/components/admin/AdminTournaments.vue'
 import AdminAchievements from '@/components/admin/AdminAchievements.vue'
 import AdminHome from '@/components/admin/AdminHome.vue'
 import AdminNews from '@/components/admin/AdminNews.vue'
+import AdminVerification from '@/components/admin/AdminVerification.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -77,6 +78,18 @@ onMounted(() => {
           <path d="M12 2l9 4v6c0 5-3.5 9-9 10-5.5-1-9-5-9-10V6z" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
         Кланы
+      </button>
+
+      <button
+          v-if="isAdmin"
+          :class="{ active: tab === 'verification' }"
+          @click="tab = 'verification'"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2l2.4 3.6 4.2.6 3 3-1.2 4.2L22 18l-3 3-4.2-1.2L12 22l-3-2.4-4.2 1.2-3-3 1.2-4.2L2 9.6l3-3 4.2-.6z" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Верификация
       </button>
 
       <!-- ТУРНИРЫ -->
@@ -161,6 +174,8 @@ onMounted(() => {
       <AdminAchievements v-else-if="tab === 'achievements' && isAdmin" />
       <AdminHome v-else-if="tab === 'home' && isAdmin" />
       <AdminNews v-else-if="tab === 'news' && isAdmin" />
+      <AdminVerification v-else-if="tab === 'verification' && isAdmin" />
+
     </div>
   </div>
 </template>
