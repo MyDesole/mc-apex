@@ -80,6 +80,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/tournaments/{tournament}/register', [TournamentController::class, 'register']);
     Route::post('/tournaments/{tournament}/withdraw', [TournamentController::class, 'withdraw']);
     Route::middleware('role:moderator,admin')->prefix('admin')->group(function () {
+        Route::get('/achievements', [\App\Http\Controllers\Api\Admin\AchievementController::class, 'index']);
+        Route::post('/achievements', [\App\Http\Controllers\Api\Admin\AchievementController::class, 'store']);
+        Route::put('/achievements/{achievement}', [\App\Http\Controllers\Api\Admin\AchievementController::class, 'update']);
+        Route::delete('/achievements/{achievement}', [\App\Http\Controllers\Api\Admin\AchievementController::class, 'destroy']);
+
+        Route::post('/users/{user}/achievements/{achievement}', [\App\Http\Controllers\Api\Admin\AchievementController::class, 'grant']);
+        Route::delete('/users/{user}/achievements/{achievement}', [\App\Http\Controllers\Api\Admin\AchievementController::class, 'revoke']);
         Route::get('/clans', [\App\Http\Controllers\Api\Admin\ClanController::class, 'index']);
         Route::get('/tournaments', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'index']);
         Route::post('/tournaments', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'store']);

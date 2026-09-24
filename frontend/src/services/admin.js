@@ -112,4 +112,17 @@ export const adminApi = {
     updateMatch(tid, mid, payload) {
         return api.put(`/admin/tournaments/${tid}/matches/${mid}`, payload)
     },
+    achievements(params = {}) {
+        const q = new URLSearchParams(params).toString()
+        return api.get(`/admin/achievements${q ? '?' + q : ''}`)
+    },
+    createAchievement(payload) {
+        return api.post('/admin/achievements', payload)
+    },
+    updateAchievement(id, payload) {
+        return api.put(`/admin/achievements/${id}`, payload)
+    },
+    destroyAchievement(id) {
+        return api.delete(`/admin/achievements/${id}`)
+    },
 }

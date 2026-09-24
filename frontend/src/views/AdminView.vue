@@ -7,6 +7,7 @@ import AdminComments from '@/components/admin/AdminComments.vue'
 import AdminEvents from '@/components/admin/AdminEvents.vue'
 import AdminClans from '@/components/admin/AdminClans.vue'
 import AdminTournaments from "@/components/admin/AdminTournaments.vue";
+import AdminAchievements from '@/components/admin/AdminAchievements.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -85,7 +86,13 @@ onMounted(() => {
         </svg>
         Комментарии
       </button>
-
+      <button
+          v-if="isAdmin"
+          :class="{ active: tab === 'achievements' }"
+          @click="tab = 'achievements'"
+      >
+        🏆 Ачивки
+      </button>
       <button
           :class="{ active: tab === 'events' }"
           @click="tab = 'events'"
@@ -103,6 +110,7 @@ onMounted(() => {
       <AdminComments v-else-if="tab === 'comments'" />
       <AdminEvents v-else-if="tab === 'events'" />
       <AdminTournaments v-else-if="tab === 'tournaments'" />
+      <AdminAchievements v-else-if="tab === 'achievements'" />
 
     </div>
   </div>
