@@ -102,9 +102,16 @@ onMounted(load)
             class="player-main"
         >
           <div class="player-avatar">
-            {{ (player.username || 'И').charAt(0).toUpperCase() }}
+            <img
+                v-if="player.avatar_url"
+                :src="player.avatar_url"
+                :alt="player.username"
+                class="player-avatar-img"
+            />
+            <template v-else>
+              {{ (player.username || 'И').charAt(0).toUpperCase() }}
+            </template>
           </div>
-
           <div class="player-info">
             <div class="player-name">{{ player.username }}</div>
             <div class="player-bio">
@@ -244,6 +251,7 @@ onMounted(load)
 }
 
 .player-avatar {
+  position: relative;
   width: 46px;
   height: 46px;
   display: flex;
@@ -255,6 +263,17 @@ onMounted(load)
   color: #fff;
   font-size: 18px;
   font-weight: 800;
+  overflow: hidden;
+}
+
+.player-avatar-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }
 
 .player-info {

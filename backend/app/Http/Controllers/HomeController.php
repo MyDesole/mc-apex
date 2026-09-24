@@ -11,10 +11,19 @@ class HomeController extends Controller
     public function top(): JsonResponse
     {
         $players = User::query()
-            ->select(['id', 'username', 'avatar', 'tier', 'tier_score'])
             ->orderByDesc('tier_score')
             ->limit(10)
-            ->get();
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'username' => $user->username,
+                    'avatar' => $user->avatar,
+                    'avatar_url' => $user->avatar_url,       // ← accessor
+                    'tier' => $user->tier,
+                    'tier_score' => $user->tier_score,
+                ];
+            });
 
         $clans = Clan::query()
             ->with('leader:id,username,avatar')

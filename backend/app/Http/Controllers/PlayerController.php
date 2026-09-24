@@ -29,10 +29,9 @@ class PlayerController extends Controller
             $query->where('tier', $tier);
         }
 
-        $players = $query->orderByDesc('tier_score')
-            ->paginate(20);
+        $players = $query->orderByDesc('tier_score')->paginate(20);
 
-        // статусы дружбы (как у тебя было)
+        // friendship map (как было)
         $ids = collect($players->items())->pluck('id')->all();
 
         $friendships = Friendship::where(function ($q) use ($me, $ids) {

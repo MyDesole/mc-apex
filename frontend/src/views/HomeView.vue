@@ -94,7 +94,15 @@ onMounted(async () => {
             </div>
 
             <div class="row-avatar">
-              {{ (player.username || 'И').charAt(0).toUpperCase() }}
+              <img
+                  v-if="player.avatar_url"
+                  :src="player.avatar_url"
+                  :alt="player.username"
+                  class="row-avatar-img"
+              />
+              <template v-else>
+                {{ (player.username || 'И').charAt(0).toUpperCase() }}
+              </template>
             </div>
 
             <div class="row-info">
@@ -501,6 +509,7 @@ onMounted(async () => {
 }
 
 .row-avatar {
+  position: relative;
   width: 46px;
   height: 46px;
   display: flex;
@@ -512,7 +521,18 @@ onMounted(async () => {
   font-size: 18px;
   font-weight: 900;
   flex-shrink: 0;
+  overflow: hidden;
   box-shadow: 0 4px 15px rgba(124, 58, 237, 0.25);
+}
+
+.row-avatar-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }
 
 .player-row.top-1 .row-avatar {

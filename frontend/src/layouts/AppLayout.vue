@@ -54,8 +54,17 @@ setInterval(loadUnread, 30000)
 
           <div v-else class="user-menu">
             <button class="user-button" @click="menuOpen = !menuOpen">
-              <span class="avatar">{{ (auth.user?.username || 'И').charAt(0).toUpperCase() }}</span>
-              <span class="username">{{ auth.user?.username }}</span>
+            <span class="avatar">
+                <img
+                    v-if="auth.user?.avatar_url"
+                    :src="auth.user.avatar_url"
+                    :alt="auth.user.username"
+                    class="avatar-img"
+                />
+                <template v-else>
+                    {{ (auth.user?.username || 'И').charAt(0).toUpperCase() }}
+                </template>
+            </span>              <span class="username">{{ auth.user?.username }}</span>
               <svg class="chevron" :class="{ open: menuOpen }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
@@ -101,7 +110,32 @@ setInterval(loadUnread, 30000)
   border-radius: 9px;
   transition: all 0.2s;
 }
+.avatar {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  overflow: hidden;
+  box-shadow: 0 3px 12px rgba(124, 58, 237, 0.25);
+}
 
+.avatar-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
 .notif-bell:hover {
   color: var(--text);
   background: var(--bg-card);
