@@ -125,4 +125,41 @@ export const adminApi = {
     destroyAchievement(id) {
         return api.delete(`/admin/achievements/${id}`)
     },
+
+    // Главная страница
+    siteSettings() {
+        return api.get('/admin/site-settings')
+    },
+    updateSiteSettings(payload) {
+        return api.put('/admin/site-settings', payload)
+    },
+
+// Новости
+    newsList(params = {}) {
+        const q = new URLSearchParams(params).toString()
+        return api.get(`/admin/news${q ? '?' + q : ''}`)
+    },
+    createNews(payload) {
+        const fd = new FormData()
+        fd.append('_method', 'POST')
+        for (const [k, v] of Object.entries(payload)) {
+            if (v === undefined || v === null) continue
+            if (typeof v === 'boolean') fd.append(k, v ? '1' : '0')
+            else fd.append(k, v)
+        }
+        return api.post('/admin/news', fd)
+    },
+    updateNews(id, payload) {
+        const fd = new FormData()
+        fd.append('_method', 'PUT')
+        for (const [k, v] of Object.entries(payload)) {
+            if (v === undefined || v === null) continue
+            if (typeof v === 'boolean') fd.append(k, v ? '1' : '0')
+            else fd.append(k, v)
+        }
+        return api.post(`/admin/news/${id}`, fd)
+    },
+    destroyNews(id) {
+        return api.delete(`/admin/news/${id}`)
+    },
 }

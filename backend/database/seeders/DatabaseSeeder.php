@@ -17,13 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        \App\Models\User::updateOrCreate(
-            ['email' => 'admin@apex.local'],
-            [
-                'username' => 'admin',
-                'password' => bcrypt(env('ADMIN_PASSWORD')),
-                'role' => 'admin',
-            ]
-        );
+        $this->call(SiteSettingsSeeder::class);
+
     }
 }

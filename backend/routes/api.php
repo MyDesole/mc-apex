@@ -46,6 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/friends/{user}', [FriendController::class, 'store']);
     Route::post('/friends/{user}/accept', [FriendController::class, 'accept']);
     Route::delete('/friends/{user}', [FriendController::class, 'destroy']);
+    Route::get('/home', [\App\Http\Controllers\HomeController::class, 'index']);
 
     // Уведомления
     Route::get('/notifications', [NotificationController::class, 'index']);
@@ -127,6 +128,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/users/{user}/ban', [UserController::class, 'ban']);
         Route::post('/users/{user}/unban', [UserController::class, 'unban']);
 
+        Route::get('/site-settings', [\App\Http\Controllers\Api\Admin\SiteSettingsController::class, 'index']);
+        Route::put('/site-settings', [\App\Http\Controllers\Api\Admin\SiteSettingsController::class, 'update']);
+
+        Route::get('/news', [\App\Http\Controllers\Api\Admin\NewsController::class, 'index']);
+        Route::post('/news', [\App\Http\Controllers\Api\Admin\NewsController::class, 'store']);
+        Route::match(['put', 'post'], '/news/{news}', [\App\Http\Controllers\Api\Admin\NewsController::class, 'update']);
+        Route::delete('/news/{news}', [\App\Http\Controllers\Api\Admin\NewsController::class, 'destroy']);
+
         // Роли
         Route::post('/users/{user}/role', [\App\Http\Controllers\Api\Admin\RoleController::class, 'update']);
 
@@ -160,3 +169,5 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/tier-tests/{tierTest}/cancel', [TesterTierTestController::class, 'cancel']);
     });
 });
+Route::get('/news', [\App\Http\Controllers\Api\NewsController::class, 'index']);
+Route::get('/news/{news}', [\App\Http\Controllers\Api\NewsController::class, 'show']);

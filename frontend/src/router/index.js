@@ -70,6 +70,16 @@ const router = createRouter({
       meta: { title: 'Кланы' },
     },
     {
+      path: '/news',
+      name: 'news',
+      component: () => import('@/views/NewsView.vue'),
+    },
+    {
+      path: '/news/:id',
+      name: 'news-item',
+      component: () => import('@/views/NewsItemView.vue'),
+    },
+    {
       path: '/clans/create',
       name: 'clan-create',
       component: ClanCreateView,

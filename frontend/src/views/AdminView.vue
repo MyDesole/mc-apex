@@ -2,12 +2,15 @@
 import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+
 import AdminUsers from '@/components/admin/AdminUsers.vue'
 import AdminComments from '@/components/admin/AdminComments.vue'
 import AdminEvents from '@/components/admin/AdminEvents.vue'
 import AdminClans from '@/components/admin/AdminClans.vue'
-import AdminTournaments from "@/components/admin/AdminTournaments.vue";
+import AdminTournaments from '@/components/admin/AdminTournaments.vue'
 import AdminAchievements from '@/components/admin/AdminAchievements.vue'
+import AdminHome from '@/components/admin/AdminHome.vue'
+import AdminNews from '@/components/admin/AdminNews.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -25,9 +28,12 @@ const roleLabels = {
 }
 
 onMounted(() => {
-  if (!isModerator.value) router.push('/')
+  if (!isModerator.value) {
+    router.push('/')
+    return
+  }
 
-  // модератор не может видеть вкладку users
+  // модератор не может видеть users — переключаем на clans
   if (!isAdmin.value && tab.value === 'users') {
     tab.value = 'clans'
   }
@@ -48,6 +54,7 @@ onMounted(() => {
     </header>
 
     <nav class="admin-tabs">
+      <!-- ПОЛЬЗОВАТЕЛИ (только админ) -->
       <button
           v-if="isAdmin"
           :class="{ active: tab === 'users' }"
@@ -61,6 +68,7 @@ onMounted(() => {
         Пользователи
       </button>
 
+      <!-- КЛАНЫ -->
       <button
           :class="{ active: tab === 'clans' }"
           @click="tab = 'clans'"
@@ -70,13 +78,19 @@ onMounted(() => {
         </svg>
         Кланы
       </button>
+
+      <!-- ТУРНИРЫ -->
       <button
-          v-if="isAdmin || isModerator"
           :class="{ active: tab === 'tournaments' }"
           @click="tab = 'tournaments'"
       >
-        🏆 Турниры
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0V2z" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Турниры
       </button>
+
+      <!-- КОММЕНТАРИИ -->
       <button
           :class="{ active: tab === 'comments' }"
           @click="tab = 'comments'"
@@ -86,13 +100,8 @@ onMounted(() => {
         </svg>
         Комментарии
       </button>
-      <button
-          v-if="isAdmin"
-          :class="{ active: tab === 'achievements' }"
-          @click="tab = 'achievements'"
-      >
-        🏆 Ачивки
-      </button>
+
+      <!-- КЛАН-ПОСТЫ -->
       <button
           :class="{ active: tab === 'events' }"
           @click="tab = 'events'"
@@ -102,16 +111,56 @@ onMounted(() => {
         </svg>
         Клан-посты
       </button>
+
+      <!-- АЧИВКИ (только админ) -->
+      <button
+          v-if="isAdmin"
+          :class="{ active: tab === 'achievements' }"
+          @click="tab = 'achievements'"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="8" r="7" />
+          <path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Ачивки
+      </button>
+
+      <!-- ГЛАВНАЯ (только админ) -->
+      <button
+          v-if="isAdmin"
+          :class="{ active: tab === 'home' }"
+          @click="tab = 'home'"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M9 22V12h6v10" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Главная
+      </button>
+
+      <!-- НОВОСТИ (только админ) -->
+      <button
+          v-if="isAdmin"
+          :class="{ active: tab === 'news' }"
+          @click="tab = 'news'"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M18 14h-8M15 18h-5M10 6h8v4h-8z" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Новости
+      </button>
     </nav>
 
     <div class="admin-content">
       <AdminUsers v-if="tab === 'users' && isAdmin" />
       <AdminClans v-else-if="tab === 'clans'" />
+      <AdminTournaments v-else-if="tab === 'tournaments'" />
       <AdminComments v-else-if="tab === 'comments'" />
       <AdminEvents v-else-if="tab === 'events'" />
-      <AdminTournaments v-else-if="tab === 'tournaments'" />
-      <AdminAchievements v-else-if="tab === 'achievements'" />
-
+      <AdminAchievements v-else-if="tab === 'achievements' && isAdmin" />
+      <AdminHome v-else-if="tab === 'home' && isAdmin" />
+      <AdminNews v-else-if="tab === 'news' && isAdmin" />
     </div>
   </div>
 </template>
