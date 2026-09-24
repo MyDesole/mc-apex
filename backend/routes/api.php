@@ -16,6 +16,7 @@ use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\TierTestController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Tester\TierTestController as TesterTierTestController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
@@ -149,5 +150,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/clans/{clan}/events/{event}/comments/{comment}', [ClanEventCommentController::class, 'destroy']);
 
     Route::get('/top', [\App\Http\Controllers\HomeController::class, 'top']);
-
+    Route::middleware('role:tester,admin')->prefix('tester')->group(function () {
+        Route::get('/tier-tests', [TesterTierTestController::class, 'index']);
+        Route::get('/tier-tests/stats', [TesterTierTestController::class, 'stats']);
+        Route::get('/tier-tests/{tierTest}', [TesterTierTestController::class, 'show']);
+        Route::post('/tier-tests/{tierTest}/claim', [TesterTierTestController::class, 'claim']);
+        Route::post('/tier-tests/{tierTest}/unclaim', [TesterTierTestController::class, 'unclaim']);
+        Route::post('/tier-tests/{tierTest}/complete', [TesterTierTestController::class, 'complete']);
+        Route::post('/tier-tests/{tierTest}/cancel', [TesterTierTestController::class, 'cancel']);
+    });
 });

@@ -35,9 +35,21 @@ async function open(n) {
   } else if (d.type === 'clan_application') {
     // лидер → сразу на заявки клана
     router.push(`/clans/${d.clan_id}`)
-  } else if (d.type === 'clan_application_accepted' || d.type === 'clan_application_declined') {
+
+  }
+  else if (d.type === 'tier_test_request') {
+  // тестер → панель тестера, юзер → свой профиль
+  if (['tester', 'admin'].includes(auth.user?.role)) {
+    router.push('/tester')
+  } else {
+    router.push('/profile')
+  }
+}
+
+  else if (d.type === 'clan_application_accepted' || d.type === 'clan_application_declined') {
     router.push(`/clans/${d.clan_id}`)
   }
+
 
   await load()
 }

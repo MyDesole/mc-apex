@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\TierTest;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -54,9 +55,10 @@ class TierTestController extends Controller
             'status' => 'pending',
         ]);
 
-        if ($test->tester_id) {
-            User::find($test->tester_id)
-                ->notify(new \App\Notifications\TierTestRequestNotification($test));
+        $testers = User::whereIn('role', ['tester', 'admin'])->get();
+
+        foreach ($testers as $tester) {
+            $tester->notify(new \App\Notifications\TierTestRequestNotification($test));
         }
 
         return response()->json([

@@ -77,6 +77,7 @@ setInterval(loadUnread, 30000)
               <span class="username">
                   <UserName :user="auth.user" compact />
               </span>
+
               <svg class="chevron" :class="{ open: menuOpen }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
@@ -85,6 +86,14 @@ setInterval(loadUnread, 30000)
             <div v-if="menuOpen" class="dropdown">
               <RouterLink to="/profile" class="dropdown-item" @click="menuOpen = false">Профиль</RouterLink>
               <RouterLink to="/friends" class="dropdown-item" @click="menuOpen = false">Друзья</RouterLink>
+              <RouterLink
+                  v-if="auth.user && ['tester', 'admin'].includes(auth.user.role)"
+                  to="/tester"
+                  class="dropdown-item"
+                  @click="menuOpen = false"
+              >
+                🎯 Панель тестера
+              </RouterLink>
               <RouterLink
                   v-if="auth.isAuthenticated"
                   to="/notifications"

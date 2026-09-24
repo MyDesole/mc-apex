@@ -93,6 +93,12 @@ const router = createRouter({
       component: () => import('@/views/TournamentsView.vue'),
     },
     {
+      path: '/tester',
+      name: 'tester',
+      component: () => import('@/views/TesterView.vue'),
+      meta: { auth: true, role: ['tester', 'admin'] },
+    },
+    {
       path: '/tournaments/:id',
       name: 'tournament',
       component: () => import('@/views/TournamentView.vue'),
