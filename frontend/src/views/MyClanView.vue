@@ -23,9 +23,11 @@ const permissions = computed(() => data.value?.my_permissions ?? {})
 
 const tabs = computed(() => {
   const base = [
-    { id: 'forum', label: '💬 Форум', show: true },
-    { id: 'resources', label: '📦 Ресурсы', show: true },
-    { id: 'members', label: '👥 Участники', show: true },
+    { id: 'forum', label: 'Форум', show: true },
+    { id: 'resources', label: 'Ресурсы', show: true },
+    { id: 'members', label: 'Участники', show: true },
+    { id: 'news', label: 'Новости', show: true },
+    { id: 'wars', label: 'Кв', show: true },
   ]
 
   if (permissions.value.applications) {

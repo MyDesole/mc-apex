@@ -342,7 +342,10 @@ Route::middleware(['auth:sanctum', 'clan.member'])->prefix('my-clan')->group(fun
         ->middleware('clan.member:resources');
     Route::post('/resources/{resource}/download', [\App\Http\Controllers\Api\ClanResourceController::class, 'download']);
     Route::delete('/resources/{resource}', [\App\Http\Controllers\Api\ClanResourceController::class, 'destroy']);
-
+    Route::post('/clans/{clan}/wars', [ClanWarController::class, 'store']);
+    Route::post('/wars/{war}/accept', [ClanWarController::class, 'accept']);
+    Route::post('/wars/{war}/decline', [ClanWarController::class, 'decline']);
+    Route::post('/wars/{war}/complete', [ClanWarController::class, 'complete']);
     // Роли
     Route::post('/roles/{user}', [\App\Http\Controllers\Api\ClanRoleController::class, 'update']);
     Route::delete('/members/{user}', [\App\Http\Controllers\Api\ClanRoleController::class, 'kick']);
