@@ -9,6 +9,7 @@ class TierTest extends Model
 {
     protected $fillable = [
         'user_id', 'tester_id', 'claimed_by', 'claimed_at',
+        'contact_type', 'contact_value', 'preferred_time',
         'mode', 'status', 'scheduled_at', 'completed_at',
         'result_tier', 'result_score', 'aspects', 'notes',
     ];

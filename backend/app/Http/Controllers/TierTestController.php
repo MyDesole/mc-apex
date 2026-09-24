@@ -35,28 +35,24 @@ class TierTestController extends Controller
     {
         $validated = $request->validate([
             'mode' => ['required', 'in:pvp,bedwars'],
-            'tester_id' => ['nullable', 'exists:users,id'],
-            'scheduled_at' => ['nullable', 'date', 'after:now'],
+            'contact_type' => ['required', 'in:discord,telegram'],
+            'contact_value' => ['required', 'string', 'max:128'],
+            'preferred_time' => ['required', 'string', 'max:128'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        abort_if(
-            ($validated['tester_id'] ?? null) === $request->user()->id,
-            422,
-            'Нельзя записаться к себе.'
-        );
-
         $test = TierTest::create([
             'user_id' => $request->user()->id,
-            'tester_id' => $validated['tester_id'] ?? null,
             'mode' => $validated['mode'],
-            'scheduled_at' => $validated['scheduled_at'] ?? null,
+            'contact_type' => $validated['contact_type'],
+            'contact_value' => $validated['contact_value'],
+            'preferred_time' => $validated['preferred_time'],
             'notes' => $validated['notes'] ?? null,
             'status' => 'pending',
         ]);
 
-        $testers = User::whereIn('role', ['tester', 'admin'])->get();
-
+        // уведомляем тестеров и админов
+        $testers = \App\Models\User::whereIn('role', ['tester', 'admin'])->get();
         foreach ($testers as $tester) {
             $tester->notify(new \App\Notifications\TierTestRequestNotification($test));
         }

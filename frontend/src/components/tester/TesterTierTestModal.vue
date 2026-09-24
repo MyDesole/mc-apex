@@ -134,7 +134,11 @@ async function cancel() {
     processing.value = false
   }
 }
-
+function copyContact(value) {
+  navigator.clipboard.writeText(value)
+  // временный фидбек
+  alert('Скопировано: ' + value)
+}
 function avatarLetter(username) {
   return (username || 'И').charAt(0).toUpperCase()
 }
@@ -190,7 +194,41 @@ function avatarLetter(username) {
           <span class="note__label">Заметка игрока:</span>
           <span class="note__text">{{ test.notes }}</span>
         </div>
+        <!-- после player-card -->
+        <div v-if="test.contact_value" class="contact-block">
+          <div class="contact-block__title">📞 Контакт для связи</div>
 
+          <div class="contact-row">
+            <div class="contact-type">
+            <span v-if="test.contact_type === 'discord'" class="type-badge discord">
+                Discord
+            </span>
+              <span v-else class="type-badge telegram">
+                Telegram
+            </span>
+            </div>
+
+            <div class="contact-value">
+              <code>{{ test.contact_value }}</code>
+              <button
+                  class="btn-copy"
+                  @click="copyContact(test.contact_value)"
+                  :title="'Скопировать'"
+              >
+                📋
+              </button>
+            </div>
+          </div>
+
+          <div v-if="test.preferred_time" class="contact-row">
+            <div class="contact-type">
+              <span class="type-badge time">⏰ Удобное время</span>
+            </div>
+            <div class="contact-value">
+              {{ test.preferred_time }}
+            </div>
+          </div>
+        </div>
         <!-- === PENDING: свободная заявка === -->
         <template v-if="isPending">
           <div class="hint">
@@ -523,7 +561,105 @@ function avatarLetter(username) {
   resize: vertical;
   outline: none;
 }
+.contact-block {
+  padding: 16px 18px;
+  background: #0d0d14;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 
+.contact-block__title {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.contact-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.contact-type {
+  flex-shrink: 0;
+}
+
+.type-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.type-badge.discord {
+  color: #8895f5;
+  background: rgba(88, 101, 242, 0.1);
+  border: 1px solid rgba(88, 101, 242, 0.3);
+}
+
+.type-badge.telegram {
+  color: #5eb5e0;
+  background: rgba(34, 158, 217, 0.1);
+  border: 1px solid rgba(34, 158, 217, 0.3);
+}
+
+.type-badge.time {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.contact-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.contact-value code {
+  flex: 1;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--accent-light);
+  font-family: 'Inter', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-copy {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.btn-copy:hover {
+  border-color: var(--accent);
+  background: rgba(124, 58, 237, 0.05);
+}
 .notes:focus {
   border-color: var(--accent);
 }

@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps({
   clan: { type: Object, required: true },
+  permissions: { type: Object, default: () => ({}) },
 })
 
 const auth = useAuthStore()
@@ -210,8 +211,11 @@ onMounted(load)
         <h2>Клан-войны</h2>
         <p class="sub">Вызывай другие кланы и доказывай силу</p>
       </div>
-
-      <button class="btn-create" @click="openChallenge">
+      <button
+          v-if="permissions.wars"
+          class="btn-create"
+          @click="openChallenge"
+      >
         ⚔️ Вызвать клан
       </button>
     </div>
@@ -270,7 +274,7 @@ onMounted(load)
             </div>
 
             <!-- Действия pending -->
-            <div v-if="w.status === 'pending'" class="war__actions">
+            <div  v-if="w.status === 'pending' && permissions.wars" class="war__actions">
               <button
                   class="btn-accept"
                   :disabled="processing === w.id"
@@ -360,8 +364,8 @@ onMounted(load)
                 </button>
 
                 <button
+                    v-if="permissions.wars"
                     class="btn-result"
-                    :disabled="processing === w.id"
                     @click="openResult(w)"
                 >
                   📝 Внести результат

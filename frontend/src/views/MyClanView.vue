@@ -23,35 +23,23 @@ const permissions = computed(() => data.value?.my_permissions ?? {})
 
 const tabs = computed(() => {
   const base = [
-    { id: 'forum', label: 'Форум', show: true },
-    { id: 'resources', label: 'Ресурсы', show: true },
-    { id: 'members', label: 'Участники', show: true },
+    { id: 'forum', label: 'Форум' },
+    { id: 'resources', label: 'Ресурсы' },
+    { id: 'members', label: 'Участники' },
+    { id: 'news', label: 'Новости' },
+    { id: 'wars', label: 'Войны', highlight: (data.value?.stats?.wars_active || 0) > 0 },
   ]
 
+  // Заявки — только для тех, кто может их принимать (лидер/офицер)
   if (permissions.value.applications) {
-    base.splice(1, 0, {
+    base.splice(3, 0, {
       id: 'applications',
       label: 'Заявки',
-      badge: data.value?.stats?.applications,
-      show: true
+      badge: data.value?.stats?.applications || null,
     })
   }
 
-  if (permissions.value.wars) {
-    base.push({
-      id: 'wars',
-      label: 'Войны',
-      badge: data.value?.stats?.wars_active || null,
-      highlight: (data.value?.stats?.wars_active || 0) > 0,
-      show: true
-    })
-  }
-
-  if (permissions.value.news) {
-    base.push({ id: 'news', label: 'Новости' , show: true})
-  }
-
-  return base.filter(t => t.show)
+  return base
 })
 
 async function load() {
@@ -167,6 +155,7 @@ onMounted(load)
       <ClanWarsTab
           v-else-if="tab === 'wars'"
           :clan="clan"
+          :permissions="permissions"
       />
       <ClanResourcesTab
           v-else-if="tab === 'resources'"

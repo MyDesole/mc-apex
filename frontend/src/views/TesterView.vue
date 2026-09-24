@@ -158,13 +158,26 @@ const statusLabels = {
             {{ t.user?.username }}
           </div>
           <div class="row__meta">
-                        <span class="mode" :class="`mode-${t.mode}`">
-                            {{ t.mode === 'pvp' ? 'PvP' : 'BedWars' }}
-                        </span>
+    <span class="mode" :class="`mode-${t.mode}`">
+        {{ t.mode === 'pvp' ? 'PvP' : 'BedWars' }}
+    </span>
             <span class="tier">Тир: {{ t.user?.tier ?? '—' }}</span>
             <span>{{ t.user?.tier_score }}%</span>
-            <span class="sep">·</span>
-            <span>{{ new Date(t.created_at).toLocaleString('ru-RU') }}</span>
+
+            <template v-if="t.contact_value">
+              <span class="sep">·</span>
+              <span class="contact-inline">
+            <b>{{ t.contact_type === 'discord' ? 'Discord' : 'Telegram' }}:</b>
+            {{ t.contact_value }}
+        </span>
+            </template>
+
+            <template v-if="t.preferred_time">
+              <span class="sep">·</span>
+              <span class="time-inline">
+            {{ t.preferred_time }}
+        </span>
+            </template>
           </div>
         </div>
 
@@ -405,7 +418,15 @@ const statusLabels = {
   font-weight: 800;
   text-transform: uppercase;
 }
+.contact-inline {
+  color: #8895f5;
+  font-size: 11px;
+}
 
+.time-inline {
+  color: #fbbf24;
+  font-size: 11px;
+}
 .mode-pvp {
   color: #a78bfa;
   background: rgba(124, 58, 237, 0.1);
