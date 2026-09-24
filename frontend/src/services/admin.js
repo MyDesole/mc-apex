@@ -77,4 +77,39 @@ export const adminApi = {
         const q = new URLSearchParams(params).toString()
         return api.get(`/admin/clans${q ? '?' + q : ''}`)
     },
+    // Турниры
+    tournaments(params = {}) {
+        const q = new URLSearchParams(params).toString()
+        return api.get(`/admin/tournaments${q ? '?' + q : ''}`)
+    },
+    createTournament(fd) {
+        return api.post('/admin/tournaments', fd)
+    },
+    updateTournament(id, payload) {
+        return api.put(`/admin/tournaments/${id}`, payload)
+    },
+    destroyTournament(id) {
+        return api.delete(`/admin/tournaments/${id}`)
+    },
+    tournamentParticipants(id) {
+        return api.get(`/admin/tournaments/${id}/participants`)
+    },
+    approveParticipant(tid, pid) {
+        return api.post(`/admin/tournaments/${tid}/participants/${pid}/approve`)
+    },
+    rejectParticipant(tid, pid) {
+        return api.post(`/admin/tournaments/${tid}/participants/${pid}/reject`)
+    },
+    setSeeds(tid, seeds) {
+        return api.post(`/admin/tournaments/${tid}/seeds`, { seeds })
+    },
+    tournamentMatches(tid) {
+        return api.get(`/admin/tournaments/${tid}/matches`)
+    },
+    generateBracket(tid) {
+        return api.post(`/admin/tournaments/${tid}/bracket/generate`)
+    },
+    updateMatch(tid, mid, payload) {
+        return api.put(`/admin/tournaments/${tid}/matches/${mid}`, payload)
+    },
 }

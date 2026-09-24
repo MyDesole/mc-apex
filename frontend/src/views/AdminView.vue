@@ -6,6 +6,7 @@ import AdminUsers from '@/components/admin/AdminUsers.vue'
 import AdminComments from '@/components/admin/AdminComments.vue'
 import AdminEvents from '@/components/admin/AdminEvents.vue'
 import AdminClans from '@/components/admin/AdminClans.vue'
+import AdminTournaments from "@/components/admin/AdminTournaments.vue";
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -68,7 +69,13 @@ onMounted(() => {
         </svg>
         Кланы
       </button>
-
+      <button
+          v-if="isAdmin || isModerator"
+          :class="{ active: tab === 'tournaments' }"
+          @click="tab = 'tournaments'"
+      >
+        🏆 Турниры
+      </button>
       <button
           :class="{ active: tab === 'comments' }"
           @click="tab = 'comments'"
@@ -95,6 +102,8 @@ onMounted(() => {
       <AdminClans v-else-if="tab === 'clans'" />
       <AdminComments v-else-if="tab === 'comments'" />
       <AdminEvents v-else-if="tab === 'events'" />
+      <AdminTournaments v-else-if="tab === 'tournaments'" />
+
     </div>
   </div>
 </template>

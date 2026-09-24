@@ -23,6 +23,9 @@ class AchievementService
             'earned_at' => now(),
         ]);
 
+        // 👇 уведомление
+        $user->notify(new \App\Notifications\AchievementGrantedNotification($achievement));
+
         return true;
     }
 

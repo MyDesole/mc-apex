@@ -87,7 +87,19 @@ const router = createRouter({
       component: ClanView,
       meta: { title: 'Клан' },
     },
+    {
+      path: '/tournaments',
+      name: 'tournaments',
+      component: () => import('@/views/TournamentsView.vue'),
+    },
+    {
+      path: '/tournaments/:id',
+      name: 'tournament',
+      component: () => import('@/views/TournamentView.vue'),
+      meta: { auth: true },
+    },
   ],
+
 })
 
 const APP_NAME = 'APEX TIERS'

@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Admin\CommentController;
 use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClanEventCommentController;
+use App\Http\Controllers\Api\TournamentController;
 use App\Http\Controllers\ClanController;
 use App\Http\Controllers\ClanEventController;
 use App\Http\Controllers\ClanWarController;
@@ -74,10 +75,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/wars/{war}/accept', [ClanWarController::class, 'accept']);
     Route::post('/wars/{war}/decline', [ClanWarController::class, 'decline']);
     Route::post('/wars/{war}/complete', [ClanWarController::class, 'complete']);
-
+    Route::get('/tournaments', [TournamentController::class, 'index']);
+    Route::get('/tournaments/{tournament}', [TournamentController::class, 'show']);
+    Route::post('/tournaments/{tournament}/register', [TournamentController::class, 'register']);
+    Route::post('/tournaments/{tournament}/withdraw', [TournamentController::class, 'withdraw']);
     Route::middleware('role:moderator,admin')->prefix('admin')->group(function () {
         Route::get('/clans', [\App\Http\Controllers\Api\Admin\ClanController::class, 'index']);
+        Route::get('/tournaments', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'index']);
+        Route::post('/tournaments', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'store']);
+        Route::put('/tournaments/{tournament}', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'update']);
+        Route::delete('/tournaments/{tournament}', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'destroy']);
 
+        Route::get('/tournaments/{tournament}/participants', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'participants']);
+        Route::post('/tournaments/{tournament}/participants/{participant}/approve', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'approveParticipant']);
+        Route::post('/tournaments/{tournament}/participants/{participant}/reject', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'rejectParticipant']);
+        Route::post('/tournaments/{tournament}/seeds', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'setSeeds']);
+
+        Route::get('/tournaments/{tournament}/matches', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'matches']);
+        Route::post('/tournaments/{tournament}/bracket/generate', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'generateBracket']);
+        Route::put('/tournaments/{tournament}/matches/{match}', [\App\Http\Controllers\Api\Admin\TournamentController::class, 'updateMatch']);
         // Статистика клана
         Route::get('/clans/{clan}/stats/logs', [ClanStatsController::class, 'logs']);
         Route::post('/clans/{clan}/stats', [ClanStatsController::class, 'update']);
