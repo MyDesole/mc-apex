@@ -118,7 +118,8 @@ class PlayerController extends Controller
     public function show(Request $request, User $user): JsonResponse
     {
         $user->load([
-            'aspects',
+            'aspectPvp',       // ← вместо 'aspects'
+            'aspectBedwars',   // ← вместо 'aspects'
             'tierTests' => fn ($q) => $q->latest()->limit(10),
             'clanMember.clan',
             'achievements',
@@ -140,8 +141,15 @@ class PlayerController extends Controller
             $total = User::where('tier_score', '>', 0)->count();
         }
 
+        // 👇 Собираем aspects вручную
+        $userArray = $user->toArray();
+        $userArray['aspects'] = [
+            'pvp' => $user->aspectPvp,
+            'bedwars' => $user->aspectBedwars,
+        ];
+
         return response()->json([
-            'user' => $user,
+            'user' => $userArray,
             'friendship' => $friendship ? [
                 'status' => $friendship->status,
                 'initiated_by_me' => $friendship->user_id === $me->id,
