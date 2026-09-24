@@ -124,6 +124,8 @@ class ClanController extends Controller
                 'role' => 'leader',
                 'joined_at' => now(),
             ]);
+            $request->user()->update(['clan_joined_at' => now()]);
+
             \App\Services\AchievementService::check($request->user());
 
             return $clan;
@@ -269,6 +271,7 @@ class ClanController extends Controller
                 'joined_at' => now(),
             ]);
             \App\Services\AchievementService::check($application->user);
+            $application->user->update(['clan_joined_at' => now()]);
 
             $application->update(['status' => 'accepted']);
             $clan->recalculatePower();
@@ -299,6 +302,7 @@ class ClanController extends Controller
             ->firstOrFail();
 
         abort_if($member->role === 'leader', 422, 'Лидер не может покинуть клан. Передайте лидерство.');
+        $member->user->update(['clan_joined_at' => null]);
 
         $member->delete();
         $clan->recalculatePower();
@@ -314,6 +318,7 @@ class ClanController extends Controller
         ClanMember::where('clan_id', $clan->id)
             ->where('user_id', $user->id)
             ->delete();
+        $user->update(['clan_joined_at' => null]);
 
         $clan->recalculatePower();
 

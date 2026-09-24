@@ -65,7 +65,15 @@ class TierTestController extends Controller
             'tier_test' => $test->load(['tester:id,username,avatar']),
         ], 201);
     }
+    public function history(Request $request, User $user): JsonResponse
+    {
+        $tests = $user->tierTests()
+            ->where('status', 'completed')
+            ->orderBy('completed_at')
+            ->get(['id', 'mode', 'result_tier', 'result_score', 'completed_at', 'aspects']);
 
+        return response()->json(['history' => $tests]);
+    }
     public function show(Request $request, TierTest $tierTest): JsonResponse
     {
         $this->authorizeAccess($request, $tierTest);

@@ -35,6 +35,30 @@ class UserController extends Controller
         return response()->json($users);
     }
 
+    public function verify(Request $request, User $user): JsonResponse
+    {
+        $validated = $request->validate([
+            'reason' => ['nullable', 'string', 'max:128'],
+        ]);
+
+        $user->update([
+            'is_verified' => true,
+            'verified_reason' => $validated['reason'] ?? null,
+        ]);
+
+        return response()->json(['user' => $user->fresh()]);
+    }
+
+    public function unverify(Request $request, User $user): JsonResponse
+    {
+        $user->update([
+            'is_verified' => false,
+            'verified_reason' => null,
+        ]);
+
+        return response()->json(['user' => $user->fresh()]);
+    }
+
     public function show(Request $request, User $user): JsonResponse
     {
         $user->load([

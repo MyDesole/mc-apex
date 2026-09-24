@@ -73,6 +73,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/achievements', [AchievementController::class, 'index']);
     Route::get('/players/{user}/achievements', [AchievementController::class, 'user']);
     // Войны
+    Route::get('/players/{user}/tier-history', [TierTestController::class, 'history']);
     Route::post('/clans/{clan}/wars', [ClanWarController::class, 'store']);
     Route::post('/wars/{war}/accept', [ClanWarController::class, 'accept']);
     Route::post('/wars/{war}/decline', [ClanWarController::class, 'decline']);
@@ -123,6 +124,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('role:admin')->prefix('admin')->group(function () {
         // Юзеры
+        Route::post('/users/{user}/verify', [UserController::class, 'verify']);
+        Route::post('/users/{user}/unverify', [UserController::class, 'unverify']);
         Route::get('/users', [\App\Http\Controllers\Api\Admin\UserController::class, 'index']);
         Route::get('/users/{user}', [UserController::class, 'show']);
         Route::post('/users/{user}/ban', [UserController::class, 'ban']);
@@ -157,6 +160,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/clans/{clan}/events/{event}/comments', [ClanEventCommentController::class, 'index']);
     Route::post('/clans/{clan}/events/{event}/comments', [ClanEventCommentController::class, 'store']);
     Route::delete('/clans/{clan}/events/{event}/comments/{comment}', [ClanEventCommentController::class, 'destroy']);
+    Route::post('/players/me/card-background/remove', [PlayerController::class, 'removeCardBackground']);
+    Route::match(['put', 'post'], '/players/me/profile', [PlayerController::class, 'updateProfile']);
 
     Route::get('/top', [\App\Http\Controllers\HomeController::class, 'top']);
     Route::middleware('role:tester,admin')->prefix('tester')->group(function () {

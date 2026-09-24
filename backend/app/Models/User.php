@@ -17,11 +17,17 @@ class User extends Authenticatable
         'username', 'email', 'password', 'avatar', 'cover_path',
         'banner_color', 'bio', 'tier', 'tier_score', 'socials',
         'role', 'is_banned', 'ban_reason', 'banned_until', 'banned_by',
+        'avatar_frame', 'profile_effect', 'accent_color',
+        'status', 'quote', 'favorite_clan_id',
+        'featured_achievements', 'profile_visibility', 'card_background',
+        'favorite_modes', 'discord_tag',
+        'is_verified', 'verified_reason', 'clan_joined_at',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+
     ];
 
     protected $casts = [
@@ -31,9 +37,17 @@ class User extends Authenticatable
         'socials' => 'array',
         'is_banned' => 'boolean',
         'banned_until' => 'datetime',
+        'favorite_modes' => 'array',
+        'featured_achievements' => 'array',
+        'is_verified' => 'boolean',
+        'clan_joined_at' => 'datetime',
 
     ];
 
+    public function getCardBackgroundUrlAttribute(): ?string
+    {
+        return $this->card_background ? asset('storage/' . $this->card_background) : null;
+    }
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
@@ -65,12 +79,44 @@ class User extends Authenticatable
         return true;
     }
 
-    protected $appends = ['avatar_url', 'cover_url', 'clan_tag'];
+    public function getFeaturedAchievementsListAttribute()
+    {
+        if (!$this->featured_achievements) return collect();
+        return \App\Models\Achievement::whereIn('id', $this->featured_achievements)->get();
+    }
 
+
+    public function favoriteClan(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Clan::class, 'favorite_clan_id');
+    }
+
+    public function featuredAchievements(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(
+            \App\Models\Achievement::class,
+            'user_featured_achievements',
+            'user_id',
+            'achievement_id'
+        );
+    }
+
+    protected $appends = [
+        'avatar_url', 'cover_url', 'clan_tag', 'clan_color',
+        'card_background_url', 'days_on_platform',     'featured_achievements_list',   // ← этого нет в твоём ответе
+
+    ];
     public function getClanTagAttribute(): ?string
     {
         if (!$this->relationLoaded('clanMember')) return null;
         return $this->clanMember?->clan?->tag;
+    }
+
+    public function getDaysOnPlatformAttribute(): int
+    {
+        if (!$this->created_at) return 0;
+
+        return (int) $this->created_at->diffInDays(now());
     }
 
     public function getClanColorAttribute(): ?string

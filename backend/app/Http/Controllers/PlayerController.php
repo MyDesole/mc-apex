@@ -58,6 +58,61 @@ class PlayerController extends Controller
         return response()->json($players);
     }
 
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'avatar_frame' => ['nullable', 'string', 'max:32'],
+            'profile_effect' => ['nullable', 'string', 'max:32'],
+            'accent_color' => ['nullable', 'string', 'max:16'],
+            'status' => ['nullable', 'string', 'max:64'],
+            'quote' => ['nullable', 'string', 'max:160'],
+            'bio' => ['nullable', 'string', 'max:500'],
+            'favorite_clan_id' => ['nullable', 'exists:clans,id'],
+            'featured_achievements' => ['nullable', 'array', 'max:6'],
+            'featured_achievements.*' => ['integer', 'exists:achievements,id'],
+            'profile_visibility' => ['nullable', 'in:public,friends,private'],
+
+            // новые
+            'discord_tag' => ['nullable', 'string', 'max:64'],
+            'favorite_modes' => ['nullable', 'array'],
+            'favorite_modes.*' => ['string', 'in:bedwars,skywars,duels,pvp,survival,other'],
+
+            // файл
+            'card_background' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ]);
+
+        // загрузка кастомного фона
+        if ($request->hasFile('card_background')) {
+            if ($user->card_background) {
+                \Storage::disk('public')->delete($user->card_background);
+            }
+
+            $validated['card_background'] = $request
+                ->file('card_background')
+                ->store("users/{$user->id}/backgrounds", 'public');
+        }
+
+        unset($validated['card_background_file']); // если было
+
+        $user->update($validated);
+
+        return response()->json(['user' => $user->fresh()]);
+    }
+
+    public function removeCardBackground(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->card_background) {
+            Storage::disk('public')->delete($user->card_background);
+            $user->update(['card_background' => null]);
+        }
+
+        return response()->json(['user' => $user->fresh()]);
+    }
+
     public function show(Request $request, User $user): JsonResponse
     {
         $user->load([
