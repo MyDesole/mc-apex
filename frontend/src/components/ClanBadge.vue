@@ -25,9 +25,7 @@ const roleColors = {
   <div v-if="!clan" class="no-clan">
     <div class="no-clan__icon">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+        <path d="M12 2l9 4v6c0 5-3.5 9-9 10-5.5-1-9-5-9-10V6z" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
     </div>
 
@@ -35,20 +33,21 @@ const roleColors = {
       <div class="no-clan__title">Не в клане</div>
       <div class="no-clan__sub">Вступи в клан, чтобы участвовать в войнах</div>
     </div>
-
-    <RouterLink to="/clans" class="no-clan__btn">
-      Найти клан
-    </RouterLink>
   </div>
 
   <RouterLink
       v-else
       :to="`/clans/${clan.id}`"
       class="clan-badge"
-      :style="{ '--clan-color': clan.banner_color }"
+      :style="{ '--clan-color': clan.banner_color || '#7c3aed' }"
   >
     <div class="clan-badge__avatar">
-      {{ (clan.tag || 'C').charAt(0) }}
+      <img
+          v-if="clan.avatar_url"
+          :src="clan.avatar_url"
+          class="avatar-img"
+      />
+      <template v-else>{{ (clan.tag || 'C').charAt(0) }}</template>
     </div>
 
     <div class="clan-badge__info">
@@ -57,16 +56,13 @@ const roleColors = {
         {{ clan.name }}
       </div>
       <div class="clan-badge__meta">
-                <span
-                    class="role"
-                    :style="{ color: roleColors[clanMember.role] }"
-                >
-                    {{ roleLabels[clanMember.role] }}
+                <span class="role" :style="{ color: roleColors[props.clanMember.role] }">
+                    {{ roleLabels[props.clanMember.role] }}
                 </span>
         <span class="sep">·</span>
-        <span>{{ clan.members_count }} участников</span>
+        <span>{{ clan.members_count ?? clan.members?.length ?? 0 }} участников</span>
         <span class="sep">·</span>
-        <span>{{ clan.power }} силы</span>
+        <span>{{ clan.power ?? 0 }} силы</span>
       </div>
     </div>
 
@@ -79,8 +75,6 @@ const roleColors = {
 </template>
 
 <style scoped>
-/* === НЕ В КЛАНЕ === */
-
 .no-clan {
   display: flex;
   align-items: center;
@@ -116,24 +110,6 @@ const roleColors = {
   color: var(--text-dim);
 }
 
-.no-clan__btn {
-  padding: 9px 16px;
-  color: #fff;
-  background: var(--accent);
-  border-radius: 9px;
-  font-size: 13px;
-  font-weight: 700;
-  white-space: nowrap;
-  transition: all 0.2s;
-}
-
-.no-clan__btn:hover {
-  background: var(--accent-light);
-  transform: translateY(-1px);
-}
-
-/* === В КЛАНЕ === */
-
 .clan-badge {
   position: relative;
   display: flex;
@@ -166,6 +142,7 @@ const roleColors = {
 }
 
 .clan-badge__avatar {
+  position: relative;
   width: 52px;
   height: 52px;
   display: flex;
@@ -177,7 +154,16 @@ const roleColors = {
   font-size: 22px;
   font-weight: 900;
   flex-shrink: 0;
+  overflow: hidden;
   box-shadow: 0 4px 20px color-mix(in srgb, var(--clan-color) 40%, transparent);
+}
+
+.avatar-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .clan-badge__info { flex: 1; min-width: 0; }
@@ -225,20 +211,5 @@ const roleColors = {
 .clan-badge:hover .clan-badge__arrow {
   color: var(--accent-light);
   transform: translateX(3px);
-}
-
-@media (max-width: 600px) {
-  .no-clan {
-    flex-direction: column;
-    align-items: flex-start;
-    text-align: left;
-  }
-
-  .no-clan__btn { width: 100%; text-align: center; }
-
-  .clan-badge__meta .sep,
-  .clan-badge__meta span:not(.role) {
-    display: none;
-  }
 }
 </style>
