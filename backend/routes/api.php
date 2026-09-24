@@ -1,15 +1,15 @@
 <?php
 
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PlayerController;
+use App\Http\Controllers\TierTestController;
 use Illuminate\Support\Facades\Route;
 
 // === Публичные контроллеры ===
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\PlayerController;
 use App\Http\Controllers\Api\AchievementController;
 use App\Http\Controllers\Api\TournamentController;
 use App\Http\Controllers\Api\NewsController;
-use App\Http\Controllers\Api\HomeController;
-use App\Http\Controllers\Api\TierTestController;
 use App\Http\Controllers\Api\ClanEventCommentController;
 use App\Http\Controllers\ClanController;
 use App\Http\Controllers\ClanEventController;
