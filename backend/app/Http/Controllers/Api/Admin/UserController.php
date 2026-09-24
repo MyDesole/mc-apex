@@ -78,26 +78,7 @@ class UserController extends Controller
     /**
      * Выдать верификацию.
      */
-    public function verify(Request $request, User $user): JsonResponse
-    {
-        $validated = $request->validate([
-            'reason' => ['nullable', 'string', 'max:128'],
-        ]);
 
-        if ($user->is_verified) {
-            return response()->json(['message' => 'Уже верифицирован.'], 422);
-        }
-
-        $user->update([
-            'is_verified' => true,
-            'verified_reason' => $validated['reason'] ?? null,
-        ]);
-
-        // уведомление юзеру
-        $user->notify(new \App\Notifications\VerifiedNotification($user->verified_reason));
-
-        return response()->json(['user' => $user->fresh()]);
-    }
 
     /**
      * Снять верификацию.
@@ -116,15 +97,7 @@ class UserController extends Controller
         return response()->json(['user' => $user->fresh()]);
     }
 
-    public function unverify(Request $request, User $user): JsonResponse
-    {
-        $user->update([
-            'is_verified' => false,
-            'verified_reason' => null,
-        ]);
 
-        return response()->json(['user' => $user->fresh()]);
-    }
 
     public function show(Request $request, User $user): JsonResponse
     {
