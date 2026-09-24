@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('player_aspects', function (Blueprint $table) {
-            $table->unsignedTinyInteger('bed_play')->default(0)->after('ppl');
-        });
+//        Schema::table('player_aspects', function (Blueprint $table) {
+//            $table->unsignedTinyInteger('bed_play')->default(0)->after('ppl');
+//        });
 
 //        Schema::table('tier_tests', function (Blueprint $table) {
 //            $table->unsignedTinyInteger('bed_play')->default(0);
