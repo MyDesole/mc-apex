@@ -101,6 +101,13 @@ watch(mobileMenuOpen, (open) => {
           <RouterLink to="/clans" class="nav-link">Кланы</RouterLink>
           <RouterLink to="/tournaments" class="nav-link">Турниры</RouterLink>
           <RouterLink to="/news" class="nav-link">Новости</RouterLink>
+          <RouterLink
+              v-if="auth.user?.clan_member"
+              to="/my-clan"
+              class="nav-link"
+          >
+             Мой клан
+          </RouterLink>
         </nav>
 
         <!-- ACTIONS -->
@@ -144,7 +151,14 @@ watch(mobileMenuOpen, (open) => {
                 Уведомления
                 <span v-if="unreadCount > 0" class="dropdown-badge">{{ unreadCount }}</span>
               </RouterLink>
-
+              <RouterLink
+                  v-if="auth.user?.clan_member"
+                  to="/my-clan"
+                  class="dropdown-item"
+                  @click="menuOpen = false"
+              >
+                Мой клан
+              </RouterLink>
               <RouterLink
                   v-if="auth.user && ['tester', 'admin'].includes(auth.user.role)"
                   to="/tester"
@@ -208,7 +222,13 @@ watch(mobileMenuOpen, (open) => {
             Уведомления
             <span v-if="unreadCount > 0" class="mobile-badge">{{ unreadCount }}</span>
           </RouterLink>
-
+          <RouterLink
+              v-if="auth.user?.clan_member"
+              to="/my-clan"
+              class="mobile-nav-link"
+          >
+            Мой клан
+          </RouterLink>
           <RouterLink
               v-if="['tester', 'admin'].includes(auth.user?.role)"
               to="/tester"

@@ -75,6 +75,12 @@ const router = createRouter({
       component: () => import('@/views/NewsView.vue'),
     },
     {
+      path: '/my-clan',
+      name: 'my-clan',
+      component: () => import('@/views/MyClanView.vue'),
+      meta: { auth: true },
+    },
+    {
       path: '/news/:id',
       name: 'news-item',
       component: () => import('@/views/NewsItemView.vue'),

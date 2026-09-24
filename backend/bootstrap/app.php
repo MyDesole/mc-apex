@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureUserHasRole::class,
             'not.banned' => \App\Http\Middleware\EnsureUserIsNotBanned::class,
+            'clan.member' => \App\Http\Middleware\EnsureClanMember::class,
         ]);
 
         $middleware->appendToGroup('auth:sanctum', [

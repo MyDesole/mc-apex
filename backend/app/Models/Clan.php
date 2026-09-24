@@ -29,7 +29,15 @@ class Clan extends Model
     {
         return $this->belongsTo(User::class, 'leader_id');
     }
+    public function forumTopics(): HasMany
+    {
+        return $this->hasMany(ClanForumTopic::class)->latest();
+    }
 
+    public function resources(): HasMany
+    {
+        return $this->hasMany(ClanResource::class)->latest();
+    }
     public function members(): HasMany
     {
         return $this->hasMany(ClanMember::class);

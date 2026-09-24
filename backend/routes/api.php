@@ -319,3 +319,32 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/news/{news}', [AdminNewsController::class, 'destroy'])->whereNumber('news');
     });
 });
+
+Route::middleware(['auth:sanctum', 'clan.member'])->prefix('my-clan')->group(function () {
+    // Дашборд
+    Route::get('/', [\App\Http\Controllers\Api\MyClanController::class, 'index']);
+
+    // Форум
+    Route::get('/forum', [\App\Http\Controllers\Api\ClanForumController::class, 'index']);
+    Route::post('/forum', [\App\Http\Controllers\Api\ClanForumController::class, 'store'])
+        ->middleware('clan.member:forum');
+    Route::get('/forum/{topic}', [\App\Http\Controllers\Api\ClanForumController::class, 'show']);
+    Route::post('/forum/{topic}/reply', [\App\Http\Controllers\Api\ClanForumController::class, 'reply']);
+    Route::post('/forum/{topic}/pin', [\App\Http\Controllers\Api\ClanForumController::class, 'pin'])
+        ->middleware('clan.member:forum');
+    Route::post('/forum/{topic}/lock', [\App\Http\Controllers\Api\ClanForumController::class, 'lock'])
+        ->middleware('clan.member:forum');
+    Route::delete('/forum/{topic}', [\App\Http\Controllers\Api\ClanForumController::class, 'destroy']);
+
+    // Ресурсы
+    Route::get('/resources', [\App\Http\Controllers\Api\ClanResourceController::class, 'index']);
+    Route::post('/resources', [\App\Http\Controllers\Api\ClanResourceController::class, 'store'])
+        ->middleware('clan.member:resources');
+    Route::post('/resources/{resource}/download', [\App\Http\Controllers\Api\ClanResourceController::class, 'download']);
+    Route::delete('/resources/{resource}', [\App\Http\Controllers\Api\ClanResourceController::class, 'destroy']);
+
+    // Роли
+    Route::post('/roles/{user}', [\App\Http\Controllers\Api\ClanRoleController::class, 'update']);
+    Route::delete('/members/{user}', [\App\Http\Controllers\Api\ClanRoleController::class, 'kick']);
+    Route::post('/transfer/{user}', [\App\Http\Controllers\Api\ClanRoleController::class, 'transferLeadership']);
+});
