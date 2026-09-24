@@ -16,7 +16,7 @@ return new class extends Migration
         });
 
         Schema::table('tier_tests', function (Blueprint $table) {
-            $table->unsignedTinyInteger('bed_play')->default(0)->after('ppl');
+            $table->unsignedTinyInteger('bed_play')->default(0);
         });
     }
 
