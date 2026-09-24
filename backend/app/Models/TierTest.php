@@ -12,6 +12,7 @@ class TierTest extends Model
         'contact_type', 'contact_value', 'preferred_time',
         'mode', 'status', 'scheduled_at', 'completed_at',
         'result_tier', 'result_score', 'aspects', 'notes',
+        'block_placing', 'rotka', 'movement', 'building', 'ppl', 'bed_play',   // ← добавили
     ];
 
     protected $casts = [

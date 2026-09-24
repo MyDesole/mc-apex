@@ -9,7 +9,7 @@ class PlayerAspect extends Model
 {
     protected $fillable = [
         'user_id', 'mode',
-        'block_placing', 'rotka', 'movement', 'building', 'ppl',
+        'block_placing', 'rotka', 'movement', 'building', 'ppl', 'bed_play',
     ];
 
     public function user(): BelongsTo
@@ -32,12 +32,21 @@ class PlayerAspect extends Model
     /**
      * Процент = сумма × 2.
      */
+    public function sum(): int
+    {
+        if ($this->mode === 'bedwars') {
+            return $this->block_placing + $this->rotka + $this->movement
+                + $this->building + $this->bed_play;
+        }
+
+        return $this->block_placing + $this->rotka + $this->movement
+            + $this->building + $this->ppl;
+    }
+
+
     public function percent(): float
     {
-        $sum = $this->block_placing + $this->rotka + $this->movement
-            + $this->building + $this->ppl;
-
-        return round($sum * 2, 2);
+        return round($this->sum() * 2, 2);
     }
 
     /**

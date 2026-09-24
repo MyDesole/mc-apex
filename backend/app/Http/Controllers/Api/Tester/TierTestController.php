@@ -126,17 +126,32 @@ class TierTestController extends Controller
         abort_if($tierTest->claimed_by !== $request->user()->id, 403);
         abort_if($tierTest->status !== 'in_progress', 422, 'Заявка не в работе.');
 
-        $validated = $request->validate([
-            'block_placing' => ['required', 'integer', 'min:0', 'max:10'],
-            'rotka' => ['required', 'integer', 'min:0', 'max:10'],
-            'movement' => ['required', 'integer', 'min:0', 'max:10'],
-            'building' => ['required', 'integer', 'min:0', 'max:10'],
-            'ppl' => ['required', 'integer', 'min:0', 'max:10'],
-            'notes' => ['nullable', 'string', 'max:2000'],
-        ]);
+        if ($tierTest->mode === 'pvp') {
+            $validated = $request->validate([
+                'block_placing' => ['required', 'integer', 'min:0', 'max:10'],
+                'rotka' => ['required', 'integer', 'min:0', 'max:10'],
+                'movement' => ['required', 'integer', 'min:0', 'max:10'],
+                'aim' => ['required', 'integer', 'min:0', 'max:10'],
+                'game_sense' => ['required', 'integer', 'min:0', 'max:10'],
+                'notes' => ['nullable', 'string', 'max:2000'],
+            ]);
 
-        $sum = $validated['block_placing'] + $validated['rotka']
-            + $validated['movement'] + $validated['building'] + $validated['ppl'];
+            $sum = $validated['block_placing'] + $validated['rotka']
+                + $validated['movement'] + $validated['aim'] + $validated['game_sense'];
+        } else {
+            $validated = $request->validate([
+                'pvp' => ['required', 'integer', 'min:0', 'max:10'],
+                'game_sense' => ['required', 'integer', 'min:0', 'max:10'],
+                'bed_play' => ['required', 'integer', 'min:0', 'max:10'],
+                'teamplay' => ['required', 'integer', 'min:0', 'max:10'],
+                'building' => ['required', 'integer', 'min:0', 'max:10'],
+                'notes' => ['nullable', 'string', 'max:2000'],
+            ]);
+
+            $sum = $validated['pvp'] + $validated['game_sense']
+                + $validated['bed_play'] + $validated['teamplay'] + $validated['building'];
+        }
+
         $percent = $sum * 2;
 
         $tier = match (true) {
@@ -149,45 +164,49 @@ class TierTestController extends Controller
         };
 
         DB::transaction(function () use ($tierTest, $validated, $percent, $tier) {
-            // обновляем запись тир-теста
             $tierTest->update([
                 'status' => 'completed',
                 'completed_at' => now(),
                 'result_tier' => $tier,
                 'result_score' => $percent,
-                'aspects' => [
-                    'block_placing' => $validated['block_placing'],
-                    'rotka' => $validated['rotka'],
-                    'movement' => $validated['movement'],
-                    'building' => $validated['building'],
-                    'ppl' => $validated['ppl'],
-                ],
+                'aspects' => $validated,
                 'notes' => $validated['notes'] ?? null,
+                ...$validated,   // раскладываем поля
             ]);
 
-            // обновляем аспекты юзера
-            PlayerAspect::updateOrCreate(
-                ['user_id' => $tierTest->user_id, 'mode' => $tierTest->mode],
-                [
-                    'block_placing' => $validated['block_placing'],
-                    'rotka' => $validated['rotka'],
-                    'movement' => $validated['movement'],
-                    'building' => $validated['building'],
-                    'ppl' => $validated['ppl'],
-                ]
+            if ($tierTest->mode === 'pvp') {
+                PlayerAspectPvp::updateOrCreate(
+                    ['user_id' => $tierTest->user_id],
+                    $validated
+                );
+            } else {
+                PlayerAspectBedwars::updateOrCreate(
+                    ['user_id' => $tierTest->user_id],
+                    $validated
+                );
+            }
+
+            // пересчёт тира
+            $user = $tierTest->user->fresh();
+            $best = max(
+                $user->aspectPvp?->percent() ?? 0,
+                $user->aspectBedwars?->percent() ?? 0
             );
 
-            // обновляем тир юзера
-            $user = $tierTest->user;
-            $user->tier = $tier;
-            $user->tier_score = $percent;
+            $user->tier_score = $best;
+            $user->tier = match (true) {
+                $best >= 90 => 'S',
+                $best >= 80 => 'A',
+                $best >= 70 => 'B',
+                $best >= 60 => 'C',
+                $best >= 50 => 'D',
+                default => 'E',
+            };
             $user->save();
 
-            // проверяем ачивки
             AchievementService::check($user);
         });
 
-        // уведомление юзеру
         $tierTest->user->notify(new \App\Notifications\TierTestCompletedNotification($tierTest->fresh()));
 
         return response()->json([

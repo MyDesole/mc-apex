@@ -7,169 +7,85 @@ import { AVATAR_FRAMES, PROFILE_EFFECTS } from '@/data/profileCustomization'
 
 const props = defineProps({
   user: { type: Object, required: true },
-  aspects: { type: Array, default: () => [] },
   editable: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['edit'])
 
+// === TIER ===
 const tierColors = {
-  S: '#facc15',
-  A: '#f97316',
-  B: '#8b5cf6',
-  C: '#06b6d4',
-  D: '#22c55e',
-  E: '#6b7280',
+  S: '#facc15', A: '#f97316', B: '#8b5cf6',
+  C: '#06b6d4', D: '#22c55e', E: '#6b7280',
 }
 
 const tierColor = computed(() => tierColors[props.user.tier] || '#6b7280')
 
-// === Фрейм и эффект ===
-const frame = computed(() =>
-    AVATAR_FRAMES.find(f => f.id === props.user.avatar_frame) ?? AVATAR_FRAMES[0]
-)
-
-const effect = computed(() =>
-    PROFILE_EFFECTS.find(e => e.id === props.user.profile_effect) ?? PROFILE_EFFECTS[0]
-)
-
-const hasFrame = computed(() => frame.value.id !== 'default')
-
-const frameStyle = computed(() => {
-  if (!frame.value) return {}
-  if (frame.value.gradient) return { background: frame.value.gradient }
-  return { background: frame.value.color }
-})
-
-const effectClass = computed(() => {
-  if (!props.user.profile_effect) return ''
-  return `effect-${props.user.profile_effect}`
-})
-
-const accent = computed(() =>
-    props.user.accent_color || props.user.banner_color || tierColor.value
-)
-
-// === Кастомный фон карточки ===
-const cardBackground = computed(() => props.user.card_background_url)
-
-const headerStyle = computed(() => {
-  const bg = cardBackground.value || props.user.cover_url
-  return {
-    ...(bg ? {
-      backgroundImage: `linear-gradient(rgba(10,10,15,0.7), rgba(10,10,15,0.9)), url(${bg})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-    } : {}),
-    '--accent-color': accent.value,
-  }
-})
-
-// === Verified ===
-const isVerified = computed(() => props.user.is_verified ?? false)
-
-// === Дни на платформе ===
-const daysOnPlatform = computed(() => props.user.days_on_platform ?? 0)
-
-function pluralDays(n) {
-  const mod10 = n % 10
-  const mod100 = n % 100
-  if (mod10 === 1 && mod100 !== 11) return 'день'
-  if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return 'дня'
-  return 'дней'
+// === АСПЕКТЫ ===
+const ASPECT_LABELS = {
+  pvp: {
+    block_placing: 'БП',
+    rotka: 'Ротка',
+    movement: 'Мувмент',
+    aim: 'Аим',
+    game_sense: 'Понимание боя',
+  },
+  bedwars: {
+    pvp: 'PvP',
+    game_sense: 'Понимание игры',
+    bed_play: 'Игра на кровати',
+    teamplay: 'Командная игра',
+    building: 'Строительство',
+  },
 }
 
-// === Клан-дата ===
-const clanJoinedAt = computed(() => props.user.clan_joined_at)
-
-function formatDate(date) {
-  return new Date(date).toLocaleDateString('ru-RU', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-  })
+const ASPECT_KEYS = {
+  pvp: ['block_placing', 'rotka', 'movement', 'aim', 'game_sense'],
+  bedwars: ['pvp', 'game_sense', 'bed_play', 'teamplay', 'building'],
 }
 
-// === Любимые режимы ===
-const MODE_LABELS = {
-  bedwars: 'BedWars',
-  skywars: 'SkyWars',
-  duels: 'Duels',
-  pvp: 'PvP',
-  survival: 'Survival',
-  other: 'Other',
+// Пустые аспекты
+const EMPTY_PVP = {
+  block_placing: 0, rotka: 0, movement: 0, aim: 0, game_sense: 0,
 }
-
-const MODE_COLORS = {
-  bedwars: '#8b5cf6',
-  skywars: '#06b6d4',
-  duels: '#f97316',
-  pvp: '#ef4444',
-  survival: '#22c55e',
-  other: '#6b7280',
+const EMPTY_BEDWARS = {
+  pvp: 0, game_sense: 0, bed_play: 0, teamplay: 0, building: 0,
 }
-
-const modes = computed(() => props.user.favorite_modes ?? [])
-
-// === Соцсети ===
-const hasSocials = computed(() => {
-  return props.user.socials && Object.values(props.user.socials).some(v => v)
-})
-
-const socialLabels = {
-  discord: 'Discord',
-  telegram: 'Telegram',
-  youtube: 'YouTube',
-  vk: 'VK',
-  website: 'Сайт',
-}
-
-// === Витрина ачивок ===
-const featured = computed(() => props.user.featured_achievements_list ?? [])
-
-// === График истории ===
-const history = ref([])
-
-onMounted(async () => {
-  if (props.user.id) {
-    try {
-      const data = await api.get(`/players/${props.user.id}/tier-history`)
-      history.value = data.history ?? []
-    } catch {
-      history.value = []
-    }
-  }
-})
-
-// === Аспекты ===
-const defaultAspects = [
-  { mode: 'pvp', block_placing: 0, rotka: 0, movement: 0, building: 0, ppl: 0, percent: 0 },
-  { mode: 'bedwars', block_placing: 0, rotka: 0, movement: 0, building: 0, ppl: 0, percent: 0 },
-]
 
 const allAspects = computed(() => {
-  const map = new Map()
+  const ua = props.user.aspects ?? {}
 
-  for (const a of defaultAspects) {
-    map.set(a.mode, { ...a })
-  }
+  const pvp = ua.pvp ?? EMPTY_PVP
+  const bw = ua.bedwars ?? EMPTY_BEDWARS
 
-  for (const a of props.aspects) {
-    map.set(a.mode, {
-      ...a,
-      percent: a.percent ?? (
-          ((a.block_placing + a.rotka + a.movement + a.building + a.ppl) * 2)
-      ),
-    })
-  }
+  const pvpSum = (pvp.block_placing ?? 0) + (pvp.rotka ?? 0)
+      + (pvp.movement ?? 0) + (pvp.aim ?? 0) + (pvp.game_sense ?? 0)
 
-  return Array.from(map.values())
+  const bwSum = (bw.pvp ?? 0) + (bw.game_sense ?? 0)
+      + (bw.bed_play ?? 0) + (bw.teamplay ?? 0) + (bw.building ?? 0)
+
+  return [
+    {
+      mode: 'pvp',
+      ...pvp,
+      percent: pvpSum * 2,
+      hasData: !!ua.pvp,
+    },
+    {
+      mode: 'bedwars',
+      ...bw,
+      percent: bwSum * 2,
+      hasData: !!ua.bedwars,
+    },
+  ]
 })
 
-const aspectLabels = {
-  block_placing: 'БП',
-  rotka: 'Ротка',
-  movement: 'Мувмент',
-  building: 'Строительство',
-  ppl: 'Аим',
+function totalScore(aspect) {
+  if (aspect.mode === 'bedwars') {
+    return (aspect.pvp ?? 0) + (aspect.game_sense ?? 0)
+        + (aspect.bed_play ?? 0) + (aspect.teamplay ?? 0) + (aspect.building ?? 0)
+  }
+  return (aspect.block_placing ?? 0) + (aspect.rotka ?? 0)
+      + (aspect.movement ?? 0) + (aspect.aim ?? 0) + (aspect.game_sense ?? 0)
 }
 
 function aspectColor(value) {
@@ -189,9 +105,105 @@ function percentColor(percent) {
   return '#6b7280'
 }
 
-function totalScore(aspect) {
-  return aspect.block_placing + aspect.rotka + aspect.movement + aspect.building + aspect.ppl
+// === ФРЕЙМ И ЭФФЕКТ ===
+const frame = computed(() =>
+    AVATAR_FRAMES.find(f => f.id === props.user.avatar_frame) ?? AVATAR_FRAMES[0]
+)
+
+const hasFrame = computed(() => frame.value.id !== 'default')
+
+const frameStyle = computed(() => {
+  if (!frame.value) return {}
+  if (frame.value.gradient) return { background: frame.value.gradient }
+  return { background: frame.value.color }
+})
+
+const effectClass = computed(() => {
+  if (!props.user.profile_effect) return ''
+  return `effect-${props.user.profile_effect}`
+})
+
+const accent = computed(() =>
+    props.user.accent_color || props.user.banner_color || tierColor.value
+)
+
+// === ФОН ===
+const cardBackground = computed(() => props.user.card_background_url)
+
+const headerStyle = computed(() => {
+  const bg = cardBackground.value || props.user.cover_url
+  return {
+    ...(bg ? {
+      backgroundImage: `linear-gradient(rgba(10,10,15,0.7), rgba(10,10,15,0.9)), url(${bg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    } : {}),
+    '--accent-color': accent.value,
+  }
+})
+
+// === VERIFIED ===
+const isVerified = computed(() => props.user.is_verified ?? false)
+
+// === ДНИ ===
+const daysOnPlatform = computed(() => props.user.days_on_platform ?? 0)
+
+function pluralDays(n) {
+  const mod10 = n % 10
+  const mod100 = n % 100
+  if (mod10 === 1 && mod100 !== 11) return 'день'
+  if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return 'дня'
+  return 'дней'
 }
+
+// === КЛАН ===
+const clanJoinedAt = computed(() => props.user.clan_joined_at)
+
+function formatDate(date) {
+  return new Date(date).toLocaleDateString('ru-RU', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+  })
+}
+
+// === РЕЖИМЫ ===
+const MODE_LABELS = {
+  bedwars: 'BedWars', skywars: 'SkyWars', duels: 'Duels',
+  pvp: 'PvP', survival: 'Survival', other: 'Other',
+}
+
+const MODE_COLORS = {
+  bedwars: '#8b5cf6', skywars: '#06b6d4', duels: '#f97316',
+  pvp: '#ef4444', survival: '#22c55e', other: '#6b7280',
+}
+
+const modes = computed(() => props.user.favorite_modes ?? [])
+
+// === СОЦСЕТИ ===
+const hasSocials = computed(() => {
+  return props.user.socials && Object.values(props.user.socials).some(v => v)
+})
+
+const socialLabels = {
+  discord: 'Discord', telegram: 'Telegram',
+  youtube: 'YouTube', vk: 'VK', website: 'Сайт',
+}
+
+// === ВИТРИНА ===
+const featured = computed(() => props.user.featured_achievements_list ?? [])
+
+// === ГРАФИК ===
+const history = ref([])
+
+onMounted(async () => {
+  if (props.user.id) {
+    try {
+      const data = await api.get(`/players/${props.user.id}/tier-history`)
+      history.value = data.history ?? []
+    } catch {
+      history.value = []
+    }
+  }
+})
 </script>
 
 <template>
@@ -202,19 +214,11 @@ function totalScore(aspect) {
         :class="effectClass"
         :style="headerStyle"
     >
-      <!-- ЛЕВО: аватар + инфо -->
       <div class="player-card__left">
         <div class="avatar-wrap" :class="{ 'avatar-wrap--framed': hasFrame }">
-          <div
-              v-if="hasFrame"
-              class="avatar-ring"
-              :style="frameStyle"
-          />
+          <div v-if="hasFrame" class="avatar-ring" :style="frameStyle" />
 
-          <div
-              class="player-card__avatar"
-              :style="{ background: accent }"
-          >
+          <div class="player-card__avatar" :style="{ background: accent }">
             <img
                 v-if="user.avatar_url"
                 :src="user.avatar_url"
@@ -248,7 +252,6 @@ function totalScore(aspect) {
 
           <p v-if="user.quote" class="quote">"{{ user.quote }}"</p>
 
-          <!-- Бейджи режимов -->
           <div v-if="modes.length" class="modes">
                         <span
                             v-for="m in modes"
@@ -260,7 +263,6 @@ function totalScore(aspect) {
                         </span>
           </div>
 
-          <!-- Мета-инфо: дни, клан-дата, discord -->
           <div class="meta-row">
                         <span v-if="daysOnPlatform" class="meta-pill">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -270,10 +272,7 @@ function totalScore(aspect) {
                             С нами {{ daysOnPlatform }} {{ pluralDays(daysOnPlatform) }}
                         </span>
 
-            <span
-                v-if="clanJoinedAt && user.clan_member?.clan"
-                class="meta-pill"
-            >
+            <span v-if="clanJoinedAt && user.clan_member?.clan" class="meta-pill">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M12 2l9 4v6c0 5-3.5 9-9 10-5.5-1-9-5-9-10V6z" />
                             </svg>
@@ -290,7 +289,6 @@ function totalScore(aspect) {
         </div>
       </div>
 
-      <!-- ПРАВО: настройки + тир -->
       <div class="player-card__right">
         <button
             v-if="editable"
@@ -317,7 +315,7 @@ function totalScore(aspect) {
       </div>
     </header>
 
-    <!-- ===== СОЦСЕТИ ===== -->
+    <!-- СОЦСЕТИ -->
     <div v-if="hasSocials" class="player-card__socials">
       <a
           v-for="(url, key) in user.socials"
@@ -333,7 +331,7 @@ function totalScore(aspect) {
       </a>
     </div>
 
-    <!-- ===== ВИТРИНА АЧИВОК ===== -->
+    <!-- ВИТРИНА -->
     <div v-if="featured.length" class="featured">
       <div class="featured__title">🏆 Витрина ачивок</div>
       <div class="featured__grid">
@@ -350,7 +348,7 @@ function totalScore(aspect) {
       </div>
     </div>
 
-    <!-- ===== ГРАФИК ПРОГРЕССА ===== -->
+    <!-- ГРАФИК -->
     <div v-if="history.length" class="chart-section">
       <div class="chart-section__head">
         <h3>Прогресс тира</h3>
@@ -359,7 +357,7 @@ function totalScore(aspect) {
       <TierHistoryChart :history="history" />
     </div>
 
-    <!-- ===== АСПЕКТЫ ===== -->
+    <!-- АСПЕКТЫ -->
     <section class="aspects">
       <div class="aspects__head">
         <h3 class="aspects__title">Аспекты игрока</h3>
@@ -372,7 +370,7 @@ function totalScore(aspect) {
             :key="aspect.mode"
             class="aspect-card"
             :class="{
-                        'aspect-card--empty': !aspect.id,
+                        'aspect-card--empty': !aspect.hasData,
                         [`aspect-card--${aspect.mode}`]: true,
                     }"
         >
@@ -384,7 +382,7 @@ function totalScore(aspect) {
               <span class="aspect-card__sub">
                                 {{ aspect.mode === 'pvp' ? 'p-ранг' : 'b-ранг' }}
                             </span>
-              <span v-if="!aspect.id" class="badge-empty">
+              <span v-if="!aspect.hasData" class="badge-empty">
                                 не тестирован
                             </span>
             </div>
@@ -409,17 +407,17 @@ function totalScore(aspect) {
 
           <div class="aspect-card__grid">
             <div
-                v-for="(label, key) in aspectLabels"
+                v-for="key in ASPECT_KEYS[aspect.mode]"
                 :key="key"
                 class="aspect"
             >
               <div class="aspect__top">
-                <span class="aspect__label">{{ label }}</span>
+                <span class="aspect__label">{{ ASPECT_LABELS[aspect.mode][key] }}</span>
                 <span
                     class="aspect__value"
                     :class="{ 'aspect__value--zero': !aspect[key] }"
                 >
-                                    {{ aspect[key] }}
+                                    {{ aspect[key] ?? 0 }}
                                 </span>
               </div>
 
@@ -427,8 +425,8 @@ function totalScore(aspect) {
                 <div
                     class="aspect__fill"
                     :style="{
-                                        width: (aspect[key] / 10 * 100) + '%',
-                                        background: aspectColor(aspect[key]),
+                                        width: ((aspect[key] ?? 0) / 10 * 100) + '%',
+                                        background: aspectColor(aspect[key] ?? 0),
                                     }"
                 />
               </div>
@@ -439,6 +437,7 @@ function totalScore(aspect) {
     </section>
   </div>
 </template>
+
 
 <style scoped>
 /* ============================================

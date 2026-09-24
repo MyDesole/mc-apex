@@ -28,7 +28,6 @@ function onUpdated() {
     <template v-if="user">
       <PlayerCard
           :user="user"
-          :aspects="aspects"
           editable
           @edit="showCustomize = true"
       />

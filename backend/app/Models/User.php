@@ -30,6 +30,24 @@ class User extends Authenticatable
 
     ];
 
+    public function aspectPvp(): HasOne
+    {
+        return $this->hasOne(PlayerAspectPvp::class);
+    }
+
+    public function aspectBedwars(): HasOne
+    {
+        return $this->hasOne(PlayerAspectBedwars::class);
+    }
+
+    /**
+     * Универсальный доступ к аспектам по режиму.
+     */
+    public function aspect(string $mode)
+    {
+        return $mode === 'pvp' ? $this->aspectPvp : $this->aspectBedwars;
+    }
+
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
@@ -103,9 +121,17 @@ class User extends Authenticatable
 
     protected $appends = [
         'avatar_url', 'cover_url', 'clan_tag', 'clan_color',
-        'card_background_url', 'days_on_platform',     'featured_achievements_list',   // ← этого нет в твоём ответе
-
+        'card_background_url', 'days_on_platform',
+        'featured_achievements_list',
     ];
+    public function getAspectsAttribute()
+    {
+        return [
+            'pvp' => $this->aspectPvp,
+            'bedwars' => $this->aspectBedwars,
+        ];
+    }
+
     public function getClanTagAttribute(): ?string
     {
         if (!$this->relationLoaded('clanMember')) return null;
@@ -150,15 +176,8 @@ class User extends Authenticatable
         return $this->cover_path ? asset('storage/' . $this->cover_path) : null;
     }
 
-    public function aspects(): HasMany
-    {
-        return $this->hasMany(PlayerAspect::class);
-    }
 
-    public function aspect(string $mode): ?PlayerAspect
-    {
-        return $this->aspects->firstWhere('mode', $mode);
-    }
+
 
     public function tierTests(): HasMany
     {

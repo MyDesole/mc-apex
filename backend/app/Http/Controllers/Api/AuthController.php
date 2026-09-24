@@ -110,12 +110,19 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         $user = $request->user()->load([
-            'aspects',
-            'clanMember.clan' => fn ($q) => $q->withCount('members'),
+            'aspectPvp',
+            'aspectBedwars',
+            'clanMember.clan',
+            'achievements',
         ]);
 
         return response()->json([
-            'user' => $user,
+            'user' => array_merge($user->toArray(), [
+                'aspects' => [
+                    'pvp' => $user->aspectPvp,
+                    'bedwars' => $user->aspectBedwars,
+                ],
+            ]),
             'rank' => $this->getUserRank($user),
         ]);
     }

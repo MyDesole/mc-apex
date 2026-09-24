@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { testerApi } from '@/services/tester.js'
 import { useAuthStore } from '@/stores/auth'
@@ -13,7 +13,6 @@ const emit = defineEmits(['close', 'updated'])
 const auth = useAuthStore()
 
 const test = ref(props.tierTest)
-const loading = ref(false)
 const error = ref('')
 const processing = ref(false)
 
@@ -22,32 +21,62 @@ const isCompleted = computed(() => test.value.status === 'completed')
 const isPending = computed(() => test.value.status === 'pending')
 const isInProgress = computed(() => test.value.status === 'in_progress')
 
-// форма оценок
-const form = ref({
-  block_placing: 0,
-  rotka: 0,
-  movement: 0,
-  building: 0,
-  ppl: 0,
-  notes: '',
-})
+const ASPECT_LABELS = {
+  pvp: {
+    block_placing: 'БП',
+    rotka: 'Ротка',
+    movement: 'Мувмент',
+    aim: 'Аим',
+    game_sense: 'Понимание боя',
+  },
+  bedwars: {
+    pvp: 'PvP',
+    game_sense: 'Понимание игры',
+    bed_play: 'Игра на кровати',
+    teamplay: 'Командная игра',
+    building: 'Строительство',
+  },
+}
 
-// если уже проведён — заполняем из aspects
+const labels = computed(() => ASPECT_LABELS[test.value.mode] ?? ASPECT_LABELS.pvp)
+
+// Пустая форма
+function emptyForm() {
+  return {
+    block_placing: 0,
+    rotka: 0,
+    movement: 0,
+    aim: 0,
+    game_sense: 0,
+    pvp: 0,
+    bed_play: 0,
+    teamplay: 0,
+    building: 0,
+    notes: '',
+  }
+}
+
+const form = ref(emptyForm())
+
+// Если уже проведён — заполняем из aspects
 if (isCompleted.value && test.value.aspects) {
+  const a = test.value.aspects
   form.value = {
-    block_placing: test.value.aspects.block_placing ?? 0,
-    rotka: test.value.aspects.rotka ?? 0,
-    movement: test.value.aspects.movement ?? 0,
-    building: test.value.aspects.building ?? 0,
-    ppl: test.value.aspects.ppl ?? 0,
+    ...emptyForm(),
+    ...a,
     notes: test.value.notes ?? '',
   }
 }
 
-const sum = computed(() =>
-    form.value.block_placing + form.value.rotka + form.value.movement
-    + form.value.building + form.value.ppl
-)
+// При смене режима — сбрасываем форму
+watch(() => test.value.mode, () => {
+  form.value = emptyForm()
+})
+
+const sum = computed(() => {
+  const l = labels.value
+  return Object.keys(l).reduce((acc, key) => acc + (Number(form.value[key]) || 0), 0)
+})
 
 const percent = computed(() => sum.value * 2)
 
@@ -68,14 +97,6 @@ const tierColors = {
   C: '#06b6d4',
   D: '#22c55e',
   E: '#6b7280',
-}
-
-const labels = {
-  block_placing: 'БП',
-  rotka: 'Ротка',
-  movement: 'Мувмент',
-  building: 'Строительство',
-  ppl: 'Аим',
 }
 
 async function claim() {
@@ -111,7 +132,13 @@ async function complete() {
   error.value = ''
 
   try {
-    await testerApi.complete(test.value.id, form.value)
+    // отправляем только нужные поля под текущий режим
+    const payload = { notes: form.value.notes }
+    for (const key of Object.keys(labels.value)) {
+      payload[key] = form.value[key]
+    }
+
+    await testerApi.complete(test.value.id, payload)
     emit('updated')
   } catch (e) {
     error.value = e.message || 'Ошибка'
@@ -134,11 +161,12 @@ async function cancel() {
     processing.value = false
   }
 }
+
 function copyContact(value) {
   navigator.clipboard.writeText(value)
-  // временный фидбек
   alert('Скопировано: ' + value)
 }
+
 function avatarLetter(username) {
   return (username || 'И').charAt(0).toUpperCase()
 }
@@ -150,9 +178,7 @@ function avatarLetter(username) {
       <header class="modal-head">
         <div>
           <h2>Тир-тест · {{ test.mode === 'pvp' ? 'PvP' : 'BedWars' }}</h2>
-          <span class="sub">
-                        {{ new Date(test.created_at).toLocaleString('ru-RU') }}
-                    </span>
+          <span class="sub">{{ new Date(test.created_at).toLocaleString('ru-RU') }}</span>
         </div>
         <button class="close" @click="$emit('close')">✕</button>
       </header>
@@ -161,19 +187,10 @@ function avatarLetter(username) {
         <div v-if="error" class="error">{{ error }}</div>
 
         <!-- Игрок -->
-        <RouterLink
-            :to="`/players/${test.user.id}`"
-            class="player-card"
-        >
+        <RouterLink :to="`/players/${test.user.id}`" class="player-card">
           <div class="avatar">
-            <img
-                v-if="test.user.avatar_url"
-                :src="test.user.avatar_url"
-                class="avatar-img"
-            />
-            <template v-else>
-              {{ avatarLetter(test.user.username) }}
-            </template>
+            <img v-if="test.user.avatar_url" :src="test.user.avatar_url" class="avatar-img" />
+            <template v-else>{{ avatarLetter(test.user.username) }}</template>
           </div>
           <div class="player-info">
             <div class="player-name">
@@ -183,8 +200,7 @@ function avatarLetter(username) {
               {{ test.user.username }}
             </div>
             <div class="player-meta">
-              Текущий тир: <b>{{ test.user.tier }}</b>
-              · {{ test.user.tier_score }}%
+              Текущий тир: <b>{{ test.user.tier }}</b> · {{ test.user.tier_score }}%
             </div>
           </div>
         </RouterLink>
@@ -194,29 +210,20 @@ function avatarLetter(username) {
           <span class="note__label">Заметка игрока:</span>
           <span class="note__text">{{ test.notes }}</span>
         </div>
-        <!-- после player-card -->
+
+        <!-- Контакт -->
         <div v-if="test.contact_value" class="contact-block">
           <div class="contact-block__title">📞 Контакт для связи</div>
 
           <div class="contact-row">
             <div class="contact-type">
-            <span v-if="test.contact_type === 'discord'" class="type-badge discord">
-                Discord
-            </span>
-              <span v-else class="type-badge telegram">
-                Telegram
-            </span>
+              <span v-if="test.contact_type === 'discord'" class="type-badge discord">Discord</span>
+              <span v-else class="type-badge telegram">Telegram</span>
             </div>
 
             <div class="contact-value">
               <code>{{ test.contact_value }}</code>
-              <button
-                  class="btn-copy"
-                  @click="copyContact(test.contact_value)"
-                  :title="'Скопировать'"
-              >
-                📋
-              </button>
+              <button class="btn-copy" @click="copyContact(test.contact_value)" title="Скопировать">📋</button>
             </div>
           </div>
 
@@ -224,12 +231,11 @@ function avatarLetter(username) {
             <div class="contact-type">
               <span class="type-badge time">⏰ Удобное время</span>
             </div>
-            <div class="contact-value">
-              {{ test.preferred_time }}
-            </div>
+            <div class="contact-value">{{ test.preferred_time }}</div>
           </div>
         </div>
-        <!-- === PENDING: свободная заявка === -->
+
+        <!-- PENDING -->
         <template v-if="isPending">
           <div class="hint">
             Эта заявка свободна. Нажми «Взять в работу», чтобы начать тест.
@@ -239,7 +245,7 @@ function avatarLetter(username) {
           </button>
         </template>
 
-        <!-- === IN_PROGRESS + MINE: форма теста === -->
+        <!-- IN_PROGRESS + MINE -->
         <template v-else-if="isInProgress && isMine">
           <div class="form">
             <div
@@ -272,7 +278,6 @@ function avatarLetter(username) {
               class="notes"
           />
 
-          <!-- Итог -->
           <div class="result" :style="{ '--tier-color': tierColors[tier] }">
             <div class="result__block">
               <span class="result__label">Балл</span>
@@ -301,14 +306,14 @@ function avatarLetter(username) {
           </div>
         </template>
 
-        <!-- === IN_PROGRESS, но у другого === -->
+        <!-- IN_PROGRESS, но у другого -->
         <template v-else-if="isInProgress && !isMine">
           <div class="hint hint--warn">
             Эту заявку уже взял {{ test.claimer?.username ?? test.tester?.username }}.
           </div>
         </template>
 
-        <!-- === COMPLETED: результат === -->
+        <!-- COMPLETED -->
         <template v-else-if="isCompleted">
           <div class="result result--final" :style="{ '--tier-color': tierColors[test.result_tier] }">
             <div class="result__block">
@@ -325,13 +330,13 @@ function avatarLetter(username) {
             </div>
           </div>
 
-          <div class="notes-view" v-if="test.notes">
+          <div v-if="test.notes" class="notes-view">
             <span class="notes-view__label">Заметки:</span>
             <p>{{ test.notes }}</p>
           </div>
         </template>
 
-        <!-- === CANCELLED === -->
+        <!-- CANCELLED -->
         <template v-else-if="test.status === 'cancelled'">
           <div class="hint hint--warn">
             Заявка отменена.
@@ -347,478 +352,518 @@ function avatarLetter(username) {
   </div>
 </template>
 
-<style scoped>
-.modal-bg {
-  position: fixed;
-  inset: 0;
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(6px);
-}
 
-.modal {
-  width: 100%;
-  max-width: 600px;
-  max-height: 92vh;
-  display: flex;
-  flex-direction: column;
+<style scoped>
+.player-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 16px;
-  overflow: hidden;
+  padding: 24px;
 }
 
-.modal-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--border);
-  gap: 12px;
-}
-
-.modal-head h2 {
-  margin: 0 0 2px;
-  font-size: 17px;
-  font-weight: 800;
-}
-
-.sub {
-  font-size: 12px;
-  color: var(--text-dim);
-}
-
-.close {
-  width: 30px;
-  height: 30px;
-  color: var(--text-dim);
-  background: transparent;
-  border: 0;
-  border-radius: 8px;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.close:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text);
-}
-
-.body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.error {
-  padding: 10px 12px;
-  color: #fca5a5;
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 8px;
-  font-size: 13px;
-}
-
-/* Player card */
-.player-card {
+.player-card__header {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+  padding: 20px;
   background: #0d0d14;
-  border: 1px solid var(--border);
   border-radius: 12px;
-  transition: border-color 0.2s;
+  overflow: hidden;
+  min-height: 110px;
 }
 
-.player-card:hover {
-  border-color: var(--border-hover);
+.player-card__left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  flex: 1;
 }
 
-.avatar {
+.avatar-wrap { position: relative; flex-shrink: 0; }
+.avatar-wrap--framed { padding: 3px; border-radius: 16px; }
+
+.avatar-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.avatar-wrap--framed .player-card__avatar {
   position: relative;
-  width: 52px;
-  height: 52px;
+  z-index: 1;
+  border: 2px solid var(--bg-card);
+}
+
+.player-card__avatar {
+  position: relative;
+  width: 72px;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-  border-radius: 12px;
-  color: #fff;
-  font-size: 20px;
+  border-radius: 14px;
+  font-size: 28px;
   font-weight: 800;
+  color: #fff;
   flex-shrink: 0;
   overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
 }
 
-.avatar-img {
+.player-card__avatar-img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
+  display: block;
 }
 
-.player-name {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--text);
-  margin-bottom: 2px;
-}
+.player-card__info { flex: 1; min-width: 0; }
 
-.clan-tag {
-  color: var(--accent-light);
-  margin-right: 4px;
-}
-
-.player-meta {
-  font-size: 12px;
-  color: var(--text-dim);
-}
-
-.player-meta b {
-  color: var(--text);
-  font-weight: 800;
-}
-
-/* Note */
-.note {
-  padding: 10px 14px;
-  background: rgba(124, 58, 237, 0.05);
-  border-left: 3px solid var(--accent);
-  border-radius: 6px;
-  font-size: 13px;
-}
-
-.note__label {
-  color: var(--text-muted);
-  font-weight: 700;
-  margin-right: 6px;
-}
-
-.note__text {
-  color: var(--text-dim);
-}
-
-/* Form */
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.aspect-row {
-  display: grid;
-  grid-template-columns: 100px 1fr 50px;
-  align-items: center;
-  gap: 12px;
-}
-
-.aspect-label {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-dim);
-}
-
-.slider {
-  width: 100%;
-  accent-color: var(--accent);
-  cursor: pointer;
-}
-
-.value {
-  width: 100%;
-  padding: 6px 8px;
-  color: var(--text);
-  background: #0d0d14;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  text-align: center;
-  font-weight: 900;
-  outline: none;
-}
-
-.value:focus {
-  border-color: var(--accent);
-}
-
-.notes {
-  width: 100%;
-  padding: 10px 12px;
-  color: var(--text);
-  background: #0d0d14;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  font: inherit;
-  font-size: 13px;
-  resize: vertical;
-  outline: none;
-}
-.contact-block {
-  padding: 16px 18px;
-  background: #0d0d14;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.contact-block__title {
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-}
-
-.contact-row {
+.player-card__name {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.contact-type {
-  flex-shrink: 0;
-}
-
-.type-badge {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 11px;
+  gap: 6px;
+  margin: 0 0 4px;
+  font-size: 20px;
   font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.type-badge.discord {
-  color: #8895f5;
-  background: rgba(88, 101, 242, 0.1);
-  border: 1px solid rgba(88, 101, 242, 0.3);
-}
-
-.type-badge.telegram {
-  color: #5eb5e0;
-  background: rgba(34, 158, 217, 0.1);
-  border: 1px solid rgba(34, 158, 217, 0.3);
-}
-
-.type-badge.time {
-  color: #fbbf24;
-  background: rgba(251, 191, 36, 0.1);
-  border: 1px solid rgba(251, 191, 36, 0.3);
-}
-
-.contact-value {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
-}
-
-.contact-value code {
-  flex: 1;
-  padding: 6px 10px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--accent-light);
-  font-family: 'Inter', monospace;
-  font-size: 13px;
-  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.btn-copy {
-  width: 34px;
-  height: 34px;
-  display: flex;
+.verified {
+  display: inline-flex;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px rgba(29, 161, 242, 0.6));
+}
+
+.status {
+  margin: 0;
+  color: var(--accent-color);
+  font-size: 13px;
+  font-weight: 700;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.bio {
+  margin: 0;
+  color: #d1d1db;
+  font-size: 13px;
+  line-height: 1.5;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.quote {
+  margin: 4px 0 0;
+  color: #b8b8c7;
+  font-size: 12px;
+  font-style: italic;
+  line-height: 1.4;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.modes { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+
+.mode-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--color);
+  background: color-mix(in srgb, var(--color) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color) 35%, transparent);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.meta-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+.meta-pill {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  background: transparent;
+  gap: 4px;
+  padding: 3px 8px;
+  background: rgba(10, 10, 15, 0.6);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.15s;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #d1d1db;
+  backdrop-filter: blur(6px);
+}
+
+.meta-pill--discord {
+  color: #8895f5;
+  border-color: rgba(88, 101, 242, 0.3);
+}
+
+.player-card__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
   flex-shrink: 0;
 }
 
-.btn-copy:hover {
-  border-color: var(--accent);
-  background: rgba(124, 58, 237, 0.05);
-}
-.notes:focus {
-  border-color: var(--accent);
+.player-card__edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  color: #fff;
+  background: rgba(124, 58, 237, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
 }
 
-/* Result */
-.result {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
-  padding: 14px;
+.player-card__edit:hover {
+  background: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+}
+
+.player-card__tier {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid;
+  border-radius: 12px;
+  font-size: 24px;
+  font-weight: 900;
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(8px);
+}
+
+.player-card__header.effect-glow {
+  box-shadow: inset 0 0 40px color-mix(in srgb, var(--accent-color) 20%, transparent);
+}
+
+.player-card__header.effect-pulse { animation: profilePulse 3s infinite; }
+
+@keyframes profilePulse {
+  0%, 100% { box-shadow: inset 0 0 40px color-mix(in srgb, var(--accent-color) 15%, transparent); }
+  50% { box-shadow: inset 0 0 60px color-mix(in srgb, var(--accent-color) 35%, transparent); }
+}
+
+.player-card__header.effect-gradient::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg,
+  color-mix(in srgb, var(--accent-color) 15%, transparent) 0%,
+  transparent 40%,
+  color-mix(in srgb, var(--accent-color) 15%, transparent) 100%);
+  pointer-events: none;
+}
+
+.player-card__header.effect-fire::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 100% 0%, rgba(239, 68, 68, 0.3), transparent 50%);
+  pointer-events: none;
+  animation: fireFlicker 2s infinite;
+}
+
+@keyframes fireFlicker {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.player-card__header.effect-ice::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 0% 100%, rgba(6, 182, 212, 0.3), transparent 50%);
+  pointer-events: none;
+}
+
+.player-card__header.effect-legendary { border: 1px solid rgba(250, 204, 21, 0.4); }
+
+.player-card__header.effect-legendary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.15), transparent 40%, rgba(249, 115, 22, 0.15));
+  pointer-events: none;
+  animation: legendaryShift 4s infinite;
+  background-size: 200% 200%;
+}
+
+@keyframes legendaryShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.player-card__socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.social-link:hover { transform: translateY(-1px); color: #fff; }
+.social-link.discord:hover { background: #5865f2; border-color: #5865f2; }
+.social-link.telegram:hover { background: #229ed9; border-color: #229ed9; }
+.social-link.youtube:hover { background: #ff0000; border-color: #ff0000; }
+.social-link.vk:hover { background: #0077ff; border-color: #0077ff; }
+.social-link.website:hover { background: var(--accent); border-color: var(--accent); }
+
+.featured {
+  margin-bottom: 20px;
+  padding: 16px 18px;
   background: #0d0d14;
   border: 1px solid var(--border);
   border-radius: 12px;
 }
 
-.result--final {
-  border-color: var(--tier-color);
-  box-shadow: 0 0 30px color-mix(in srgb, var(--tier-color) 15%, transparent);
-}
-
-.result__block {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.result__label {
-  font-size: 10px;
+.featured__title {
+  margin-bottom: 12px;
   color: var(--text-muted);
-  text-transform: uppercase;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.result__value {
-  font-size: 20px;
-  font-weight: 900;
-  color: var(--text);
-}
-
-.result__value.accent {
-  color: var(--accent-light);
-}
-
-.result__value.tier {
-  font-size: 26px;
-  color: var(--tier-color);
-  filter: drop-shadow(0 0 10px var(--tier-color));
-}
-
-/* Actions */
-.actions {
-  display: flex;
+.featured__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 8px;
-  flex-wrap: wrap;
 }
 
-.flex-1 {
-  flex: 1;
-}
-
-.btn-primary,
-.btn-cancel,
-.btn-danger {
-  min-height: 42px;
-  padding: 0 20px;
+.featured__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid color-mix(in srgb, var(--color) 30%, transparent);
   border-radius: 10px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  border: 0;
   transition: all 0.2s;
 }
 
-.btn-primary {
-  color: #fff;
-  background: var(--accent);
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--accent-light);
+.featured__item:hover {
+  border-color: var(--color);
   transform: translateY(-1px);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--color) 25%, transparent);
 }
 
-.btn-cancel {
-  color: var(--text-dim);
-  background: transparent;
-  border: 1px solid var(--border);
-}
+.featured__icon { font-size: 20px; flex-shrink: 0; }
 
-.btn-cancel:hover:not(:disabled) {
+.featured__name {
+  font-size: 12px;
+  font-weight: 700;
   color: var(--text);
-  border-color: var(--border-hover);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.btn-danger {
-  color: #f87171;
-  background: transparent;
-  border: 1px solid rgba(239, 68, 68, 0.25);
+.chart-section { margin-bottom: 20px; }
+
+.chart-section__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+  padding: 0 2px;
 }
 
-.btn-danger:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.08);
+.chart-section__head h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
 }
 
-.btn-primary:disabled,
-.btn-cancel:disabled,
-.btn-danger:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Hints */
-.hint {
-  padding: 12px 14px;
-  color: var(--text-dim);
-  background: rgba(124, 58, 237, 0.05);
-  border: 1px solid rgba(124, 58, 237, 0.2);
-  border-radius: 10px;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.hint--warn {
-  color: #fbbf24;
-  background: rgba(251, 191, 36, 0.05);
-  border-color: rgba(251, 191, 36, 0.2);
-}
-
-.notes-view {
-  padding: 12px 14px;
-  background: #0d0d14;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-}
-
-.notes-view__label {
-  display: block;
+.chart-section__count {
   font-size: 11px;
   color: var(--text-muted);
+  font-weight: 700;
   text-transform: uppercase;
-  font-weight: 800;
   letter-spacing: 0.4px;
-  margin-bottom: 6px;
 }
 
-.notes-view p {
-  margin: 0;
-  color: var(--text-dim);
-  font-size: 13px;
-  line-height: 1.5;
-  white-space: pre-wrap;
-}
+.aspects { margin-top: 4px; }
 
-.modal-foot {
+.aspects__head {
   display: flex;
-  justify-content: flex-end;
-  padding: 14px 22px;
-  border-top: 1px solid var(--border);
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 0 2px;
+}
+
+.aspects__title { margin: 0; font-size: 14px; font-weight: 800; color: var(--text); }
+.aspects__sub { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+
+.aspects__list { display: flex; flex-direction: column; gap: 12px; }
+
+.aspect-card {
+  position: relative;
+  padding: 16px 18px;
+  background: #0d0d14;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: border-color 0.2s ease;
+}
+
+.aspect-card:hover { border-color: var(--border-hover); }
+.aspect-card--empty { opacity: 0.75; }
+
+.aspect-card--pvp {
+  background: linear-gradient(180deg, rgba(124, 58, 237, 0.04), transparent 40%), #0d0d14;
+}
+
+.aspect-card--bedwars {
+  background: linear-gradient(180deg, rgba(6, 182, 212, 0.04), transparent 40%), #0d0d14;
+}
+
+.aspect-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  gap: 12px;
+}
+
+.aspect-card__head-left {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.aspect-card__mode { font-size: 14px; font-weight: 800; color: var(--text); }
+.aspect-card__sub { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+
+.badge-empty {
+  display: inline-block;
+  padding: 2px 8px;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.aspect-card__head-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.total { display: flex; align-items: baseline; gap: 2px; font-weight: 900; }
+.total__value { font-size: 16px; color: var(--text); }
+.total__max { font-size: 11px; color: var(--text-muted); font-weight: 700; }
+
+.percent-pill {
+  padding: 4px 10px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.aspect-card__grid { display: grid; gap: 10px; }
+.aspect { display: flex; flex-direction: column; gap: 5px; }
+
+.aspect__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.aspect__label { color: var(--text-dim); font-size: 12px; font-weight: 600; }
+.aspect__value { color: var(--text); font-size: 12px; font-weight: 800; }
+.aspect__value--zero { color: var(--text-muted); }
+
+.aspect__bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.aspect__fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (max-width: 600px) {
+  .player-card { padding: 16px; }
+
+  .player-card__header {
+    padding: 16px;
+    gap: 12px;
+    min-height: 90px;
+  }
+
+  .player-card__left { gap: 12px; }
+
+  .player-card__avatar {
+    width: 56px;
+    height: 56px;
+    font-size: 22px;
+    border-radius: 12px;
+  }
+
+  .player-card__name { font-size: 16px; }
+  .bio, .status { font-size: 11px; }
+
+  .player-card__edit { padding: 6px 10px; font-size: 11px; }
+  .player-card__edit svg { display: none; }
+
+  .player-card__tier {
+    width: 44px;
+    height: 44px;
+    font-size: 19px;
+    border-radius: 10px;
+  }
+
+  .aspect-card { padding: 14px; }
+  .aspect-card__head { flex-wrap: wrap; }
+  .aspect-card__head-right { width: 100%; justify-content: space-between; }
 }
 </style>
