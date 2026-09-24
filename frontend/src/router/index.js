@@ -6,40 +6,90 @@ import RegisterView from '../views/RegisterView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import PlayerView from '@/views/PlayerView.vue'
 import PlayersView from "@/views/PlayersView.vue";
+import FriendsView from "@/views/FriendsView.vue";
+import NotificationsView from "@/views/NotificationsView.vue";
+import ClansView from "@/views/ClansView.vue";
+import ClanCreateView from "@/views/ClanCreateView.vue";
+import ClanView from "@/views/ClanView.vue";
 
 const router = createRouter({
   history: createWebHistory(),
-
   routes: [
-    { path: '/', name: 'home', component: HomeView },
-    { path: '/login', name: 'login', component: LoginView, meta: { guest: true } },
-    { path: '/register', name: 'register', component: RegisterView, meta: { guest: true } },
-
-    { path: '/profile', name: 'profile', component: ProfileView, meta: { auth: true } },
+    {
+      path: '/',
+      name: 'home',
+      component: HomeView,
+      meta: { title: 'Главная' },
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: LoginView,
+      meta: { title: 'Вход', guest: true },
+    },
+    {
+      path: '/register',
+      name: 'register',
+      component: RegisterView,
+      meta: { title: 'Регистрация', guest: true },
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: ProfileView,
+      meta: { title: 'Мой профиль', auth: true },
+    },
     {
       path: '/players',
       name: 'players',
       component: PlayersView,
-      meta: { auth: true },
+      meta: { title: 'Игроки', auth: true },
+    },
+    {
+      path: '/players/:id',
+      name: 'player',
+      component: PlayerView,
+      meta: { title: 'Профиль игрока', auth: true },
     },
     {
       path: '/friends',
       name: 'friends',
-      component: () => import('@/views/FriendsView.vue'),
-      meta: { auth: true },
+      component: FriendsView,
+      meta: { title: 'Друзья', auth: true },
     },
     {
       path: '/notifications',
       name: 'notifications',
-      component: () => import('@/views/NotificationsView.vue'),
-      meta: { auth: true },
+      component: NotificationsView,
+      meta: { title: 'Уведомления', auth: true },
     },
-
-    { path: '/clans', name: 'clans', component: () => import('@/views/ClansView.vue') },
-    { path: '/clans/create', name: 'clan-create', component: () => import('@/views/ClanCreateView.vue'), meta: { auth: true } },
-    { path: '/clans/:id', name: 'clan', component: () => import('@/views/ClanView.vue') },
-    { path: '/players/:id', name: 'player', component: PlayerView, meta: { auth: true } },
+    {
+      path: '/clans',
+      name: 'clans',
+      component: ClansView,
+      meta: { title: 'Кланы' },
+    },
+    {
+      path: '/clans/create',
+      name: 'clan-create',
+      component: ClanCreateView,
+      meta: { title: 'Создать клан', auth: true },
+    },
+    {
+      path: '/clans/:id',
+      name: 'clan',
+      component: ClanView,
+      meta: { title: 'Клан' },
+    },
   ],
 })
+
+const APP_NAME = 'APEX TIERS'
+
+router.afterEach((to) => {
+  const title = to.meta?.title
+  document.title = title ? `${title} · ${APP_NAME}` : APP_NAME
+})
+
 
 export default router
