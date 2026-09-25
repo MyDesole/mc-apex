@@ -18,7 +18,7 @@ class ProfileRecommendationController extends Controller
     {
         $recommendations = ProfileRecommendation::where('target_id', $user->id)
             ->where('is_hidden', false)
-            ->with('author:id,username,avatar,avatar_url,tier,is_verified,accent_color,banner_color')
+            ->with('author:id,username,avatar,tier,is_verified,accent_color,banner_color')
             ->latest()
             ->get();
 
