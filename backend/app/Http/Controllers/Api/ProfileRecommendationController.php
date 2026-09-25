@@ -72,7 +72,7 @@ class ProfileRecommendationController extends Controller
             ]
         );
 
-        $rec->load('author:id,username,avatar,avatar_url,tier,is_verified,accent_color,banner_color');
+        $rec->load('author:id,username,avatar,tier,is_verified,accent_color,banner_color');
 
         return response()->json([
             'recommendation' => $rec,
