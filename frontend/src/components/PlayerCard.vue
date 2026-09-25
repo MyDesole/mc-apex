@@ -540,7 +540,7 @@ onMounted(async () => {
           <span class="friends__count">{{ allFriends.length }}</span>
         </header>
 
-        <div class="friends__list">
+        <div class="friends__grid">
           <RouterLink
               v-for="f in allFriends"
               :key="f.id"
@@ -557,20 +557,14 @@ onMounted(async () => {
               <template v-else>
                 {{ (f.username || 'И').charAt(0).toUpperCase() }}
               </template>
+
+              <span
+                  class="friend__tier-dot"
+                  :style="{ background: tierColors[f.tier] || '#6b7280' }"
+              />
             </div>
 
             <div class="friend__name">{{ f.username }}</div>
-
-            <div
-                class="friend__tier"
-                :style="{
-                  color: tierColors[f.tier] || '#6b7280',
-                  borderColor: (tierColors[f.tier] || '#6b7280') + '55',
-                  background: (tierColors[f.tier] || '#6b7280') + '12',
-                }"
-            >
-              {{ f.tier ?? '—' }}
-            </div>
           </RouterLink>
         </div>
       </aside>
@@ -1382,7 +1376,7 @@ onMounted(async () => {
 }
 
 /* ============================================
-   FRIENDS (список)
+   FRIENDS
    ============================================ */
 
 .friends {
@@ -1418,43 +1412,48 @@ onMounted(async () => {
   font-weight: 700;
 }
 
-.friends__list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.friends__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
 }
 
 .friend {
   position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
+  gap: 6px;
+  padding: 10px 6px 8px;
   border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   text-decoration: none;
-  transition: background 0.15s ease, transform 0.15s ease;
+  transition: all 0.15s ease;
+  overflow: hidden;
 }
 
 .friend:hover {
-  background: rgba(255, 255, 255, 0.04);
-  transform: translateX(2px);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(139, 92, 246, 0.5);
+  transform: translateY(-2px);
 }
 
 .friend__avatar {
   position: relative;
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  border-radius: 8px;
+  border-radius: 10px;
   background: linear-gradient(135deg, #8b5cf6, #6d28d9);
   color: #fff;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 900;
   overflow: hidden;
-  box-shadow: 0 3px 10px rgba(124, 58, 237, 0.25);
+  box-shadow: 0 3px 10px rgba(124, 58, 237, 0.3);
+  flex-shrink: 0;
 }
 
 .friend__avatar img {
@@ -1466,25 +1465,27 @@ onMounted(async () => {
   display: block;
 }
 
+.friend__tier-dot {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #171a21;
+  box-shadow: 0 0 8px currentColor;
+  z-index: 2;
+}
+
 .friend__name {
-  flex: 1;
-  min-width: 0;
-  font-size: 12.5px;
+  width: 100%;
+  font-size: 11px;
   font-weight: 700;
-  color: #e5e7eb;
+  color: #c7d5e0;
+  text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.friend__tier {
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: -0.3px;
-  flex-shrink: 0;
-  padding: 2px 7px;
-  border: 1px solid;
-  border-radius: 6px;
 }
 
 /* ============================================
@@ -1754,23 +1755,23 @@ onMounted(async () => {
   }
 
   .friend {
-    padding: 6px 8px;
+    padding: 8px 4px 6px;
   }
 
   .friend__avatar {
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
-    border-radius: 7px;
+    width: 34px;
+    height: 34px;
+    font-size: 13px;
+    border-radius: 9px;
+  }
+
+  .friend__tier-dot {
+    width: 10px;
+    height: 10px;
   }
 
   .friend__name {
-    font-size: 11.5px;
-  }
-
-  .friend__tier {
-    font-size: 10.5px;
-    padding: 1px 6px;
+    font-size: 10px;
   }
 
   .ach-modal {
