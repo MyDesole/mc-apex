@@ -134,6 +134,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'avatar_url', 'cover_url', 'clan_tag', 'clan_color',
         'card_background_url', 'days_on_platform',
         'featured_achievements_list',
+        'friends_all',
     ];
     public function getAspectsAttribute()
     {
@@ -141,6 +142,22 @@ class User extends Authenticatable implements MustVerifyEmail
             'pvp' => $this->aspectPvp,
             'bedwars' => $this->aspectBedwars,
         ];
+    }
+
+    public function getFriendsAllAttribute(): \Illuminate\Support\Collection
+    {
+        $direct = $this->relationLoaded('friendsList')
+            ? $this->getRelation('friendsList')
+            : collect();
+
+        $reverse = $this->relationLoaded('friendsOf')
+            ? $this->getRelation('friendsOf')
+            : collect();
+
+        return $direct
+            ->merge($reverse)
+            ->unique('id')
+            ->values();
     }
 
     public function getClanTagAttribute(): ?string
@@ -199,6 +216,30 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Friendship::class, 'user_id')
             ->where('status', 'accepted');
+    }
+
+    public function friendsList(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'friendships',
+            'user_id',
+            'friend_id'
+        )
+            ->wherePivot('status', 'accepted')
+            ->withPivot('status', 'created_at');
+    }
+
+    public function friendsOf(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'friendships',
+            'friend_id',
+            'user_id'
+        )
+            ->wherePivot('status', 'accepted')
+            ->withPivot('status', 'created_at');
     }
 
     public function friendRequests(): HasMany

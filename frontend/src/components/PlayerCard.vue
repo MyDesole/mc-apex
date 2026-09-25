@@ -127,8 +127,6 @@ const accent = computed(() =>
 )
 
 // === ФОН ===
-
-// Обложка — только шапка
 const headerStyle = computed(() => {
   const url = props.user.cover_url
   return {
@@ -141,7 +139,6 @@ const headerStyle = computed(() => {
   }
 })
 
-// Фон карточки — вся карточка
 const cardStyle = computed(() => {
   const url = props.user.card_background_url
   return {
@@ -182,7 +179,12 @@ const showcaseRows = computed(() => {
   return rows
 })
 
-// Модалка достижения
+// === ДРУЗЬЯ ===
+const allFriends = computed(() => {
+  return props.user.friends_all ?? props.user.friends ?? []
+})
+
+// === МОДАЛКА ДОСТИЖЕНИЯ ===
 const openedAchievement = ref(null)
 const showAchievement = ref(false)
 
@@ -196,7 +198,6 @@ function closeAchievement() {
   openedAchievement.value = null
 }
 
-// Цвет по редкости, если бэк не отдаёт a.color
 const rarityColors = {
   common: '#7c3aed',
   rare: '#06b6d4',
@@ -280,7 +281,7 @@ onMounted(async () => {
   <div class="profile-layout">
     <!-- ====== ОСНОВНАЯ КАРТОЧКА ====== -->
     <div class="player-card" :style="cardStyle">
-      <!-- ===== HEADER ===== -->
+      <!-- HEADER -->
       <header
           class="player-card__header"
           :class="effectClass"
@@ -492,44 +493,88 @@ onMounted(async () => {
       </section>
     </div>
 
-    <!-- ====== STEAM-STYLE ВИТРИНА ====== -->
-    <aside class="showcase" v-if="allAchievements.length">
-      <header class="showcase__head">
-        <h3 class="showcase__title">Достижения</h3>
-        <span class="showcase__count">{{ allAchievements.length }}</span>
-      </header>
+    <!-- ====== ПРАВАЯ КОЛОНКА ====== -->
+    <div class="side-column">
+      <!-- ДОСТИЖЕНИЯ -->
+      <aside class="showcase" v-if="allAchievements.length">
+        <header class="showcase__head">
+          <h3 class="showcase__title">Достижения</h3>
+          <span class="showcase__count">{{ allAchievements.length }}</span>
+        </header>
 
-      <div class="showcase__rows">
-        <div
-            v-for="(row, ri) in showcaseRows"
-            :key="ri"
-            class="showcase__row"
-        >
-          <button
-              v-for="a in row"
-              :key="a.id"
-              type="button"
-              class="showcase__cell"
-              :style="{ '--color': achievementColor(a) }"
-              @click="openAchievement(a)"
-          >
-            <div class="showcase__icon">{{ a.icon }}</div>
-            <div class="showcase__meta">
-              <span class="showcase__name">{{ a.name }}</span>
-            </div>
-          </button>
-
-          <!-- Пустые ячейки до 4 в ряду -->
+        <div class="showcase__rows">
           <div
-              v-for="n in (4 - row.length)"
-              :key="'empty-' + ri + '-' + n"
-              class="showcase__cell showcase__cell--empty"
+              v-for="(row, ri) in showcaseRows"
+              :key="ri"
+              class="showcase__row"
           >
-            <div class="showcase__icon showcase__icon--empty">?</div>
+            <button
+                v-for="a in row"
+                :key="a.id"
+                type="button"
+                class="showcase__cell"
+                :style="{ '--color': achievementColor(a) }"
+                @click="openAchievement(a)"
+            >
+              <div class="showcase__icon">{{ a.icon }}</div>
+              <div class="showcase__meta">
+                <span class="showcase__name">{{ a.name }}</span>
+              </div>
+            </button>
+
+            <div
+                v-for="n in (4 - row.length)"
+                :key="'empty-' + ri + '-' + n"
+                class="showcase__cell showcase__cell--empty"
+            >
+              <div class="showcase__icon showcase__icon--empty">?</div>
+            </div>
           </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+
+      <!-- ДРУЗЬЯ -->
+      <aside class="friends" v-if="allFriends.length">
+        <header class="friends__head">
+          <h3 class="friends__title">Друзья</h3>
+          <span class="friends__count">{{ allFriends.length }}</span>
+        </header>
+
+        <div class="friends__list">
+          <RouterLink
+              v-for="f in allFriends"
+              :key="f.id"
+              :to="`/players/${f.id}`"
+              class="friend"
+              :title="f.username"
+          >
+            <div class="friend__avatar">
+              <img
+                  v-if="f.avatar_url"
+                  :src="f.avatar_url"
+                  :alt="f.username"
+              />
+              <template v-else>
+                {{ (f.username || 'И').charAt(0).toUpperCase() }}
+              </template>
+            </div>
+
+            <div class="friend__name">{{ f.username }}</div>
+
+            <div
+                class="friend__tier"
+                :style="{
+                  color: tierColors[f.tier] || '#6b7280',
+                  borderColor: (tierColors[f.tier] || '#6b7280') + '55',
+                  background: (tierColors[f.tier] || '#6b7280') + '12',
+                }"
+            >
+              {{ f.tier ?? '—' }}
+            </div>
+          </RouterLink>
+        </div>
+      </aside>
+    </div>
 
     <!-- ====== МОДАЛКА ДОСТИЖЕНИЯ ====== -->
     <Teleport to="body">
@@ -614,6 +659,14 @@ onMounted(async () => {
   align-items: start;
 }
 
+.side-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 20px;
+}
+
 /* ============================================
    PLAYER CARD
    ============================================ */
@@ -669,7 +722,7 @@ onMounted(async () => {
   flex: 1;
 }
 
-/* === AVATAR FRAME === */
+/* === AVATAR === */
 
 .avatar-wrap {
   position: relative;
@@ -794,7 +847,7 @@ onMounted(async () => {
   letter-spacing: 0.3px;
 }
 
-/* === META ROW === */
+/* === META === */
 
 .meta-row {
   display: flex;
@@ -869,7 +922,7 @@ onMounted(async () => {
   transition: box-shadow 0.2s ease;
 }
 
-/* === PROFILE EFFECTS === */
+/* === EFFECTS === */
 
 .player-card__header.effect-glow {
   box-shadow: inset 0 0 40px color-mix(in srgb, var(--accent-color) 20%, transparent);
@@ -999,9 +1052,7 @@ onMounted(async () => {
   letter-spacing: 0.4px;
 }
 
-/* ============================================
-   АСПЕКТЫ
-   ============================================ */
+/* === АСПЕКТЫ === */
 
 .aspects {
   margin-top: 4px;
@@ -1182,7 +1233,7 @@ onMounted(async () => {
 }
 
 /* ============================================
-   STEAM-STYLE SHOWCASE
+   SHOWCASE (достижения)
    ============================================ */
 
 .showcase {
@@ -1193,8 +1244,6 @@ onMounted(async () => {
   background: linear-gradient(180deg, #171a21 0%, #10131a 100%);
   border: 1px solid var(--border);
   border-radius: 16px;
-  position: sticky;
-  top: 20px;
 }
 
 .showcase__head {
@@ -1257,11 +1306,6 @@ onMounted(async () => {
       inset 0 0 0 1px color-mix(in srgb, var(--color) 60%, transparent);
 }
 
-.showcase__cell:focus-visible {
-  outline: 2px solid var(--color);
-  outline-offset: 2px;
-}
-
 .showcase__cell::before {
   content: '';
   position: absolute;
@@ -1283,9 +1327,7 @@ onMounted(async () => {
   pointer-events: none;
 }
 
-.showcase__cell:hover::after {
-  opacity: 1;
-}
+.showcase__cell:hover::after { opacity: 1; }
 
 .showcase__icon {
   font-size: 28px;
@@ -1314,7 +1356,6 @@ onMounted(async () => {
   color: rgba(255, 255, 255, 0.15);
 }
 
-/* Мета-плашка внизу ячейки */
 .showcase__meta {
   position: absolute;
   bottom: 0;
@@ -1330,9 +1371,7 @@ onMounted(async () => {
   pointer-events: none;
 }
 
-.showcase__cell:hover .showcase__meta {
-  transform: translateY(0);
-}
+.showcase__cell:hover .showcase__meta { transform: translateY(0); }
 
 .showcase__name {
   display: block;
@@ -1340,6 +1379,112 @@ onMounted(async () => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* ============================================
+   FRIENDS (список)
+   ============================================ */
+
+.friends {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(180deg, #171a21 0%, #10131a 100%);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.friends__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.friends__title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: #c7d5e0;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+}
+
+.friends__count {
+  font-size: 11px;
+  color: #4a5568;
+  font-weight: 700;
+}
+
+.friends__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.friend {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.friend:hover {
+  background: rgba(255, 255, 255, 0.04);
+  transform: translateX(2px);
+}
+
+.friend__avatar {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(124, 58, 237, 0.25);
+}
+
+.friend__avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.friend__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #e5e7eb;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.friend__tier {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border: 1px solid;
+  border-radius: 6px;
 }
 
 /* ============================================
@@ -1531,7 +1676,7 @@ onMounted(async () => {
     grid-template-columns: 1fr;
   }
 
-  .showcase {
+  .side-column {
     position: static;
   }
 }
@@ -1602,6 +1747,30 @@ onMounted(async () => {
 
   .showcase__icon {
     font-size: 22px;
+  }
+
+  .friends {
+    padding: 12px;
+  }
+
+  .friend {
+    padding: 6px 8px;
+  }
+
+  .friend__avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+    border-radius: 7px;
+  }
+
+  .friend__name {
+    font-size: 11.5px;
+  }
+
+  .friend__tier {
+    font-size: 10.5px;
+    padding: 1px 6px;
   }
 
   .ach-modal {

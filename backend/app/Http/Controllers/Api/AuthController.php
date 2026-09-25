@@ -82,6 +82,8 @@ class AuthController extends Controller
             },
             'achievements',
             'tierTests',
+            'friendsList',
+            'friendsOf',
         ]);
 
         return response()->json([

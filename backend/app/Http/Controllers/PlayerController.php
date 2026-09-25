@@ -123,6 +123,8 @@ class PlayerController extends Controller
             'tierTests' => fn ($q) => $q->latest()->limit(10),
             'clanMember.clan',
             'achievements',
+            'friendsList',
+            'friendsOf',
         ]);
 
         $me = $request->user();
