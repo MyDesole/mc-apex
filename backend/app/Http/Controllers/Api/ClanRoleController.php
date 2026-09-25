@@ -7,6 +7,7 @@ use App\Models\ClanMember;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ClanRoleController extends Controller
 {
@@ -70,7 +71,7 @@ class ClanRoleController extends Controller
             ->where('user_id', $user->id)
             ->firstOrFail();
 
-        DB::transaction(function () use ($clan, $me, $newLeaderMember, $request) {
+        DB::transaction(function () use ($clan, $me, $newLeaderMember, $request, $user) {
             // старый лидер → офицер
             $me->update(['role' => 'officer']);
             // новый → лидер
