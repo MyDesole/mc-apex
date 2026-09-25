@@ -19,6 +19,25 @@ const roleColors = {
   officer: '#60a5fa',
   member: '#9ca3af',
 }
+
+// Русская плюрализация
+function plural(n, one, few, many) {
+  const mod10 = n % 10
+  const mod100 = n % 100
+  if (mod10 === 1 && mod100 !== 11) return one
+  if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return few
+  return many
+}
+
+function pluralMembers(n) {
+  if (n == null) return ''
+  return `${n} ${plural(n, 'участник', 'участника', 'участников')}`
+}
+
+function pluralPower(n) {
+  if (n == null) return ''
+  return `${n} ${plural(n, 'сила', 'силы', 'сил')}`
+}
 </script>
 
 <template>
@@ -46,6 +65,7 @@ const roleColors = {
           v-if="clan.avatar_url"
           :src="clan.avatar_url"
           class="avatar-img"
+          :alt="clan.name"
       />
       <template v-else>{{ (clan.tag || 'C').charAt(0) }}</template>
     </div>
@@ -55,14 +75,21 @@ const roleColors = {
         <span class="tag">[{{ clan.tag }}]</span>
         {{ clan.name }}
       </div>
+
       <div class="clan-badge__meta">
-                <span class="role" :style="{ color: roleColors[props.clanMember.role] }">
-                    {{ roleLabels[props.clanMember.role] }}
-                </span>
-        <span class="sep">·</span>
-        <span>{{ clan.members_count ?? clan.members?.length ?? 0 }} участников</span>
-        <span class="sep">·</span>
-        <span>{{ clan.power ?? 0 }} силы</span>
+        <span class="role" :style="{ color: roleColors[props.clanMember.role] }">
+          {{ roleLabels[props.clanMember.role] }}
+        </span>
+
+        <template v-if="clan.members_count">
+          <span class="sep">·</span>
+          <span>{{ pluralMembers(clan.members_count) }}</span>
+        </template>
+
+        <template v-if="clan.power">
+          <span class="sep">·</span>
+          <span>{{ pluralPower(clan.power) }}</span>
+        </template>
       </div>
     </div>
 

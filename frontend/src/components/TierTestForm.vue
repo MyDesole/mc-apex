@@ -1,10 +1,13 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { tierTestsApi } from '@/services/tierTests.js'
 
-const emit = defineEmits(['created'])
+const props = defineProps({
+  modelValue: { type: Boolean, default: false },
+})
 
-const open = ref(false)
+const emit = defineEmits(['update:modelValue', 'created'])
+
 const loading = ref(false)
 const error = ref('')
 const success = ref(false)
@@ -17,6 +20,25 @@ const form = ref({
   notes: '',
 })
 
+// сброс формы при каждом открытии
+watch(() => props.modelValue, (open) => {
+  if (open) {
+    success.value = false
+    error.value = ''
+    form.value = {
+      mode: 'pvp',
+      contact_type: 'discord',
+      contact_value: '',
+      preferred_time: '',
+      notes: '',
+    }
+  }
+})
+
+function close() {
+  emit('update:modelValue', false)
+}
+
 async function submit() {
   loading.value = true
   error.value = ''
@@ -24,39 +46,27 @@ async function submit() {
   try {
     await tierTestsApi.create(form.value)
     success.value = true
+    emit('created')
   } catch (e) {
     error.value = e.message || 'Ошибка'
   } finally {
     loading.value = false
   }
 }
-
-function reset() {
-  open.value = false
-  success.value = false
-  form.value = {
-    mode: 'pvp',
-    contact_type: 'discord',
-    contact_value: '',
-    preferred_time: '',
-    notes: '',
-  }
-  error.value = ''
-  emit('created')
-}
 </script>
 
 <template>
-  <button class="btn-open" @click="open = true">
-    + Записаться на тир-тест
-  </button>
-
+  <Teleport to="body">
   <!-- ===== МОДАЛКА ЗАПИСИ ===== -->
-  <div v-if="open && !success" class="modal-bg" @click.self="open = false">
+  <div v-if="modelValue && !success" class="modal-bg" @click.self="close">
     <div class="modal">
       <header class="modal-head">
         <h2>Запись на тир-тест</h2>
-        <button class="close" @click="open = false">✕</button>
+        <button class="close" @click="close" aria-label="Закрыть">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
+        </button>
       </header>
 
       <div class="body">
@@ -130,7 +140,7 @@ function reset() {
       </div>
 
       <footer class="modal-foot">
-        <button class="btn-cancel" @click="open = false">Отмена</button>
+        <button class="btn-cancel" @click="close">Отмена</button>
         <button
             class="btn-submit"
             :disabled="loading || !form.contact_value || !form.preferred_time"
@@ -143,7 +153,7 @@ function reset() {
   </div>
 
   <!-- ===== SPLASH: УСПЕШНО ЗАПИСАН ===== -->
-  <div v-if="success" class="modal-bg" @click.self="reset">
+  <div v-if="modelValue && success" class="modal-bg" @click.self="close">
     <div class="splash">
       <div class="splash__icon">
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -170,10 +180,12 @@ function reset() {
         </div>
       </div>
 
-      <button class="btn-ok" @click="reset">Понятно</button>
+      <button class="btn-ok" @click="close">Понятно</button>
     </div>
   </div>
+  </Teleport>
 </template>
+
 
 <style scoped>
 /* ============================================

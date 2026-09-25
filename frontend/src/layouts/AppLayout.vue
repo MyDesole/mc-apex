@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/auth'
 import { notificationsApi } from '@/services/notification.js'
 import UserName from '@/components/UserName.vue'
 import VerifyEmailBanner from "@/components/VerifyEmailBanner.vue";
+import TierTestBanner from '@/components/TierTestBanner.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -53,7 +54,9 @@ let unreadInterval = null
 onMounted(() => {
   loadUnread()
   unreadInterval = setInterval(loadUnread, 30000)
-
+  if (!auth.initialized) {
+    auth.fetchMe()
+  }
   window.addEventListener('resize', onResize)
   document.addEventListener('click', onClickOutside)
 })
@@ -79,6 +82,7 @@ watch(mobileMenuOpen, (open) => {
     <VerifyEmailBanner v-if="auth.isAuthenticated" />
 
     <header class="site-header">
+
       <div class="header-inner">
         <!-- BURGER (mobile) -->
         <button
@@ -190,6 +194,7 @@ watch(mobileMenuOpen, (open) => {
           </div>
         </div>
       </div>
+
     </header>
 
     <!-- MOBILE MENU -->
@@ -274,6 +279,7 @@ watch(mobileMenuOpen, (open) => {
       <RouterView />
     </main>
   </div>
+  <TierTestBanner/>
 </template>
 
 <style scoped>

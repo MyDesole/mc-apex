@@ -77,8 +77,11 @@ class AuthController extends Controller
         $user = $request->user()->load([
             'aspectPvp',
             'aspectBedwars',
-            'clanMember.clan',
+            'clanMember.clan' => function ($q) {
+                $q->withCount('members');
+            },
             'achievements',
+            'tierTests',
         ]);
 
         return response()->json([
