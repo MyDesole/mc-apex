@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ProfileRecommendationController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\TierTestController;
@@ -65,7 +66,8 @@ Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $requ
     return redirect(config('app.frontend_url') . '/profile?verified=1');
 })->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
 
-
+Route::get('/players/{user}/recommendations', [ProfileRecommendationController::class, 'index'])
+    ->whereNumber('user');
 
 
 // Home (главная)
@@ -130,6 +132,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/cover/remove', [PlayerController::class, 'removeCover']);
         Route::post('/card-background/remove', [PlayerController::class, 'removeCardBackground']);
     });
+
+    Route::post('/players/{user}/recommendations', [ProfileRecommendationController::class, 'store'])
+        ->whereNumber('user');
+
+    Route::delete('/players/{user}/recommendations', [ProfileRecommendationController::class, 'destroy'])
+        ->whereNumber('user');
+
+    Route::post('/recommendations/{recommendation}/hide', [ProfileRecommendationController::class, 'hide'])
+        ->whereNumber('recommendation');
 
     /*
     |----------------------------------------------------------------------

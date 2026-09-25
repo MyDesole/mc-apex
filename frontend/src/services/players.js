@@ -55,4 +55,14 @@ export const playersApi = {
     removeCover() {
         return api.post('/players/me/cover/remove')
     },
+
+    saveRecommendation(userId, payload) {
+        return api.post(`/players/${userId}/recommendations`, payload)
+    },
+    deleteRecommendation(userId) {
+        return api.delete(`/players/${userId}/recommendations`)
+    },
+    hideRecommendation(recommendationId) {
+        return api.post(`/recommendations/${recommendationId}/hide`)
+    },
 }

@@ -2,15 +2,20 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import UserName from '@/components/UserName.vue'
 import TierHistoryChart from '@/components/TierHistoryChart.vue'
+import ProfileRecommendations from '@/components/ProfileRecommendations.vue'
 import { api } from '@/services/api.js'
 import { AVATAR_FRAMES, PROFILE_EFFECTS } from '@/data/profileCustomization'
 
 const props = defineProps({
   user: { type: Object, required: true },
   editable: { type: Boolean, default: false },
+  recommendations: { type: Array, default: () => [] },
+  myRecommendation: { type: Object, default: null },
+  canRecommend: { type: Boolean, default: false },
+  isOwner: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['edit'])
+const emit = defineEmits(['edit', 'recommendationsUpdated'])
 
 // === TIER ===
 const tierColors = {
@@ -317,11 +322,8 @@ onMounted(() => {
 
 // Следим за сменой пользователя — при переходе между профилями всё перезагружается
 watch(() => props.user.id, (newId) => {
-  // сбрасываем модалки и ховер
   closeAchievement()
   onFriendLeave()
-
-  // перезагружаем историю тира
   loadHistory(newId)
 })
 </script>
@@ -609,6 +611,17 @@ watch(() => props.user.id, (newId) => {
           </RouterLink>
         </div>
       </aside>
+
+      <!-- ОТЗЫВЫ -->
+      <ProfileRecommendations
+          v-if="!isOwner || recommendations.length || canRecommend"
+          :target-user="user"
+          :recommendations="recommendations"
+          :my-recommendation="myRecommendation"
+          :can-recommend="canRecommend"
+          :is-owner="isOwner"
+          @updated="emit('recommendationsUpdated')"
+      />
     </div>
 
     <!-- ====== ВСПЛЫВАЮЩАЯ КАРТОЧКА ДРУГА ====== -->
@@ -631,7 +644,6 @@ watch(() => props.user.id, (newId) => {
                     || '#7c3aed',
               }"
           >
-            <!-- Обложка -->
             <div
                 class="friend-hover__cover"
                 :style="hoveredFriend.cover_url ? {
@@ -690,7 +702,6 @@ watch(() => props.user.id, (newId) => {
               </div>
             </div>
 
-            <!-- Нижняя часть: режимы + мета -->
             <div class="friend-hover__footer">
               <div
                   v-if="Array.isArray(hoveredFriend.favorite_modes) && hoveredFriend.favorite_modes.length"
@@ -1643,7 +1654,7 @@ watch(() => props.user.id, (newId) => {
 }
 
 /* ============================================
-   FRIEND HOVER — точная копия player-card
+   FRIEND HOVER
    ============================================ */
 
 .friend-hover {
@@ -1778,7 +1789,6 @@ watch(() => props.user.id, (newId) => {
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
-/* Нижняя часть — режимы + мета */
 .friend-hover__footer {
   display: flex;
   flex-direction: column;

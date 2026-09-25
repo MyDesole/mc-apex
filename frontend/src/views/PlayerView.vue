@@ -15,6 +15,9 @@ const user = ref(null)
 const aspects = ref([])
 const friendship = ref(null)
 const rank = ref({ position: null, total: 0 })
+const recommendations = ref([])
+const myRecommendation = ref(null)
+const canRecommend = ref(false)
 const loading = ref(true)
 const error = ref(null)
 
@@ -25,11 +28,13 @@ async function load(id) {
   loading.value = true
   error.value = null
 
-  // сбрасываем старые данные, чтобы не мелькали при переходе
   user.value = null
   aspects.value = []
   friendship.value = null
   rank.value = { position: null, total: 0 }
+  recommendations.value = []
+  myRecommendation.value = null
+  canRecommend.value = false
 
   try {
     const data = await api.get(`/players/${id}`)
@@ -37,6 +42,9 @@ async function load(id) {
     aspects.value = data.user.aspects ?? []
     friendship.value = data.friendship
     rank.value = data.rank ?? { position: null, total: 0 }
+    recommendations.value = data.recommendations ?? []
+    myRecommendation.value = data.my_recommendation ?? null
+    canRecommend.value = data.can_recommend ?? false
   } catch (e) {
     error.value = e.status === 404
         ? 'Игрок не найден'
@@ -50,9 +58,6 @@ function onFriendshipUpdate(state) {
   friendship.value = state
 }
 
-// Ключевое: следим за параметром маршрута.
-// При переходе на другого игрока (или на того же) — перезагружаем данные.
-// immediate: true — чтобы сработало и при первом монтировании.
 watch(
     () => route.params.id,
     (newId) => {
@@ -81,7 +86,13 @@ watch(
   </div>
 
   <div v-else-if="user" class="container">
-    <PlayerCard :user="user" />
+    <PlayerCard
+        :user="user"
+        :recommendations="recommendations"
+        :my-recommendation="myRecommendation"
+        :can-recommend="canRecommend"
+        @recommendations-updated="load(route.params.id)"
+    />
 
     <section class="blocks">
       <div class="block-col">

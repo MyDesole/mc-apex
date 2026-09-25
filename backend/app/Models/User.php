@@ -144,6 +144,19 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
+    public function recommendationsReceived(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\ProfileRecommendation::class, 'target_id')
+            ->where('is_hidden', false)
+            ->latest();
+    }
+
+    public function recommendationsWritten(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\ProfileRecommendation::class, 'author_id')
+            ->latest();
+    }
+
     public function getFriendsAllAttribute(): \Illuminate\Support\Collection
     {
         $direct = $this->relationLoaded('friendsList')

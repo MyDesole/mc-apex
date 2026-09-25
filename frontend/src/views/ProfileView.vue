@@ -1,11 +1,12 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import PlayerCard from '@/components/PlayerCard.vue'
 import TierTestHistory from '@/components/TierTestHistory.vue'
 import ClanBadge from '@/components/ClanBadge.vue'
 import RankBadge from '@/components/RankBadge.vue'
 import ProfileCustomizeModal from '@/components/ProfileCustomizeModal.vue'
 import TierTestForm from '@/components/TierTestForm.vue'
+import { api } from '@/services/api.js'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
@@ -15,7 +16,21 @@ const aspects = computed(() => auth.user?.aspects ?? [])
 const clanMember = computed(() => auth.user?.clan_member ?? null)
 const rank = computed(() => auth.rank ?? { position: null, total: 0 })
 
-// модалка кастомизации
+// === ОТЗЫВЫ ===
+const recommendations = ref([])
+
+async function loadRecommendations() {
+  if (!auth.user?.id) return
+
+  try {
+    const data = await api.get(`/players/${auth.user.id}`)
+    recommendations.value = data.recommendations ?? []
+  } catch {
+    recommendations.value = []
+  }
+}
+
+// === МОДАЛКА КАСТОМИЗАЦИИ ===
 const showCustomize = ref(false)
 
 function onCustomizeUpdated() {
@@ -23,7 +38,7 @@ function onCustomizeUpdated() {
   auth.fetchMe()
 }
 
-// модалка записи на тир-тест
+// === МОДАЛКА ЗАПИСИ НА ТИР-ТЕСТ ===
 const showTierTestForm = ref(false)
 
 function openTierTestForm() {
@@ -31,10 +46,15 @@ function openTierTestForm() {
 }
 
 function onTierTestCreated() {
-  // обновляем user — теперь в tier_tests появится запись,
-  // баннер «запишись» на главной исчезнет сам
   auth.fetchMe()
 }
+
+onMounted(async () => {
+  if (!auth.initialized) {
+    await auth.fetchMe()
+  }
+  loadRecommendations()
+})
 </script>
 
 <template>
@@ -43,7 +63,12 @@ function onTierTestCreated() {
       <PlayerCard
           :user="user"
           editable
+          :recommendations="recommendations"
+          :my-recommendation="null"
+          is-owner
+          :can-recommend="false"
           @edit="showCustomize = true"
+          @recommendations-updated="loadRecommendations"
       />
 
       <section class="blocks">

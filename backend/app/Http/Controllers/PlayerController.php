@@ -127,7 +127,22 @@ class PlayerController extends Controller
             'friendsOf',
         ]);
 
+
         $me = $request->user();
+
+        $recommendations = \App\Models\ProfileRecommendation::where('target_id', $user->id)
+            ->where('is_hidden', false)
+            ->with('author:id,username,avatar,avatar_url,tier,is_verified,accent_color,banner_color')
+            ->latest()
+            ->limit(20)
+            ->get();
+
+        $myRecommendation = null;
+        if ($me) {
+            $myRecommendation = \App\Models\ProfileRecommendation::where('target_id', $user->id)
+                ->where('author_id', $me->id)
+                ->first();
+        }
 
         $friendship = Friendship::where(function ($q) use ($me, $user) {
             $q->where('user_id', $me->id)->where('friend_id', $user->id);
@@ -170,6 +185,9 @@ class PlayerController extends Controller
                 'position' => $position,
                 'total' => $total,
             ],
+            'recommendations' => $recommendations,
+            'my_recommendation' => $myRecommendation,
+            'can_recommend' => $me ? ($me->id !== $user->id && $me->isFriendsWith($user->id)) : false,
         ]);
     }
 
