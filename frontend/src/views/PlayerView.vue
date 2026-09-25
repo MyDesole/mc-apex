@@ -1,6 +1,6 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import PlayerCard from '@/components/PlayerCard.vue'
 import ClanBadge from '@/components/ClanBadge.vue'
 import RankBadge from '@/components/RankBadge.vue'
@@ -9,7 +9,6 @@ import { api } from '@/services/api.js'
 import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
-const router = useRouter()
 const auth = useAuthStore()
 
 const user = ref(null)
@@ -22,18 +21,26 @@ const error = ref(null)
 const clanMember = computed(() => user.value?.clan_member ?? null)
 const isMe = computed(() => auth.user?.id === user.value?.id)
 
-async function load() {
+async function load(id) {
   loading.value = true
   error.value = null
 
+  // сбрасываем старые данные, чтобы не мелькали при переходе
+  user.value = null
+  aspects.value = []
+  friendship.value = null
+  rank.value = { position: null, total: 0 }
+
   try {
-    const data = await api.get(`/players/${route.params.id}`)
+    const data = await api.get(`/players/${id}`)
     user.value = data.user
     aspects.value = data.user.aspects ?? []
     friendship.value = data.friendship
     rank.value = data.rank ?? { position: null, total: 0 }
   } catch (e) {
-    error.value = e.status === 404 ? 'Игрок не найден' : (e.message || 'Ошибка загрузки')
+    error.value = e.status === 404
+        ? 'Игрок не найден'
+        : (e.message || 'Ошибка загрузки')
   } finally {
     loading.value = false
   }
@@ -43,7 +50,16 @@ function onFriendshipUpdate(state) {
   friendship.value = state
 }
 
-onMounted(load)
+// Ключевое: следим за параметром маршрута.
+// При переходе на другого игрока (или на того же) — перезагружаем данные.
+// immediate: true — чтобы сработало и при первом монтировании.
+watch(
+    () => route.params.id,
+    (newId) => {
+      if (newId) load(newId)
+    },
+    { immediate: true }
+)
 </script>
 
 <template>
@@ -53,20 +69,20 @@ onMounted(load)
   </div>
 
   <div v-else-if="error" class="error-page">
-    <div class="error-page__icon">🚫</div>
+    <div class="error-page__icon">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 8v4M12 16h.01" />
+      </svg>
+    </div>
     <h1>{{ error.includes('не найден') ? '404' : 'Ошибка' }}</h1>
     <p>{{ error }}</p>
-    <RouterLink to="/players" class="btn-back">← Все игроки</RouterLink>
+    <RouterLink to="/players" class="btn-back">Все игроки</RouterLink>
   </div>
 
   <div v-else-if="user" class="container">
-    <!-- Карточка игрока -->
-    <PlayerCard
-        :user="user"
-        :aspects="aspects"
-    />
+    <PlayerCard :user="user" />
 
-    <!-- Блоки: клан + место в топе -->
     <section class="blocks">
       <div class="block-col">
         <h3 class="block-title">Клан</h3>
@@ -82,7 +98,6 @@ onMounted(load)
       </div>
     </section>
 
-    <!-- Дружба -->
     <div v-if="!isMe" class="friend-block">
       <h3 class="block-title">Дружба</h3>
       <FriendButton
@@ -164,14 +179,14 @@ onMounted(load)
 }
 
 .error-page__icon {
-  font-size: 56px;
-  opacity: 0.5;
+  color: var(--text-muted);
+  opacity: 0.6;
   margin-bottom: 8px;
 }
 
 .error-page h1 {
   font-size: 72px;
-  color: var(--danger);
+  color: #f87171;
   margin: 0;
   letter-spacing: -2px;
 }
