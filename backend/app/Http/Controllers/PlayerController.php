@@ -283,11 +283,10 @@ class PlayerController extends Controller
         );
 
         $bestTier = match (true) {
-            $bestPercent >= 90 => 'S',
-            $bestPercent >= 80 => 'A',
-            $bestPercent >= 70 => 'B',
-            $bestPercent >= 60 => 'C',
-            $bestPercent >= 50 => 'D',
+            $bestPercent >= 71 => 'A',
+            $bestPercent >= 56 => 'B',
+            $bestPercent >= 41 => 'C',
+            $bestPercent >= 21 => 'D',
             default => 'E',
         };
 
