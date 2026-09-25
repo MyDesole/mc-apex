@@ -3,70 +3,27 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\EmailVerificationCode;
+use App\Models\EmailVerification;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    public function register(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'username' => [
-                'required',
-                'string',
-                'min:3',
-                'max:32',
-                'regex:/^[a-zA-Z0-9_]+$/',
-                'unique:users,username',
-            ],
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-                'unique:users,email',
-            ],
-            'password' => [
-                'required',
-                'string',
-                'min:8',
-                'confirmed',
-            ],
-        ]);
 
-        $user = User::create([
-            'username' => $validated['username'],
-            'email' => $validated['email'],
-            'password' => $validated['password'],
-        ]);
-
-        Auth::login($user);
-
-        $request->session()->regenerate();
-
-        return response()->json([
-            'message' => 'Регистрация выполнена успешно.',
-            'user' => $user,
-        ], 201);
-    }
 
     public function login(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'login' => [
-                'required',
-                'string',
-            ],
-            'password' => [
-                'required',
-                'string',
-            ],
-            'remember' => [
-                'boolean',
-            ],
+            'login' => ['required', 'string'],
+            'password' => ['required', 'string'],
+            'remember' => ['boolean'],
         ]);
 
         $field = filter_var($validated['login'], FILTER_VALIDATE_EMAIL)
@@ -78,12 +35,20 @@ class AuthController extends Controller
             'password' => $validated['password'],
         ];
 
-        if (!Auth::attempt(
-            $credentials,
-            $validated['remember'] ?? false
-        )) {
+        if (!Auth::attempt($credentials, $validated['remember'] ?? false)) {
             throw ValidationException::withMessages([
                 'login' => ['Неверный логин или пароль.'],
+            ]);
+        }
+
+        $user = $request->user();
+
+        if (!$user->hasVerifiedEmail()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+
+            throw ValidationException::withMessages([
+                'login' => ['Сначала подтвердите email. Проверьте почту.'],
             ]);
         }
 
@@ -91,7 +56,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Вход выполнен успешно.',
-            'user' => $request->user(),
+            'user' => $user,
         ]);
     }
 
@@ -144,5 +109,112 @@ class AuthController extends Controller
             'position' => $position,
             'total' => $total,
         ];
+    }
+
+    public function sendVerificationCode(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+        ]);
+
+        $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        EmailVerification::updateOrCreate(
+            ['email' => $validated['email']],
+            [
+                'code' => $code,
+                'expires_at' => now()->addMinutes(15),
+                'verified_at' => null,
+            ]
+        );
+
+        Mail::to($validated['email'])->send(new EmailVerificationCode($code));
+
+        return response()->json([
+            'message' => 'Код отправлен на ' . $validated['email'],
+            'email' => $validated['email'],
+        ]);
+    }
+
+    /**
+     * Шаг 2: проверка кода.
+     */
+    public function verifyCode(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email'],
+            'code' => ['required', 'string', 'size:6'],
+        ]);
+
+        $verification = EmailVerification::where('email', $validated['email'])->first();
+
+        if (!$verification || $verification->code !== $validated['code']) {
+            throw ValidationException::withMessages([
+                'code' => ['Неверный код подтверждения.'],
+            ]);
+        }
+
+        if ($verification->isExpired()) {
+            throw ValidationException::withMessages([
+                'code' => ['Код истёк. Запросите новый.'],
+            ]);
+        }
+
+        $verification->update(['verified_at' => now()]);
+
+        // Выдаём одноразовый токен, чтобы нельзя было зарегистрироваться без верификации
+        $token = Str::random(64);
+        cache()->put('email_verified:' . $token, $validated['email'], now()->addMinutes(30));
+
+        return response()->json([
+            'message' => 'Email подтверждён.',
+            'verification_token' => $token,
+        ]);
+    }
+
+    /**
+     * Шаг 3: регистрация — только с валидным verification_token.
+     */
+    public function register(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'username' => [
+                'required', 'string', 'min:3', 'max:32',
+                'regex:/^[a-zA-Z0-9_]+$/',
+                'unique:users,username',
+            ],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'verification_token' => ['required', 'string'],
+        ]);
+
+        $email = cache()->pull('email_verified:' . $validated['verification_token']);
+
+        if (!$email) {
+            throw ValidationException::withMessages([
+                'verification_token' => ['Сессия подтверждения email истекла. Начните заново.'],
+            ]);
+        }
+
+        if (User::where('email', $email)->exists()) {
+            throw ValidationException::withMessages([
+                'email' => ['Этот email уже занят.'],
+            ]);
+        }
+
+        $user = User::create([
+            'username' => $validated['username'],
+            'email' => $email,
+            'password' => $validated['password'],
+        ]);
+
+        $user->markEmailAsVerified();
+
+        Auth::guard('web')->login($user);
+        $request->session()->regenerate();
+
+        return response()->json([
+            'message' => 'Аккаунт создан. Добро пожаловать!',
+            'user' => $user,
+        ], 201);
     }
 }

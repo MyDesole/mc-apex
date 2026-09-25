@@ -216,7 +216,17 @@ onMounted(load)
           class="btn-create"
           @click="openChallenge"
       >
-        ⚔️ Вызвать клан
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.5 17.5 3 6V3h3l11.5 11.5" />
+          <path d="m13 19 6-6" />
+          <path d="m16 16 4 4" />
+          <path d="m19 21 2-2" />
+          <path d="M14.5 6.5 18 3h3v3l-3.5 3.5" />
+          <path d="m5 14 6 6" />
+          <path d="m8 21-4-4" />
+          <path d="m3 19 2 2" />
+        </svg>
+        Вызвать клан
       </button>
     </div>
 
@@ -246,7 +256,6 @@ onMounted(load)
               :key="w.id"
               class="war war--incoming"
           >
-            <!-- Соперник -->
             <div class="war__clan">
               <div
                   class="war__avatar"
@@ -261,9 +270,20 @@ onMounted(load)
                   {{ w.challenger?.name }}
                 </div>
                 <div class="war__meta">
-                  <span>⚡ {{ w.challenger?.power }} силы</span>
+                  <span class="meta-item">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+                    </svg>
+                    {{ w.challenger?.power }} силы
+                  </span>
                   <span v-if="w.scheduled_at" class="sep">·</span>
-                  <span v-if="w.scheduled_at">📅 {{ formatDate(w.scheduled_at) }}</span>
+                  <span v-if="w.scheduled_at" class="meta-item">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" />
+                      <path d="M16 2v4M8 2v4M3 10h18" />
+                    </svg>
+                    {{ formatDate(w.scheduled_at) }}
+                  </span>
                 </div>
                 <p v-if="w.notes" class="war__notes">"{{ w.notes }}"</p>
               </div>
@@ -274,33 +294,52 @@ onMounted(load)
             </div>
 
             <!-- Действия pending -->
-            <div  v-if="w.status === 'pending' && permissions.wars" class="war__actions">
+            <div v-if="w.status === 'pending' && permissions.wars" class="war__actions">
               <button
                   class="btn-accept"
                   :disabled="processing === w.id"
                   @click="accept(w)"
               >
-                ✅ Принять
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12l5 5L20 7" />
+                </svg>
+                Принять
               </button>
               <button
                   class="btn-decline"
                   :disabled="processing === w.id"
                   @click="decline(w)"
               >
-                ❌ Отклонить
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+                Отклонить
               </button>
             </div>
 
             <!-- Принята — участники + кнопки -->
             <div v-if="w.status === 'accepted'" class="war__participants">
               <div class="participants-head">
-                <span>👥 Участники</span>
+                <span class="participants-head__title">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  Участники
+                </span>
                 <span class="count">{{ (w.participants || []).length }}</span>
               </div>
 
               <div class="participants-cols">
                 <div class="participants-col">
-                  <div class="col-label">🛡️ Мой клан</div>
+                  <div class="col-label">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                    Мой клан
+                  </div>
 
                   <div v-if="!myParticipants(w).length" class="col-empty">
                     Никто не присоединился
@@ -322,7 +361,15 @@ onMounted(load)
                 </div>
 
                 <div class="participants-col">
-                  <div class="col-label">⚔️ Противник</div>
+                  <div class="col-label">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14.5 17.5 3 6V3h3l11.5 11.5" />
+                      <path d="m13 19 6-6" />
+                      <path d="m16 16 4 4" />
+                      <path d="m19 21 2-2" />
+                    </svg>
+                    Противник
+                  </div>
 
                   <div v-if="!enemyParticipants(w).length" class="col-empty">
                     Никто не присоединился
@@ -351,7 +398,13 @@ onMounted(load)
                     :disabled="processing === `join-${w.id}`"
                     @click="joinWar(w)"
                 >
-                  {{ processing === `join-${w.id}` ? '...' : '➕ Присоединиться' }}
+                  <template v-if="processing === `join-${w.id}`">...</template>
+                  <template v-else>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                    Присоединиться
+                  </template>
                 </button>
 
                 <button
@@ -360,7 +413,12 @@ onMounted(load)
                     :disabled="processing === `leave-${w.id}`"
                     @click="leaveWar(w)"
                 >
-                  🚪 Покинуть
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <path d="m16 17 5-5-5-5" />
+                    <path d="M21 12H9" />
+                  </svg>
+                  Покинуть
                 </button>
 
                 <button
@@ -368,25 +426,40 @@ onMounted(load)
                     class="btn-result"
                     @click="openResult(w)"
                 >
-                  📝 Внести результат
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                  </svg>
+                  Внести результат
                 </button>
               </div>
             </div>
 
             <!-- Завершена -->
             <div v-if="w.status === 'completed'" class="war__result">
-                            <span class="score">
-                                <b>{{ w.challenger_score }}</b> : <b>{{ w.opponent_score }}</b>
-                            </span>
+              <span class="score">
+                <b>{{ w.challenger_score }}</b> : <b>{{ w.opponent_score }}</b>
+              </span>
               <span
                   v-if="w.winner_clan_id === myClanId"
                   class="win"
               >
-                                🏆 Победа
-                            </span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 21h8M12 17v4" />
+                  <path d="M7 4h10v5a5 5 0 0 1-10 0V4z" />
+                  <path d="M17 5h3a2 2 0 0 1 0 4h-3" />
+                  <path d="M7 5H4a2 2 0 0 0 0 4h3" />
+                </svg>
+                Победа
+              </span>
               <span v-else class="loss">
-                                💀 Поражение
-                            </span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 9h6v6H9z" />
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M8 8l-2-2M16 8l2-2M8 16l-2 2M16 16l2 2" />
+                </svg>
+                Поражение
+              </span>
             </div>
           </div>
         </div>
@@ -423,7 +496,13 @@ onMounted(load)
                   {{ w.opponent?.name }}
                 </div>
                 <div class="war__meta">
-                  <span v-if="w.scheduled_at">📅 {{ formatDate(w.scheduled_at) }}</span>
+                  <span v-if="w.scheduled_at" class="meta-item">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" />
+                      <path d="M16 2v4M8 2v4M3 10h18" />
+                    </svg>
+                    {{ formatDate(w.scheduled_at) }}
+                  </span>
                   <span v-if="w.notes" class="war__notes-inline">· "{{ w.notes }}"</span>
                 </div>
               </div>
@@ -436,13 +515,26 @@ onMounted(load)
             <!-- Принята — участники -->
             <div v-if="w.status === 'accepted'" class="war__participants">
               <div class="participants-head">
-                <span>👥 Участники</span>
+                <span class="participants-head__title">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  Участники
+                </span>
                 <span class="count">{{ (w.participants || []).length }}</span>
               </div>
 
               <div class="participants-cols">
                 <div class="participants-col">
-                  <div class="col-label">🛡️ Мой клан</div>
+                  <div class="col-label">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                    Мой клан
+                  </div>
                   <div v-if="!myParticipants(w).length" class="col-empty">
                     Никто не присоединился
                   </div>
@@ -462,7 +554,15 @@ onMounted(load)
                 </div>
 
                 <div class="participants-col">
-                  <div class="col-label">⚔️ Противник</div>
+                  <div class="col-label">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14.5 17.5 3 6V3h3l11.5 11.5" />
+                      <path d="m13 19 6-6" />
+                      <path d="m16 16 4 4" />
+                      <path d="m19 21 2-2" />
+                    </svg>
+                    Противник
+                  </div>
                   <div v-if="!enemyParticipants(w).length" class="col-empty">
                     Никто не присоединился
                   </div>
@@ -489,7 +589,13 @@ onMounted(load)
                     :disabled="processing === `join-${w.id}`"
                     @click="joinWar(w)"
                 >
-                  {{ processing === `join-${w.id}` ? '...' : '➕ Присоединиться' }}
+                  <template v-if="processing === `join-${w.id}`">...</template>
+                  <template v-else>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                    Присоединиться
+                  </template>
                 </button>
 
                 <button
@@ -498,7 +604,12 @@ onMounted(load)
                     :disabled="processing === `leave-${w.id}`"
                     @click="leaveWar(w)"
                 >
-                  🚪 Покинуть
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <path d="m16 17 5-5-5-5" />
+                    <path d="M21 12H9" />
+                  </svg>
+                  Покинуть
                 </button>
 
                 <button
@@ -506,25 +617,40 @@ onMounted(load)
                     :disabled="processing === w.id"
                     @click="openResult(w)"
                 >
-                  📝 Внести результат
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                  </svg>
+                  Внести результат
                 </button>
               </div>
             </div>
 
             <!-- Завершена -->
             <div v-if="w.status === 'completed'" class="war__result">
-                            <span class="score">
-                                <b>{{ w.challenger_score }}</b> : <b>{{ w.opponent_score }}</b>
-                            </span>
+              <span class="score">
+                <b>{{ w.challenger_score }}</b> : <b>{{ w.opponent_score }}</b>
+              </span>
               <span
                   v-if="w.winner_clan_id === myClanId"
                   class="win"
               >
-                                🏆 Победа
-                            </span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 21h8M12 17v4" />
+                  <path d="M7 4h10v5a5 5 0 0 1-10 0V4z" />
+                  <path d="M17 5h3a2 2 0 0 1 0 4h-3" />
+                  <path d="M7 5H4a2 2 0 0 0 0 4h3" />
+                </svg>
+                Победа
+              </span>
               <span v-else class="loss">
-                                💀 Поражение
-                            </span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 9h6v6H9z" />
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M8 8l-2-2M16 8l2-2M8 16l-2 2M16 16l2 2" />
+                </svg>
+                Поражение
+              </span>
             </div>
           </div>
         </div>
@@ -532,10 +658,29 @@ onMounted(load)
 
       <!-- Пусто -->
       <div v-if="!incoming.length && !outgoing.length" class="empty">
-        <div class="empty__icon">⚔️</div>
+        <div class="empty__icon">
+          <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 17.5 3 6V3h3l11.5 11.5" />
+            <path d="m13 19 6-6" />
+            <path d="m16 16 4 4" />
+            <path d="m19 21 2-2" />
+            <path d="M14.5 6.5 18 3h3v3l-3.5 3.5" />
+            <path d="m5 14 6 6" />
+            <path d="m8 21-4-4" />
+            <path d="m3 19 2 2" />
+          </svg>
+        </div>
         <div class="empty__title">Войн пока нет</div>
         <div class="empty__hint">Вызови первый клан на битву</div>
-        <button class="btn-create" @click="openChallenge">⚔️ Вызвать клан</button>
+        <button class="btn-create" @click="openChallenge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 17.5 3 6V3h3l11.5 11.5" />
+            <path d="m13 19 6-6" />
+            <path d="m16 16 4 4" />
+            <path d="m19 21 2-2" />
+          </svg>
+          Вызвать клан
+        </button>
       </div>
     </template>
 
@@ -544,7 +689,11 @@ onMounted(load)
       <div class="modal">
         <header class="modal-head">
           <h3>Вызвать клан на войну</h3>
-          <button class="close" @click="showChallenge = false">✕</button>
+          <button class="close" @click="showChallenge = false" aria-label="Закрыть">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
         </header>
 
         <div class="modal-body">
@@ -608,7 +757,16 @@ onMounted(load)
               :disabled="processing === 'challenge' || !challengeForm.opponent_id"
               @click="submitChallenge"
           >
-            {{ processing === 'challenge' ? '...' : '⚔️ Отправить вызов' }}
+            <template v-if="processing === 'challenge'">...</template>
+            <template v-else>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 17.5 3 6V3h3l11.5 11.5" />
+                <path d="m13 19 6-6" />
+                <path d="m16 16 4 4" />
+                <path d="m19 21 2-2" />
+              </svg>
+              Отправить вызов
+            </template>
           </button>
         </footer>
       </div>
@@ -619,7 +777,11 @@ onMounted(load)
       <div class="modal">
         <header class="modal-head">
           <h3>Результат войны</h3>
-          <button class="close" @click="showResult = false">✕</button>
+          <button class="close" @click="showResult = false" aria-label="Закрыть">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
         </header>
 
         <div class="modal-body">
@@ -674,7 +836,13 @@ onMounted(load)
               :disabled="processing === 'result'"
               @click="submitResult"
           >
-            {{ processing === 'result' ? '...' : '✓ Завершить войну' }}
+            <template v-if="processing === 'result'">...</template>
+            <template v-else>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12l5 5L20 7" />
+              </svg>
+              Завершить войну
+            </template>
           </button>
         </footer>
       </div>
@@ -695,7 +863,12 @@ onMounted(load)
 .head h2 { margin: 0 0 4px; font-size: 20px; font-weight: 800; }
 .sub { margin: 0; color: var(--text-dim); font-size: 13px; }
 
+/* === КНОПКА СОЗДАНИЯ === */
+
 .btn-create {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   padding: 10px 18px;
   color: #fff;
   background: var(--accent);
@@ -709,7 +882,12 @@ onMounted(load)
   transition: all 0.15s;
 }
 
-.btn-create:hover { background: var(--accent-light); transform: translateY(-1px); }
+.btn-create:hover {
+  background: var(--accent-light);
+  transform: translateY(-1px);
+}
+
+/* === ERROR === */
 
 .error {
   padding: 10px 12px;
@@ -747,6 +925,8 @@ onMounted(load)
 }
 
 .list { display: flex; flex-direction: column; gap: 10px; }
+
+/* === WAR CARD === */
 
 .war {
   padding: 16px 20px;
@@ -802,10 +982,17 @@ onMounted(load)
 
 .war__meta {
   display: flex;
+  align-items: center;
   gap: 6px;
   flex-wrap: wrap;
   font-size: 12px;
   color: var(--text-dim);
+}
+
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .war__meta .sep { opacity: 0.4; }
@@ -840,7 +1027,8 @@ onMounted(load)
 .status-declined { color: #6b7280; background: rgba(107, 114, 128, 0.1); }
 .status-cancelled { color: #6b7280; background: rgba(107, 114, 128, 0.1); }
 
-/* Actions */
+/* === ACTIONS === */
+
 .war__actions {
   display: flex;
   gap: 8px;
@@ -849,6 +1037,10 @@ onMounted(load)
 }
 
 .btn-accept, .btn-decline, .btn-result, .btn-join, .btn-leave {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 10px 14px;
   border-radius: 9px;
   font-size: 13px;
@@ -901,7 +1093,8 @@ onMounted(load)
   cursor: not-allowed;
 }
 
-/* Participants */
+/* === PARTICIPANTS === */
+
 .war__participants {
   padding-top: 12px;
   border-top: 1px solid var(--border);
@@ -921,6 +1114,12 @@ onMounted(load)
   letter-spacing: 0.4px;
 }
 
+.participants-head__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .participants-cols {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -938,6 +1137,9 @@ onMounted(load)
 }
 
 .col-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 10px;
   font-weight: 800;
   color: var(--text-muted);
@@ -998,7 +1200,8 @@ onMounted(load)
   flex: 1;
 }
 
-/* Result */
+/* === RESULT === */
+
 .war__result {
   display: flex;
   justify-content: center;
@@ -1017,21 +1220,21 @@ onMounted(load)
 
 .score b { color: var(--accent-light); }
 
-.win {
-  color: #4ade80;
-  font-weight: 800;
-  font-size: 12px;
-  text-transform: uppercase;
-}
-
+.win,
 .loss {
-  color: #f87171;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-weight: 800;
   font-size: 12px;
   text-transform: uppercase;
 }
 
-/* Empty */
+.win { color: #4ade80; }
+.loss { color: #f87171; }
+
+/* === EMPTY === */
+
 .empty {
   display: flex;
   flex-direction: column;
@@ -1045,7 +1248,12 @@ onMounted(load)
   color: var(--text-dim);
 }
 
-.empty__icon { font-size: 42px; opacity: 0.6; margin-bottom: 4px; }
+.empty__icon {
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
 .empty__title { font-size: 16px; font-weight: 800; color: var(--text); }
 .empty__hint { font-size: 13px; margin-bottom: 12px; }
 
@@ -1070,7 +1278,8 @@ onMounted(load)
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Modal */
+/* === MODAL === */
+
 .modal-bg {
   position: fixed;
   inset: 0;
@@ -1108,6 +1317,9 @@ onMounted(load)
 .close {
   width: 30px;
   height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: var(--text-dim);
   background: transparent;
   border: 0;
@@ -1208,7 +1420,8 @@ onMounted(load)
 .clan-option__name { font-size: 13px; font-weight: 700; color: var(--text); }
 .clan-option__meta { font-size: 11px; color: var(--text-dim); }
 
-/* Result modal */
+/* === RESULT MODAL === */
+
 .result-teams {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -1267,6 +1480,9 @@ onMounted(load)
 }
 
 .btn-cancel, .btn-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   min-height: 40px;
   padding: 0 20px;
   border-radius: 9px;
@@ -1293,7 +1509,7 @@ onMounted(load)
 
 @media (max-width: 600px) {
   .head { flex-direction: column; }
-  .btn-create { width: 100%; }
+  .btn-create { width: 100%; justify-content: center; }
   .war__clan { flex-wrap: wrap; }
   .war__status { width: 100%; text-align: center; }
   .participants-cols { grid-template-columns: 1fr; }

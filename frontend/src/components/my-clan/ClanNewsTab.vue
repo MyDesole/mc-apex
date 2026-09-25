@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { clansApi } from '@/services/clans.js'
 import { useAuthStore } from '@/stores/auth'
-
+import ClanEventComments from "@/components/clan/ClanEventComments.vue";
 const props = defineProps({
   clan: { type: Object, required: true },
   permissions: { type: Object, default: () => ({}) },
@@ -14,6 +14,13 @@ const loading = ref(true)
 const showForm = ref(false)
 const form = ref({ type: 'announcement', title: '', body: '', starts_at: '' })
 const processing = ref(false)
+
+// какие комментарии раскрыты
+const openComments = ref({})
+
+function toggleComments(id) {
+  openComments.value[id] = !openComments.value[id]
+}
 
 async function load() {
   loading.value = true
@@ -87,12 +94,12 @@ onMounted(load)
     <div v-else class="list">
       <article v-for="e in events" :key="e.id" class="event">
         <header class="event__head">
-                    <span class="type" :class="`type-${e.type}`">
-                        {{ typeLabels[e.type] }}
-                    </span>
+          <span class="type" :class="`type-${e.type}`">
+            {{ typeLabels[e.type] }}
+          </span>
           <span v-if="e.starts_at" class="date">
-                        {{ new Date(e.starts_at).toLocaleString('ru-RU') }}
-                    </span>
+            {{ new Date(e.starts_at).toLocaleString('ru-RU') }}
+          </span>
         </header>
 
         <h3 class="event__title">{{ e.title }}</h3>
@@ -108,6 +115,36 @@ onMounted(load)
             Удалить
           </button>
         </footer>
+
+        <!-- Комментарии -->
+        <button
+            class="comments-toggle"
+            :class="{ 'comments-toggle--open': openComments[e.id] }"
+            type="button"
+            @click="toggleComments(e.id)"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          Комментарии
+          <svg
+              class="comments-toggle__chev"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+          >
+            <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+
+        <ClanEventComments
+            v-if="openComments[e.id]"
+            :clan-id="clan.id"
+            :event-id="e.id"
+        />
       </article>
     </div>
   </div>
@@ -127,6 +164,7 @@ onMounted(load)
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+  transition: background 0.15s;
 }
 
 .btn-create:hover { background: var(--accent-light); }
@@ -233,6 +271,39 @@ onMounted(load)
   font-weight: 700;
   cursor: pointer;
   font-size: 12px;
+}
+
+/* === COMMENTS TOGGLE === */
+
+.comments-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 6px 0;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.comments-toggle:hover {
+  color: var(--accent-light);
+}
+
+.comments-toggle--open {
+  color: var(--accent-light);
+}
+
+.comments-toggle__chev {
+  transition: transform 0.2s;
+}
+
+.comments-toggle--open .comments-toggle__chev {
+  transform: rotate(180deg);
 }
 
 .empty {

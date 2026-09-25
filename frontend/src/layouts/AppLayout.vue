@@ -4,6 +4,7 @@ import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { notificationsApi } from '@/services/notification.js'
 import UserName from '@/components/UserName.vue'
+import VerifyEmailBanner from "@/components/VerifyEmailBanner.vue";
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -75,6 +76,8 @@ watch(mobileMenuOpen, (open) => {
 
 <template>
   <div class="app">
+    <VerifyEmailBanner v-if="auth.isAuthenticated" />
+
     <header class="site-header">
       <div class="header-inner">
         <!-- BURGER (mobile) -->
@@ -151,6 +154,7 @@ watch(mobileMenuOpen, (open) => {
                 Уведомления
                 <span v-if="unreadCount > 0" class="dropdown-badge">{{ unreadCount }}</span>
               </RouterLink>
+
               <RouterLink
                   v-if="auth.user?.clan_member"
                   to="/my-clan"

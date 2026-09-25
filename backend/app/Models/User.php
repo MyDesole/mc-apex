@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -9,12 +10,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
-        'username', 'email', 'password', 'avatar', 'cover_path',
+        'username', 'email', 'email_verified_at', 'password', 'avatar', 'cover_path',
         'banner_color', 'bio', 'tier', 'tier_score', 'socials',
         'role', 'is_banned', 'ban_reason', 'banned_until', 'banned_by',
         'avatar_frame', 'profile_effect', 'accent_color',
@@ -29,6 +30,16 @@ class User extends Authenticatable
         'remember_token',
 
     ];
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new \App\Notifications\ResetPasswordNotification($token));
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new \App\Notifications\VerifyEmailNotification());
+    }
 
     public function aspectPvp(): HasOne
     {

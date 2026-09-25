@@ -79,7 +79,7 @@ async function submit() {
                         <span>Запомнить меня</span>
                     </label>
 
-                    <a href="#">Забыли пароль?</a>
+                  <RouterLink to="/forgot-password">Забыли пароль?</RouterLink>
                 </div>
 
                 <div

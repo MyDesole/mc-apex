@@ -1,7 +1,7 @@
 import { api } from './api.js'
 
 export const playersApi = {
-    // === Профиль: обновление ===
+    // === Профиль: обновление (рамки, эффекты, био и т.д.) ===
     updateProfile(payload) {
         const fd = new FormData()
         fd.append('_method', 'PUT')
@@ -9,7 +9,6 @@ export const playersApi = {
         for (const [key, value] of Object.entries(payload)) {
             if (value === undefined || value === null) continue
 
-            // массивы → favorites[0], favorites[1]...
             if (Array.isArray(value)) {
                 value.forEach((v, i) => {
                     fd.append(`${key}[${i}]`, v)
@@ -26,6 +25,20 @@ export const playersApi = {
         return api.post('/players/me/profile', fd)
     },
 
+    // === Аватар / обложка (файлы) ===
+    updateMe(payload) {
+        const fd = new FormData()
+        fd.append('_method', 'PUT')   // ← спуф метода
+
+        for (const [key, value] of Object.entries(payload)) {
+            if (value === undefined || value === null) continue
+            if (value instanceof File) fd.append(key, value)
+            else fd.append(key, value)
+        }
+
+        return api.post('/players/me', fd)   // ← именно POST, не PUT
+    },
+
     removeCardBackground() {
         return api.post('/players/me/card-background/remove')
     },
@@ -35,7 +48,6 @@ export const playersApi = {
         return api.put('/players/me/aspects', payload)
     },
 
-    // === Аватар / обложка (если нужны) ===
     removeAvatar() {
         return api.post('/players/me/avatar/remove')
     },

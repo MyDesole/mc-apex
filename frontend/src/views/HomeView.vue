@@ -54,7 +54,6 @@ onMounted(async () => {
     clans.value = data.clans ?? []
     news.value = data.news ?? []
 
-    // превращаем соцсети в массив для v-for
     socialsList.value = Object.entries(socials.value)
         .filter(([, url]) => url)
         .map(([key, url]) => ({
@@ -157,18 +156,23 @@ onMounted(async () => {
                 class="news-card__cover"
                 :style="n.cover_url ? { backgroundImage: `url(${n.cover_url})` } : {}"
             >
-                            <span v-if="!n.cover_url" class="news-card__letter">
-                                {{ n.title.charAt(0).toUpperCase() }}
-                            </span>
+              <span v-if="!n.cover_url" class="news-card__letter">
+                {{ n.title.charAt(0).toUpperCase() }}
+              </span>
 
               <div class="news-card__badges">
-                <span v-if="n.is_pinned" class="news-badge news-badge--pin">📌</span>
+                <span v-if="n.is_pinned" class="news-badge news-badge--pin">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 17v5" />
+                    <path d="M9 11V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v7l2 3v1H7v-1l2-3z" />
+                  </svg>
+                </span>
                 <span
                     class="news-badge"
                     :class="`news-badge--${n.type}`"
                 >
-                                    {{ typeLabels[n.type] }}
-                                </span>
+                  {{ typeLabels[n.type] }}
+                </span>
               </div>
             </div>
 
@@ -176,6 +180,10 @@ onMounted(async () => {
               <h3 class="news-card__title">{{ n.title }}</h3>
               <p v-if="n.excerpt" class="news-card__excerpt">{{ n.excerpt }}</p>
               <div class="news-card__meta">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <path d="M16 2v4M8 2v4M3 10h18" />
+                </svg>
                 {{ new Date(n.published_at ?? n.created_at).toLocaleDateString('ru-RU') }}
               </div>
             </div>
@@ -203,55 +211,195 @@ onMounted(async () => {
           Пока нет игроков с рейтингом
         </div>
 
-        <div v-else class="players-list">
-          <RouterLink
-              v-for="(player, i) in players"
-              :key="player.id"
-              :to="`/players/${player.id}`"
-              class="player-row"
-              :class="{ 'top-1': i === 0, 'top-2': i === 1, 'top-3': i === 2 }"
-          >
-            <div class="rank">
-              <span v-if="i === 0" class="medal">🥇</span>
-              <span v-else-if="i === 1" class="medal">🥈</span>
-              <span v-else-if="i === 2" class="medal">🥉</span>
-              <span v-else class="rank-num">#{{ i + 1 }}</span>
-            </div>
-
-            <div class="row-avatar">
-              <img
-                  v-if="player.avatar_url"
-                  :src="player.avatar_url"
-                  :alt="player.username"
-                  class="row-avatar-img"
-              />
-              <template v-else>
-                {{ (player.username || 'И').charAt(0).toUpperCase() }}
-              </template>
-            </div>
-
-            <div class="row-info">
-              <div class="row-name">
-                <UserName :user="player" />
+        <template v-else>
+          <!-- ПОДИУМ ТОП-3 -->
+          <div v-if="players.length >= 1" class="podium" :class="{ 'podium--full': players.length >= 3 }">
+            <!-- 2 место -->
+            <RouterLink
+                v-if="players[1]"
+                :to="`/players/${players[1].id}`"
+                class="podium-card podium-card--2"
+            >
+              <div class="podium-card__glow" />
+              <div class="podium-card__rank">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l2.4 6.4 6.6.5-5 4.4 1.5 6.7L12 16.6 6.5 20l1.5-6.7-5-4.4 6.6-.5z" />
+                </svg>
+                <span>2</span>
               </div>
-              <div class="row-bar">
-                <div
-                    class="row-bar-fill"
-                    :style="{ width: Math.min(player.tier_score, 100) + '%' }"
+
+              <div class="podium-card__avatar">
+                <img
+                    v-if="players[1].avatar_url"
+                    :src="players[1].avatar_url"
+                    :alt="players[1].username"
                 />
+                <template v-else>
+                  {{ (players[1].username || 'И').charAt(0).toUpperCase() }}
+                </template>
               </div>
-            </div>
 
-            <div class="row-tier" :style="{ color: tierColors[player.tier] }">
-              {{ player.tier }}
-            </div>
+              <div class="podium-card__name">
+                <UserName :user="players[1]" />
+              </div>
 
-            <div class="row-score">
-              <span class="score-value">{{ player.tier_score }}</span>
-              <span class="score-suffix">%</span>
-            </div>
-          </RouterLink>
-        </div>
+              <div class="podium-card__tier" :style="{ color: tierColors[players[1].tier] }">
+                {{ players[1].tier }}
+              </div>
+
+              <div class="podium-card__score">
+                <span class="score-value">{{ players[1].tier_score }}</span>
+                <span class="score-suffix">%</span>
+              </div>
+
+              <div class="podium-card__base">
+                <span class="podium-card__place">2 место</span>
+              </div>
+            </RouterLink>
+
+            <!-- 1 место -->
+            <RouterLink
+                v-if="players[0]"
+                :to="`/players/${players[0].id}`"
+                class="podium-card podium-card--1"
+            >
+              <div class="podium-card__crown">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 7l4 5 5-7 5 7 4-5v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
+                  <circle cx="3" cy="7" r="1" />
+                  <circle cx="21" cy="7" r="1" />
+                  <circle cx="12" cy="5" r="1" />
+                </svg>
+              </div>
+
+              <div class="podium-card__glow" />
+              <div class="podium-card__rank">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l2.4 6.4 6.6.5-5 4.4 1.5 6.7L12 16.6 6.5 20l1.5-6.7-5-4.4 6.6-.5z" />
+                </svg>
+                <span>1</span>
+              </div>
+
+              <div class="podium-card__avatar">
+                <img
+                    v-if="players[0].avatar_url"
+                    :src="players[0].avatar_url"
+                    :alt="players[0].username"
+                />
+                <template v-else>
+                  {{ (players[0].username || 'И').charAt(0).toUpperCase() }}
+                </template>
+              </div>
+
+              <div class="podium-card__name">
+                <UserName :user="players[0]" />
+              </div>
+
+              <div class="podium-card__tier" :style="{ color: tierColors[players[0].tier] }">
+                {{ players[0].tier }}
+              </div>
+
+              <div class="podium-card__score">
+                <span class="score-value">{{ players[0].tier_score }}</span>
+                <span class="score-suffix">%</span>
+              </div>
+
+              <div class="podium-card__base">
+                <span class="podium-card__place">1 место</span>
+              </div>
+            </RouterLink>
+
+            <!-- 3 место -->
+            <RouterLink
+                v-if="players[2]"
+                :to="`/players/${players[2].id}`"
+                class="podium-card podium-card--3"
+            >
+              <div class="podium-card__glow" />
+              <div class="podium-card__rank">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l2.4 6.4 6.6.5-5 4.4 1.5 6.7L12 16.6 6.5 20l1.5-6.7-5-4.4 6.6-.5z" />
+                </svg>
+                <span>3</span>
+              </div>
+
+              <div class="podium-card__avatar">
+                <img
+                    v-if="players[2].avatar_url"
+                    :src="players[2].avatar_url"
+                    :alt="players[2].username"
+                />
+                <template v-else>
+                  {{ (players[2].username || 'И').charAt(0).toUpperCase() }}
+                </template>
+              </div>
+
+              <div class="podium-card__name">
+                <UserName :user="players[2]" />
+              </div>
+
+              <div class="podium-card__tier" :style="{ color: tierColors[players[2].tier] }">
+                {{ players[2].tier }}
+              </div>
+
+              <div class="podium-card__score">
+                <span class="score-value">{{ players[2].tier_score }}</span>
+                <span class="score-suffix">%</span>
+              </div>
+
+              <div class="podium-card__base">
+                <span class="podium-card__place">3 место</span>
+              </div>
+            </RouterLink>
+          </div>
+
+          <!-- ОСТАЛЬНЫЕ (4+) -->
+          <div v-if="players.length > 3" class="players-list">
+            <RouterLink
+                v-for="(player, i) in players.slice(3)"
+                :key="player.id"
+                :to="`/players/${player.id}`"
+                class="player-row"
+            >
+              <div class="rank">
+                <span class="rank-num">#{{ i + 4 }}</span>
+              </div>
+
+              <div class="row-avatar">
+                <img
+                    v-if="player.avatar_url"
+                    :src="player.avatar_url"
+                    :alt="player.username"
+                    class="row-avatar-img"
+                />
+                <template v-else>
+                  {{ (player.username || 'И').charAt(0).toUpperCase() }}
+                </template>
+              </div>
+
+              <div class="row-info">
+                <div class="row-name">
+                  <UserName :user="player" />
+                </div>
+                <div class="row-bar">
+                  <div
+                      class="row-bar-fill"
+                      :style="{ width: Math.min(player.tier_score, 100) + '%' }"
+                  />
+                </div>
+              </div>
+
+              <div class="row-tier" :style="{ color: tierColors[player.tier] }">
+                {{ player.tier }}
+              </div>
+
+              <div class="row-score">
+                <span class="score-value">{{ player.tier_score }}</span>
+                <span class="score-suffix">%</span>
+              </div>
+            </RouterLink>
+          </div>
+        </template>
       </section>
 
       <!-- ТОП КЛАНОВ -->
@@ -274,64 +422,205 @@ onMounted(async () => {
           Пока нет кланов
         </div>
 
-        <div v-else class="clans-list">
-          <RouterLink
-              v-for="(clan, i) in clans"
-              :key="clan.id"
-              :to="`/clans/${clan.id}`"
-              class="clan-row"
-              :class="{
-                            'top-1': i === 0,
-                            'top-2': i === 1,
-                            'top-3': i === 2,
-                            highlighted: clan.is_highlighted,
-                        }"
-          >
-            <div class="rank">
-              <span v-if="i === 0" class="medal">🥇</span>
-              <span v-else-if="i === 1" class="medal">🥈</span>
-              <span v-else-if="i === 2" class="medal">🥉</span>
-              <span v-else class="rank-num">#{{ i + 1 }}</span>
-            </div>
+        <template v-else>
+          <!-- ПОДИУМ ТОП-3 КЛАНОВ -->
+          <div v-if="clans.length >= 1" class="podium" :class="{ 'podium--full': clans.length >= 3 }">
+            <!-- 2 место -->
+            <RouterLink
+                v-if="clans[1]"
+                :to="`/clans/${clans[1].id}`"
+                class="podium-card podium-card--2"
+            >
+              <div class="podium-card__glow" />
+              <div class="podium-card__rank">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l2.4 6.4 6.6.5-5 4.4 1.5 6.7L12 16.6 6.5 20l1.5-6.7-5-4.4 6.6-.5z" />
+                </svg>
+                <span>2</span>
+              </div>
 
-            <div class="clan-avatar" :style="{ background: clan.banner_color }">
-              <img
-                  v-if="clan.avatar_url"
-                  :src="clan.avatar_url"
-                  :alt="clan.name"
-                  class="avatar-img"
-              />
-              <template v-else>{{ clan.tag?.charAt(0) || 'C' }}</template>
-            </div>
+              <div
+                  class="podium-card__clan-avatar"
+                  :style="{ background: clans[1].banner_color || '#7c3aed' }"
+              >
+                <img v-if="clans[1].avatar_url" :src="clans[1].avatar_url" :alt="clans[1].name" />
+                <template v-else>{{ clans[1].tag?.charAt(0) || 'C' }}</template>
+              </div>
 
-            <div class="clan-info">
-              <div class="clan-name">
-                <span class="tag">[{{ clan.tag }}]</span>
-                {{ clan.name }}
+              <div class="podium-card__name">
+                <span class="podium-card__tag">[{{ clans[1].tag }}]</span>
+                {{ clans[1].name }}
               </div>
-              <div class="clan-meta">
-                {{ clan.members_count }} участников
-                <span class="sep">·</span>
-                Лидер: {{ clan.leader?.username }}
-              </div>
-            </div>
 
-            <div class="clan-stats">
-              <div class="stat">
-                <span class="stat-value power">{{ clan.power }}</span>
-                <span class="stat-label">сила</span>
+              <div class="podium-card__stats">
+                <div class="podium-stat">
+                  <span class="podium-stat__val">{{ clans[1].power }}</span>
+                  <span class="podium-stat__lbl">сила</span>
+                </div>
+                <div class="podium-stat">
+                  <span class="podium-stat__val win">{{ clans[1].wins }}</span>
+                  <span class="podium-stat__lbl">побед</span>
+                </div>
               </div>
-              <div class="stat">
-                <span class="stat-value win">{{ clan.wins }}</span>
-                <span class="stat-label">побед</span>
+
+              <div class="podium-card__base">
+                <span class="podium-card__place">2 место</span>
               </div>
-              <div class="stat">
-                <span class="stat-value loss">{{ clan.losses }}</span>
-                <span class="stat-label">поражений</span>
+            </RouterLink>
+
+            <!-- 1 место -->
+            <RouterLink
+                v-if="clans[0]"
+                :to="`/clans/${clans[0].id}`"
+                class="podium-card podium-card--1"
+            >
+              <div class="podium-card__crown">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 7l4 5 5-7 5 7 4-5v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
+                  <circle cx="3" cy="7" r="1" />
+                  <circle cx="21" cy="7" r="1" />
+                  <circle cx="12" cy="5" r="1" />
+                </svg>
               </div>
-            </div>
-          </RouterLink>
-        </div>
+
+              <div class="podium-card__glow" />
+              <div class="podium-card__rank">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l2.4 6.4 6.6.5-5 4.4 1.5 6.7L12 16.6 6.5 20l1.5-6.7-5-4.4 6.6-.5z" />
+                </svg>
+                <span>1</span>
+              </div>
+
+              <div
+                  class="podium-card__clan-avatar"
+                  :style="{ background: clans[0].banner_color || '#7c3aed' }"
+              >
+                <img v-if="clans[0].avatar_url" :src="clans[0].avatar_url" :alt="clans[0].name" />
+                <template v-else>{{ clans[0].tag?.charAt(0) || 'C' }}</template>
+              </div>
+
+              <div class="podium-card__name">
+                <span class="podium-card__tag">[{{ clans[0].tag }}]</span>
+                {{ clans[0].name }}
+              </div>
+
+              <div class="podium-card__stats">
+                <div class="podium-stat">
+                  <span class="podium-stat__val">{{ clans[0].power }}</span>
+                  <span class="podium-stat__lbl">сила</span>
+                </div>
+                <div class="podium-stat">
+                  <span class="podium-stat__val win">{{ clans[0].wins }}</span>
+                  <span class="podium-stat__lbl">побед</span>
+                </div>
+              </div>
+
+              <div class="podium-card__base">
+                <span class="podium-card__place">1 место</span>
+              </div>
+            </RouterLink>
+
+            <!-- 3 место -->
+            <RouterLink
+                v-if="clans[2]"
+                :to="`/clans/${clans[2].id}`"
+                class="podium-card podium-card--3"
+            >
+              <div class="podium-card__glow" />
+              <div class="podium-card__rank">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l2.4 6.4 6.6.5-5 4.4 1.5 6.7L12 16.6 6.5 20l1.5-6.7-5-4.4 6.6-.5z" />
+                </svg>
+                <span>3</span>
+              </div>
+
+              <div
+                  class="podium-card__clan-avatar"
+                  :style="{ background: clans[2].banner_color || '#7c3aed' }"
+              >
+                <img v-if="clans[2].avatar_url" :src="clans[2].avatar_url" :alt="clans[2].name" />
+                <template v-else>{{ clans[2].tag?.charAt(0) || 'C' }}</template>
+              </div>
+
+              <div class="podium-card__name">
+                <span class="podium-card__tag">[{{ clans[2].tag }}]</span>
+                {{ clans[2].name }}
+              </div>
+
+              <div class="podium-card__stats">
+                <div class="podium-stat">
+                  <span class="podium-stat__val">{{ clans[2].power }}</span>
+                  <span class="podium-stat__lbl">сила</span>
+                </div>
+                <div class="podium-stat">
+                  <span class="podium-stat__val win">{{ clans[2].wins }}</span>
+                  <span class="podium-stat__lbl">побед</span>
+                </div>
+              </div>
+
+              <div class="podium-card__base">
+                <span class="podium-card__place">3 место</span>
+              </div>
+            </RouterLink>
+          </div>
+
+          <!-- ОСТАЛЬНЫЕ (4+) -->
+          <div v-if="clans.length > 3" class="clans-list">
+            <RouterLink
+                v-for="(clan, i) in clans.slice(3)"
+                :key="clan.id"
+                :to="`/clans/${clan.id}`"
+                class="clan-row"
+                :class="{ highlighted: clan.is_highlighted }"
+            >
+              <div class="rank">
+                <span class="rank-num">#{{ i + 4 }}</span>
+              </div>
+
+              <div class="clan-avatar" :style="{ background: clan.banner_color }">
+                <img
+                    v-if="clan.avatar_url"
+                    :src="clan.avatar_url"
+                    :alt="clan.name"
+                    class="avatar-img"
+                />
+                <template v-else>{{ clan.tag?.charAt(0) || 'C' }}</template>
+              </div>
+
+              <div class="clan-info">
+                <div class="clan-name">
+                  <span class="tag">[{{ clan.tag }}]</span>
+                  {{ clan.name }}
+                  <span v-if="clan.is_highlighted" class="highlight-star">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2l2.4 6.4 6.6.5-5 4.4 1.5 6.7L12 16.6 6.5 20l1.5-6.7-5-4.4 6.6-.5z" />
+                    </svg>
+                  </span>
+                </div>
+                <div class="clan-meta">
+                  {{ clan.members_count }} участников
+                  <span class="sep">·</span>
+                  Лидер: {{ clan.leader?.username }}
+                </div>
+              </div>
+
+              <div class="clan-stats">
+                <div class="stat">
+                  <span class="stat-value power">{{ clan.power }}</span>
+                  <span class="stat-label">сила</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-value win">{{ clan.wins }}</span>
+                  <span class="stat-label">побед</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-value loss">{{ clan.losses }}</span>
+                  <span class="stat-label">поражений</span>
+                </div>
+              </div>
+            </RouterLink>
+          </div>
+        </template>
       </section>
     </div>
 
@@ -586,6 +875,9 @@ onMounted(async () => {
 }
 
 .news-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 3px 8px;
   border-radius: 999px;
   font-size: 9px;
@@ -640,6 +932,9 @@ onMounted(async () => {
 }
 
 .news-card__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   margin-top: auto;
   font-size: 11px;
   color: var(--text-muted);
@@ -706,7 +1001,335 @@ onMounted(async () => {
   gap: 10px;
 }
 
-/* === ОБЩЕЕ ДЛЯ СПИСКОВ === */
+/* === PODIUM === */
+
+.podium {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 1fr;
+  align-items: end;
+  gap: 14px;
+  padding: 24px 12px 0;
+  margin-bottom: 20px;
+  perspective: 1200px;
+}
+
+.podium--full {
+  min-height: 340px;
+}
+
+.podium-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 16px 0;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 18px 18px 14px 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  transform-style: preserve-3d;
+}
+
+.podium-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-hover);
+}
+
+.podium-card__glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.8;
+  background: radial-gradient(circle at 50% 0%, currentColor 0%, transparent 60%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* Rank badge */
+.podium-card__rank {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+  color: #fff;
+}
+
+.podium-card__rank svg {
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+}
+
+/* Avatar */
+.podium-card__avatar,
+.podium-card__clan-avatar {
+  position: relative;
+  z-index: 2;
+  width: 84px;
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 30px;
+  font-weight: 900;
+  color: #fff;
+  overflow: hidden;
+  border: 3px solid var(--bg-card);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.podium-card__clan-avatar {
+  border-radius: 20px;
+}
+
+.podium-card__avatar img,
+.podium-card__clan-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* Crown */
+.podium-card__crown {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #facc15;
+  filter: drop-shadow(0 4px 12px rgba(250, 204, 21, 0.6));
+  z-index: 3;
+  animation: crownFloat 3s ease-in-out infinite;
+}
+
+@keyframes crownFloat {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-4px); }
+}
+
+/* Name */
+.podium-card__name {
+  position: relative;
+  z-index: 2;
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.podium-card__tag {
+  color: var(--accent-light);
+}
+
+/* Tier */
+.podium-card__tier {
+  position: relative;
+  z-index: 2;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  filter: drop-shadow(0 2px 8px currentColor);
+}
+
+/* Score */
+.podium-card__score {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: baseline;
+  gap: 1px;
+}
+
+.podium-card__score .score-value {
+  font-size: 20px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.podium-card__score .score-suffix {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+/* Stats (для кланов) */
+.podium-card__stats {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 20px;
+}
+
+.podium-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.podium-stat__val {
+  font-size: 16px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.podium-stat__val.win { color: #4ade80; }
+
+.podium-stat__lbl {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+/* Base (place) */
+.podium-card__base {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  margin-top: auto;
+  padding: 12px 0 10px;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.podium-card__place {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* 1 место */
+.podium-card--1 {
+  color: #facc15;
+  padding-top: 34px;
+  padding-bottom: 0;
+  background:
+      radial-gradient(circle at 50% -10%, rgba(250, 204, 21, 0.25), transparent 60%),
+      linear-gradient(180deg, rgba(250, 204, 21, 0.06), rgba(250, 204, 21, 0.01));
+  border-color: rgba(250, 204, 21, 0.45);
+  box-shadow:
+      0 20px 60px -20px rgba(250, 204, 21, 0.4),
+      0 0 0 1px rgba(250, 204, 21, 0.1) inset;
+}
+
+.podium-card--1:hover {
+  border-color: rgba(250, 204, 21, 0.7);
+  box-shadow:
+      0 28px 80px -20px rgba(250, 204, 21, 0.55),
+      0 0 0 1px rgba(250, 204, 21, 0.2) inset;
+}
+
+.podium-card--1 .podium-card__glow {
+  color: #facc15;
+  opacity: 0.5;
+}
+
+.podium-card--1 .podium-card__rank {
+  background: linear-gradient(135deg, #fde047, #f59e0b);
+  color: #422006;
+  box-shadow: 0 4px 14px rgba(250, 204, 21, 0.5);
+}
+
+.podium-card--1 .podium-card__avatar,
+.podium-card--1 .podium-card__clan-avatar {
+  width: 96px;
+  height: 96px;
+  border-color: rgba(250, 204, 21, 0.5);
+  box-shadow:
+      0 12px 40px rgba(250, 204, 21, 0.35),
+      0 0 0 4px rgba(250, 204, 21, 0.15);
+}
+
+.podium-card--1 .podium-card__place { color: #facc15; }
+
+/* 2 место */
+.podium-card--2 {
+  color: #cbd5e1;
+  min-height: 290px;
+  background:
+      radial-gradient(circle at 50% -10%, rgba(203, 213, 225, 0.2), transparent 60%),
+      linear-gradient(180deg, rgba(203, 213, 225, 0.05), rgba(203, 213, 225, 0.01));
+  border-color: rgba(203, 213, 225, 0.35);
+}
+
+.podium-card--2:hover {
+  border-color: rgba(203, 213, 225, 0.55);
+}
+
+.podium-card--2 .podium-card__glow {
+  color: #cbd5e1;
+  opacity: 0.35;
+}
+
+.podium-card--2 .podium-card__rank {
+  background: linear-gradient(135deg, #e5e7eb, #9ca3af);
+  color: #1e293b;
+  box-shadow: 0 4px 14px rgba(203, 213, 225, 0.4);
+}
+
+.podium-card--2 .podium-card__avatar,
+.podium-card--2 .podium-card__clan-avatar {
+  border-color: rgba(203, 213, 225, 0.4);
+  box-shadow:
+      0 10px 30px rgba(0, 0, 0, 0.5),
+      0 0 0 3px rgba(203, 213, 225, 0.1);
+}
+
+.podium-card--2 .podium-card__place { color: #cbd5e1; }
+
+/* 3 место */
+.podium-card--3 {
+  color: #d97706;
+  min-height: 270px;
+  background:
+      radial-gradient(circle at 50% -10%, rgba(217, 119, 6, 0.2), transparent 60%),
+      linear-gradient(180deg, rgba(217, 119, 6, 0.05), rgba(217, 119, 6, 0.01));
+  border-color: rgba(217, 119, 6, 0.4);
+}
+
+.podium-card--3:hover {
+  border-color: rgba(217, 119, 6, 0.6);
+}
+
+.podium-card--3 .podium-card__glow {
+  color: #d97706;
+  opacity: 0.35;
+}
+
+.podium-card--3 .podium-card__rank {
+  background: linear-gradient(135deg, #e09966, #a0522d);
+  color: #2a1006;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.4);
+}
+
+.podium-card--3 .podium-card__avatar,
+.podium-card--3 .podium-card__clan-avatar {
+  border-color: rgba(217, 119, 6, 0.4);
+  box-shadow:
+      0 10px 30px rgba(0, 0, 0, 0.5),
+      0 0 0 3px rgba(217, 119, 6, 0.1);
+}
+
+.podium-card--3 .podium-card__place { color: #d97706; }
+
+/* === PLAYERS / CLANS LIST === */
 
 .players-list,
 .clans-list {
@@ -755,57 +1378,6 @@ onMounted(async () => {
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
 }
 
-.player-row.top-1,
-.clan-row.top-1 {
-  border-color: rgba(250, 204, 21, 0.35);
-  background: linear-gradient(90deg, rgba(250, 204, 21, 0.06) 0%, var(--bg-card) 40%);
-}
-
-.player-row.top-1::before,
-.clan-row.top-1::before {
-  background: linear-gradient(180deg, #facc15, #f59e0b);
-  opacity: 0.8;
-}
-
-.player-row.top-2,
-.clan-row.top-2 {
-  border-color: rgba(192, 192, 192, 0.3);
-  background: linear-gradient(90deg, rgba(192, 192, 192, 0.05) 0%, var(--bg-card) 40%);
-}
-
-.player-row.top-2::before,
-.clan-row.top-2::before {
-  background: linear-gradient(180deg, #e5e7eb, #9ca3af);
-  opacity: 0.7;
-}
-
-.player-row.top-3,
-.clan-row.top-3 {
-  border-color: rgba(205, 127, 50, 0.3);
-  background: linear-gradient(90deg, rgba(205, 127, 50, 0.05) 0%, var(--bg-card) 40%);
-}
-
-.player-row.top-3::before,
-.clan-row.top-3::before {
-  background: linear-gradient(180deg, #cd7f32, #a0522d);
-  opacity: 0.7;
-}
-
-/* Highlighted clan */
-.clan-row.highlighted {
-  border-color: rgba(250, 204, 21, 0.5);
-  box-shadow: 0 0 30px rgba(250, 204, 21, 0.08);
-}
-
-.clan-row.highlighted::after {
-  content: '⭐';
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  font-size: 13px;
-  pointer-events: none;
-}
-
 /* === RANK === */
 
 .rank {
@@ -814,12 +1386,6 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   font-weight: 900;
-}
-
-.medal {
-  font-size: 22px;
-  line-height: 1;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
 }
 
 .rank-num {
@@ -862,21 +1428,6 @@ onMounted(async () => {
   display: block;
 }
 
-.player-row.top-1 .row-avatar {
-  background: linear-gradient(135deg, #fde047, #f59e0b);
-  box-shadow: 0 4px 20px rgba(250, 204, 21, 0.4);
-}
-
-.player-row.top-2 .row-avatar {
-  background: linear-gradient(135deg, #f3f4f6, #9ca3af);
-  box-shadow: 0 4px 20px rgba(192, 192, 192, 0.3);
-}
-
-.player-row.top-3 .row-avatar {
-  background: linear-gradient(135deg, #e09966, #a0522d);
-  box-shadow: 0 4px 20px rgba(205, 127, 50, 0.3);
-}
-
 .row-info {
   min-width: 0;
   display: flex;
@@ -904,18 +1455,6 @@ onMounted(async () => {
   background: linear-gradient(90deg, #7c3aed, #a78bfa);
   border-radius: 999px;
   transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.player-row.top-1 .row-bar-fill {
-  background: linear-gradient(90deg, #facc15, #fde047);
-}
-
-.player-row.top-2 .row-bar-fill {
-  background: linear-gradient(90deg, #9ca3af, #e5e7eb);
-}
-
-.player-row.top-3 .row-bar-fill {
-  background: linear-gradient(90deg, #a0522d, #cd7f32);
 }
 
 .row-tier {
@@ -982,6 +1521,9 @@ onMounted(async () => {
 }
 
 .clan-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 15px;
   font-weight: 700;
   margin-bottom: 4px;
@@ -992,7 +1534,14 @@ onMounted(async () => {
 
 .clan-name .tag {
   color: var(--accent-light);
-  margin-right: 4px;
+  margin-right: 2px;
+}
+
+.highlight-star {
+  display: inline-flex;
+  align-items: center;
+  color: #facc15;
+  filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.6));
 }
 
 .clan-meta {
@@ -1145,6 +1694,43 @@ onMounted(async () => {
 @media (max-width: 800px) {
   .hero h1 { font-size: 48px; }
 
+  .podium {
+    grid-template-columns: 1fr;
+    padding: 0;
+    gap: 10px;
+    min-height: auto;
+  }
+
+  .podium-card--1,
+  .podium-card--2,
+  .podium-card--3 {
+    min-height: 0;
+    padding: 20px 16px 0;
+    border-radius: 16px;
+  }
+
+  .podium-card--1 {
+    padding-top: 28px;
+  }
+
+  .podium-card--1 .podium-card__avatar,
+  .podium-card--1 .podium-card__clan-avatar {
+    width: 80px;
+    height: 80px;
+  }
+
+  .podium-card__avatar,
+  .podium-card__clan-avatar {
+    width: 72px;
+    height: 72px;
+    font-size: 26px;
+  }
+
+  /* на мобилке 1 место всегда первое */
+  .podium-card--1 { order: -1; }
+  .podium-card--2 { order: 0; }
+  .podium-card--3 { order: 1; }
+
   .player-row {
     grid-template-columns: 40px 44px 1fr 48px 60px;
     gap: 12px;
@@ -1226,7 +1812,5 @@ onMounted(async () => {
   .clan-avatar { width: 40px; height: 40px; border-radius: 10px; font-size: 16px; }
 
   .clan-stats { display: none; }
-
-  .medal { font-size: 18px; }
 }
 </style>

@@ -88,7 +88,7 @@ class PlayerController extends Controller
         // загрузка кастомного фона
         if ($request->hasFile('card_background')) {
             if ($user->card_background) {
-                \Storage::disk('public')->delete($user->card_background);
+                Storage::disk('public')->delete($user->card_background);
             }
 
             $validated['card_background'] = $request
@@ -147,6 +147,16 @@ class PlayerController extends Controller
             'pvp' => $user->aspectPvp,
             'bedwars' => $user->aspectBedwars,
         ];
+
+        $userArray['all_achievements'] = $user->achievements->map(fn ($a) => [
+            'id' => $a->id,
+            'name' => $a->name,
+            'icon' => $a->icon,
+            'color' => $a->color,
+            'description' => $a->description,
+            'points' => $a->points,
+            'earned_at' => $a->pivot->earned_at ?? null,
+        ])->values();
 
         return response()->json([
             'user' => $userArray,

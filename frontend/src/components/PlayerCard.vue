@@ -43,7 +43,6 @@ const ASPECT_KEYS = {
   bedwars: ['pvp', 'game_sense', 'bed_play', 'teamplay', 'building'],
 }
 
-// Пустые аспекты
 const EMPTY_PVP = {
   block_placing: 0, rotka: 0, movement: 0, aim: 0, game_sense: 0,
 }
@@ -128,13 +127,26 @@ const accent = computed(() =>
 )
 
 // === ФОН ===
-const cardBackground = computed(() => props.user.card_background_url)
 
+// Обложка — только шапка
 const headerStyle = computed(() => {
-  const bg = cardBackground.value || props.user.cover_url
+  const url = props.user.cover_url
   return {
-    ...(bg ? {
-      backgroundImage: `linear-gradient(rgba(10,10,15,0.7), rgba(10,10,15,0.9)), url(${bg})`,
+    ...(url ? {
+      backgroundImage: `linear-gradient(rgba(10,10,15,0.45), rgba(10,10,15,0.85)), url(${url})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    } : {}),
+    '--accent-color': accent.value,
+  }
+})
+
+// Фон карточки — вся карточка
+const cardStyle = computed(() => {
+  const url = props.user.card_background_url
+  return {
+    ...(url ? {
+      backgroundImage: `url(${url})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
     } : {}),
@@ -155,6 +167,21 @@ function pluralDays(n) {
   if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return 'дня'
   return 'дней'
 }
+
+const allAchievements = computed(() => {
+  // приоритет: отдельное поле all_achievements, если бэк его отдаёт
+  // иначе — user.achievements (из $user->toArray() с загруженной связью)
+  return props.user.all_achievements ?? props.user.achievements ?? []
+})
+
+const showcaseRows = computed(() => {
+  const list = allAchievements.value
+  const rows = []
+  for (let i = 0; i < list.length; i += 4) {
+    rows.push(list.slice(i, i + 4))
+  }
+  return rows
+})
 
 // === КЛАН ===
 const clanJoinedAt = computed(() => props.user.clan_joined_at)
@@ -188,8 +215,18 @@ const socialLabels = {
   youtube: 'YouTube', vk: 'VK', website: 'Сайт',
 }
 
-// === ВИТРИНА ===
+// === ВИТРИНА (Steam-style) ===
 const featured = computed(() => props.user.featured_achievements_list ?? [])
+
+// Группировка ровно по 4 в ряд, как в Steam
+const featuredRows = computed(() => {
+  const list = featured.value
+  const rows = []
+  for (let i = 0; i < list.length; i += 4) {
+    rows.push(list.slice(i, i + 4))
+  }
+  return rows
+})
 
 // === ГРАФИК ===
 const history = ref([])
@@ -207,248 +244,302 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="player-card">
-    <!-- ===== HEADER ===== -->
-    <header
-        class="player-card__header"
-        :class="effectClass"
-        :style="headerStyle"
-    >
-      <div class="player-card__left">
-        <div class="avatar-wrap" :class="{ 'avatar-wrap--framed': hasFrame }">
-          <div v-if="hasFrame" class="avatar-ring" :style="frameStyle" />
-
-          <div class="player-card__avatar" :style="{ background: accent }">
-            <img
-                v-if="user.avatar_url"
-                :src="user.avatar_url"
-                :alt="user.username"
-                class="player-card__avatar-img"
-            />
-            <template v-else>
-              {{ (user.username || 'И').charAt(0).toUpperCase() }}
-            </template>
-          </div>
-        </div>
-
-        <div class="player-card__info">
-          <h2 class="player-card__name">
-            <UserName :user="user" />
-
-            <span
-                v-if="isVerified"
-                class="verified"
-                :title="user.verified_reason || 'Подтверждённый аккаунт'"
-            >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <path d="M12 2l2.4 3.6 4.2.6 3 3-1.2 4.2L22 18l-3 3-4.2-1.2L12 22l-3-2.4-4.2 1.2-3-3 1.2-4.2L2 9.6l3-3 4.2-.6z" fill="#1da1f2" />
-                                <path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
-                            </svg>
-                        </span>
-          </h2>
-
-          <p v-if="user.status" class="status">{{ user.status }}</p>
-          <p v-else-if="user.bio" class="bio">{{ user.bio }}</p>
-
-          <p v-if="user.quote" class="quote">"{{ user.quote }}"</p>
-
-          <div v-if="modes.length" class="modes">
-                        <span
-                            v-for="m in modes"
-                            :key="m"
-                            class="mode-badge"
-                            :style="{ '--color': MODE_COLORS[m] || '#7c3aed' }"
-                        >
-                            {{ MODE_LABELS[m] ?? m }}
-                        </span>
-          </div>
-
-          <div class="meta-row">
-                        <span v-if="daysOnPlatform" class="meta-pill">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10" />
-                                <path d="M12 6v6l4 2" stroke-linecap="round" />
-                            </svg>
-                            С нами {{ daysOnPlatform }} {{ pluralDays(daysOnPlatform) }}
-                        </span>
-
-            <span v-if="clanJoinedAt && user.clan_member?.clan" class="meta-pill">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 2l9 4v6c0 5-3.5 9-9 10-5.5-1-9-5-9-10V6z" />
-                            </svg>
-                            В [{{ user.clan_member.clan.tag }}] с {{ formatDate(clanJoinedAt) }}
-                        </span>
-
-            <span v-if="user.discord_tag" class="meta-pill meta-pill--discord">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="#5865f2">
-                                <path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z" />
-                            </svg>
-                            {{ user.discord_tag }}
-                        </span>
-          </div>
-        </div>
-      </div>
-
-      <div class="player-card__right">
-        <button
-            v-if="editable"
-            class="player-card__edit"
-            type="button"
-            @click="emit('edit')"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-          Настройки
-        </button>
-
-        <div
-            class="player-card__tier"
-            :style="{
-                        borderColor: tierColor,
-                        color: tierColor,
-                        boxShadow: `0 0 20px ${tierColor}40`,
-                    }"
-        >
-          {{ user.tier }}
-        </div>
-      </div>
-    </header>
-
-    <!-- СОЦСЕТИ -->
-    <div v-if="hasSocials" class="player-card__socials">
-      <a
-          v-for="(url, key) in user.socials"
-          :key="key"
-          v-show="url"
-          :href="url"
-          target="_blank"
-          rel="noopener"
-          class="social-link"
-          :class="key"
+  <div class="profile-layout">
+    <!-- ====== ОСНОВНАЯ КАРТОЧКА ====== -->
+    <div class="player-card" :style="cardStyle">
+      <!-- ===== HEADER ===== -->
+      <header
+          class="player-card__header"
+          :class="effectClass"
+          :style="headerStyle"
       >
-        {{ socialLabels[key] }}
-      </a>
-    </div>
+        <div class="player-card__left">
+          <div class="avatar-wrap" :class="{ 'avatar-wrap--framed': hasFrame }">
+            <div v-if="hasFrame" class="avatar-ring" :style="frameStyle" />
 
-    <!-- ВИТРИНА -->
-    <div v-if="featured.length" class="featured">
-      <div class="featured__title">🏆 Витрина ачивок</div>
-      <div class="featured__grid">
-        <div
-            v-for="a in featured"
-            :key="a.id"
-            class="featured__item"
-            :style="{ '--color': a.color }"
-            :title="a.description"
-        >
-          <div class="featured__icon">{{ a.icon }}</div>
-          <div class="featured__name">{{ a.name }}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ГРАФИК -->
-    <div v-if="history.length" class="chart-section">
-      <div class="chart-section__head">
-        <h3>Прогресс тира</h3>
-        <span class="chart-section__count">{{ history.length }} тестов</span>
-      </div>
-      <TierHistoryChart :history="history" />
-    </div>
-
-    <!-- АСПЕКТЫ -->
-    <section class="aspects">
-      <div class="aspects__head">
-        <h3 class="aspects__title">Аспекты игрока</h3>
-        <span class="aspects__sub">Оценка по 5 критериям · макс. 100%</span>
-      </div>
-
-      <div class="aspects__list">
-        <article
-            v-for="aspect in allAspects"
-            :key="aspect.mode"
-            class="aspect-card"
-            :class="{
-                        'aspect-card--empty': !aspect.hasData,
-                        [`aspect-card--${aspect.mode}`]: true,
-                    }"
-        >
-          <header class="aspect-card__head">
-            <div class="aspect-card__head-left">
-                            <span class="aspect-card__mode">
-                                {{ aspect.mode === 'pvp' ? 'PvP' : 'BedWars' }}
-                            </span>
-              <span class="aspect-card__sub">
-                                {{ aspect.mode === 'pvp' ? 'p-ранг' : 'b-ранг' }}
-                            </span>
-              <span v-if="!aspect.hasData" class="badge-empty">
-                                не тестирован
-                            </span>
-            </div>
-
-            <div class="aspect-card__head-right">
-              <div class="total">
-                <span class="total__value">{{ totalScore(aspect) }}</span>
-                <span class="total__max">/50</span>
-              </div>
-              <div
-                  class="percent-pill"
-                  :style="{
-                                    color: percentColor(aspect.percent),
-                                    borderColor: percentColor(aspect.percent) + '55',
-                                    background: percentColor(aspect.percent) + '12',
-                                }"
-              >
-                {{ aspect.percent }}%
-              </div>
-            </div>
-          </header>
-
-          <div class="aspect-card__grid">
-            <div
-                v-for="key in ASPECT_KEYS[aspect.mode]"
-                :key="key"
-                class="aspect"
-            >
-              <div class="aspect__top">
-                <span class="aspect__label">{{ ASPECT_LABELS[aspect.mode][key] }}</span>
-                <span
-                    class="aspect__value"
-                    :class="{ 'aspect__value--zero': !aspect[key] }"
-                >
-                                    {{ aspect[key] ?? 0 }}
-                                </span>
-              </div>
-
-              <div class="aspect__bar">
-                <div
-                    class="aspect__fill"
-                    :style="{
-                                        width: ((aspect[key] ?? 0) / 10 * 100) + '%',
-                                        background: aspectColor(aspect[key] ?? 0),
-                                    }"
-                />
-              </div>
+            <div class="player-card__avatar" :style="{ background: accent }">
+              <img
+                  v-if="user.avatar_url"
+                  :src="user.avatar_url"
+                  :alt="user.username"
+                  class="player-card__avatar-img"
+              />
+              <template v-else>
+                {{ (user.username || 'И').charAt(0).toUpperCase() }}
+              </template>
             </div>
           </div>
-        </article>
+
+          <div class="player-card__info">
+            <h2 class="player-card__name">
+              <UserName :user="user" />
+
+              <span
+                  v-if="isVerified"
+                  class="verified"
+                  :title="user.verified_reason || 'Подтверждённый аккаунт'"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2l2.4 3.6 4.2.6 3 3-1.2 4.2L22 18l-3 3-4.2-1.2L12 22l-3-2.4-4.2 1.2-3-3 1.2-4.2L2 9.6l3-3 4.2-.6z" fill="#1da1f2" />
+                  <path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                </svg>
+              </span>
+            </h2>
+
+            <p v-if="user.status" class="status">{{ user.status }}</p>
+            <p v-else-if="user.bio" class="bio">{{ user.bio }}</p>
+
+            <p v-if="user.quote" class="quote">"{{ user.quote }}"</p>
+
+            <div v-if="modes.length" class="modes">
+              <span
+                  v-for="m in modes"
+                  :key="m"
+                  class="mode-badge"
+                  :style="{ '--color': MODE_COLORS[m] || '#7c3aed' }"
+              >
+                {{ MODE_LABELS[m] ?? m }}
+              </span>
+            </div>
+
+            <div class="meta-row">
+              <span v-if="daysOnPlatform" class="meta-pill">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 6v6l4 2" stroke-linecap="round" />
+                </svg>
+                С нами {{ daysOnPlatform }} {{ pluralDays(daysOnPlatform) }}
+              </span>
+
+              <span v-if="clanJoinedAt && user.clan_member?.clan" class="meta-pill">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2l9 4v6c0 5-3.5 9-9 10-5.5-1-9-5-9-10V6z" />
+                </svg>
+                В [{{ user.clan_member.clan.tag }}] с {{ formatDate(clanJoinedAt) }}
+              </span>
+
+              <span v-if="user.discord_tag" class="meta-pill meta-pill--discord">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="#5865f2">
+                  <path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z" />
+                </svg>
+                {{ user.discord_tag }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="player-card__right">
+          <button
+              v-if="editable"
+              class="player-card__edit"
+              type="button"
+              @click="emit('edit')"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            Настройки
+          </button>
+
+          <div
+              class="player-card__tier"
+              :style="{
+                borderColor: tierColor,
+                color: tierColor,
+                boxShadow: `0 0 20px ${tierColor}40`,
+              }"
+          >
+            {{ user.tier }}
+          </div>
+        </div>
+      </header>
+
+      <!-- СОЦСЕТИ -->
+      <div v-if="hasSocials" class="player-card__socials">
+        <a
+            v-for="(url, key) in user.socials"
+            :key="key"
+            v-show="url"
+            :href="url"
+            target="_blank"
+            rel="noopener"
+            class="social-link"
+            :class="key"
+        >
+          {{ socialLabels[key] }}
+        </a>
       </div>
-    </section>
+
+      <!-- ГРАФИК -->
+      <div v-if="history.length" class="chart-section">
+        <div class="chart-section__head">
+          <h3>Прогресс тира</h3>
+          <span class="chart-section__count">{{ history.length }} тестов</span>
+        </div>
+        <TierHistoryChart :history="history" />
+      </div>
+
+      <!-- АСПЕКТЫ -->
+      <section class="aspects">
+        <div class="aspects__head">
+          <h3 class="aspects__title">Аспекты игрока</h3>
+          <span class="aspects__sub">Оценка по 5 критериям · макс. 100%</span>
+        </div>
+
+        <div class="aspects__list">
+          <article
+              v-for="aspect in allAspects"
+              :key="aspect.mode"
+              class="aspect-card"
+              :class="{
+                'aspect-card--empty': !aspect.hasData,
+                [`aspect-card--${aspect.mode}`]: true,
+              }"
+          >
+            <header class="aspect-card__head">
+              <div class="aspect-card__head-left">
+                <span class="aspect-card__mode">
+                  {{ aspect.mode === 'pvp' ? 'PvP' : 'BedWars' }}
+                </span>
+                <span class="aspect-card__sub">
+                  {{ aspect.mode === 'pvp' ? 'p-ранг' : 'b-ранг' }}
+                </span>
+                <span v-if="!aspect.hasData" class="badge-empty">
+                  не тестирован
+                </span>
+              </div>
+
+              <div class="aspect-card__head-right">
+                <div class="total">
+                  <span class="total__value">{{ totalScore(aspect) }}</span>
+                  <span class="total__max">/50</span>
+                </div>
+                <div
+                    class="percent-pill"
+                    :style="{
+                      color: percentColor(aspect.percent),
+                      borderColor: percentColor(aspect.percent) + '55',
+                      background: percentColor(aspect.percent) + '12',
+                    }"
+                >
+                  {{ aspect.percent }}%
+                </div>
+              </div>
+            </header>
+
+            <div class="aspect-card__grid">
+              <div
+                  v-for="key in ASPECT_KEYS[aspect.mode]"
+                  :key="key"
+                  class="aspect"
+              >
+                <div class="aspect__top">
+                  <span class="aspect__label">{{ ASPECT_LABELS[aspect.mode][key] }}</span>
+                  <span
+                      class="aspect__value"
+                      :class="{ 'aspect__value--zero': !aspect[key] }"
+                  >
+                    {{ aspect[key] ?? 0 }}
+                  </span>
+                </div>
+
+                <div class="aspect__bar">
+                  <div
+                      class="aspect__fill"
+                      :style="{
+                        width: ((aspect[key] ?? 0) / 10 * 100) + '%',
+                        background: aspectColor(aspect[key] ?? 0),
+                      }"
+                  />
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </div>
+
+    <!-- ====== STEAM-STYLE ВИТРИНА ====== -->
+    <!-- ====== STEAM-STYLE ВИТРИНА — ВСЕ ДОСТИЖЕНИЯ ====== -->
+    <aside class="showcase" v-if="allAchievements.length">
+      <header class="showcase__head">
+        <h3 class="showcase__title">Достижения</h3>
+        <span class="showcase__count">{{ allAchievements.length }}</span>
+      </header>
+
+      <div class="showcase__rows">
+        <div
+            v-for="(row, ri) in showcaseRows"
+            :key="ri"
+            class="showcase__row"
+        >
+          <div
+              v-for="a in row"
+              :key="a.id"
+              class="showcase__cell"
+              :style="{ '--color': a.color }"
+              :title="a.description || a.name"
+          >
+            <div class="showcase__icon">{{ a.icon }}</div>
+            <div class="showcase__meta">
+              <span class="showcase__name">{{ a.name }}</span>
+            </div>
+          </div>
+
+          <!-- Пустые ячейки до 4 в ряду — как в Steam -->
+          <div
+              v-for="n in (4 - row.length)"
+              :key="'empty-' + ri + '-' + n"
+              class="showcase__cell showcase__cell--empty"
+          >
+            <div class="showcase__icon showcase__icon--empty">?</div>
+          </div>
+        </div>
+      </div>
+    </aside>
   </div>
 </template>
 
-
 <style scoped>
+/* ============================================
+   LAYOUT
+   ============================================ */
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
+  align-items: start;
+}
+
 /* ============================================
    PLAYER CARD
    ============================================ */
 
 .player-card {
+  position: relative;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 24px;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+}
+
+/* Затемнение поверх фона карточки, чтобы контент читался */
+.player-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(13, 13, 20, 0.82);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.player-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* === HEADER === */
@@ -462,6 +553,8 @@ onMounted(async () => {
   margin-bottom: 20px;
   padding: 20px;
   background: #0d0d14;
+  background-size: cover;
+  background-position: center;
   border-radius: 12px;
   overflow: hidden;
   min-height: 110px;
@@ -776,62 +869,6 @@ onMounted(async () => {
 .social-link.vk:hover { background: #0077ff; border-color: #0077ff; }
 .social-link.website:hover { background: var(--accent); border-color: var(--accent); }
 
-/* === FEATURED ACHIEVEMENTS === */
-
-.featured {
-  margin-bottom: 20px;
-  padding: 16px 18px;
-  background: #0d0d14;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-}
-
-.featured__title {
-  margin-bottom: 12px;
-  color: var(--text-muted);
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.featured__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 8px;
-}
-
-.featured__item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid color-mix(in srgb, var(--color) 30%, transparent);
-  border-radius: 10px;
-  transition: all 0.2s;
-}
-
-.featured__item:hover {
-  border-color: var(--color);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 20px color-mix(in srgb, var(--color) 25%, transparent);
-}
-
-.featured__icon {
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-.featured__name {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /* === CHART === */
 
 .chart-section {
@@ -1043,7 +1080,177 @@ onMounted(async () => {
   transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* === АДАПТИВ === */
+/* ============================================
+   STEAM-STYLE SHOWCASE
+   ============================================ */
+
+.showcase {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(180deg, #171a21 0%, #10131a 100%);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  position: sticky;
+  top: 20px;
+}
+
+.showcase__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.showcase__title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: #c7d5e0;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+}
+
+.showcase__count {
+  font-size: 11px;
+  color: #4a5568;
+  font-weight: 700;
+}
+
+.showcase__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.showcase__row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.showcase__cell {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: help;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.showcase__cell:hover {
+  transform: translateY(-2px);
+  border-color: var(--color);
+  box-shadow:
+      0 6px 18px color-mix(in srgb, var(--color) 35%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--color) 60%, transparent);
+}
+
+/* Блик сверху, как в Steam */
+.showcase__cell::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent);
+  pointer-events: none;
+}
+
+.showcase__cell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, color-mix(in srgb, var(--color) 30%, transparent), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.showcase__cell:hover::after {
+  opacity: 1;
+}
+
+.showcase__icon {
+  font-size: 28px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
+  position: relative;
+  z-index: 1;
+}
+
+.showcase__cell--empty {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.showcase__cell--empty:hover {
+  transform: none;
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+}
+
+.showcase__cell--empty::after { display: none; }
+
+.showcase__icon--empty {
+  font-size: 16px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.15);
+}
+
+/* Мета-информация — при наведении показывается как tooltip */
+.showcase__meta {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 6px 8px;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.9), transparent);
+  font-size: 10px;
+  color: #c7d5e0;
+  transform: translateY(100%);
+  transition: transform 0.2s ease;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.showcase__cell:hover .showcase__meta {
+  transform: translateY(0);
+}
+
+.showcase__name {
+  display: block;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.showcase__desc {
+  display: none;
+}
+
+/* ============================================
+   АДАПТИВ
+   ============================================ */
+
+@media (max-width: 1000px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .showcase {
+    position: static;
+  }
+}
 
 @media (max-width: 600px) {
   .player-card {
@@ -1103,6 +1310,14 @@ onMounted(async () => {
   .aspect-card__head-right {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .showcase {
+    padding: 12px;
+  }
+
+  .showcase__icon {
+    font-size: 22px;
   }
 }
 </style>

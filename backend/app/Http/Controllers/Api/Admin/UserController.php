@@ -102,14 +102,19 @@ class UserController extends Controller
     public function show(Request $request, User $user): JsonResponse
     {
         $user->load([
-            'aspects',
+            'aspectPvp',
+            'aspectBedwars',
             'achievements',
             'clanMember.clan',
             'tierTests' => fn ($q) => $q->latest()->limit(20),
         ]);
-
         return response()->json([
-            'user' => $user,
+            'user' => array_merge($user->toArray(), [
+                'aspects' => [
+                    'pvp' => $user->aspectPvp,
+                    'bedwars' => $user->aspectBedwars,
+                ],
+            ]),
             'achievement_points' => $user->achievementPoints(),
         ]);
     }

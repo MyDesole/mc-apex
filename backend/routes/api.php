@@ -3,6 +3,7 @@
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\TierTestController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Route;
 
 // === Публичные контроллеры ===
@@ -37,12 +38,35 @@ use App\Http\Controllers\Api\Admin\NewsController as AdminNewsController;
 | ПУБЛИЧНЫЕ РОУТЫ (без авторизации)
 |--------------------------------------------------------------------------
 */
+use App\Http\Controllers\Api\PasswordResetController;
 
-// Auth
 Route::prefix('auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/forgot-password', [PasswordResetController::class, 'forgot'])
+        ->middleware('throttle:3,1');
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])
+        ->middleware('throttle:5,1');
 });
+Route::prefix('auth')->group(function () {
+    // Регистрация (3 шага)
+    Route::post('/login', [AuthController::class, 'login']);
+
+    Route::post('/register/send-code', [AuthController::class, 'sendVerificationCode'])
+        ->middleware('throttle:3,1');
+
+    Route::post('/register/verify-code', [AuthController::class, 'verifyCode'])
+        ->middleware('throttle:10,1');
+
+    Route::post('/register', [AuthController::class, 'register']);
+});
+
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+
+    return redirect(config('app.frontend_url') . '/profile?verified=1');
+})->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
+
+
+
 
 // Home (главная)
 Route::get('/home', [HomeController::class, 'index']);
@@ -71,6 +95,16 @@ Route::get('/players/{user}', [PlayerController::class, 'show'])->whereNumber('u
 */
 
 Route::middleware('auth:sanctum')->group(function () {
+
+    Route::post('/email/verification-notification', function (Request $request) {
+        if ($request->user()->hasVerifiedEmail()) {
+            return response()->json(['message' => 'Email уже подтверждён.']);
+        }
+
+        $request->user()->sendEmailVerificationNotification();
+
+        return response()->json(['message' => 'Письмо отправлено повторно.']);
+    })->middleware('throttle:6,1');
 
     /*
     |----------------------------------------------------------------------

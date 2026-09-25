@@ -8,6 +8,9 @@ export const useAuthStore = defineStore('auth', () => {
     const loading = ref(false)
     const initialized = ref(false)
 
+    // токен, выданный после успешной проверки кода
+    const verificationToken = ref(null)
+
     const isAuthenticated = computed(() => !!user.value)
 
     async function fetchMe() {
@@ -50,7 +53,49 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    async function register(username, email, password, passwordConfirmation) {
+    /**
+     * Шаг 1: отправить код на email.
+     */
+    async function sendVerificationCode(email) {
+        loading.value = true
+
+        try {
+            await getCsrfCookie()
+
+            const response = await api.post('/auth/register/send-code', {
+                email,
+            })
+
+            return response
+        } finally {
+            loading.value = false
+        }
+    }
+
+    /**
+     * Шаг 2: проверить код. Сохраняет verification_token.
+     */
+    async function verifyCode(email, code) {
+        loading.value = true
+
+        try {
+            const response = await api.post('/auth/register/verify-code', {
+                email,
+                code,
+            })
+
+            verificationToken.value = response.verification_token
+
+            return response
+        } finally {
+            loading.value = false
+        }
+    }
+
+    /**
+     * Шаг 3: создать аккаунт. Требует verification_token.
+     */
+    async function register(username, password, passwordConfirmation) {
         loading.value = true
 
         try {
@@ -58,20 +103,26 @@ export const useAuthStore = defineStore('auth', () => {
 
             const response = await api.post('/auth/register', {
                 username,
-                email,
                 password,
                 password_confirmation: passwordConfirmation,
+                verification_token: verificationToken.value,
             })
+
+            // сбрасываем одноразовый токен — он уже использован
+            verificationToken.value = null
 
             user.value = response.user
 
-            // подтянуть rank и полный профиль (clan_member.clan)
             await fetchMe()
 
             return response
         } finally {
             loading.value = false
         }
+    }
+
+    function resetVerification() {
+        verificationToken.value = null
     }
 
     async function logout() {
@@ -81,6 +132,32 @@ export const useAuthStore = defineStore('auth', () => {
             await api.post('/auth/logout')
             user.value = null
             rank.value = { position: null, total: 0 }
+            verificationToken.value = null
+        } finally {
+            loading.value = false
+        }
+    }
+
+    async function forgotPassword(email) {
+        loading.value = true
+        try {
+            await getCsrfCookie()
+            return await api.post('/auth/forgot-password', { email })
+        } finally {
+            loading.value = false
+        }
+    }
+
+    async function resetPassword(email, code, password, passwordConfirmation) {
+        loading.value = true
+        try {
+            await getCsrfCookie()
+            return await api.post('/auth/reset-password', {
+                email,
+                code,
+                password,
+                password_confirmation: passwordConfirmation,
+            })
         } finally {
             loading.value = false
         }
@@ -92,9 +169,15 @@ export const useAuthStore = defineStore('auth', () => {
         loading,
         initialized,
         isAuthenticated,
+        verificationToken,
         fetchMe,
+        resetPassword,
+        forgotPassword,
         login,
+        sendVerificationCode,
+        verifyCode,
         register,
+        resetVerification,
         logout,
     }
 })
