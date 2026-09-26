@@ -28,6 +28,12 @@ const router = createRouter({
       meta: { title: 'Вход', guest: true },
     },
     {
+      path: '/messages/:id?',
+      name: 'messages',
+      component: () => import('../views/Messages.vue'),
+      meta: { title: 'Сообщения', requiresAuth: true },
+    },
+    {
       path: '/register',
       name: 'register',
       component: RegisterView,
@@ -73,20 +79,37 @@ const router = createRouter({
       path: '/news',
       name: 'news',
       component: () => import('@/views/NewsView.vue'),
+      meta: { title: 'Новости' },
     },
     {
       path: '/my-clan',
       name: 'my-clan',
       component: () => import('@/views/MyClanView.vue'),
-      meta: { auth: true },
+      meta: { title: 'Мой клан', auth: true },
     },
-    { path: '/forgot-password', name: 'forgot-password', component: () => import('../views/ForgotPasswordView.vue') },
-    { path: '/reset-password', name: 'reset-password', component: () => import('../views/ResetPasswordView.vue') },
-    { path: '/verify-email', name: 'verify-email', component: () => import('@/views/VerifyEmailView.vue'), meta: { guest: true } },
+    {
+      path: '/forgot-password',
+      name: 'forgot-password',
+      component: () => import('../views/ForgotPasswordView.vue'),
+      meta: { title: 'Восстановление пароля' },
+    },
+    {
+      path: '/reset-password',
+      name: 'reset-password',
+      component: () => import('../views/ResetPasswordView.vue'),
+      meta: { title: 'Сброс пароля' },
+    },
+    {
+      path: '/verify-email',
+      name: 'verify-email',
+      component: () => import('@/views/VerifyEmailView.vue'),
+      meta: { title: 'Подтверждение почты', guest: true },
+    },
     {
       path: '/news/:id',
       name: 'news-item',
       component: () => import('@/views/NewsItemView.vue'),
+      meta: { title: 'Новость' },
     },
     {
       path: '/clans/create',
@@ -98,7 +121,7 @@ const router = createRouter({
       path: '/admin',
       name: 'admin',
       component: () => import('@/views/AdminView.vue'),
-      meta: { auth: true, role: ['moderator', 'admin'] },
+      meta: { title: 'Админ-панель', auth: true, role: ['moderator', 'admin'] },
     },
     {
       path: '/clans/:id',
@@ -110,21 +133,21 @@ const router = createRouter({
       path: '/tournaments',
       name: 'tournaments',
       component: () => import('@/views/TournamentsView.vue'),
+      meta: { title: 'Турниры' },
     },
     {
       path: '/tester',
       name: 'tester',
       component: () => import('@/views/TesterView.vue'),
-      meta: { auth: true, role: ['tester', 'admin'] },
+      meta: { title: 'Тестер', auth: true, role: ['tester', 'admin'] },
     },
     {
       path: '/tournaments/:id',
       name: 'tournament',
       component: () => import('@/views/TournamentView.vue'),
-      meta: { auth: true },
+      meta: { title: 'Турнир', auth: true },
     },
   ],
-
 })
 
 const APP_NAME = 'APEX TIERS'
@@ -133,6 +156,5 @@ router.afterEach((to) => {
   const title = to.meta?.title
   document.title = title ? `${title} · ${APP_NAME}` : APP_NAME
 })
-
 
 export default router

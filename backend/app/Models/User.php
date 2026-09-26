@@ -53,6 +53,18 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->save();
     }
 
+    public function conversations(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_participants')
+            ->withPivot('last_read_at')
+            ->withTimestamps();
+    }
+
+    public function sentMessages(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Message::class, 'user_id');
+    }
+
     public function sendPasswordResetNotification($token): void
     {
         $this->notify(new \App\Notifications\ResetPasswordNotification($token));

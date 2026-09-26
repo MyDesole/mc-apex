@@ -3,9 +3,13 @@ import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { notificationsApi } from '@/services/notification.js'
+import { chatApi } from '@/services/chat.js'
 import UserName from '@/components/UserName.vue'
-import VerifyEmailBanner from "@/components/VerifyEmailBanner.vue";
+import VerifyEmailBanner from '@/components/VerifyEmailBanner.vue'
 import TierTestBanner from '@/components/TierTestBanner.vue'
+import NotificationToast from '@/components/NotificationToast.vue'
+import { useRealtimeNotifications } from '@/composables/useRealtimeNotifications'
+import { useRealtimeMessages } from '@/composables/useRealtimeMessages'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -14,7 +18,18 @@ const route = useRoute()
 const menuOpen = ref(false)
 const mobileMenuOpen = ref(false)
 
-const unreadCount = ref(0)
+// === Realtime: уведомления ===
+const {
+  unreadCount,
+  latestNotification,
+  newNotificationArrived,
+} = useRealtimeNotifications()
+
+// === Realtime: чат ===
+const { latestMessage } = useRealtimeMessages()
+
+// Счётчик непрочитанных сообщений в чате
+const chatUnread = ref(0)
 
 async function logout() {
   menuOpen.value = false
@@ -23,7 +38,8 @@ async function logout() {
   router.push('/')
 }
 
-async function loadUnread() {
+// Fallback для уведомлений (если websocket отвалится)
+async function loadUnreadNotifications() {
   if (!auth.isAuthenticated) return
   try {
     const data = await notificationsApi.list()
@@ -31,38 +47,66 @@ async function loadUnread() {
   } catch (e) { /* ignore */ }
 }
 
-// закрываем мобильное меню при смене роута
+// Счётчик непрочитанных сообщений
+async function loadChatUnread() {
+  if (!auth.isAuthenticated) return
+  try {
+    const data = await chatApi.unreadCount()
+    chatUnread.value = data.unread_count || 0
+  } catch (e) { /* ignore */ }
+}
+
+// Закрываем меню при смене роута
 watch(() => route.path, () => {
   mobileMenuOpen.value = false
   menuOpen.value = false
 })
 
-// закрываем при ресайзе на десктоп
+// Закрываем мобильное меню при ресайзе на десктоп
 function onResize() {
   if (window.innerWidth > 800) {
     mobileMenuOpen.value = false
   }
 }
 
-// закрываем дропдауны по клику вне
+// Закрываем дропдаун по клику вне
 function onClickOutside(e) {
   if (!e.target.closest('.user-menu')) menuOpen.value = false
 }
 
-let unreadInterval = null
+// При новом realtime-сообщении увеличиваем счётчик
+watch(latestMessage, () => {
+  loadChatUnread()
+})
+
+// При уходе с чата на другую страницу тоже обновим счётчик
+watch(() => route.path, (path) => {
+  if (path.startsWith('/messages')) {
+    setTimeout(loadChatUnread, 500)
+  }
+})
+
+let notifInterval = null
+let chatInterval = null
 
 onMounted(() => {
-  loadUnread()
-  unreadInterval = setInterval(loadUnread, 30000)
+  loadUnreadNotifications()
+  loadChatUnread()
+
+  notifInterval = setInterval(loadUnreadNotifications, 60000)
+  chatInterval = setInterval(loadChatUnread, 60000)
+
   if (!auth.initialized) {
     auth.fetchMe()
   }
+
   window.addEventListener('resize', onResize)
   document.addEventListener('click', onClickOutside)
 })
 
 onUnmounted(() => {
-  if (unreadInterval) clearInterval(unreadInterval)
+  if (notifInterval) clearInterval(notifInterval)
+  if (chatInterval) clearInterval(chatInterval)
   window.removeEventListener('resize', onResize)
   document.removeEventListener('click', onClickOutside)
 })
@@ -71,7 +115,7 @@ function toggleMobile() {
   mobileMenuOpen.value = !mobileMenuOpen.value
 }
 
-// блокируем скролл body когда меню открыто
+// Блокируем скролл body когда мобильное меню открыто
 watch(mobileMenuOpen, (open) => {
   document.body.style.overflow = open ? 'hidden' : ''
 })
@@ -82,7 +126,6 @@ watch(mobileMenuOpen, (open) => {
     <VerifyEmailBanner v-if="auth.isAuthenticated" />
 
     <header class="site-header">
-
       <div class="header-inner">
         <!-- BURGER (mobile) -->
         <button
@@ -113,7 +156,7 @@ watch(mobileMenuOpen, (open) => {
               to="/my-clan"
               class="nav-link"
           >
-             Мой клан
+            Мой клан
           </RouterLink>
         </nav>
 
@@ -124,77 +167,96 @@ watch(mobileMenuOpen, (open) => {
             <RouterLink to="/register" class="btn btn-primary">Регистрация</RouterLink>
           </template>
 
-          <div v-else class="user-menu">
-            <button class="user-button" @click.stop="menuOpen = !menuOpen">
-                            <span class="avatar">
-                                <img
-                                    v-if="auth.user?.avatar_url"
-                                    :src="auth.user.avatar_url"
-                                    :alt="auth.user.username"
-                                    class="avatar-img"
-                                />
-                                <template v-else>
-                                    {{ (auth.user?.username || 'И').charAt(0).toUpperCase() }}
-                                </template>
-                            </span>
-
-              <span class="username">
-                                <UserName :user="auth.user" compact />
-                            </span>
-
-              <svg class="chevron" :class="{ open: menuOpen }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+          <template v-else>
+            <!-- ИКОНКА ЧАТА -->
+            <RouterLink to="/messages" class="notif-bell" title="Сообщения">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
-            </button>
+              <span v-if="chatUnread > 0" class="notif-badge">
+                {{ chatUnread > 99 ? '99+' : chatUnread }}
+              </span>
+            </RouterLink>
 
-            <div v-if="menuOpen" class="dropdown">
-              <RouterLink to="/profile" class="dropdown-item" @click="menuOpen = false">
-                 Профиль
-              </RouterLink>
-              <RouterLink to="/friends" class="dropdown-item" @click="menuOpen = false">
-                 Друзья
-              </RouterLink>
-              <RouterLink to="/notifications" class="dropdown-item" @click="menuOpen = false">
-                Уведомления
-                <span v-if="unreadCount > 0" class="dropdown-badge">{{ unreadCount }}</span>
-              </RouterLink>
+            <!-- КОЛОКОЛЬЧИК УВЕДОМЛЕНИЙ -->
+            <RouterLink to="/notifications" class="notif-bell" title="Уведомления">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+              </svg>
+              <span v-if="unreadCount > 0" class="notif-badge">
+                {{ unreadCount > 99 ? '99+' : unreadCount }}
+              </span>
+            </RouterLink>
 
-              <RouterLink
-                  v-if="auth.user?.clan_member"
-                  to="/my-clan"
-                  class="dropdown-item"
-                  @click="menuOpen = false"
-              >
-                Мой клан
-              </RouterLink>
-              <RouterLink
-                  v-if="auth.user && ['tester', 'admin'].includes(auth.user.role)"
-                  to="/tester"
-                  class="dropdown-item"
-                  @click="menuOpen = false"
-              >
-                Панель тестера
-              </RouterLink>
+            <!-- МЕНЮ ПРОФИЛЯ -->
+            <div class="user-menu">
+              <button class="user-button" @click.stop="menuOpen = !menuOpen">
+                <span class="avatar">
+                  <img
+                      v-if="auth.user?.avatar_url"
+                      :src="auth.user.avatar_url"
+                      :alt="auth.user.username"
+                      class="avatar-img"
+                  />
+                  <template v-else>
+                    {{ (auth.user?.username || 'И').charAt(0).toUpperCase() }}
+                  </template>
+                </span>
 
-              <RouterLink
-                  v-if="auth.user && ['moderator', 'admin'].includes(auth.user.role)"
-                  to="/admin"
-                  class="dropdown-item"
-                  @click="menuOpen = false"
-              >
-                 Админка
-              </RouterLink>
+                <span class="username">
+                  <UserName :user="auth.user" compact />
+                </span>
 
-              <div class="dropdown-divider"></div>
-
-              <button class="dropdown-item danger" @click="logout">
-                Выйти
+                <svg class="chevron" :class="{ open: menuOpen }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
               </button>
+
+              <div v-if="menuOpen" class="dropdown">
+                <RouterLink to="/profile" class="dropdown-item" @click="menuOpen = false">
+                  Профиль
+                </RouterLink>
+                <RouterLink to="/friends" class="dropdown-item" @click="menuOpen = false">
+                  Друзья
+                </RouterLink>
+
+                <RouterLink
+                    v-if="auth.user?.clan_member"
+                    to="/my-clan"
+                    class="dropdown-item"
+                    @click="menuOpen = false"
+                >
+                  Мой клан
+                </RouterLink>
+                <RouterLink
+                    v-if="auth.user && ['tester', 'admin'].includes(auth.user.role)"
+                    to="/tester"
+                    class="dropdown-item"
+                    @click="menuOpen = false"
+                >
+                  Панель тестера
+                </RouterLink>
+
+                <RouterLink
+                    v-if="auth.user && ['moderator', 'admin'].includes(auth.user.role)"
+                    to="/admin"
+                    class="dropdown-item"
+                    @click="menuOpen = false"
+                >
+                  Админка
+                </RouterLink>
+
+                <div class="dropdown-divider"></div>
+
+                <button class="dropdown-item danger" @click="logout">
+                  Выйти
+                </button>
+              </div>
             </div>
-          </div>
+          </template>
         </div>
       </div>
-
     </header>
 
     <!-- MOBILE MENU -->
@@ -227,9 +289,17 @@ watch(mobileMenuOpen, (open) => {
           <RouterLink to="/friends" class="mobile-nav-link">
             Друзья
           </RouterLink>
+          <RouterLink to="/messages" class="mobile-nav-link">
+            Сообщения
+            <span v-if="chatUnread > 0" class="mobile-badge">
+              {{ chatUnread > 99 ? '99+' : chatUnread }}
+            </span>
+          </RouterLink>
           <RouterLink to="/notifications" class="mobile-nav-link">
             Уведомления
-            <span v-if="unreadCount > 0" class="mobile-badge">{{ unreadCount }}</span>
+            <span v-if="unreadCount > 0" class="mobile-badge">
+              {{ unreadCount > 99 ? '99+' : unreadCount }}
+            </span>
           </RouterLink>
           <RouterLink
               v-if="auth.user?.clan_member"
@@ -279,7 +349,13 @@ watch(mobileMenuOpen, (open) => {
       <RouterView />
     </main>
   </div>
-  <TierTestBanner/>
+
+  <TierTestBanner />
+
+  <NotificationToast
+      :notification="latestNotification"
+      :trigger="newNotificationArrived"
+  />
 </template>
 
 <style scoped>
@@ -424,7 +500,7 @@ watch(mobileMenuOpen, (open) => {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 6px;
   margin-left: auto;
 }
 
@@ -463,6 +539,46 @@ watch(mobileMenuOpen, (open) => {
 .btn-primary:hover {
   background: var(--accent-light);
   box-shadow: 0 7px 25px rgba(124, 58, 237, 0.3);
+}
+
+/* === NOTIF BELL === */
+
+.notif-bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  transition: all 0.2s;
+}
+
+.notif-bell:hover {
+  color: var(--text);
+  background: var(--bg-card);
+  border-color: var(--border);
+}
+
+.notif-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ef4444;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  box-shadow: 0 0 0 2px var(--bg-header);
 }
 
 /* === USER MENU === */
@@ -589,21 +705,6 @@ watch(mobileMenuOpen, (open) => {
   background: rgba(239, 68, 68, 0.08);
 }
 
-.dropdown-badge {
-  margin-left: auto;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #ef4444;
-  color: #fff;
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 800;
-}
-
 .dropdown-divider {
   height: 1px;
   margin: 5px 4px;
@@ -671,13 +772,6 @@ watch(mobileMenuOpen, (open) => {
 .mobile-nav-link--danger:hover {
   color: #fca5a5;
   background: rgba(239, 68, 68, 0.08);
-}
-
-.mobile-nav-icon {
-  width: 24px;
-  text-align: center;
-  font-size: 18px;
-  flex-shrink: 0;
 }
 
 .mobile-badge {
@@ -773,42 +867,6 @@ watch(mobileMenuOpen, (open) => {
 .backdrop-enter-from,
 .backdrop-leave-to {
   opacity: 0;
-}
-
-/* === NOTIF BELL (legacy) === */
-
-.notif-bell {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  color: var(--text-dim);
-  border-radius: 9px;
-  transition: all 0.2s;
-}
-
-.notif-bell:hover {
-  color: var(--text);
-  background: var(--bg-card);
-}
-
-.notif-badge {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #ef4444;
-  color: #fff;
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 800;
 }
 
 /* ============================================

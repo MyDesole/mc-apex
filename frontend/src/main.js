@@ -11,6 +11,7 @@ import '@fontsource/inter/800.css'
 import '@fontsource/inter/900.css'
 import './assets/base.css'
 import './assets/main.css'
+import './echo'
 
 import { useAuthStore } from './stores/auth'
 

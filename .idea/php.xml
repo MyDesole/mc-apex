@@ -82,7 +82,6 @@
       <path value="$PROJECT_DIR$/backend/vendor/symfony/deprecation-contracts" />
       <path value="$PROJECT_DIR$/backend/vendor/symfony/service-contracts" />
       <path value="$PROJECT_DIR$/backend/vendor/symfony/string" />
-      <path value="$PROJECT_DIR$/backend/vendor/symfony/polyfill-php82" />
       <path value="$PROJECT_DIR$/backend/vendor/symfony/mime" />
       <path value="$PROJECT_DIR$/backend/vendor/psy/psysh" />
       <path value="$PROJECT_DIR$/backend/vendor/symfony/polyfill-intl-idn" />
@@ -123,6 +122,20 @@
       <path value="$PROJECT_DIR$/backend/vendor/carbonphp/carbon-doctrine-types" />
       <path value="$PROJECT_DIR$/backend/vendor/nikic/php-parser" />
       <path value="$PROJECT_DIR$/backend/vendor/laravel/sanctum" />
+      <path value="$PROJECT_DIR$/backend/vendor/ratchet/rfc6455" />
+      <path value="$PROJECT_DIR$/backend/vendor/ralouphie/getallheaders" />
+      <path value="$PROJECT_DIR$/backend/vendor/evenement/evenement" />
+      <path value="$PROJECT_DIR$/backend/vendor/laravel/reverb" />
+      <path value="$PROJECT_DIR$/backend/vendor/pusher/pusher-php-server" />
+      <path value="$PROJECT_DIR$/backend/vendor/react/promise-timer" />
+      <path value="$PROJECT_DIR$/backend/vendor/react/dns" />
+      <path value="$PROJECT_DIR$/backend/vendor/react/stream" />
+      <path value="$PROJECT_DIR$/backend/vendor/react/cache" />
+      <path value="$PROJECT_DIR$/backend/vendor/react/promise" />
+      <path value="$PROJECT_DIR$/backend/vendor/react/event-loop" />
+      <path value="$PROJECT_DIR$/backend/vendor/react/socket" />
+      <path value="$PROJECT_DIR$/backend/vendor/clue/redis-react" />
+      <path value="$PROJECT_DIR$/backend/vendor/clue/redis-protocol" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.3" />

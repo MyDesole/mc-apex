@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { newsApi } from '@/services/news.js'
 
@@ -15,20 +15,29 @@ const typeLabels = {
   announcement: 'Анонс',
 }
 
-async function load() {
+async function load(id) {
   loading.value = true
   error.value = null
+  data.value = null
 
   try {
-    data.value = await newsApi.show(route.params.id)
+    data.value = await newsApi.show(id)
   } catch (e) {
-    error.value = e.status === 404 ? 'Новость не найдена' : (e.message || 'Ошибка загрузки')
+    error.value = e.status === 404
+        ? 'Новость не найдена'
+        : (e.message || 'Ошибка загрузки')
   } finally {
     loading.value = false
   }
 }
 
-onMounted(load)
+watch(
+    () => route.params.id,
+    (newId) => {
+      if (newId) load(newId)
+    },
+    { immediate: true }
+)
 </script>
 
 <template>

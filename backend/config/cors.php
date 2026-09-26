@@ -15,11 +15,23 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => [
+        'api/*',
+        'sanctum/csrf-cookie',
+        'broadcasting/auth',   // ← добавь это
+        'login',
+        'logout',
+        'register',
+    ],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => [
+        'http://localhost:5173',
+        'http://localhost:8000',
+        'http://mc-apex.ru',
+        'https://mc-apex.ru',
+    ],
 
     'allowed_origins_patterns' => [],
 
@@ -29,6 +41,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 
 ];

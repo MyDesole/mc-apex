@@ -133,6 +133,24 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/card-background/remove', [PlayerController::class, 'removeCardBackground']);
     });
 
+    Route::prefix('chat')->group(function () {
+        Route::get('/conversations', [\App\Http\Controllers\Api\ChatController::class, 'index']);
+        Route::get('/conversations/{conversation}', [\App\Http\Controllers\Api\ChatController::class, 'show'])
+            ->whereNumber('conversation');
+        Route::get('/search', [\App\Http\Controllers\Api\ChatController::class, 'search']);
+        Route::post('/start-direct', [\App\Http\Controllers\Api\ChatController::class, 'startDirect']);
+        Route::post('/start-clan', [\App\Http\Controllers\Api\ChatController::class, 'startClan']);
+        Route::post('/messages/{message}/read', [\App\Http\Controllers\Api\ChatController::class, 'markRead'])
+            ->whereNumber('message');
+
+        Route::post('/messages/{message}/forward', [\App\Http\Controllers\Api\ChatController::class, 'forward'])
+            ->whereNumber('message');
+        Route::post('/conversations/{conversation}/messages', [\App\Http\Controllers\Api\ChatController::class, 'send'])
+            ->whereNumber('conversation');
+
+        Route::get('/unread-count', [\App\Http\Controllers\Api\ChatController::class, 'unreadCount']);
+    });
+
     Route::post('/players/{user}/recommendations', [ProfileRecommendationController::class, 'store'])
         ->whereNumber('user');
 
