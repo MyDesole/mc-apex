@@ -68,8 +68,18 @@ const currentList = computed(() => {
     <div v-else class="friends-list">
       <div v-for="user in currentList" :key="user.id" class="friend-row">
         <RouterLink :to="`/players/${user.id}`" class="friend-main">
-          <div class="avatar">{{ (user.username || 'И').charAt(0).toUpperCase() }}</div>
-          <div>
+          <div class="avatar" :class="`tier-bg-${user.tier}`">
+            <img
+                v-if="user.avatar_url"
+                :src="user.avatar_url"
+                :alt="user.username"
+                class="avatar-img"
+            />
+            <template v-else>
+              {{ (user.username || 'И').charAt(0).toUpperCase() }}
+            </template>
+          </div>
+          <div class="friend-info">
             <div class="name">
               <UserName :user="user" />
             </div>
@@ -156,23 +166,60 @@ h1 {
   align-items: center;
   gap: 12px;
   flex: 1;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
 }
 
+/* === AVATAR === */
+
 .avatar {
+  position: relative;
   width: 42px;
   height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  flex-shrink: 0;
   border-radius: 10px;
   color: #fff;
   font-weight: 800;
+  font-size: 16px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+}
+
+/* фоны по тиру, если нет аватарки */
+.tier-bg-S { background: linear-gradient(135deg, #facc15, #d97706); }
+.tier-bg-A { background: linear-gradient(135deg, #f97316, #c2410c); }
+.tier-bg-B { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+.tier-bg-C { background: linear-gradient(135deg, #06b6d4, #0e7490); }
+.tier-bg-D { background: linear-gradient(135deg, #22c55e, #15803d); }
+.tier-bg-E { background: linear-gradient(135deg, #6b7280, #374151); }
+
+.avatar-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* === INFO === */
+
+.friend-info {
+  min-width: 0;
+  flex: 1;
 }
 
 .name {
   font-weight: 700;
   font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tier {
@@ -180,9 +227,12 @@ h1 {
   font-size: 12px;
 }
 
+/* === ACTIONS === */
+
 .actions {
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .btn-accept,
@@ -222,5 +272,38 @@ h1 {
   padding: 40px;
   text-align: center;
   color: var(--text-dim);
+}
+
+/* === MOBILE === */
+
+@media (max-width: 640px) {
+  .friends-page {
+    width: calc(100% - 24px);
+    margin: 20px auto;
+  }
+
+  h1 {
+    font-size: 22px;
+    margin-bottom: 18px;
+  }
+
+  .friend-row {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 15px;
+    border-radius: 9px;
+  }
+
+  .btn-accept,
+  .btn-remove {
+    min-height: 32px;
+    padding: 0 12px;
+    font-size: 12.5px;
+  }
 }
 </style>
