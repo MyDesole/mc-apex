@@ -46,32 +46,44 @@ class AchievementService
                 self::grant($user, 'clan_officer');
             }
 
-            // войны клана
             $wins = \App\Models\ClanWar::where('winner_clan_id', $clanMember->clan_id)->count();
             if ($wins >= 1) self::grant($user, 'clan_war_win');
             if ($wins >= 5) self::grant($user, 'clan_war_5');
         }
 
-        // Тиры
+        // Тиры E–A по проценту. S и S+ — за турниры, здесь НЕ выдаём.
         $tierMap = [
             'E' => 'tier_e',
             'D' => 'tier_d',
             'C' => 'tier_c',
             'B' => 'tier_b',
             'A' => 'tier_a',
-            'S' => 'tier_s',
         ];
 
-        if ($user->tier && isset($tierMap[$user->tier])) {
-            self::grant($user, $tierMap[$user->tier]);
+        $order = ['E', 'D', 'C', 'B', 'A'];
 
-            // все предыдущие тиры тоже выдаём (если B — то и C, D, E)
-            $order = ['E', 'D', 'C', 'B', 'A', 'S'];
+        if ($user->tier && isset($tierMap[$user->tier])) {
             $idx = array_search($user->tier, $order);
             if ($idx !== false) {
                 for ($i = 0; $i <= $idx; $i++) {
                     self::grant($user, $tierMap[$order[$i]]);
                 }
+            }
+        }
+
+        // Отдельно: если у юзера уже S — выдаём tier_s
+        if ($user->tier === 'S') {
+            self::grant($user, 'tier_s');
+        }
+
+        // Отдельно: если у юзера S+ — выдаём tier_s_plus
+        if ($user->tier === 'S+') {
+            self::grant($user, 'tier_s_plus');
+            // И заодно tier_s, потому что S+ «включает» S
+            self::grant($user, 'tier_s');
+            // И все предыдущие тиры
+            foreach (['E', 'D', 'C', 'B', 'A'] as $t) {
+                self::grant($user, $tierMap[$t]);
             }
         }
 

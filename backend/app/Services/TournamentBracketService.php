@@ -122,5 +122,56 @@ class TournamentBracketService
         if ($next->participant1_id && $next->participant2_id) {
             $next->update(['status' => 'ready']);
         }
+
+        if ($match->isFinal() && $match->winner_id) {
+            $tournament = $match->tournament;
+            $winner = $match->winner;
+
+            if ($tournament && $tournament->type === 'solo' && $winner && $winner->user_id) {
+                $user = \App\Models\User::find($winner->user_id);
+                $level = $tournament->level; // 'A' | 'S' | null
+
+                if ($user && $level) {
+                    // фиксируем победу
+                    \App\Models\TournamentWin::firstOrCreate(
+                        [
+                            'user_id' => $user->id,
+                            'tournament_id' => $tournament->id,
+                        ],
+                        [
+                            'min_tier' => $tournament->min_tier,
+                            'max_tier' => $tournament->max_tier,
+                        ]
+                    );
+
+                    // турнир уровня A: победа + процент >= 71 → S
+                    if ($level === 'A') {
+                        if ($user->tier_score >= 71 && !in_array($user->tier, ['S', 'S+'], true)) {
+                            $user->tier = 'S';
+                            $user->save();
+                        }
+                    }
+
+                    // турнир уровня S: 5 побед в S-турнирах + процент >= 71 → S+
+                    if ($level === 'S') {
+                        $sWins = \App\Models\TournamentWin::where('user_id', $user->id)
+                            ->where('min_tier', 'A')
+                            ->where('max_tier', 'S')
+                            ->count();
+
+                        if ($sWins >= 5 && $user->tier_score >= 71) {
+                            $user->tier = 'S+';
+                            $user->save();
+                        }
+                    }
+
+                    // пересчёт ачивок (tier_s / tier_s_plus выдаются в AchievementService::check)
+                    \App\Services\AchievementService::check($user);
+
+                    // ачивка за первую победу в турнире
+                    \App\Services\AchievementService::grant($user, 'tournament_first_win');
+                }
+            }
+        }
     }
 }

@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\AchievementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AspectController extends Controller
 {
@@ -16,87 +17,114 @@ class AspectController extends Controller
     {
         $validated = $request->validate([
             'mode' => ['required', 'in:pvp,bedwars'],
-            'block_placing' => ['required', 'integer', 'min:0', 'max:10'],
-            'rotka' => ['required', 'integer', 'min:0', 'max:10'],
-            'movement' => ['required', 'integer', 'min:0', 'max:10'],
-            'building' => ['required', 'integer', 'min:0', 'max:10'],
-            'ppl' => ['required', 'integer', 'min:0', 'max:10'],
+            'block_placing' => ['required', 'integer', 'min:0', 'max:20'],
+            'rotka' => ['required', 'integer', 'min:0', 'max:20'],
+            'movement' => ['required', 'integer', 'min:0', 'max:20'],
+            'aim' => ['required', 'integer', 'min:0', 'max:20'],
+            'game_sense' => ['required', 'integer', 'min:0', 'max:20'],
         ]);
 
-        $aspect = PlayerAspect::updateOrCreate(
-            ['user_id' => $user->id, 'mode' => $validated['mode']],
-            $validated
-        );
+        // Создаём/обновляем нужную модель аспектов
+        if ($validated['mode'] === 'pvp') {
+            \App\Models\PlayerAspectPvp::updateOrCreate(
+                ['user_id' => $user->id],
+                collect($validated)->only([
+                    'block_placing', 'rotka', 'movement', 'aim', 'game_sense',
+                ])->toArray()
+            );
+        } else {
+            \App\Models\PlayerAspectBedwars::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'pvp' => $validated['block_placing'] ?? 0,
+                    'game_sense' => $validated['game_sense'] ?? 0,
+                    'bed_play' => $validated['rotka'] ?? 0,
+                    'teamplay' => $validated['movement'] ?? 0,
+                    'building' => $validated['aim'] ?? 0,
+                ]
+            );
+        }
 
-        // пересчитываем тир
-        $user->tier_score = $aspect->percent();
-        $user->tier = $aspect->tier();
-        $user->save();
-
+        $user = $user->fresh();
+        $user->recalcTierFromAspects();
         AchievementService::check($user);
 
-        return response()->json(['aspect' => $aspect, 'user' => $user->fresh()]);
+        return response()->json(['user' => $user->fresh()]);
     }
 
     public function conductTierTest(Request $request, User $user): JsonResponse
     {
         $validated = $request->validate([
             'mode' => ['required', 'in:pvp,bedwars'],
-            'block_placing' => ['required', 'integer', 'min:0', 'max:10'],
-            'rotka' => ['required', 'integer', 'min:0', 'max:10'],
-            'movement' => ['required', 'integer', 'min:0', 'max:10'],
-            'building' => ['required', 'integer', 'min:0', 'max:10'],
-            'ppl' => ['required', 'integer', 'min:0', 'max:10'],
+            'aspects' => ['required', 'array'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $sum = $validated['block_placing'] + $validated['rotka']
-            + $validated['movement'] + $validated['building'] + $validated['ppl'];
-        $percent = $sum * 2;
+        if ($validated['mode'] === 'pvp') {
+            $aspects = $request->validate([
+                'aspects.block_placing' => ['required', 'integer', 'min:0', 'max:20'],
+                'aspects.rotka' => ['required', 'integer', 'min:0', 'max:20'],
+                'aspects.movement' => ['required', 'integer', 'min:0', 'max:20'],
+                'aspects.aim' => ['required', 'integer', 'min:0', 'max:20'],
+                'aspects.game_sense' => ['required', 'integer', 'min:0', 'max:20'],
+            ])['aspects'];
+
+            $sum = array_sum($aspects);
+        } else {
+            $aspects = $request->validate([
+                'aspects.pvp' => ['required', 'integer', 'min:0', 'max:20'],
+                'aspects.game_sense' => ['required', 'integer', 'min:0', 'max:20'],
+                'aspects.bed_play' => ['required', 'integer', 'min:0', 'max:20'],
+                'aspects.teamplay' => ['required', 'integer', 'min:0', 'max:20'],
+                'aspects.building' => ['required', 'integer', 'min:0', 'max:20'],
+            ])['aspects'];
+
+            $sum = array_sum($aspects);
+        }
+
+        $percent = $sum; // без *2
 
         $tier = match (true) {
-            $percent >= 90 => 'S',
-            $percent >= 80 => 'A',
-            $percent >= 70 => 'B',
-            $percent >= 60 => 'C',
-            $percent >= 50 => 'D',
+            $percent >= 71 => 'A',
+            $percent >= 56 => 'B',
+            $percent >= 41 => 'C',
+            $percent >= 21 => 'D',
             default => 'E',
         };
 
-        // создаём запись тир-теста
-        $test = TierTest::create([
-            'user_id' => $user->id,
-            'tester_id' => $request->user()->id,
-            'mode' => $validated['mode'],
-            'status' => 'completed',
-            'completed_at' => now(),
-            'result_tier' => $tier,
-            'result_score' => $percent,
-            'aspects' => [
-                'block_placing' => $validated['block_placing'],
-                'rotka' => $validated['rotka'],
-                'movement' => $validated['movement'],
-                'building' => $validated['building'],
-                'ppl' => $validated['ppl'],
-            ],
-            'notes' => $validated['notes'] ?? null,
-        ]);
+        DB::transaction(function () use ($user, $validated, $aspects, $percent, $tier, $request) {
+            $test = TierTest::create([
+                'user_id' => $user->id,
+                'tester_id' => $request->user()->id,
+                'mode' => $validated['mode'],
+                'status' => 'completed',
+                'completed_at' => now(),
+                'result_tier' => $tier,
+                'result_score' => $percent,
+                'aspects' => $aspects,
+                'notes' => $validated['notes'] ?? null,
+            ]);
 
-        // обновляем аспекты и тир юзера
-        PlayerAspect::updateOrCreate(
-            ['user_id' => $user->id, 'mode' => $validated['mode']],
-            $validated
-        );
+            if ($validated['mode'] === 'pvp') {
+                \App\Models\PlayerAspectPvp::updateOrCreate(
+                    ['user_id' => $user->id],
+                    $aspects
+                );
+            } else {
+                \App\Models\PlayerAspectBedwars::updateOrCreate(
+                    ['user_id' => $user->id],
+                    $aspects
+                );
+            }
 
-        $user->tier = $tier;
-        $user->tier_score = $percent;
-        $user->save();
+            $user->refresh();
+            $user->recalcTierFromAspects();
+            AchievementService::check($user);
 
-        AchievementService::check($user);
-        $user->notify(new \App\Notifications\TierTestCompletedNotification($test));
+            $user->notify(new \App\Notifications\TierTestCompletedNotification($test));
+        });
 
         return response()->json([
-            'tier_test' => $test,
             'user' => $user->fresh(),
         ], 201);
     }

@@ -26,7 +26,7 @@ class PlayerAspectPvp extends Model
 
     public function percent(): float
     {
-        return round($this->sum() * 2, 2);
+        return round($this->sum(), 2);
     }
 
     public function averageScore(): float
@@ -37,11 +37,10 @@ class PlayerAspectPvp extends Model
     public function tier(): string
     {
         return match (true) {
-            $this->percent() >= 90 => 'S',
-            $this->percent() >= 80 => 'A',
-            $this->percent() >= 70 => 'B',
-            $this->percent() >= 60 => 'C',
-            $this->percent() >= 50 => 'D',
+            $this->percent() >= 71 => 'A',
+            $this->percent() >= 56 => 'B',
+            $this->percent() >= 41 => 'C',
+            $this->percent() >= 21 => 'D',
             default => 'E',
         };
     }

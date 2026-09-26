@@ -73,24 +73,27 @@ watch(() => test.value.mode, () => {
   form.value = emptyForm()
 })
 
+// Сумма баллов по активным полям (макс. 100)
 const sum = computed(() => {
   const l = labels.value
   return Object.keys(l).reduce((acc, key) => acc + (Number(form.value[key]) || 0), 0)
 })
 
-const percent = computed(() => sum.value * 2)
+// Процент = сумма (шкала 0–100 без умножения)
+const percent = computed(() => sum.value)
 
+// Тир по новой сетке: A — 71+, S здесь НЕ выдаётся (только за турниры)
 const tier = computed(() => {
   const p = percent.value
-  if (p >= 90) return 'S'
-  if (p >= 80) return 'A'
-  if (p >= 70) return 'B'
-  if (p >= 60) return 'C'
-  if (p >= 50) return 'D'
+  if (p >= 71) return 'A'
+  if (p >= 56) return 'B'
+  if (p >= 41) return 'C'
+  if (p >= 21) return 'D'
   return 'E'
 })
 
 const tierColors = {
+  'S+': '#fbbf24',
   S: '#facc15',
   A: '#f97316',
   B: '#8b5cf6',
@@ -194,9 +197,9 @@ function avatarLetter(username) {
           </div>
           <div class="player-info">
             <div class="player-name">
-                            <span v-if="test.user.clan_member?.clan" class="clan-tag">
-                                [{{ test.user.clan_member.clan.tag }}]
-                            </span>
+              <span v-if="test.user.clan_member?.clan" class="clan-tag">
+                [{{ test.user.clan_member.clan.tag }}]
+              </span>
               {{ test.user.username }}
             </div>
             <div class="player-meta">
@@ -213,7 +216,7 @@ function avatarLetter(username) {
 
         <!-- Контакт -->
         <div v-if="test.contact_value" class="contact-block">
-          <div class="contact-block__title">📞 Контакт для связи</div>
+          <div class="contact-block__title">Контакт для связи</div>
 
           <div class="contact-row">
             <div class="contact-type">
@@ -223,13 +226,18 @@ function avatarLetter(username) {
 
             <div class="contact-value">
               <code>{{ test.contact_value }}</code>
-              <button class="btn-copy" @click="copyContact(test.contact_value)" title="Скопировать">📋</button>
+              <button class="btn-copy" @click="copyContact(test.contact_value)" title="Скопировать">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+              </button>
             </div>
           </div>
 
           <div v-if="test.preferred_time" class="contact-row">
             <div class="contact-type">
-              <span class="type-badge time">⏰ Удобное время</span>
+              <span class="type-badge time">Удобное время</span>
             </div>
             <div class="contact-value">{{ test.preferred_time }}</div>
           </div>
@@ -258,14 +266,14 @@ function avatarLetter(username) {
                   v-model.number="form[key]"
                   type="range"
                   min="0"
-                  max="10"
+                  max="20"
                   class="slider"
               />
               <input
                   v-model.number="form[key]"
                   type="number"
                   min="0"
-                  max="10"
+                  max="20"
                   class="value"
               />
             </div>
@@ -281,7 +289,7 @@ function avatarLetter(username) {
           <div class="result" :style="{ '--tier-color': tierColors[tier] }">
             <div class="result__block">
               <span class="result__label">Балл</span>
-              <span class="result__value">{{ sum }} / 50</span>
+              <span class="result__value">{{ sum }} / 100</span>
             </div>
             <div class="result__block">
               <span class="result__label">Процент</span>
@@ -315,10 +323,10 @@ function avatarLetter(username) {
 
         <!-- COMPLETED -->
         <template v-else-if="isCompleted">
-          <div class="result result--final" :style="{ '--tier-color': tierColors[test.result_tier] }">
+          <div class="result result--final" :style="{ '--tier-color': tierColors[test.result_tier] || '#6b7280' }">
             <div class="result__block">
               <span class="result__label">Балл</span>
-              <span class="result__value">{{ sum }} / 50</span>
+              <span class="result__value">{{ sum }} / 100</span>
             </div>
             <div class="result__block">
               <span class="result__label">Процент</span>
@@ -351,7 +359,6 @@ function avatarLetter(username) {
     </div>
   </div>
 </template>
-
 
 <style scoped>
 /* ============================================
@@ -627,17 +634,18 @@ function avatarLetter(username) {
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--text-dim);
   background: transparent;
   border: 1px solid var(--border);
   border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
   transition: all 0.15s;
   flex-shrink: 0;
 }
 
 .btn-copy:hover {
   border-color: var(--accent);
+  color: var(--accent-light);
   background: rgba(124, 58, 237, 0.05);
 }
 
@@ -688,6 +696,7 @@ function avatarLetter(username) {
 
 .notes {
   width: 100%;
+  min-height: 90px;
   padding: 10px 12px;
   color: var(--text);
   background: #0d0d14;
@@ -695,8 +704,10 @@ function avatarLetter(username) {
   border-radius: 9px;
   font: inherit;
   font-size: 13px;
+  line-height: 1.5;
   resize: vertical;
   outline: none;
+  box-sizing: border-box;
 }
 
 .notes:focus {

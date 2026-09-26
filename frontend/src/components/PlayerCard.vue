@@ -19,8 +19,13 @@ const emit = defineEmits(['edit', 'recommendationsUpdated'])
 
 // === TIER ===
 const tierColors = {
-  S: '#facc15', A: '#f97316', B: '#8b5cf6',
-  C: '#06b6d4', D: '#22c55e', E: '#6b7280',
+  'S+': '#fbbf24',
+  S: '#facc15',
+  A: '#f97316',
+  B: '#8b5cf6',
+  C: '#06b6d4',
+  D: '#22c55e',
+  E: '#6b7280',
 }
 
 const tierColor = computed(() => tierColors[props.user.tier] || '#6b7280')
@@ -71,13 +76,13 @@ const allAspects = computed(() => {
     {
       mode: 'pvp',
       ...pvp,
-      percent: pvpSum * 2,
+      percent: pvpSum,
       hasData: !!ua.pvp,
     },
     {
       mode: 'bedwars',
       ...bw,
-      percent: bwSum * 2,
+      percent: bwSum,
       hasData: !!ua.bedwars,
     },
   ]
@@ -93,9 +98,9 @@ function totalScore(aspect) {
 }
 
 function aspectColor(value) {
-  if (value >= 8) return 'linear-gradient(90deg, #22c55e, #4ade80)'
-  if (value >= 6) return 'linear-gradient(90deg, #7c3aed, #a78bfa)'
-  if (value >= 4) return 'linear-gradient(90deg, #f59e0b, #fbbf24)'
+  if (value >= 16) return 'linear-gradient(90deg, #22c55e, #4ade80)'
+  if (value >= 12) return 'linear-gradient(90deg, #7c3aed, #a78bfa)'
+  if (value >= 8) return 'linear-gradient(90deg, #f59e0b, #fbbf24)'
   if (value >= 1) return 'linear-gradient(90deg, #ef4444, #f87171)'
   return 'rgba(255, 255, 255, 0.06)'
 }
@@ -464,7 +469,7 @@ watch(() => props.user.id, (newId) => {
       <section class="aspects">
         <div class="aspects__head">
           <h3 class="aspects__title">Аспекты игрока</h3>
-          <span class="aspects__sub">Оценка по 5 критериям · макс. 100%</span>
+          <span class="aspects__sub">Оценка по 5 критериям · макс. 100</span>
         </div>
 
         <div class="aspects__list">
@@ -493,7 +498,7 @@ watch(() => props.user.id, (newId) => {
               <div class="aspect-card__head-right">
                 <div class="total">
                   <span class="total__value">{{ totalScore(aspect) }}</span>
-                  <span class="total__max">/50</span>
+                  <span class="total__max">/100</span>
                 </div>
                 <div
                     class="percent-pill"
@@ -528,7 +533,7 @@ watch(() => props.user.id, (newId) => {
                   <div
                       class="aspect__fill"
                       :style="{
-                        width: ((aspect[key] ?? 0) / 10 * 100) + '%',
+                        width: ((aspect[key] ?? 0) / 20 * 100) + '%',
                         background: aspectColor(aspect[key] ?? 0),
                       }"
                   />

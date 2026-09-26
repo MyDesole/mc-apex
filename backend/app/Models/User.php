@@ -31,6 +31,28 @@ class User extends Authenticatable implements MustVerifyEmail
 
     ];
 
+    public function recalcTierFromAspects(): void
+    {
+        $pvp = $this->aspectPvp;
+        $bw = $this->aspectBedwars;
+
+        $best = max($pvp?->percent() ?? 0, $bw?->percent() ?? 0);
+
+        $this->tier_score = $best;
+
+        if (!in_array($this->tier, ['S', 'S+'], true)) {
+            $this->tier = match (true) {
+                $best >= 71 => 'A',
+                $best >= 56 => 'B',
+                $best >= 41 => 'C',
+                $best >= 21 => 'D',
+                default => 'E',
+            };
+        }
+
+        $this->save();
+    }
+
     public function sendPasswordResetNotification($token): void
     {
         $this->notify(new \App\Notifications\ResetPasswordNotification($token));

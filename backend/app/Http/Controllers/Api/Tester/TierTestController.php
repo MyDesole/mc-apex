@@ -130,11 +130,11 @@ class TierTestController extends Controller
 
         if ($tierTest->mode === 'pvp') {
             $validated = $request->validate([
-                'block_placing' => ['required', 'integer', 'min:0', 'max:10'],
-                'rotka' => ['required', 'integer', 'min:0', 'max:10'],
-                'movement' => ['required', 'integer', 'min:0', 'max:10'],
-                'aim' => ['required', 'integer', 'min:0', 'max:10'],
-                'game_sense' => ['required', 'integer', 'min:0', 'max:10'],
+                'block_placing' => ['required', 'integer', 'min:0', 'max:20'],
+                'rotka' => ['required', 'integer', 'min:0', 'max:20'],
+                'movement' => ['required', 'integer', 'min:0', 'max:20'],
+                'aim' => ['required', 'integer', 'min:0', 'max:20'],
+                'game_sense' => ['required', 'integer', 'min:0', 'max:20'],
                 'notes' => ['nullable', 'string', 'max:2000'],
             ]);
 
@@ -142,11 +142,11 @@ class TierTestController extends Controller
                 + $validated['movement'] + $validated['aim'] + $validated['game_sense'];
         } else {
             $validated = $request->validate([
-                'pvp' => ['required', 'integer', 'min:0', 'max:10'],
-                'game_sense' => ['required', 'integer', 'min:0', 'max:10'],
-                'bed_play' => ['required', 'integer', 'min:0', 'max:10'],
-                'teamplay' => ['required', 'integer', 'min:0', 'max:10'],
-                'building' => ['required', 'integer', 'min:0', 'max:10'],
+                'pvp' => ['required', 'integer', 'min:0', 'max:20'],
+                'game_sense' => ['required', 'integer', 'min:0', 'max:20'],
+                'bed_play' => ['required', 'integer', 'min:0', 'max:20'],
+                'teamplay' => ['required', 'integer', 'min:0', 'max:20'],
+                'building' => ['required', 'integer', 'min:0', 'max:20'],
                 'notes' => ['nullable', 'string', 'max:2000'],
             ]);
 
@@ -154,14 +154,13 @@ class TierTestController extends Controller
                 + $validated['bed_play'] + $validated['teamplay'] + $validated['building'];
         }
 
-        $percent = $sum * 2;
+        $percent = $sum; // без *2 — максимум 100
 
         $tier = match (true) {
-            $percent >= 90 => 'S',
-            $percent >= 80 => 'A',
-            $percent >= 70 => 'B',
-            $percent >= 60 => 'C',
-            $percent >= 50 => 'D',
+            $percent >= 71 => 'A',
+            $percent >= 56 => 'B',
+            $percent >= 41 => 'C',
+            $percent >= 21 => 'D',
             default => 'E',
         };
 
@@ -187,24 +186,8 @@ class TierTestController extends Controller
                 );
             }
 
-            // пересчёт тира
             $user = $tierTest->user->fresh();
-            $best = max(
-                $user->aspectPvp?->percent() ?? 0,
-                $user->aspectBedwars?->percent() ?? 0
-            );
-
-            $user->tier_score = $best;
-            $user->tier = match (true) {
-                $best >= 90 => 'S',
-                $best >= 80 => 'A',
-                $best >= 70 => 'B',
-                $best >= 60 => 'C',
-                $best >= 50 => 'D',
-                default => 'E',
-            };
-            $user->save();
-
+            $user->recalcTierFromAspects();
             AchievementService::check($user);
         });
 
@@ -215,7 +198,6 @@ class TierTestController extends Controller
             'user' => $tierTest->user->fresh(),
         ]);
     }
-
     /**
      * Отменить заявку (тестер не смог провести).
      */

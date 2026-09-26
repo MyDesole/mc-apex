@@ -7,6 +7,7 @@ use App\Models\PlayerAspect;
 use App\Models\PlayerAspectBedwars;
 use App\Models\PlayerAspectPvp;
 use App\Models\User;
+use App\Services\AchievementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -267,11 +268,11 @@ class PlayerController extends Controller
 
         if ($mode === 'pvp') {
             $validated = $request->validate([
-                'block_placing' => ['required', 'integer', 'min:0', 'max:10'],
-                'rotka' => ['required', 'integer', 'min:0', 'max:10'],
-                'movement' => ['required', 'integer', 'min:0', 'max:10'],
-                'aim' => ['required', 'integer', 'min:0', 'max:10'],
-                'game_sense' => ['required', 'integer', 'min:0', 'max:10'],
+                'block_placing' => ['required', 'integer', 'min:0', 'max:20'],
+                'rotka' => ['required', 'integer', 'min:0', 'max:20'],
+                'movement' => ['required', 'integer', 'min:0', 'max:20'],
+                'aim' => ['required', 'integer', 'min:0', 'max:20'],
+                'game_sense' => ['required', 'integer', 'min:0', 'max:20'],
             ]);
 
             $aspect = PlayerAspectPvp::updateOrCreate(
@@ -280,11 +281,11 @@ class PlayerController extends Controller
             );
         } else {
             $validated = $request->validate([
-                'pvp' => ['required', 'integer', 'min:0', 'max:10'],
-                'game_sense' => ['required', 'integer', 'min:0', 'max:10'],
-                'bed_play' => ['required', 'integer', 'min:0', 'max:10'],
-                'teamplay' => ['required', 'integer', 'min:0', 'max:10'],
-                'building' => ['required', 'integer', 'min:0', 'max:10'],
+                'pvp' => ['required', 'integer', 'min:0', 'max:20'],
+                'game_sense' => ['required', 'integer', 'min:0', 'max:20'],
+                'bed_play' => ['required', 'integer', 'min:0', 'max:20'],
+                'teamplay' => ['required', 'integer', 'min:0', 'max:20'],
+                'building' => ['required', 'integer', 'min:0', 'max:20'],
             ]);
 
             $aspect = PlayerAspectBedwars::updateOrCreate(
@@ -294,26 +295,9 @@ class PlayerController extends Controller
         }
 
         $user = $request->user();
-        $pvp = $user->aspectPvp;
-        $bw = $user->aspectBedwars;
+        $user->recalcTierFromAspects();
+        AchievementService::check($user);
 
-        $bestPercent = max(
-            $pvp?->percent() ?? 0,
-            $bw?->percent() ?? 0
-        );
-
-        $bestTier = match (true) {
-            $bestPercent >= 71 => 'A',
-            $bestPercent >= 56 => 'B',
-            $bestPercent >= 41 => 'C',
-            $bestPercent >= 21 => 'D',
-            default => 'E',
-        };
-
-        $user->tier_score = $bestPercent;
-        $user->tier = $bestTier;
-        $user->save();
-
-        return response()->json(['aspect' => $aspect]);
+        return response()->json(['aspect' => $aspect, 'user' => $user->fresh()]);
     }
 }

@@ -24,7 +24,12 @@ class Tournament extends Model
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
     ];
-
+    public function getLevelAttribute(): ?string
+    {
+        if ($this->min_tier === 'B' && $this->max_tier === 'A') return 'A';
+        if ($this->min_tier === 'A' && $this->max_tier === 'S') return 'S';
+        return null;
+    }
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

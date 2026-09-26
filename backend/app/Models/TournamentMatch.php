@@ -44,4 +44,9 @@ class TournamentMatch extends Model
     {
         return $this->belongsTo(self::class, 'next_match_id');
     }
+
+    public function isFinal(): bool
+    {
+        return is_null($this->next_match_id);
+    }
 }

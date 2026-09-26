@@ -85,9 +85,21 @@ class TierTestController extends Controller
 
         $validated = $request->validate([
             'status' => ['sometimes', 'in:pending,in_progress,completed,cancelled'],
-            'result_tier' => ['nullable', 'in:S,A,B,C,D,E'],
+            'result_tier' => ['nullable', 'in:S+,S,A,B,C,D,E'],
             'result_score' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'aspects' => ['nullable', 'array'],
+
+            // валидация конкретных полей аспектов (универсальная для обоих режимов)
+            'aspects.block_placing' => ['nullable', 'integer', 'min:0', 'max:20'],
+            'aspects.rotka' => ['nullable', 'integer', 'min:0', 'max:20'],
+            'aspects.movement' => ['nullable', 'integer', 'min:0', 'max:20'],
+            'aspects.aim' => ['nullable', 'integer', 'min:0', 'max:20'],
+            'aspects.game_sense' => ['nullable', 'integer', 'min:0', 'max:20'],
+            'aspects.pvp' => ['nullable', 'integer', 'min:0', 'max:20'],
+            'aspects.bed_play' => ['nullable', 'integer', 'min:0', 'max:20'],
+            'aspects.teamplay' => ['nullable', 'integer', 'min:0', 'max:20'],
+            'aspects.building' => ['nullable', 'integer', 'min:0', 'max:20'],
+
             'notes' => ['nullable', 'string'],
         ]);
 
@@ -99,8 +111,38 @@ class TierTestController extends Controller
 
         if ($tierTest->status === 'completed' && $tierTest->result_tier) {
             $user = $tierTest->user;
-            $user->tier = $tierTest->result_tier;
-            $user->tier_score = $tierTest->result_score ?? 0;
+
+            // Если в aspects пришли оценки — обновляем модель аспектов
+            if (!empty($validated['aspects'])) {
+                $aspects = $validated['aspects'];
+
+                if ($tierTest->mode === 'pvp') {
+                    \App\Models\PlayerAspectPvp::updateOrCreate(
+                        ['user_id' => $user->id],
+                        collect($aspects)->only([
+                            'block_placing', 'rotka', 'movement', 'aim', 'game_sense',
+                        ])->toArray()
+                    );
+                } else {
+                    \App\Models\PlayerAspectBedwars::updateOrCreate(
+                        ['user_id' => $user->id],
+                        collect($aspects)->only([
+                            'pvp', 'game_sense', 'bed_play', 'teamplay', 'building',
+                        ])->toArray()
+                    );
+                }
+
+                $user = $user->fresh();
+            }
+
+            // tier_score всегда обновляем
+            $user->tier_score = $tierTest->result_score ?? $user->tier_score;
+
+            // S/S+ не понижаем автоматически
+            if (!in_array($user->tier, ['S', 'S+'], true)) {
+                $user->tier = $tierTest->result_tier;
+            }
+
             $user->save();
 
             \App\Services\AchievementService::check($user);
