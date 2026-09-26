@@ -40,13 +40,11 @@ const inputEl = ref(null)
 
 const showChatOnMobile = computed(() => !!activeConversation.value)
 
-// Сколько участников диалога, кроме меня — нужно для галочки «прочитано всеми»
 const otherParticipantsCount = computed(() => {
   if (!activeConversation.value) return 0
   return Math.max(0, (activeConversation.value.users || []).length - 1)
 })
 
-// Собеседник в личном диалоге (для клика в шапке)
 const directPartner = computed(() => {
   if (!activeConversation.value) return null
   if (activeConversation.value.type === 'clan_message') return null
@@ -89,6 +87,7 @@ async function openConversation(id) {
       })
     }
 
+    loadingChat.value = false
     await scrollToBottom()
   } catch (e) {
     error.value = e.message || 'Не удалось открыть диалог'
@@ -119,7 +118,7 @@ async function sendMessage() {
       conversations.value.unshift(c)
     }
 
-    await scrollToBottom()
+    await scrollToBottom(true)
   } catch (e) {
     error.value = e.message || 'Не удалось отправить'
     body.value = text
@@ -129,11 +128,18 @@ async function sendMessage() {
   }
 }
 
-async function scrollToBottom() {
+async function scrollToBottom(smooth = false) {
   await nextTick()
-  if (messagesEl.value) {
-    messagesEl.value.scrollTop = messagesEl.value.scrollHeight
-  }
+  if (!messagesEl.value) return
+
+  await nextTick()
+  requestAnimationFrame(() => {
+    if (!messagesEl.value) return
+    messagesEl.value.scrollTo({
+      top: messagesEl.value.scrollHeight,
+      behavior: smooth ? 'smooth' : 'auto',
+    })
+  })
 }
 
 async function scrollToMessage(id) {
@@ -290,7 +296,70 @@ function isMessageFullyRead(m) {
 }
 
 // ============================================
-// ДРОПДАУН ПОИСКА (для кнопки «+» в списке диалогов)
+// LONG-PRESS ДЕЙСТВИЯ (мобилка)
+// ============================================
+
+const actionSheetOpen = ref(false)
+const actionSheetMessage = ref(null)
+
+let longPressTimer = null
+let touchStartPos = { x: 0, y: 0 }
+let touchMoved = false
+
+function onMsgTouchStart(e, m) {
+  if (!e.touches || !e.touches.length) return
+
+  touchMoved = false
+  touchStartPos = {
+    x: e.touches[0].clientX,
+    y: e.touches[0].clientY,
+  }
+
+  clearTimeout(longPressTimer)
+  longPressTimer = setTimeout(() => {
+    if (touchMoved) return
+    if (navigator.vibrate) navigator.vibrate(15)
+    actionSheetMessage.value = m
+    actionSheetOpen.value = true
+  }, 450)
+}
+
+function onMsgTouchMove(e) {
+  if (!e.touches || !e.touches.length) return
+
+  const dx = Math.abs(e.touches[0].clientX - touchStartPos.x)
+  const dy = Math.abs(e.touches[0].clientY - touchStartPos.y)
+
+  if (dx > 10 || dy > 10) {
+    touchMoved = true
+    clearTimeout(longPressTimer)
+  }
+}
+
+function onMsgTouchEnd() {
+  clearTimeout(longPressTimer)
+}
+
+function closeActionSheet() {
+  actionSheetOpen.value = false
+  actionSheetMessage.value = null
+}
+
+function actionReply() {
+  if (!actionSheetMessage.value) return
+  setReply(actionSheetMessage.value)
+  closeActionSheet()
+}
+
+function actionForward() {
+  if (!actionSheetMessage.value) return
+  const m = actionSheetMessage.value
+  closeActionSheet()
+  setTimeout(() => openForward(m), 80)
+}
+
+// ============================================
+// ДРОПДАУН ПОИСКА
 // ============================================
 
 const searchOpen = ref(false)
@@ -403,12 +472,32 @@ watch(
     { immediate: true }
 )
 
+watch(() => messages.value.length, async (newLen, oldLen) => {
+  if (newLen === 0 || newLen <= oldLen) return
+
+  const el = messagesEl.value
+  if (!el) return
+
+  const wasNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150
+
+  await nextTick()
+
+  if (wasNearBottom) {
+    requestAnimationFrame(() => {
+      if (!messagesEl.value) return
+      messagesEl.value.scrollTo({
+        top: messagesEl.value.scrollHeight,
+        behavior: 'smooth',
+      })
+    })
+  }
+})
+
 watch(latestMessage, async (m) => {
   if (!m) return
 
   if (activeConversation.value && m.conversation_id === activeConversation.value.id) {
     messages.value.push(m)
-    await scrollToBottom()
     chatApi.show(m.conversation_id).catch(() => {})
   } else {
     const idx = conversations.value.findIndex(c => c.id === m.conversation_id)
@@ -450,14 +539,13 @@ onUnmounted(() => {
   window.removeEventListener('scroll', onResizeOrScroll, true)
   clearTimeout(searchTimer)
   clearTimeout(forwardTimer)
+  clearTimeout(longPressTimer)
 })
 </script>
 
 <template>
   <div class="messages-page" :class="{ 'messages-page--chat-open': showChatOnMobile }">
-    <!-- ============================================
-         СПИСОК ДИАЛОГОВ
-         ============================================ -->
+    <!-- СПИСОК ДИАЛОГОВ -->
     <aside class="conversations">
       <header class="conversations__head">
         <h1>Сообщения</h1>
@@ -486,7 +574,7 @@ onUnmounted(() => {
         Найди игрока или клан через кнопку «+».
       </div>
 
-      <ul v-else class="conversations__list">
+      <ul v-else class="conversations__list scroll-thin">
         <li v-for="c in conversations" :key="c.id">
           <RouterLink
               :to="`/messages/${c.id}`"
@@ -543,9 +631,7 @@ onUnmounted(() => {
       </ul>
     </aside>
 
-    <!-- ============================================
-         ОКНО ЧАТА
-         ============================================ -->
+    <!-- ОКНО ЧАТА -->
     <section class="chat" :class="{ 'chat--empty': !activeConversation }">
       <template v-if="!activeConversation">
         <div class="chat__empty">
@@ -564,7 +650,6 @@ onUnmounted(() => {
             </svg>
           </button>
 
-          <!-- Аватар собеседника (клик → профиль) -->
           <div
               v-if="directPartner"
               class="chat__head-avatar"
@@ -598,7 +683,7 @@ onUnmounted(() => {
           </div>
         </header>
 
-        <div ref="messagesEl" class="chat__messages">
+        <div ref="messagesEl" class="chat__messages scroll-thin">
           <div v-if="loadingChat" class="chat__loading">Загрузка...</div>
 
           <template v-else-if="messages.length">
@@ -608,6 +693,11 @@ onUnmounted(() => {
                 :data-message-id="m.id"
                 class="msg"
                 :class="{ 'msg--mine': m.user?.id === auth.user?.id }"
+                @touchstart.passive="onMsgTouchStart($event, m)"
+                @touchmove.passive="onMsgTouchMove"
+                @touchend="onMsgTouchEnd"
+                @touchcancel="onMsgTouchEnd"
+                @contextmenu.prevent
             >
               <div
                   class="msg__avatar"
@@ -620,7 +710,6 @@ onUnmounted(() => {
 
               <div class="msg__body">
                 <div class="msg__bubble">
-                  <!-- Переслано от -->
                   <div v-if="m.forwarded_from" class="msg__forwarded">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M15 17l5-5-5-5" />
@@ -629,7 +718,6 @@ onUnmounted(() => {
                     Переслано от <b>{{ m.forwarded_from.username }}</b>
                   </div>
 
-                  <!-- Цитата ответа -->
                   <div
                       v-if="m.reply_to"
                       class="msg__reply"
@@ -668,26 +756,14 @@ onUnmounted(() => {
                 </div>
               </div>
 
-              <!-- Действия с сообщением -->
               <div class="msg__actions">
-                <button
-                    class="msg__action"
-                    type="button"
-                    title="Ответить"
-                    @click="setReply(m)"
-                >
+                <button class="msg__action" type="button" title="Ответить" @click="setReply(m)">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M9 17l-5-5 5-5" />
                     <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
                   </svg>
                 </button>
-
-                <button
-                    class="msg__action"
-                    type="button"
-                    title="Переслать"
-                    @click="openForward(m)"
-                >
+                <button class="msg__action" type="button" title="Переслать" @click="openForward(m)">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M15 17l5-5-5-5" />
                     <path d="M4 18v-2a4 4 0 0 1 4-4h12" />
@@ -703,7 +779,6 @@ onUnmounted(() => {
         </div>
 
         <footer class="chat__footer">
-          <!-- Панель «Отвечая на» -->
           <div v-if="replyTo" class="chat__reply-bar">
             <div class="chat__reply-bar-icon">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -717,12 +792,7 @@ onUnmounted(() => {
                 {{ replyTo.body?.slice(0, 100) }}
               </div>
             </div>
-            <button
-                class="chat__reply-bar-close"
-                type="button"
-                aria-label="Отменить ответ"
-                @click="clearReply"
-            >
+            <button class="chat__reply-bar-close" type="button" aria-label="Отменить ответ" @click="clearReply">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
@@ -741,11 +811,7 @@ onUnmounted(() => {
                 rows="1"
                 @keydown.enter.exact.prevent="sendMessage"
             />
-            <button
-                class="chat__send"
-                type="submit"
-                :disabled="sending || !body.trim()"
-            >
+            <button class="chat__send" type="submit" :disabled="sending || !body.trim()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M22 2 11 13" />
                 <path d="M22 2l-7 20-4-9-9-4 20-7z" />
@@ -756,18 +822,13 @@ onUnmounted(() => {
       </template>
     </section>
 
-    <!-- ============================================
-         ДРОПДАУН ПОИСКА (кнопка «+»)
-         ============================================ -->
+    <!-- ДРОПДАУН ПОИСКА -->
     <Teleport to="body">
       <Transition name="search-fade">
         <div
             v-if="searchOpen"
             class="search-dropdown"
-            :style="{
-              top: dropdownPos.top + 'px',
-              right: dropdownPos.right + 'px',
-            }"
+            :style="{ top: dropdownPos.top + 'px', right: dropdownPos.right + 'px' }"
             @click.stop
         >
           <div class="search-input-wrap">
@@ -775,33 +836,17 @@ onUnmounted(() => {
               <circle cx="11" cy="11" r="7" />
               <path d="m21 21-4.3-4.3" />
             </svg>
-            <input
-                v-model="searchQuery"
-                type="text"
-                class="search-input"
-                placeholder="Поиск: игрок или клан"
-                autofocus
-            />
+            <input v-model="searchQuery" type="text" class="search-input" placeholder="Поиск: игрок или клан" autofocus />
           </div>
 
-          <div class="search-body">
-            <div v-if="searchLoading" class="search-hint">
-              Поиск...
-            </div>
-
+          <div class="search-body scroll-thin">
+            <div v-if="searchLoading" class="search-hint">Поиск...</div>
             <template v-else>
               <div v-if="searchResults.users.length" class="search-section">
                 <div class="search-section__title">
                   {{ searchQuery.trim() === '' ? 'Друзья' : 'Игроки' }}
                 </div>
-
-                <button
-                    v-for="u in searchResults.users"
-                    :key="u.id"
-                    type="button"
-                    class="search-item"
-                    @click="startWithUser(u.id)"
-                >
+                <button v-for="u in searchResults.users" :key="u.id" type="button" class="search-item" @click="startWithUser(u.id)">
                   <div class="search-item__avatar">
                     <img v-if="u.avatar_url" :src="u.avatar_url" :alt="u.username" />
                     <template v-else>{{ (u.username || 'И').charAt(0).toUpperCase() }}</template>
@@ -814,10 +859,7 @@ onUnmounted(() => {
                       </svg>
                     </div>
                     <div class="search-item__sub">
-                      Тир
-                      <b :style="{ color: tierColors[u.tier] || '#6b7280' }">
-                        {{ u.tier ?? '—' }}
-                      </b>
+                      Тир <b :style="{ color: tierColors[u.tier] || '#6b7280' }">{{ u.tier ?? '—' }}</b>
                     </div>
                   </div>
                 </button>
@@ -825,18 +867,8 @@ onUnmounted(() => {
 
               <div v-if="searchResults.clans.length" class="search-section">
                 <div class="search-section__title">Кланы</div>
-
-                <button
-                    v-for="c in searchResults.clans"
-                    :key="c.id"
-                    type="button"
-                    class="search-item"
-                    @click="startWithClan(c.id)"
-                >
-                  <div
-                      class="search-item__avatar"
-                      :style="{ background: c.banner_color || '#7c3aed' }"
-                  >
+                <button v-for="c in searchResults.clans" :key="c.id" type="button" class="search-item" @click="startWithClan(c.id)">
+                  <div class="search-item__avatar" :style="{ background: c.banner_color || '#7c3aed' }">
                     <img v-if="c.avatar_url" :src="c.avatar_url" :alt="c.name" />
                     <template v-else>{{ (c.tag || 'C').charAt(0) }}</template>
                   </div>
@@ -845,20 +877,13 @@ onUnmounted(() => {
                       <span class="search-item__tag">[{{ c.tag }}]</span>
                       {{ c.name }}
                     </div>
-                    <div class="search-item__sub">
-                      Написать клану (лидеру и офицерам)
-                    </div>
+                    <div class="search-item__sub">Написать клану (лидеру и офицерам)</div>
                   </div>
                 </button>
               </div>
 
-              <div
-                  v-if="!searchResults.users.length && !searchResults.clans.length"
-                  class="search-hint"
-              >
-                {{ searchQuery.trim() === ''
-                  ? 'У тебя пока нет друзей'
-                  : 'Ничего не найдено' }}
+              <div v-if="!searchResults.users.length && !searchResults.clans.length" class="search-hint">
+                {{ searchQuery.trim() === '' ? 'У тебя пока нет друзей' : 'Ничего не найдено' }}
               </div>
             </template>
           </div>
@@ -866,25 +891,14 @@ onUnmounted(() => {
       </Transition>
     </Teleport>
 
-    <!-- ============================================
-         МОДАЛКА ПЕРЕСЫЛКИ
-         ============================================ -->
+    <!-- МОДАЛКА ПЕРЕСЫЛКИ -->
     <Teleport to="body">
       <Transition name="search-fade">
-        <div
-            v-if="forwardOpen"
-            class="forward-modal-bg"
-            @click.self="closeForward"
-        >
+        <div v-if="forwardOpen" class="forward-modal-bg" @click.self="closeForward">
           <div class="forward-modal">
             <header class="forward-modal__head">
               <h3>Переслать сообщение</h3>
-              <button
-                  class="forward-modal__close"
-                  type="button"
-                  aria-label="Закрыть"
-                  @click="closeForward"
-              >
+              <button class="forward-modal__close" type="button" aria-label="Закрыть" @click="closeForward">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M18 6 6 18M6 6l12 12" />
                 </svg>
@@ -892,12 +906,8 @@ onUnmounted(() => {
             </header>
 
             <div v-if="forwardMessage" class="forward-modal__preview">
-              <div class="forward-modal__preview-author">
-                {{ forwardMessage.user?.username }}
-              </div>
-              <div class="forward-modal__preview-body">
-                {{ forwardMessage.body?.slice(0, 140) }}
-              </div>
+              <div class="forward-modal__preview-author">{{ forwardMessage.user?.username }}</div>
+              <div class="forward-modal__preview-body">{{ forwardMessage.body?.slice(0, 140) }}</div>
             </div>
 
             <div class="forward-modal__search">
@@ -905,23 +915,16 @@ onUnmounted(() => {
                 <circle cx="11" cy="11" r="7" />
                 <path d="m21 21-4.3-4.3" />
               </svg>
-              <input
-                  v-model="forwardSearch"
-                  type="text"
-                  class="forward-modal__input"
-                  placeholder="Игрок или клан..."
-              />
+              <input v-model="forwardSearch" type="text" class="forward-modal__input" placeholder="Игрок или клан..." />
             </div>
 
-            <div class="forward-modal__body">
+            <div class="forward-modal__body scroll-thin">
               <div v-if="forwardLoading" class="forward-modal__hint">Поиск...</div>
-
               <template v-else>
                 <div v-if="forwardResults.users.length" class="forward-modal__section">
                   <div class="forward-modal__section-title">
                     {{ forwardSearch.trim() === '' ? 'Друзья' : 'Игроки' }}
                   </div>
-
                   <button
                       v-for="u in forwardResults.users"
                       :key="u.id"
@@ -945,7 +948,6 @@ onUnmounted(() => {
 
                 <div v-if="forwardResults.clans.length" class="forward-modal__section">
                   <div class="forward-modal__section-title">Кланы</div>
-
                   <button
                       v-for="c in forwardResults.clans"
                       :key="c.id"
@@ -954,10 +956,7 @@ onUnmounted(() => {
                       :disabled="forwardSending"
                       @click="confirmForwardClan(c.id)"
                   >
-                    <div
-                        class="forward-modal__item-avatar"
-                        :style="{ background: c.banner_color || '#7c3aed' }"
-                    >
+                    <div class="forward-modal__item-avatar" :style="{ background: c.banner_color || '#7c3aed' }">
                       <img v-if="c.avatar_url" :src="c.avatar_url" :alt="c.name" />
                       <template v-else>{{ (c.tag || 'C').charAt(0) }}</template>
                     </div>
@@ -966,23 +965,58 @@ onUnmounted(() => {
                         <span class="forward-modal__item-tag">[{{ c.tag }}]</span>
                         {{ c.name }}
                       </div>
-                      <div class="forward-modal__item-sub">
-                        Отправить лидеру и офицерам
-                      </div>
+                      <div class="forward-modal__item-sub">Отправить лидеру и офицерам</div>
                     </div>
                   </button>
                 </div>
 
-                <div
-                    v-if="!forwardResults.users.length && !forwardResults.clans.length"
-                    class="forward-modal__hint"
-                >
-                  {{ forwardSearch.trim() === ''
-                    ? 'У тебя пока нет друзей'
-                    : 'Ничего не найдено' }}
+                <div v-if="!forwardResults.users.length && !forwardResults.clans.length" class="forward-modal__hint">
+                  {{ forwardSearch.trim() === '' ? 'У тебя пока нет друзей' : 'Ничего не найдено' }}
                 </div>
               </template>
             </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- BOTTOM SHEET — действия с сообщением (мобилка) -->
+    <Teleport to="body">
+      <Transition name="sheet-fade">
+        <div
+            v-if="actionSheetOpen"
+            class="action-sheet-bg"
+            @click.self="closeActionSheet"
+        >
+          <div class="action-sheet">
+            <div v-if="actionSheetMessage" class="action-sheet__preview">
+              <div class="action-sheet__preview-author">
+                {{ actionSheetMessage.user?.username }}
+              </div>
+              <div class="action-sheet__preview-body">
+                {{ actionSheetMessage.body?.slice(0, 120) }}
+              </div>
+            </div>
+
+            <button class="action-sheet__item" type="button" @click="actionReply">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 17l-5-5 5-5" />
+                <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+              </svg>
+              Ответить
+            </button>
+
+            <button class="action-sheet__item" type="button" @click="actionForward">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 17l5-5-5-5" />
+                <path d="M4 18v-2a4 4 0 0 1 4-4h12" />
+              </svg>
+              Переслать
+            </button>
+
+            <button class="action-sheet__item action-sheet__item--cancel" type="button" @click="closeActionSheet">
+              Отмена
+            </button>
           </div>
         </div>
       </Transition>
@@ -991,6 +1025,45 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* ============================================
+   КРАСИВЫЙ СКРОЛЛБАР
+   ============================================ */
+
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 58, 237, 0.35) transparent;
+}
+
+.scroll-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.25);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: background 0.2s;
+}
+
+.scroll-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.5);
+  background-clip: content-box;
+}
+
+.scroll-thin::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ============================================
+   БАЗА
+   ============================================ */
+
 .messages-page {
   display: grid;
   grid-template-columns: 340px 1fr;
@@ -1002,7 +1075,7 @@ onUnmounted(() => {
 }
 
 /* ============================================
-   CONVERSATIONS LIST
+   СПИСОК ДИАЛОГОВ
    ============================================ */
 
 .conversations {
@@ -1011,6 +1084,7 @@ onUnmounted(() => {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 16px;
+  overflow: hidden;
 }
 
 .conversations__head {
@@ -1072,7 +1146,6 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  border-radius: 0 0 16px 16px;
 }
 
 .conv {
@@ -1210,7 +1283,7 @@ onUnmounted(() => {
 }
 
 /* ============================================
-   CHAT
+   ЧАТ
    ============================================ */
 
 .chat {
@@ -1264,7 +1337,6 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
-/* Аватар собеседника в шапке — кликабельный */
 .chat__head-avatar {
   flex-shrink: 0;
   cursor: pointer;
@@ -1312,7 +1384,6 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-/* Имя собеседника — кликабельно */
 .chat__head-name--link {
   cursor: pointer;
   transition: color 0.15s;
@@ -1331,13 +1402,7 @@ onUnmounted(() => {
   gap: 14px;
 }
 
-.chat__loading {
-  text-align: center;
-  padding: 40px;
-  color: var(--text-muted);
-  font-size: 13px;
-}
-
+.chat__loading,
 .chat__empty-mini {
   text-align: center;
   padding: 40px;
@@ -1346,7 +1411,7 @@ onUnmounted(() => {
 }
 
 /* ============================================
-   MESSAGE
+   СООБЩЕНИЕ
    ============================================ */
 
 .msg {
@@ -1360,7 +1425,6 @@ onUnmounted(() => {
   flex-direction: row-reverse;
 }
 
-/* Аватарка в сообщении — кликабельная */
 .msg__avatar {
   position: relative;
   width: 34px;
@@ -1396,7 +1460,6 @@ onUnmounted(() => {
   min-width: 0;
 }
 
-/* Пузырь сообщения */
 .msg__bubble {
   padding: 8px 12px 6px;
   background: #0d0d14;
@@ -1410,7 +1473,6 @@ onUnmounted(() => {
   border-color: rgba(124, 58, 237, 0.3);
 }
 
-/* Переслано */
 .msg__forwarded {
   display: inline-flex;
   align-items: center;
@@ -1430,7 +1492,6 @@ onUnmounted(() => {
   opacity: 0.7;
 }
 
-/* Цитата ответа */
 .msg__reply {
   display: flex;
   flex-direction: column;
@@ -1463,7 +1524,6 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-/* Контент: текст + мета справа снизу */
 .msg__content {
   display: block;
 }
@@ -1499,7 +1559,7 @@ onUnmounted(() => {
 }
 
 /* ============================================
-   Галочки
+   ГАЛОЧКИ
    ============================================ */
 
 .msg__read-status {
@@ -1534,10 +1594,7 @@ onUnmounted(() => {
   transform: translate(calc(-50% - 5px), -50%) scale(0.8);
 }
 
-.msg__read-status--read {
-  color: #22c55e;
-}
-
+.msg__read-status--read,
 .msg__read-status--full {
   color: #22c55e;
 }
@@ -1551,7 +1608,6 @@ onUnmounted(() => {
   transform: translate(calc(-50% + 4px), -50%) scale(1);
 }
 
-/* Подсветка при скролле к сообщению */
 .msg--highlight .msg__bubble {
   animation: msgHighlight 1.2s ease;
 }
@@ -1570,7 +1626,6 @@ onUnmounted(() => {
   100% { background: rgba(124, 58, 237, 0.15); }
 }
 
-/* Действия с сообщением */
 .msg__actions {
   display: flex;
   gap: 4px;
@@ -1604,7 +1659,7 @@ onUnmounted(() => {
 }
 
 /* ============================================
-   REPLY BAR
+   ПАНЕЛЬ ОТВЕТА
    ============================================ */
 
 .chat__reply-bar {
@@ -1671,7 +1726,7 @@ onUnmounted(() => {
 }
 
 /* ============================================
-   FOOTER
+   ФУТЕР
    ============================================ */
 
 .chat__footer {
@@ -1743,7 +1798,7 @@ onUnmounted(() => {
 }
 
 /* ============================================
-   SEARCH DROPDOWN
+   ДРОПДАУН ПОИСКА
    ============================================ */
 
 .search-dropdown {
@@ -1902,7 +1957,7 @@ onUnmounted(() => {
 }
 
 /* ============================================
-   FORWARD MODAL
+   МОДАЛКА ПЕРЕСЫЛКИ
    ============================================ */
 
 .forward-modal-bg {
@@ -2125,6 +2180,97 @@ onUnmounted(() => {
   font-weight: 800;
 }
 
+/* ============================================
+   BOTTOM SHEET
+   ============================================ */
+
+.action-sheet-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(6, 6, 10, 0.55);
+  backdrop-filter: blur(4px);
+  padding: 0;
+}
+
+.action-sheet {
+  width: 100%;
+  max-width: 480px;
+  background: #16161f;
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  box-shadow: 0 -20px 60px -20px rgba(0, 0, 0, 0.7);
+  animation: sheetSlideUp 0.22s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+@keyframes sheetSlideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.action-sheet__preview {
+  padding: 10px 14px 12px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.action-sheet__preview-author {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--accent-light);
+  margin-bottom: 3px;
+}
+
+.action-sheet__preview-body {
+  font-size: 13px;
+  color: var(--text-dim);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.action-sheet__item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.action-sheet__item:active {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.action-sheet__item svg {
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.action-sheet__item--cancel {
+  justify-content: center;
+  margin-top: 4px;
+  color: var(--text-dim);
+  font-weight: 700;
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 12px 12px;
+  padding-top: 16px;
+}
+
 /* Transition */
 
 .search-fade-enter-active,
@@ -2138,16 +2284,99 @@ onUnmounted(() => {
   transform: translateY(-4px);
 }
 
+.sheet-fade-enter-active,
+.sheet-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.sheet-fade-enter-from,
+.sheet-fade-leave-to {
+  opacity: 0;
+}
+
 /* ============================================
-   MOBILE
+   МОБИЛЬНАЯ ВЕРСИЯ
    ============================================ */
 
 @media (max-width: 900px) {
   .messages-page {
-    grid-template-columns: 1fr;
-    height: calc(100vh - var(--header-height) - 24px);
-    margin: 12px auto;
-    width: calc(100% - 24px);
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: none;
+    gap: 0;
+    width: 100%;
+    height: calc(100dvh - var(--header-height));
+    margin: 0;
+    padding: 0;
+    min-height: 0;
+  }
+
+  .conversations {
+    flex: 1;
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+    background: var(--bg);
+  }
+
+  .conversations__head {
+    padding: 14px 16px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .conversations__head h1 {
+    font-size: 18px;
+  }
+
+  .conversations__list {
+    padding: 6px 8px 12px;
+    gap: 2px;
+  }
+
+  .conv {
+    padding: 10px 10px;
+    border-radius: 12px;
+    gap: 12px;
+  }
+
+  .conv__avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 18px;
+  }
+
+  .conv__name {
+    font-size: 14.5px;
+    margin-bottom: 4px;
+  }
+
+  .conv__preview {
+    font-size: 13px;
+  }
+
+  .conv__time {
+    font-size: 11px;
+    text-transform: none;
+    font-weight: 600;
+  }
+
+  .conv__badge {
+    min-width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
+
+  .chat {
+    flex: 1;
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+    background: var(--bg);
   }
 
   .messages-page--chat-open .conversations {
@@ -2158,23 +2387,168 @@ onUnmounted(() => {
     display: none;
   }
 
+  .chat__head {
+    padding: 10px 12px;
+    gap: 10px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
   .chat__back {
     display: inline-flex;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+  }
+
+  .chat__back:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .chat__head-avatar-box {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    font-size: 14px;
+  }
+
+  .chat__head-name {
+    font-size: 15px;
+  }
+
+  .chat__head-sub {
+    font-size: 11.5px;
+  }
+
+  .chat__messages {
+    padding: 12px 10px 8px;
+    gap: 8px;
+    overscroll-behavior: contain;
+  }
+
+  .msg {
+    max-width: 88%;
+    gap: 8px;
+  }
+
+  .msg__avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 12px;
+  }
+
+  .msg__bubble {
+    padding: 7px 11px 5px;
+    border-radius: 14px;
+  }
+
+  .msg:not(.msg--mine) .msg__bubble {
+    border-bottom-left-radius: 4px;
+  }
+
+  .msg--mine .msg__bubble {
+    border-bottom-right-radius: 4px;
+  }
+
+  .msg__text {
+    font-size: 14.5px;
+  }
+
+  .msg__time {
+    font-size: 10px;
+  }
+
+  /* Скрываем кнопки действий на мобилке — теперь через long-press */
+  .msg__actions {
+    display: none;
+  }
+
+  .chat__footer {
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+  }
+
+  .chat__input {
+    min-height: 42px;
+    padding: 11px 16px;
+    font-size: 15px;
+    border-radius: 21px;
+  }
+
+  .chat__send {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+  }
+
+  .chat__reply-bar {
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    border-radius: 10px;
   }
 
   .search-dropdown {
-    left: 12px !important;
-    right: 12px !important;
+    left: 8px !important;
+    right: 8px !important;
     width: auto;
     max-width: none;
+    max-height: 70vh;
+    border-radius: 14px;
   }
 
+  .search-item {
+    padding: 10px;
+    gap: 12px;
+  }
+
+  .search-item__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 15px;
+  }
+
+  .forward-modal-bg {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .forward-modal {
+    max-width: 100%;
+    width: 100%;
+    max-height: 90vh;
+    border-radius: 16px 16px 0 0;
+    animation: sheetSlideUp 0.22s cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+
+  .forward-modal__item-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
   .msg {
     max-width: 92%;
   }
 
-  .msg__actions {
-    opacity: 1;
+  .conv__avatar {
+    width: 46px;
+    height: 46px;
+  }
+
+  .chat__messages {
+    padding: 10px 8px 6px;
   }
 }
 </style>
