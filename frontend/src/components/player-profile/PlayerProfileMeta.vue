@@ -95,11 +95,8 @@ const clanJoinedAt = computed(() => props.user.clan_joined_at)
   font-style: italic;
   line-height: 1.4;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
+  word-break: break-word;
+  white-space: normal;
 }
 
 /* === MODES === */
