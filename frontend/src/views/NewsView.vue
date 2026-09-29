@@ -14,6 +14,21 @@ const typeLabels = {
   announcement: 'Анонс',
 }
 
+const typeClasses = {
+  news: 'badge--news',
+  update: 'badge--update',
+  event: 'badge--event',
+  announcement: 'badge--announcement',
+}
+
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
 onMounted(async () => {
   try {
     const data = await newsApi.list()
@@ -29,65 +44,95 @@ onMounted(async () => {
 <template>
   <div class="news-page">
     <header class="page-head">
-      <div>
-        <h1>Новости</h1>
-        <p class="subtitle">Последние обновления APEX TIERS</p>
+      <div class="page-head__content">
+        <div class="page-head__label">
+          <span class="page-head__dot" />
+          Новости
+        </div>
+
+        <h1>Последние события</h1>
+
+        <p class="subtitle">
+          Новости, обновления и важные события APEX TIERS
+        </p>
       </div>
     </header>
 
-    <div v-if="loading" class="empty">
+    <div v-if="loading" class="state">
       <div class="spinner" />
-      <span>Загрузка...</span>
+      <span>Загрузка новостей...</span>
     </div>
 
-    <div v-else-if="error" class="empty">
-      <div class="empty__icon">⚠️</div>
-      <div class="empty__title">{{ error }}</div>
+    <div v-else-if="error" class="state state--error">
+      <div class="state__icon">⚠️</div>
+      <div class="state__title">{{ error }}</div>
+      <div class="state__hint">
+        Попробуйте обновить страницу
+      </div>
     </div>
 
-    <div v-else-if="!news.length" class="empty">
-      <div class="empty__icon">📰</div>
-      <div class="empty__title">Новостей пока нет</div>
-      <div class="empty__hint">Заходи позже — скоро что-то будет</div>
+    <div v-else-if="!news.length" class="state">
+      <div class="state__icon">📰</div>
+      <div class="state__title">Новостей пока нет</div>
+      <div class="state__hint">
+        Загляните позже — здесь скоро появятся новые публикации
+      </div>
     </div>
 
     <div v-else class="grid">
       <RouterLink
-          v-for="n in news"
-          :key="n.id"
-          :to="`/news/${n.id}`"
+          v-for="item in news"
+          :key="item.id"
+          :to="`/news/${item.id}`"
           class="card"
-          :class="{ 'card--pinned': n.is_pinned }"
+          :class="{ 'card--pinned': item.is_pinned }"
       >
         <div
             class="card__cover"
-            :style="n.cover_url ? { backgroundImage: `url(${n.cover_url})` } : {}"
+            :style="item.cover_url
+            ? { backgroundImage: `url(${item.cover_url})` }
+            : {}
+          "
         >
-                    <span v-if="!n.cover_url" class="card__letter">
-                        {{ n.title.charAt(0).toUpperCase() }}
-                    </span>
+          <span v-if="!item.cover_url" class="card__letter">
+            {{ item.title.charAt(0).toUpperCase() }}
+          </span>
+
+          <div class="card__overlay" />
 
           <div class="card__badges">
-            <span v-if="n.is_pinned" class="badge badge--pin">📌</span>
-            <span class="badge" :class="`badge--${n.type}`">
-                            {{ typeLabels[n.type] }}
-                        </span>
+            <span
+                v-if="item.is_pinned"
+                class="badge badge--pin"
+                title="Закреплено"
+            >
+              📌
+            </span>
+
+            <span
+                class="badge"
+                :class="typeClasses[item.type]"
+            >
+              {{ typeLabels[item.type] || 'Публикация' }}
+            </span>
           </div>
         </div>
 
         <div class="card__body">
-          <h3 class="card__title">{{ n.title }}</h3>
+          <h3 class="card__title">
+            {{ item.title }}
+          </h3>
 
-          <p v-if="n.excerpt" class="card__excerpt">
-            {{ n.excerpt }}
+          <p v-if="item.excerpt" class="card__excerpt">
+            {{ item.excerpt }}
           </p>
 
           <div class="card__meta">
-                        <span>
-                            {{ new Date(n.published_at ?? n.created_at).toLocaleDateString('ru-RU', {
-                          day: '2-digit', month: 'short', year: 'numeric'
-                        }) }}
-                        </span>
+            <span>
+              {{ formatDate(item.published_at ?? item.created_at) }}
+            </span>
+
+            <span class="card__arrow">→</span>
           </div>
         </div>
       </RouterLink>
@@ -105,11 +150,38 @@ onMounted(async () => {
   margin-bottom: 28px;
 }
 
+.page-head__content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.page-head__label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 8px;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.page-head__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+}
+
 .page-head h1 {
   margin: 0 0 6px;
   font-size: 28px;
   font-weight: 800;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.6px;
+  color: var(--text);
 }
 
 .subtitle {
@@ -118,21 +190,30 @@ onMounted(async () => {
   font-size: 14px;
 }
 
-/* Grid */
+/* Сетка */
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
 }
 
+/* Карточка */
+
 .card {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
-  transition: all 0.25s ease;
+  color: inherit;
+  text-decoration: none;
+  transition:
+      transform 0.25s ease,
+      border-color 0.25s ease,
+      box-shadow 0.25s ease;
 }
 
 .card:hover {
@@ -146,130 +227,208 @@ onMounted(async () => {
   box-shadow: 0 0 30px rgba(250, 204, 21, 0.05);
 }
 
+.card--pinned:hover {
+  border-color: rgba(250, 204, 21, 0.55);
+  box-shadow: 0 14px 40px rgba(250, 204, 21, 0.08);
+}
+
+/* Обложка */
+
 .card__cover {
   position: relative;
   height: 160px;
-  background: linear-gradient(135deg, #7c3aed, #06b6d4);
-  background-size: cover;
-  background-position: center;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  background:
+      radial-gradient(
+          circle at 20% 20%,
+          rgba(255, 255, 255, 0.12),
+          transparent 30%
+      ),
+      linear-gradient(135deg, #7c3aed, #06b6d4);
+  background-size: cover;
+  background-position: center;
+}
+
+.card__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.08),
+      rgba(0, 0, 0, 0.35)
+  );
+  pointer-events: none;
 }
 
 .card__letter {
+  position: relative;
+  z-index: 1;
   font-size: 48px;
   font-weight: 900;
+  line-height: 1;
   color: #fff;
-  opacity: 0.4;
+  opacity: 0.35;
 }
+
+/* Метки */
 
 .card__badges {
   position: absolute;
+  z-index: 2;
   top: 10px;
   left: 10px;
   right: 10px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 6px;
 }
 
 .badge {
-  padding: 3px 9px;
+  padding: 4px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(8px);
+  color: #fff;
   font-size: 10px;
   font-weight: 900;
-  text-transform: uppercase;
+  line-height: 1;
   letter-spacing: 0.4px;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(6px);
+  text-transform: uppercase;
 }
 
 .badge--pin {
-  background: rgba(250, 204, 21, 0.9);
+  padding: 5px 8px;
+  border-color: transparent;
+  background: rgba(250, 204, 21, 0.92);
   color: #000;
 }
 
-.badge--news { color: #a78bfa; }
-.badge--update { color: #4ade80; }
-.badge--event { color: #f472b6; }
-.badge--announcement { color: #fbbf24; }
+.badge--news {
+  color: #a78bfa;
+}
+
+.badge--update {
+  color: #4ade80;
+}
+
+.badge--event {
+  color: #f472b6;
+}
+
+.badge--announcement {
+  color: #fbbf24;
+}
+
+/* Содержимое */
 
 .card__body {
-  padding: 16px 18px;
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 8px;
-  flex: 1;
+  padding: 16px 18px;
 }
 
 .card__title {
+  display: -webkit-box;
   margin: 0;
+  overflow: hidden;
+  color: var(--text);
   font-size: 16px;
   font-weight: 800;
-  color: var(--text);
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
   line-height: 1.3;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .card__excerpt {
+  display: -webkit-box;
   margin: 0;
+  overflow: hidden;
   color: var(--text-dim);
   font-size: 13px;
   line-height: 1.5;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin-top: auto;
   padding-top: 8px;
-  font-size: 12px;
   color: var(--text-muted);
+  font-size: 12px;
   font-weight: 600;
 }
 
-/* States */
-.empty {
+.card__arrow {
+  color: var(--accent);
+  font-size: 16px;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
+}
+
+.card:hover .card__arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Состояния */
+
+.state {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   padding: 60px 20px;
-  text-align: center;
-  background: var(--bg-card);
   border: 1px dashed var(--border);
   border-radius: 14px;
+  background: var(--bg-card);
   color: var(--text-dim);
   font-size: 13px;
+  text-align: center;
 }
 
-.empty__icon {
+.state--error {
+  border-color: rgba(248, 113, 113, 0.2);
+}
+
+.state__icon {
+  margin-bottom: 4px;
   font-size: 42px;
   opacity: 0.6;
-  margin-bottom: 4px;
 }
 
-.empty__title {
+.state__title {
+  color: var(--text);
   font-size: 16px;
   font-weight: 800;
-  color: var(--text);
 }
 
-.empty__hint {
-  font-size: 13px;
+.state__hint {
+  max-width: 420px;
   color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.5;
 }
+
+/* Загрузка */
 
 .spinner {
   width: 28px;
   height: 28px;
+  margin-bottom: 2px;
   border: 3px solid rgba(124, 58, 237, 0.15);
   border-top-color: var(--accent);
   border-radius: 50%;
@@ -277,12 +436,33 @@ onMounted(async () => {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
+/* Мобильная версия */
+
 @media (max-width: 600px) {
+  .news-page {
+    width: min(100% - 24px, 1100px);
+    margin: 24px auto;
+  }
+
+  .page-head {
+    margin-bottom: 20px;
+  }
+
+  .page-head h1 {
+    font-size: 24px;
+  }
+
   .grid {
     grid-template-columns: 1fr;
+  }
+
+  .card__cover {
+    height: 150px;
   }
 }
 </style>

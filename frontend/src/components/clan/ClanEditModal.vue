@@ -91,16 +91,26 @@ const colorPresets = [
   <div class="modal-bg" @click.self="$emit('close')">
     <div class="modal">
       <header class="modal-head">
-        <h2>Настройки клана</h2>
-        <button class="close" @click="$emit('close')">✕</button>
+        <div>
+          <div class="eyebrow">УПРАВЛЕНИЕ КЛАНОМ</div>
+          <h2>Настройки клана</h2>
+        </div>
+
+        <button class="close" @click="$emit('close')">×</button>
       </header>
 
-      <div v-if="error" class="error-banner">{{ error }}</div>
+      <div v-if="error" class="error-banner">
+        <span>!</span>
+        {{ error }}
+      </div>
 
       <div class="form-body">
-        <!-- Подложка -->
-        <div class="field">
-          <label>Подложка клана</label>
+
+        <section class="settings-section">
+          <div class="section-label">
+            <strong>Оформление</strong>
+            <span>Как клан выглядит для остальных игроков</span>
+          </div>
 
           <div class="cover-drop">
             <div
@@ -108,55 +118,59 @@ const colorPresets = [
                 class="cover-preview"
                 :style="{ backgroundImage: `url(${coverPreview})` }"
             >
+              <div class="cover-gradient"></div>
+
               <div class="cover-overlay">
-                <button class="btn-change" type="button">
-                  <input type="file" accept="image/*" @change="onCoverChange" />
+                <label class="cover-btn primary">
+                  <input type="file" accept="image/*" @change="onCoverChange">
                   Заменить
-                </button>
-                <button class="btn-remove" type="button" @click="removeCover">
+                </label>
+
+                <button
+                    class="cover-btn danger"
+                    type="button"
+                    @click="removeCover"
+                >
                   Удалить
                 </button>
               </div>
             </div>
 
             <label v-else class="cover-empty">
-              <input type="file" accept="image/*" @change="onCoverChange" />
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-              <span>Загрузить подложку</span>
-              <small>JPG, PNG, WebP · до 5 МБ</small>
+              <input type="file" accept="image/*" @change="onCoverChange">
+
+              <div class="upload-icon">↑</div>
+
+              <strong>Загрузить подложку</strong>
+              <span>JPG, PNG или WebP · до 5 МБ</span>
             </label>
           </div>
-        </div>
 
-        <!-- Аватар + базовое -->
-        <div class="row">
-          <div class="field avatar-field">
-            <label>Аватар</label>
+          <div class="identity-row">
+            <div class="avatar-block">
+              <div class="avatar-label">Аватар</div>
 
-            <div class="avatar-upload">
               <div
-                  v-if="avatarPreview"
                   class="avatar-preview"
-                  :style="{ backgroundImage: `url(${avatarPreview})` }"
-              />
-              <div
-                  v-else
-                  class="avatar-preview avatar-placeholder"
-                  :style="{ background: form.banner_color }"
+                  :class="{ placeholder: !avatarPreview }"
+                  :style="avatarPreview
+                  ? { backgroundImage: `url(${avatarPreview})` }
+                  : { background: form.banner_color }"
               >
-                {{ form.tag?.charAt(0) || 'C' }}
+                <template v-if="!avatarPreview">
+                  {{ form.tag?.charAt(0) || 'C' }}
+                </template>
               </div>
 
               <div class="avatar-actions">
-                <label class="btn-small">
-                  <input type="file" accept="image/*" @change="onAvatarChange" />
+                <label class="mini-btn">
+                  <input type="file" accept="image/*" @change="onAvatarChange">
                   Выбрать
                 </label>
+
                 <button
                     v-if="avatarPreview"
-                    class="btn-small ghost"
+                    class="mini-btn danger"
                     type="button"
                     @click="removeAvatar"
                 >
@@ -164,32 +178,50 @@ const colorPresets = [
                 </button>
               </div>
             </div>
+
+            <div class="identity-fields">
+              <div class="field">
+                <label>Название</label>
+                <input v-model="form.name" type="text" maxlength="32">
+              </div>
+
+              <div class="field">
+                <label>Тег</label>
+                <input
+                    v-model="form.tag"
+                    type="text"
+                    maxlength="8"
+                    class="tag-input"
+                    @input="form.tag = form.tag.toUpperCase()"
+                >
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <div class="section-label">
+            <strong>Информация</strong>
+            <span>Кратко расскажи игрокам о клане</span>
           </div>
 
-          <div class="field flex-1">
-            <label>Название</label>
-            <input v-model="form.name" type="text" maxlength="32" />
-
-            <label class="mt">Тег</label>
-            <input
-                v-model="form.tag"
-                type="text"
-                maxlength="8"
-                class="tag-input"
-                @input="form.tag = form.tag.toUpperCase()"
+          <div class="field">
+            <label>Описание</label>
+            <textarea
+                v-model="form.description"
+                rows="4"
+                maxlength="1000"
+                placeholder="Расскажи о клане..."
             />
           </div>
-        </div>
+        </section>
 
-        <!-- Описание -->
-        <div class="field">
-          <label>Описание</label>
-          <textarea v-model="form.description" rows="3" maxlength="1000" />
-        </div>
+        <section class="settings-section">
+          <div class="section-label">
+            <strong>Цвет клана</strong>
+            <span>Используется в карточках и элементах оформления</span>
+          </div>
 
-        <!-- Цвет -->
-        <div class="field">
-          <label>Цвет баннера</label>
           <div class="color-row">
             <button
                 v-for="c in colorPresets"
@@ -200,61 +232,91 @@ const colorPresets = [
                 :style="{ background: c }"
                 @click="form.banner_color = c"
             />
-            <input v-model="form.banner_color" type="color" class="color-custom" />
-          </div>
-        </div>
 
-        <!-- Соцсети -->
-        <div class="field">
-          <label>Соцсети</label>
+            <input
+                v-model="form.banner_color"
+                type="color"
+                class="color-custom"
+            >
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <div class="section-label">
+            <strong>Ссылки</strong>
+            <span>Соцсети и сайт клана</span>
+          </div>
+
           <div class="socials">
             <div class="social-row">
               <span class="social-icon discord">D</span>
-              <input v-model="form.socials.discord" placeholder="Discord invite" />
+              <input v-model="form.socials.discord" placeholder="Ссылка на Discord">
             </div>
+
             <div class="social-row">
               <span class="social-icon telegram">T</span>
-              <input v-model="form.socials.telegram" placeholder="Telegram link" />
+              <input v-model="form.socials.telegram" placeholder="Ссылка на Telegram">
             </div>
+
             <div class="social-row">
               <span class="social-icon youtube">Y</span>
-              <input v-model="form.socials.youtube" placeholder="YouTube link" />
+              <input v-model="form.socials.youtube" placeholder="Ссылка на YouTube">
             </div>
+
             <div class="social-row">
               <span class="social-icon vk">VK</span>
-              <input v-model="form.socials.vk" placeholder="VK link" />
+              <input v-model="form.socials.vk" placeholder="Ссылка на VK">
             </div>
+
             <div class="social-row">
-              <span class="social-icon web">🌐</span>
-              <input v-model="form.socials.website" placeholder="https://..." />
+              <span class="social-icon web">↗</span>
+              <input v-model="form.socials.website" placeholder="Сайт клана">
             </div>
           </div>
-        </div>
+        </section>
 
-        <!-- Опции -->
-        <div class="options">
-          <label class="check">
-            <input v-model="form.is_open" type="checkbox" />
-            <span>
-                            Открыт для вступления
-                            <small>Любой может подать заявку</small>
-                        </span>
+        <section class="settings-section">
+          <div class="section-label">
+            <strong>Доступ</strong>
+            <span>Управление вступлением и отображением</span>
+          </div>
+
+          <label class="option-card">
+            <input v-model="form.is_open" type="checkbox">
+
+            <span class="fake-check">✓</span>
+
+            <span class="option-content">
+              <strong>Открытый набор</strong>
+              <small>Любой игрок сможет отправить заявку в клан</small>
+            </span>
           </label>
 
-          <label class="check highlight">
-            <input v-model="form.is_highlighted" type="checkbox" />
-            <span>
-                            ⭐ Выделить в списке кланов
-                            <small>Ваш клан будет подсвечен в общем списке</small>
-                        </span>
+          <label class="option-card highlight">
+            <input v-model="form.is_highlighted" type="checkbox">
+
+            <span class="fake-check">★</span>
+
+            <span class="option-content">
+              <strong>Выделять клан</strong>
+              <small>Клан будет заметнее в общем списке</small>
+            </span>
           </label>
-        </div>
+        </section>
+
       </div>
 
       <footer class="modal-foot">
-        <button class="btn-cancel" @click="$emit('close')">Отмена</button>
-        <button class="btn-save" :disabled="loading" @click="submit">
-          {{ loading ? 'Сохранение...' : 'Сохранить' }}
+        <button class="btn-cancel" @click="$emit('close')">
+          Отмена
+        </button>
+
+        <button
+            class="btn-save"
+            :disabled="loading"
+            @click="submit"
+        >
+          {{ loading ? 'Сохраняем...' : 'Сохранить изменения' }}
         </button>
       </footer>
     </div>
@@ -270,123 +332,129 @@ const colorPresets = [
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(6px);
+  background: rgba(3, 3, 8, .78);
+  backdrop-filter: blur(12px);
 }
 
 .modal {
   width: 100%;
-  max-width: 620px;
-  max-height: 90vh;
+  max-width: 680px;
+  max-height: min(900px, 92vh);
   display: flex;
   flex-direction: column;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 18px;
   overflow: hidden;
+  background:
+      linear-gradient(135deg, rgba(124,58,237,.045), transparent 35%),
+      var(--bg-card);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 20px;
+  box-shadow: 0 30px 100px rgba(0,0,0,.5);
 }
 
 .modal-head {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  justify-content: space-between;
+  padding: 22px 24px;
   border-bottom: 1px solid var(--border);
+}
+
+.eyebrow {
+  margin-bottom: 4px;
+  color: var(--accent-light);
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 1.4px;
 }
 
 .modal-head h2 {
   margin: 0;
-  font-size: 18px;
-  font-weight: 800;
+  font-size: 20px;
+  font-weight: 850;
 }
 
 .close {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   color: var(--text-dim);
-  background: transparent;
-  border: 0;
-  border-radius: 8px;
-  font-size: 16px;
+  background: rgba(255,255,255,.035);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 23px;
   cursor: pointer;
+  transition: .18s;
 }
 
 .close:hover {
-  background: rgba(255, 255, 255, 0.05);
   color: var(--text);
+  background: rgba(255,255,255,.07);
 }
 
 .error-banner {
-  margin: 0 24px;
-  padding: 10px 12px;
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  margin: 14px 24px 0;
+  padding: 11px 13px;
   color: #fca5a5;
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 8px;
-  font-size: 13px;
+  background: rgba(239,68,68,.07);
+  border: 1px solid rgba(239,68,68,.18);
+  border-radius: 10px;
+  font-size: 12px;
 }
 
 .form-body {
-  flex: 1;
   overflow-y: auto;
-  padding: 20px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  padding: 22px 24px;
 }
 
-/* === FIELDS === */
+.settings-section {
+  padding: 20px 0;
+  border-bottom: 1px solid rgba(255,255,255,.055);
+}
 
-.field label {
+.settings-section:first-child {
+  padding-top: 0;
+}
+
+.settings-section:last-child {
+  border-bottom: 0;
+}
+
+.section-label {
+  margin-bottom: 13px;
+}
+
+.section-label strong {
   display: block;
-  margin-bottom: 8px;
-  color: #b8b8c7;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 13px;
+  font-weight: 800;
 }
 
-.field input[type='text'],
-.field textarea {
-  width: 100%;
-  padding: 11px 13px;
-  color: var(--text);
-  background: #0d0d14;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  font: inherit;
-  outline: none;
-  resize: vertical;
+.section-label span {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 11px;
 }
-
-.field input[type='text']:focus,
-.field textarea:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
-}
-
-.tag-input {
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-weight: 700;
-}
-
-.mt { margin-top: 12px; }
-
-/* === COVER === */
 
 .cover-drop {
-  position: relative;
-  border-radius: 12px;
   overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 13px;
 }
 
 .cover-preview {
   position: relative;
-  height: 140px;
-  background-size: cover;
+  height: 150px;
   background-position: center;
+  background-size: cover;
+}
+
+.cover-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.55), transparent);
 }
 
 .cover-overlay {
@@ -395,176 +463,213 @@ const colorPresets = [
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  background: rgba(0, 0, 0, 0.5);
+  gap: 8px;
   opacity: 0;
-  transition: opacity 0.2s;
+  background: rgba(0,0,0,.4);
+  transition: .2s;
 }
 
 .cover-preview:hover .cover-overlay {
   opacity: 1;
 }
 
-.btn-change,
-.btn-remove {
-  position: relative;
-  padding: 9px 16px;
+.cover-btn {
+  padding: 8px 13px;
   border-radius: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
   border: 0;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
 }
 
-.btn-change {
+.cover-btn input,
+.cover-empty input,
+.mini-btn input {
+  display: none;
+}
+
+.cover-btn.primary {
   color: #fff;
   background: var(--accent);
 }
 
-.btn-change input { display: none; }
-
-.btn-remove {
+.cover-btn.danger {
   color: #fff;
-  background: rgba(239, 68, 68, 0.85);
+  background: rgba(220,38,38,.9);
 }
 
 .cover-empty {
+  min-height: 150px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 30px;
-  background: #0d0d14;
-  border: 2px dashed var(--border);
-  border-radius: 12px;
-  cursor: pointer;
+  justify-content: center;
+  gap: 6px;
   color: var(--text-dim);
-  transition: all 0.2s;
+  cursor: pointer;
+  background: rgba(255,255,255,.012);
 }
 
-.cover-empty:hover {
-  border-color: var(--accent);
+.upload-icon {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 3px;
   color: var(--accent-light);
+  background: rgba(124,58,237,.1);
+  border-radius: 11px;
+  font-size: 22px;
+  font-weight: 300;
 }
 
-.cover-empty input { display: none; }
+.cover-empty strong {
+  color: var(--text);
+  font-size: 12px;
+}
 
 .cover-empty span {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.cover-empty small {
-  font-size: 11px;
   color: var(--text-muted);
+  font-size: 10px;
 }
 
-/* === AVATAR === */
-
-.row {
+.identity-row {
   display: flex;
   gap: 20px;
+  margin-top: 16px;
 }
 
-.avatar-field { flex-shrink: 0; }
+.avatar-block {
+  width: 100px;
+  flex: 0 0 100px;
+}
 
-.avatar-upload {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
+.avatar-label,
+.field label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .7px;
 }
 
 .avatar-preview {
   width: 84px;
   height: 84px;
-  border-radius: 14px;
-  background-size: cover;
-  background-position: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-.avatar-placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  background-position: center;
+  background-size: cover;
+  border-radius: 14px;
   color: #fff;
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 900;
+  box-shadow: 0 8px 25px rgba(0,0,0,.25);
 }
 
 .avatar-actions {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 84px;
+  gap: 5px;
+  margin-top: 7px;
 }
 
-.btn-small {
-  display: block;
-  padding: 6px 10px;
-  text-align: center;
+.mini-btn {
+  padding: 5px 8px;
   color: #fff;
   background: var(--accent);
-  border-radius: 7px;
-  font-size: 11px;
-  font-weight: 700;
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 800;
   cursor: pointer;
   border: 0;
 }
 
-.btn-small input { display: none; }
+.mini-btn.danger {
+  color: #fca5a5;
+  background: rgba(239,68,68,.08);
+}
 
-.btn-small.ghost {
-  color: var(--text-dim);
-  background: transparent;
+.identity-fields {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 130px;
+  gap: 12px;
+  align-content: start;
+}
+
+.field input[type=text],
+.field textarea,
+.social-row input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  color: var(--text);
+  background: #0c0c13;
   border: 1px solid var(--border);
+  border-radius: 9px;
+  outline: none;
+  font: inherit;
+  font-size: 12px;
+  transition: .18s;
 }
 
-.btn-small.ghost:hover {
-  color: #f87171;
-  border-color: rgba(239, 68, 68, 0.3);
+.field textarea {
+  resize: vertical;
+  line-height: 1.5;
 }
 
-.flex-1 { flex: 1; }
+.field input:focus,
+.field textarea:focus,
+.social-row input:focus {
+  border-color: rgba(139,92,246,.65);
+  box-shadow: 0 0 0 3px rgba(124,58,237,.1);
+}
 
-/* === COLORS === */
+.tag-input {
+  text-transform: uppercase;
+  font-weight: 850 !important;
+  letter-spacing: 1px;
+}
 
 .color-row {
   display: flex;
-  gap: 10px;
   align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
-.color-swatch {
-  width: 34px;
-  height: 34px;
+.color-swatch,
+.color-custom {
+  width: 32px;
+  height: 32px;
+  padding: 0;
   border-radius: 9px;
   cursor: pointer;
-  border: 2px solid transparent;
-  transition: transform 0.15s, border-color 0.15s;
 }
 
-.color-swatch:hover { transform: scale(1.08); }
+.color-swatch {
+  border: 2px solid transparent;
+  transition: .15s;
+}
+
+.color-swatch:hover {
+  transform: scale(1.08);
+}
 
 .color-swatch.active {
   border-color: #fff;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(255,255,255,.12);
 }
 
 .color-custom {
-  width: 34px;
-  height: 34px;
-  padding: 0;
   border: 1px solid var(--border);
-  border-radius: 9px;
   background: transparent;
-  cursor: pointer;
 }
-
-/* === SOCIALS === */
 
 .socials {
   display: flex;
@@ -575,111 +680,113 @@ const colorPresets = [
 .social-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
 }
 
 .social-icon {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 9px;
-  font-size: 13px;
-  font-weight: 900;
   color: #fff;
-  flex-shrink: 0;
-}
-
-.social-icon.discord { background: #5865f2; }
-.social-icon.telegram { background: #229ed9; }
-.social-icon.youtube { background: #ff0000; }
-.social-icon.vk { background: #0077ff; font-size: 11px; }
-.social-icon.web { background: #4b5563; }
-
-.social-row input {
-  flex: 1;
-  padding: 10px 12px;
-  color: var(--text);
-  background: #0d0d14;
-  border: 1px solid var(--border);
   border-radius: 9px;
-  font: inherit;
-  outline: none;
+  font-size: 11px;
+  font-weight: 900;
 }
 
-.social-row input:focus {
+.discord { background: #5865f2; }
+.telegram { background: #229ed9; }
+.youtube { background: #ef4444; }
+.vk { background: #0077ff; }
+.web { background: #4b5563; }
+
+.option-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 13px;
+  margin-top: 8px;
+  background: rgba(255,255,255,.018);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  cursor: pointer;
+  transition: .18s;
+}
+
+.option-card:hover {
+  border-color: var(--border-hover);
+  background: rgba(255,255,255,.025);
+}
+
+.option-card.highlight {
+  border-color: rgba(250,204,21,.16);
+  background: rgba(250,204,21,.025);
+}
+
+.option-card input {
+  position: absolute;
+  opacity: 0;
+}
+
+.fake-check {
+  width: 25px;
+  height: 25px;
+  flex: 0 0 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  background: #0b0b11;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.option-card input:checked + .fake-check {
+  color: #fff;
+  background: var(--accent);
   border-color: var(--accent);
 }
 
-/* === OPTIONS === */
-
-.options {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.highlight input:checked + .fake-check {
+  color: #facc15;
+  background: rgba(250,204,21,.1);
+  border-color: rgba(250,204,21,.3);
 }
 
-.check {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px 14px;
-  background: #0d0d14;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-
-.check:hover { border-color: var(--border-hover); }
-
-.check.highlight {
-  border-color: rgba(250, 204, 21, 0.25);
-  background: rgba(250, 204, 21, 0.04);
-}
-
-.check input {
-  margin-top: 2px;
-  accent-color: var(--accent);
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-}
-
-.check span {
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.check small {
+.option-content strong {
   display: block;
-  margin-top: 2px;
-  color: var(--text-dim);
-  font-weight: 400;
-  font-size: 11px;
+  font-size: 12px;
 }
 
-/* === FOOT === */
+.option-content small {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 10px;
+}
 
 .modal-foot {
   display: flex;
-  gap: 10px;
   justify-content: flex-end;
-  padding: 16px 24px;
+  gap: 9px;
+  padding: 15px 24px;
   border-top: 1px solid var(--border);
+  background: rgba(0,0,0,.08);
 }
 
 .btn-cancel,
 .btn-save {
-  min-height: 42px;
-  padding: 0 22px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 700;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 800;
   cursor: pointer;
-  border: 0;
 }
 
 .btn-cancel {
@@ -690,19 +797,42 @@ const colorPresets = [
 
 .btn-save {
   color: #fff;
-  background: var(--accent);
-  box-shadow: 0 5px 20px rgba(124, 58, 237, 0.25);
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  border: 0;
+  box-shadow: 0 7px 20px rgba(124,58,237,.2);
 }
 
 .btn-save:disabled {
-  opacity: 0.6;
+  opacity: .55;
   cursor: not-allowed;
 }
 
 @media (max-width: 600px) {
-  .row { flex-direction: column; }
-  .avatar-actions { width: 100%; flex-direction: row; }
-  .modal-foot { flex-direction: column-reverse; }
-  .btn-cancel, .btn-save { width: 100%; }
+  .modal-bg {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modal {
+    max-height: 94vh;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .identity-row {
+    flex-direction: column;
+  }
+
+  .identity-fields {
+    grid-template-columns: 1fr 110px;
+  }
+
+  .modal-foot {
+    flex-direction: column-reverse;
+  }
+
+  .btn-cancel,
+  .btn-save {
+    width: 100%;
+  }
 }
 </style>

@@ -1,115 +1,131 @@
-<script setup>
-import { onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
-import { clansApi } from '@/services/clans.js'
-
-const props = defineProps({
-  clan: { type: Object, required: true },
-  canManage: { type: Boolean, default: false },
-})
-
-const emit = defineEmits(['refresh'])
-
-const loading = ref(true)
-const applications = ref([])
-const processing = ref(null)
-
-async function load() {
-  loading.value = true
-  try {
-    const data = await clansApi.applications(props.clan.id)
-    applications.value = data.applications || []
-  } catch (e) {
-    console.error(e)
-  } finally {
-    loading.value = false
-  }
-}
-
-async function accept(app) {
-  processing.value = app.id
-  try {
-    await clansApi.acceptApplication(props.clan.id, app.id)
-    await load()
-    emit('refresh')
-  } finally {
-    processing.value = null
-  }
-}
-
-async function decline(app) {
-  processing.value = app.id
-  try {
-    await clansApi.declineApplication(props.clan.id, app.id)
-    await load()
-    emit('refresh')
-  } finally {
-    processing.value = null
-  }
-}
-
-onMounted(load)
-</script>
-
 <template>
   <div class="applications">
-    <div v-if="loading" class="empty">Загрузка...</div>
+    <div class="section-head">
+      <div>
+        <div class="section-title">Заявки</div>
+        <div class="section-subtitle">Игроки, которые хотят вступить в клан</div>
+      </div>
 
-    <div v-else-if="!applications.length" class="empty">
-      Новых заявок нет
+      <div v-if="applications.length" class="count-badge">
+        {{ applications.length }}
+      </div>
+    </div>
+
+    <div v-if="loading" class="state-card">
+      <div class="loader"></div>
+      <span>Загружаем заявки...</span>
+    </div>
+
+    <div v-else-if="!applications.length" class="state-card state-empty">
+      <div class="state-icon">✓</div>
+      <strong>Новых заявок нет</strong>
+      <span>Когда кто-нибудь подаст заявку, она появится здесь</span>
     </div>
 
     <div v-else class="apps-list">
-      <div
+      <article
           v-for="app in applications"
           :key="app.id"
-          class="app-row"
+          class="app-card"
       >
         <RouterLink
             :to="`/players/${app.user.id}`"
             class="app-user"
         >
           <div class="avatar">
-            {{ (app.user.username || 'И').charAt(0).toUpperCase() }}
+            <img
+                v-if="app.user.avatar_url"
+                :src="app.user.avatar_url"
+                :alt="app.user.username"
+            />
+            <template v-else>
+              {{ (app.user.username || 'И').charAt(0).toUpperCase() }}
+            </template>
           </div>
 
-          <div class="app-info">
-            <div class="app-name">{{ app.user.username }}</div>
-            <div class="app-meta">
-              Тир: {{ app.user.tier || '—' }}
-              <span class="sep">·</span>
-              {{ app.user.tier_score }}%
+          <div class="user-info">
+            <div class="user-name">{{ app.user.username }}</div>
+
+            <div class="user-meta">
+              <span class="tier">
+                {{ app.user.tier || '—' }}
+              </span>
+              <span>Тир</span>
+              <i></i>
+              <span>{{ app.user.tier_score ?? 0 }}%</span>
+              <span>рейтинг</span>
             </div>
           </div>
         </RouterLink>
 
         <div v-if="app.message" class="app-message">
-          {{ app.message }}
+          <span class="message-mark">“</span>
+          <span>{{ app.message }}</span>
         </div>
 
         <div v-if="canManage" class="app-actions">
           <button
-              class="btn-accept"
+              class="action action-accept"
               :disabled="processing === app.id"
               @click="accept(app)"
           >
+            <span>✓</span>
             Принять
           </button>
+
           <button
-              class="btn-decline"
+              class="action action-decline"
               :disabled="processing === app.id"
               @click="decline(app)"
           >
             Отклонить
           </button>
         </div>
-      </div>
+      </article>
     </div>
   </div>
 </template>
 
 <style scoped>
-.applications { display: flex; flex-direction: column; gap: 8px; }
+.applications {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.section-title {
+  font-size: 17px;
+  font-weight: 850;
+  color: var(--text);
+}
+
+.section-subtitle {
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.count-badge {
+  min-width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 9px;
+  color: #fff;
+  background: rgba(124, 58, 237, .18);
+  border: 1px solid rgba(139, 92, 246, .28);
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 800;
+}
 
 .apps-list {
   display: flex;
@@ -117,115 +133,212 @@ onMounted(load)
   gap: 10px;
 }
 
-.app-row {
-  padding: 16px 20px;
-  background: var(--bg-card);
+.app-card {
+  position: relative;
+  padding: 16px;
+  overflow: hidden;
+  background:
+      linear-gradient(135deg, rgba(124, 58, 237, .035), transparent 45%),
+      var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  transition: all 0.2s;
+  border-radius: 14px;
+  transition: .2s ease;
 }
 
-.app-row:hover {
-  border-color: var(--border-hover);
+.app-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: var(--accent);
+  opacity: .25;
+}
+
+.app-card:hover {
+  border-color: rgba(139, 92, 246, .3);
+  transform: translateY(-1px);
 }
 
 .app-user {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 10px;
+  gap: 13px;
+  text-decoration: none;
+  color: inherit;
 }
 
 .avatar {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-  border-radius: 11px;
+  overflow: hidden;
   color: #fff;
+  background: linear-gradient(135deg, #8b5cf6, #5b21b6);
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 850;
+  box-shadow: 0 8px 24px rgba(124, 58, 237, .16);
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-name {
+  font-size: 14px;
   font-weight: 800;
-  font-size: 17px;
 }
 
-.app-name {
-  font-weight: 700;
-  font-size: 15px;
-  margin-bottom: 2px;
+.user-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 11px;
 }
 
-.app-meta {
-  font-size: 12px;
-  color: var(--text-dim);
+.user-meta i {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  opacity: .5;
 }
 
-.app-meta .sep { margin: 0 6px; opacity: 0.4; }
+.tier {
+  color: #c4b5fd;
+  font-weight: 800;
+}
 
 .app-message {
-  padding: 10px 14px;
-  margin-bottom: 12px;
-  background: rgba(124, 58, 237, 0.05);
-  border-left: 3px solid var(--accent);
-  border-radius: 6px;
+  display: flex;
+  gap: 5px;
+  margin: 13px 0 0 59px;
+  padding: 10px 12px;
   color: var(--text-dim);
-  font-size: 13px;
-  font-style: italic;
+  background: rgba(124, 58, 237, .055);
+  border: 1px solid rgba(124, 58, 237, .1);
+  border-radius: 9px;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.message-mark {
+  color: var(--accent-light);
+  font-size: 18px;
+  line-height: 12px;
 }
 
 .app-actions {
   display: flex;
-  gap: 8px;
   justify-content: flex-end;
+  gap: 8px;
+  margin-top: 13px;
 }
 
-.btn-accept,
-.btn-decline {
-  min-height: 36px;
-  padding: 0 16px;
+.action {
+  min-height: 34px;
+  padding: 0 13px;
   border-radius: 8px;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 750;
   cursor: pointer;
-  border: 0;
-  transition: all 0.2s;
+  transition: .18s ease;
 }
 
-.btn-accept {
-  color: #fff;
-  background: #22c55e;
-}
-
-.btn-accept:hover:not(:disabled) {
-  background: #16a34a;
-  transform: translateY(-1px);
-}
-
-.btn-decline {
-  color: var(--text-dim);
-  background: transparent;
-  border: 1px solid var(--border);
-}
-
-.btn-decline:hover:not(:disabled) {
-  color: #f87171;
-  border-color: rgba(239, 68, 68, 0.3);
-  background: rgba(239, 68, 68, 0.05);
-}
-
-.btn-accept:disabled,
-.btn-decline:disabled {
-  opacity: 0.5;
+.action:disabled {
+  opacity: .45;
   cursor: not-allowed;
 }
 
-.empty {
-  padding: 40px;
-  text-align: center;
+.action-accept {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  background: #16a34a;
+  border: 1px solid #22c55e;
+}
+
+.action-accept:hover:not(:disabled) {
+  background: #22c55e;
+  transform: translateY(-1px);
+}
+
+.action-decline {
   color: var(--text-dim);
+  background: rgba(255,255,255,.025);
+  border: 1px solid var(--border);
+}
+
+.action-decline:hover:not(:disabled) {
+  color: #fca5a5;
+  border-color: rgba(239,68,68,.3);
+  background: rgba(239,68,68,.05);
+}
+
+.state-card {
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  color: var(--text-muted);
   background: var(--bg-card);
   border: 1px dashed var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
+  font-size: 12px;
+}
+
+.state-empty strong {
+  color: var(--text-dim);
   font-size: 13px;
+}
+
+.state-icon {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #22c55e;
+  background: rgba(34,197,94,.08);
+  border: 1px solid rgba(34,197,94,.15);
+  border-radius: 11px;
+  font-weight: 900;
+}
+
+.loader {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(139,92,246,.18);
+  border-top-color: var(--accent-light);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 600px) {
+  .app-message {
+    margin-left: 0;
+  }
+
+  .app-actions {
+    justify-content: stretch;
+  }
+
+  .action {
+    flex: 1;
+  }
 }
 </style>
