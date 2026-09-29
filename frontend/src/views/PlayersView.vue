@@ -871,45 +871,6 @@ function scoreOf(player) {
           >
 
             <!-- Crown -->
-            <div
-                v-if="slot === 0"
-                class="podium__crown"
-            >
-              <div class="podium__crown-glow" />
-
-              <svg
-                  width="30"
-                  height="30"
-                  viewBox="0 0 24 24"
-                  fill="none"
-              >
-                <path
-                    d="M3 8l4 3 5-7 5 7 4-3v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8z"
-                    fill="#facc15"
-                />
-
-                <circle
-                    cx="3"
-                    cy="8"
-                    r="1.6"
-                    fill="#fde68a"
-                />
-
-                <circle
-                    cx="12"
-                    cy="4"
-                    r="1.8"
-                    fill="#fff7ae"
-                />
-
-                <circle
-                    cx="21"
-                    cy="8"
-                    r="1.6"
-                    fill="#fde68a"
-                />
-              </svg>
-            </div>
 
             <!-- Rank badge -->
             <div
