@@ -56,8 +56,8 @@ const verifiedSize = computed(() => {
   return props.size === 'sm' ? 13 : 16
 })
 
-// Цитата для компактного режима
 const quote = computed(() => props.user.quote || null)
+const bio = computed(() => props.user.bio || null)
 </script>
 
 <template>
@@ -93,10 +93,10 @@ const quote = computed(() => props.user.quote || null)
           </span>
         </h2>
 
-        <!-- COMPACT: только цитата -->
-        <p v-if="compact && quote" class="pp-header__quote">
-          "{{ quote }}"
-        </p>
+        <template v-if="compact">
+          <p v-if="bio" class="pp-header__bio">{{ bio }}</p>
+          <p v-if="quote" class="pp-header__quote">"{{ quote }}"</p>
+        </template>
 
         <!-- ОБЫЧНЫЙ: полная мета -->
         <PlayerProfileMeta v-else-if="!compact" :user="user" />
@@ -310,19 +310,24 @@ const quote = computed(() => props.user.quote || null)
   filter: drop-shadow(0 0 4px rgba(29, 161, 242, 0.5));
 }
 
-/* Цитата — единственное, что видно в компактном режиме */
-.pp-header__quote {
+.pp-header__bio {
   margin: 0;
   font-size: 11.5px;
-  line-height: 1.35;
+  line-height: 1.4;
+  color: #d1d1db;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  word-break: break-word;
+}
+
+/* Цитата — без обрезки */
+.pp-header__quote {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  line-height: 1.4;
   font-style: italic;
   color: #b8b8c7;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
+  word-break: break-word;
 }
 
 .pp-header--compact .pp-header__right {
