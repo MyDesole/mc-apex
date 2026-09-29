@@ -657,7 +657,6 @@ watch(mobileMenuOpen, (open) => {
 
 .site-header {
   position: sticky;
-  overflow-x: hidden;
   top: 0;
   z-index: 1000;
 
@@ -682,7 +681,7 @@ watch(mobileMenuOpen, (open) => {
   position: absolute;
   top: -100px;
   left: 50%;
-  width: 700px;
+  width: 100%;
   height: 180px;
 
   transform: translateX(-50%);
