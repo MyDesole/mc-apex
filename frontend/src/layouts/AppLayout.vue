@@ -158,7 +158,7 @@ watch(mobileMenuOpen, (open) => {
         <!-- NAV (desktop) -->
         <nav class="main-nav">
           <RouterLink to="/" class="nav-link">Главная</RouterLink>
-          <RouterLink to="/players" class="nav-link">Игроки</RouterLink>
+          <RouterLink to="/players" class="nav-link">Рейтинг</RouterLink>
           <RouterLink to="/clans" class="nav-link">Кланы</RouterLink>
           <RouterLink to="/tournaments" class="nav-link">Турниры</RouterLink>
           <RouterLink to="/news" class="nav-link">Новости</RouterLink>
