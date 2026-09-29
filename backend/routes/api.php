@@ -150,7 +150,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/unread-count', [\App\Http\Controllers\Api\ChatController::class, 'unreadCount']);
     });
-
+    Route::get('/players/rating', [PlayerController::class, 'rating']);
     Route::post('/players/{user}/recommendations', [ProfileRecommendationController::class, 'store'])
         ->whereNumber('user');
 

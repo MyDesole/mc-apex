@@ -19,8 +19,7 @@ class PlayerController extends Controller
         $me = $request->user();
 
         $query = User::query()
-            ->with('clanMember.clan:id,name,tag,banner_color')
-            ->where('id', '!=', $me->id);
+            ->with('clanMember.clan:id,name,tag,banner_color');
 
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
@@ -59,6 +58,61 @@ class PlayerController extends Controller
         });
 
         return response()->json($players);
+    }
+
+    public function rating(Request $request): JsonResponse
+    {
+        $mode = $request->query('mode', 'overall');
+
+        $players = User::query()
+            ->with(['aspectPvp', 'aspectBedwars', 'clanMember.clan:id,name,tag,banner_color'])
+            ->whereNotIn('role', ['admin', 'moderator', 'tester'])
+            ->get();
+
+        $mapped = $players->map(function ($user) use ($mode) {
+            $pvp = $user->aspectPvp;
+            $bw  = $user->aspectBedwars;
+
+            $pvpSum = $pvp
+                ? $pvp->block_placing + $pvp->rotka + $pvp->movement + $pvp->aim + $pvp->game_sense
+                : 0;
+
+            $bwSum = $bw
+                ? $bw->pvp + $bw->game_sense + $bw->bed_play + $bw->teamplay + $bw->building
+                : 0;
+
+            $score = match ($mode) {
+                'pvp'     => $pvpSum,
+                'bedwars' => $bwSum,
+                default   => (int) round(($pvpSum + $bwSum) / 2),
+            };
+
+            return [
+                'id' => $user->id,
+                'username' => $user->username,
+                'avatar_url' => $user->avatar_url,
+                'tier' => $user->tier,
+                'tier_score' => $score,
+                'clan_tag' => $user->clan_tag,
+                'clan_color' => $user->clan_color,
+                'rating_score' => $score,
+                'is_verified' => $user->is_verified,
+                'accent_color' => $user->accent_color,
+                'banner_color' => $user->banner_color,
+                'quote' => $user->quote,
+                'status' => $user->status,
+                'bio' => $user->bio,
+                'cover_url' => $user->cover_url,
+                'profile_effect' => $user->profile_effect,
+                'avatar_frame' => $user->avatar_frame,
+            ];
+        })
+            ->filter(fn ($p) => $p['rating_score'] > 0)
+            ->sortByDesc('rating_score')
+            ->values()
+            ->take(10);
+
+        return response()->json(['data' => $mapped]);
     }
 
     public function updateProfile(Request $request): JsonResponse

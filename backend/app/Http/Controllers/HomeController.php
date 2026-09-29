@@ -11,7 +11,8 @@ class HomeController extends Controller
     public function top(): JsonResponse
     {
         $players = User::query()
-            ->with('clanMember.clan:id,name,tag,banner_color')   // ← добавь
+            ->whereNotIn('role', ['admin', 'moderator', 'tester'])
+            ->with('clanMember.clan:id,name,tag,banner_color')
             ->orderByDesc('tier_score')
             ->limit(10)
             ->get()
@@ -38,8 +39,8 @@ class HomeController extends Controller
                     'name' => $clan->name,
                     'tag' => $clan->tag,
                     'avatar' => $clan->avatar,
-                    'avatar_url' => $clan->avatar_url,   // ← добавь это
-                    'cover_url' => $clan->cover_url,     // ← и это, если нужно
+                    'avatar_url' => $clan->avatar_url,
+                    'cover_url' => $clan->cover_url,
                     'banner_color' => $clan->banner_color,
                     'power' => $clan->power,
                     'wins' => $clan->wins,
@@ -66,6 +67,7 @@ class HomeController extends Controller
 
         // топ игроков
         $players = \App\Models\User::query()
+            ->whereNotIn('role', ['admin', 'moder', 'tester'])   // ← исключаем персонал
             ->with('clanMember.clan:id,tag,banner_color')
             ->orderByDesc('tier_score')
             ->limit(10)

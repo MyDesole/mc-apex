@@ -1,199 +1,387 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { api } from '@/services/api.js'
-import FriendButton from '@/components/FriendButton.vue'
-import UserName from '@/components/UserName.vue'
+import PlayerProfileHeader from '@/components/player-profile/PlayerProfileHeader.vue'
+
+const category = ref('pvp') // 'pvp' | 'other'
+const pvpMode = ref('overall') // 'overall' | 'pvp' | 'bedwars'
 
 const players = ref([])
 const loading = ref(true)
-const search = ref('')
-const tierFilter = ref('')
-const page = ref(1)
-const lastPage = ref(1)
-const total = ref(0)
 
-let debounceTimer = null
+const CATEGORIES = [
+  { value: 'pvp', label: 'PvP', color: '#ef4444' },
+  { value: 'other', label: 'Не PvP', color: '#06b6d4' },
+]
+
+const PVP_MODES = [
+  { value: 'overall', label: 'Общий рейтинг', color: '#facc15' },
+  { value: 'pvp', label: 'PvP', color: '#ef4444' },
+  { value: 'bedwars', label: 'BedWars', color: '#8b5cf6' },
+]
 
 async function load() {
+  if (category.value === 'other') {
+    players.value = []
+    loading.value = false
+    return
+  }
+
   loading.value = true
   try {
-    const params = new URLSearchParams()
-    if (search.value) params.append('search', search.value)
-    if (tierFilter.value) params.append('tier', tierFilter.value)
-    params.append('page', page.value)
-
-    const data = await api.get(`/players?${params.toString()}`)
-
-    players.value = data.data
-    lastPage.value = data.last_page
-    total.value = data.total
+    const data = await api.get(`/players/rating?mode=${pvpMode.value}`)
+    players.value = (data.data ?? []).slice(0, 10)
   } catch (e) {
     console.error(e)
+    players.value = []
   } finally {
     loading.value = false
   }
 }
 
-watch(search, () => {
-  clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(() => {
-    page.value = 1
-    load()
-  }, 300)
-})
-
-watch(tierFilter, () => {
-  page.value = 1
-  load()
-})
-
-watch(page, load)
-
-function onFriendshipUpdate(playerId, newState) {
-  const player = players.value.find(p => p.id === playerId)
-  if (player) player.friendship = newState
-}
-
 onMounted(load)
+watch([category, pvpMode], load)
+
+const topThree = computed(() => players.value.slice(0, 3))
+const rest = computed(() => players.value.slice(3))
+
+const PODIUM_ORDER = [1, 0, 2]   // десктоп: слева 2, центр 1, справа 3
+const MOBILE_ORDER = [0, 1, 2]   // мобилка: 1, 2, 3 сверху вниз
+
+// Защита от короткого topThree (меньше 3 игроков)
+const podiumSlots = computed(() =>
+    PODIUM_ORDER.filter(i => i < topThree.value.length)
+)
+const mobileSlots = computed(() =>
+    MOBILE_ORDER.filter(i => i < topThree.value.length)
+)
+
+const TIER_ACCENTS = {
+  'S+': '#fbbf24', S: '#facc15', A: '#f97316',
+  B: '#8b5cf6', C: '#06b6d4', D: '#22c55e', E: '#6b7280',
+}
+function accent(p) { return TIER_ACCENTS[p?.tier] || '#7c3aed' }
+function rankOf(slotIdx) { return slotIdx + 1 }
+
+function scoreOf(player) {
+  return player?.rating_score ?? 0
+}
 </script>
 
 <template>
-  <div class="players-page">
+  <div class="rating-page">
     <!-- HEAD -->
-    <header class="page-head">
-      <div class="page-head__text">
-        <h1>Игроки</h1>
-        <p class="page-head__sub">
-          Найдено: <strong>{{ total }}</strong>
+    <header class="rating-head">
+      <div class="rating-head__text">
+        <h1 class="rating-head__title">
+          Восхождение к <span class="apex">APEX</span>
+        </h1>
+        <p class="rating-head__sub">
+          Лучшие игроки ·
+          <strong>{{ CATEGORIES.find(c => c.value === category)?.label }}</strong>
+          <template v-if="category === 'pvp'">
+            · <strong>{{ PVP_MODES.find(m => m.value === pvpMode)?.label }}</strong>
+          </template>
         </p>
+      </div>
+
+      <div class="mode-tabs">
+        <button
+            v-for="c in CATEGORIES"
+            :key="c.value"
+            type="button"
+            class="mode-tab"
+            :class="{ 'mode-tab--active': category === c.value }"
+            :style="{ '--tab-color': c.color }"
+            @click="category = c.value"
+        >
+          <svg v-if="c.value === 'pvp'" class="mode-tab__icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 17.5 3 6V3h3l11.5 11.5" />
+            <path d="M13 19l6-6" />
+            <path d="M16 16l4 4" />
+            <path d="M19 21l2-2" />
+            <path d="M9.5 6.5 21 18v3h-3L6.5 9.5" />
+            <path d="M5 14l6 6" />
+            <path d="M2 19l4-4" />
+            <path d="M3 21l2-2" />
+          </svg>
+          <svg v-else class="mode-tab__icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2l9 4v6c0 5-3.5 9-9 10-5.5-1-9-5-9-10V6z" />
+            <path d="M9 12l2 2 4-4" />
+          </svg>
+          <span class="mode-tab__label">{{ c.label }}</span>
+        </button>
       </div>
     </header>
 
-    <!-- FILTERS -->
-    <div class="filters">
-      <div class="filters__search">
-        <svg class="filters__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="7" />
-          <path d="m21 21-4.3-4.3" stroke-linecap="round" />
-        </svg>
-
-        <input
-            v-model="search"
-            type="text"
-            placeholder="Поиск по нику..."
-            class="search-input"
-        />
-      </div>
-
-      <select v-model="tierFilter" class="tier-select">
-        <option value="">Все тиры</option>
-        <option value="S">S</option>
-        <option value="A">A</option>
-        <option value="B">B</option>
-        <option value="C">C</option>
-        <option value="D">D</option>
-        <option value="E">E</option>
-      </select>
+    <!-- SUBTABS -->
+    <div v-if="category === 'pvp'" class="sub-tabs">
+      <button
+          v-for="m in PVP_MODES"
+          :key="m.value"
+          type="button"
+          class="sub-tab"
+          :class="{ 'sub-tab--active': pvpMode === m.value }"
+          :style="{ '--tab-color': m.color }"
+          @click="pvpMode = m.value"
+      >
+        <span class="sub-tab__dot" />
+        <span class="sub-tab__label">{{ m.label }}</span>
+      </button>
     </div>
 
-    <!-- STATES -->
+    <!-- LOADING -->
     <div v-if="loading" class="state">
       <div class="spinner" />
       <span>Загрузка...</span>
     </div>
 
-    <div v-else-if="!players.length" class="state state--empty">
-      <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
-        <circle cx="11" cy="11" r="7" />
-        <path d="m21 21-4.3-4.3" stroke-linecap="round" />
+    <!-- ЗАГЛУШКА: Не PvP -->
+    <div v-else-if="category === 'other'" class="state state--empty">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2l9 4v6c0 5-3.5 9-9 10-5.5-1-9-5-9-10V6z" />
+        <path d="M12 8v4" />
+        <circle cx="12" cy="16" r="0.5" fill="currentColor" />
       </svg>
-      <span>Никого не найдено</span>
+      <span class="state__title">В разработке</span>
+      <span class="state__sub">Скоро здесь появятся рейтинги по другим режимам</span>
     </div>
 
-    <!-- LIST -->
-    <div v-else class="players-list">
-      <div
-          v-for="player in players"
-          :key="player.id"
-          class="player-row"
-      >
-        <RouterLink
-            :to="`/players/${player.id}`"
-            class="player-main"
-        >
-          <div class="player-avatar" :class="`tier-bg-${player.tier}`">
-            <img
-                v-if="player.avatar_url"
-                :src="player.avatar_url"
-                :alt="player.username"
-                class="player-avatar-img"
-            />
-            <template v-else>
-              {{ (player.username || 'И').charAt(0).toUpperCase() }}
-            </template>
+    <template v-else>
+      <!-- ============================================
+           MOUNTAIN (desktop / tablet)
+           ============================================ -->
+      <section v-if="topThree.length" class="mountain">
+        <svg class="mountain__bg" viewBox="0 0 1200 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#0a0a18" />
+              <stop offset="60%" stop-color="#0d0d1a" />
+              <stop offset="100%" stop-color="#0a0a12" />
+            </linearGradient>
+
+            <linearGradient id="peakBackGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#1b1b2e" />
+              <stop offset="100%" stop-color="#0e0e18" />
+            </linearGradient>
+
+            <linearGradient id="peakMidGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#25253f" />
+              <stop offset="100%" stop-color="#12121f" />
+            </linearGradient>
+
+            <linearGradient id="peakFrontGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2f2f52" />
+              <stop offset="100%" stop-color="#15152a" />
+            </linearGradient>
+
+            <linearGradient id="snowGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="rgba(255,255,255,0.85)" />
+              <stop offset="100%" stop-color="rgba(255,255,255,0.15)" />
+            </linearGradient>
+
+            <radialGradient id="apexGlow" cx="50%" cy="30%" r="55%">
+              <stop offset="0%" stop-color="rgba(250, 204, 21, 0.28)" />
+              <stop offset="60%" stop-color="rgba(250, 204, 21, 0.06)" />
+              <stop offset="100%" stop-color="rgba(250, 204, 21, 0)" />
+            </radialGradient>
+
+            <linearGradient id="ridgeGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="rgba(255,255,255,0.16)" />
+              <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+            </linearGradient>
+          </defs>
+
+          <rect width="1200" height="500" fill="url(#skyGrad)" />
+
+          <g fill="rgba(255,255,255,0.5)">
+            <circle cx="120" cy="70" r="1.2" />
+            <circle cx="230" cy="40" r="1" />
+            <circle cx="340" cy="90" r="1.4" />
+            <circle cx="820" cy="55" r="1.1" />
+            <circle cx="960" cy="80" r="1.3" />
+            <circle cx="1080" cy="45" r="1" />
+            <circle cx="600" cy="30" r="1.2" />
+          </g>
+
+          <ellipse cx="600" cy="120" rx="260" ry="140" fill="url(#apexGlow)" />
+
+          <g fill="url(#peakBackGrad)">
+            <polygon points="60,500 180,300 300,500" />
+            <polygon points="240,500 380,260 520,500" />
+            <polygon points="700,500 850,270 1000,500" />
+            <polygon points="880,500 1020,300 1160,500" />
+          </g>
+
+          <g>
+            <polygon points="140,500 340,270 540,500" fill="url(#peakMidGrad)" />
+            <polygon points="340,270 300,330 340,350 380,320" fill="url(#snowGrad)" />
+            <polygon points="660,500 860,300 1060,500" fill="url(#peakMidGrad)" />
+            <polygon points="860,300 820,360 860,380 900,350" fill="url(#snowGrad)" />
+            <polygon points="440,500 600,320 760,500" fill="url(#peakMidGrad)" opacity="0.75" />
+          </g>
+
+          <g>
+            <polygon points="380,500 600,60 820,500" fill="url(#peakFrontGrad)" />
+            <polygon points="600,60 545,155 600,185 655,150" fill="url(#snowGrad)" />
+            <polygon points="600,60 600,500 820,500" fill="rgba(0,0,0,0.18)" />
+            <line x1="600" y1="60" x2="600" y2="500" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+            <polygon points="-40,500 140,360 320,500" fill="url(#peakFrontGrad)" />
+            <polygon points="880,500 1060,360 1240,500" fill="url(#peakFrontGrad)" />
+          </g>
+
+          <path d="M0,470 L200,400 L340,340 L600,180 L860,340 L1000,400 L1200,470"
+                stroke="url(#ridgeGrad)" stroke-width="1.2" fill="none" opacity="0.5" />
+        </svg>
+
+        <!-- PODIUM -->
+        <div class="podium">
+          <div
+              v-for="slot in podiumSlots"
+              :key="slot"
+              class="podium__slot"
+              :class="`podium__slot--rank${rankOf(slot)}`"
+          >
+            <div
+                v-if="slot === 0"
+                class="podium__crown"
+                :style="{ '--accent': accent(topThree[slot]) }"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M3 8l4 3 5-7 5 7 4-3v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8z" fill="currentColor" />
+                <circle cx="3" cy="8" r="1.6" fill="currentColor" />
+                <circle cx="12" cy="4" r="1.8" fill="currentColor" />
+                <circle cx="21" cy="8" r="1.6" fill="currentColor" />
+              </svg>
+            </div>
+
+            <!-- Медаль -->
+            <div class="podium__badge" :style="{ '--accent': accent(topThree[slot]) }">
+              <svg v-if="slot === 0" class="podium__medal" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M8 2l4 8 4-8" stroke="#facc15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="12" cy="15" r="6" fill="#facc15" stroke="#a16207" stroke-width="1.4" />
+                <path d="M12 12.5l1 2 2.2.3-1.6 1.5.4 2.2-2-1.1-2 1.1.4-2.2-1.6-1.5 2.2-.3z" fill="#7c2d12" />
+              </svg>
+              <svg v-else-if="slot === 1" class="podium__medal" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M8 2l4 8 4-8" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="12" cy="15" r="6" fill="#cbd5e1" stroke="#64748b" stroke-width="1.4" />
+                <text x="12" y="18.6" text-anchor="middle" font-size="7" font-weight="900" fill="#334155">2</text>
+              </svg>
+              <svg v-else class="podium__medal" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M8 2l4 8 4-8" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="12" cy="15" r="6" fill="#f59e0b" stroke="#92400e" stroke-width="1.4" />
+                <text x="12" y="18.6" text-anchor="middle" font-size="7" font-weight="900" fill="#78350f">3</text>
+              </svg>
+              <span class="podium__rank">#{{ rankOf(slot) }}</span>
+            </div>
+
+            <!-- 🆕 Очки рейтинга -->
+            <div class="podium__score" :style="{ '--accent': accent(topThree[slot]) }">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2l2.4 6.4 6.6.5-5 4.4 1.5 6.7L12 16.6 6.5 20l1.5-6.7-5-4.4 6.6-.5z" />
+              </svg>
+              <span>{{ scoreOf(topThree[slot]) }}</span>
+            </div>
+
+            <RouterLink
+                :to="`/players/${topThree[slot].id}`"
+                class="podium__card"
+                :style="{ '--accent': accent(topThree[slot]) }"
+            >
+              <PlayerProfileHeader
+                  compact
+                  :user="topThree[slot]"
+                  size="md"
+                  :cover-url="topThree[slot].cover_url"
+              />
+            </RouterLink>
           </div>
-
-          <div class="player-info">
-            <div class="player-name">
-              <UserName :user="player" />
-            </div>
-
-            <div class="player-bio">
-              {{ player.bio || 'Без описания' }}
-            </div>
-          </div>
-
-          <div class="player-stats">
-            <div class="player-tier" :class="`tier-${player.tier}`">
-              {{ player.tier }}
-            </div>
-
-            <div class="player-score">
-              <span class="player-score__value">{{ player.tier_score }}</span>
-              <span class="player-score__unit">%</span>
-            </div>
-          </div>
-        </RouterLink>
-
-        <div class="player-action">
-          <FriendButton
-              :user-id="player.id"
-              :friendship="player.friendship"
-              @update="(state) => onFriendshipUpdate(player.id, state)"
-          />
         </div>
+      </section>
+
+      <!-- ============================================
+           MOBILE PODIUM (< 640px) — порядок 1, 2, 3
+           ============================================ -->
+      <section v-if="topThree.length" class="mobile-podium">
+        <div
+            v-for="slot in mobileSlots"
+            :key="slot"
+            class="mobile-podium__row"
+            :class="`mobile-podium__row--rank${rankOf(slot)}`"
+        >
+          <div class="mobile-podium__rank-wrap" :style="{ '--accent': accent(topThree[slot]) }">
+            <svg v-if="slot === 0" class="mobile-podium__medal" width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M8 2l4 8 4-8" stroke="#facc15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <circle cx="12" cy="15" r="6" fill="#facc15" stroke="#a16207" stroke-width="1.4" />
+              <path d="M12 12.5l1 2 2.2.3-1.6 1.5.4 2.2-2-1.1-2 1.1.4-2.2-1.6-1.5 2.2-.3z" fill="#7c2d12" />
+            </svg>
+            <svg v-else-if="slot === 1" class="mobile-podium__medal" width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M8 2l4 8 4-8" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <circle cx="12" cy="15" r="6" fill="#cbd5e1" stroke="#64748b" stroke-width="1.4" />
+              <text x="12" y="18.6" text-anchor="middle" font-size="7" font-weight="900" fill="#334155">2</text>
+            </svg>
+            <svg v-else class="mobile-podium__medal" width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M8 2l4 8 4-8" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <circle cx="12" cy="15" r="6" fill="#f59e0b" stroke="#92400e" stroke-width="1.4" />
+              <text x="12" y="18.6" text-anchor="middle" font-size="7" font-weight="900" fill="#78350f">3</text>
+            </svg>
+          </div>
+
+          <RouterLink
+              :to="`/players/${topThree[slot].id}`"
+              class="mobile-podium__card"
+              :style="{ '--accent': accent(topThree[slot]) }"
+          >
+            <PlayerProfileHeader
+                compact
+                :user="topThree[slot]"
+                :cover-url="topThree[slot].cover_url"
+            />
+          </RouterLink>
+
+          <!-- 🆕 Очки -->
+          <span class="mobile-podium__score" :style="{ '--accent': accent(topThree[slot]) }">
+            {{ scoreOf(topThree[slot]) }}
+          </span>
+        </div>
+      </section>
+
+      <!-- REST -->
+      <section v-if="rest.length" class="rest">
+        <header class="rest__head">
+          <h2 class="rest__title">Остальные восходители</h2>
+          <span class="rest__count">{{ rest.length }}</span>
+        </header>
+
+        <div class="rest__grid">
+          <RouterLink
+              v-for="(p, i) in rest"
+              :key="p.id"
+              :to="`/players/${p.id}`"
+              class="rest__row"
+          >
+            <span class="rest__rank">#{{ i + 4 }}</span>
+
+            <!-- 🆕 Очки -->
+            <span class="rest__score">
+              {{ scoreOf(p) }}
+            </span>
+
+            <PlayerProfileHeader
+                compact
+                :user="p"
+                :cover-url="p.cover_url"
+                class="rest__header"
+            />
+          </RouterLink>
+        </div>
+      </section>
+
+      <div v-if="!players.length" class="state state--empty">
+        <span>Пока никто не покорил вершину</span>
       </div>
-    </div>
-
-    <!-- PAGINATION -->
-    <nav v-if="lastPage > 1" class="pagination">
-      <button
-          class="pagination__btn"
-          :disabled="page <= 1"
-          @click="page--"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-          <path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-        Назад
-      </button>
-
-      <span class="pagination__page">
-        <strong>{{ page }}</strong> / {{ lastPage }}
-      </span>
-
-      <button
-          class="pagination__btn"
-          :disabled="page >= lastPage"
-          @click="page++"
-      >
-        Вперёд
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-          <path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      </button>
-    </nav>
+    </template>
   </div>
 </template>
 
@@ -201,442 +389,561 @@ onMounted(load)
 /* ============================================
    PAGE
    ============================================ */
-
-.players-page {
-  width: min(1000px, calc(100% - 40px));
-  margin: 40px auto;
+.rating-page {
+  width: min(1100px, calc(100% - 40px));
+  margin: 32px auto 60px;
 }
 
-.page-head {
-  margin-bottom: 22px;
+/* HEAD */
+.rating-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
 }
 
-.page-head__text h1 {
-  margin: 0 0 4px;
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: -0.3px;
+.rating-head__title {
+  margin: 0 0 6px;
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  color: var(--text);
 }
 
-.page-head__sub {
+.apex {
+  background: linear-gradient(135deg, #facc15, #f97316);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 20px rgba(250, 204, 21, 0.35));
+}
+
+.rating-head__sub {
   margin: 0;
   color: var(--text-dim);
   font-size: 13.5px;
 }
 
-.page-head__sub strong {
+.rating-head__sub strong {
   color: var(--text);
   font-weight: 800;
 }
 
-/* ============================================
-   FILTERS
-   ============================================ */
-
-.filters {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+/* TABS */
+.mode-tabs {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
 }
 
-.filters__search {
-  position: relative;
-  flex: 1;
-  display: flex;
+.mode-tab {
+  display: inline-flex;
   align-items: center;
-}
-
-.filters__icon {
-  position: absolute;
-  left: 14px;
-  color: var(--text-muted);
-  pointer-events: none;
-}
-
-.search-input {
-  width: 100%;
-  min-height: 44px;
-  padding: 0 16px 0 40px;
-  color: var(--text);
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  outline: none;
+  gap: 6px;
+  padding: 8px 14px;
+  color: var(--text-dim);
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
   font: inherit;
-  font-size: 14px;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-
-.search-input::placeholder {
-  color: var(--text-muted);
-}
-
-.search-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
-}
-
-.tier-select {
-  min-height: 44px;
-  padding: 0 36px 0 14px;
-  color: var(--text);
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.mode-tab:hover { color: var(--text); }
+
+.mode-tab--active {
+  color: #fff;
+  background: color-mix(in srgb, var(--tab-color) 20%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tab-color) 55%, transparent);
+}
+
+.mode-tab__icon { flex-shrink: 0; }
+
+/* SUBTABS */
+.sub-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding: 0 4px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.sub-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
   font: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238a8a97' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
 }
 
-.tier-select:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+.sub-tab:hover {
+  color: var(--text);
+  border-color: var(--border-hover, var(--border));
 }
 
-/* ============================================
-   STATES
-   ============================================ */
+.sub-tab__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--tab-color);
+  opacity: 0.4;
+  transition: opacity 0.18s ease, box-shadow 0.18s ease;
+}
 
+.sub-tab--active {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--tab-color) 55%, transparent);
+  background: color-mix(in srgb, var(--tab-color) 12%, transparent);
+}
+
+.sub-tab--active .sub-tab__dot {
+  opacity: 1;
+  box-shadow: 0 0 8px var(--tab-color);
+}
+
+/* STATES */
 .state {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  padding: 60px 20px;
+  padding: 80px 20px;
   text-align: center;
   color: var(--text-dim);
   font-size: 14px;
 }
+.state--empty { opacity: 0.85; }
 
-.state--empty svg {
+.state__title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.state__sub {
+  font-size: 12.5px;
   color: var(--text-muted);
-  opacity: 0.6;
+  max-width: 280px;
+  text-align: center;
+  line-height: 1.5;
 }
 
 .spinner {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border: 2.5px solid color-mix(in srgb, var(--accent) 25%, transparent);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+/* ============================================
+   MOUNTAIN
+   ============================================ */
+.mountain {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1200 / 520;
+  min-height: 520px;
+  margin-bottom: 40px;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.mountain__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 /* ============================================
-   PLAYERS LIST
+   PODIUM
    ============================================ */
+.podium {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
 
-.players-list {
+.podium__slot {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+.podium__slot--rank1 {
+  left: 50%;
+  top: 16%;
+  z-index: 3;
+  width: clamp(220px, 30%, 360px);
+}
+
+.podium__slot--rank2 {
+  left: 27%;
+  top: 58%;
+  z-index: 2;
+  width: clamp(180px, 24%, 300px);
+}
+
+.podium__slot--rank3 {
+  left: 73%;
+  top: 80%;
+  z-index: 1;
+  width: clamp(180px, 24%, 300px);
+}
+
+.podium__crown {
+  position: absolute;
+  top: -34px;
+  color: #facc15;
+  filter: drop-shadow(0 0 12px rgba(250, 204, 21, 0.7));
+  animation: crownFloat 2.4s ease-in-out infinite;
+}
+@keyframes crownFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.podium__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: color-mix(in srgb, var(--accent) 18%, rgba(10, 10, 15, 0.85));
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  border-radius: 999px;
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--accent) 35%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.podium__medal { display: block; }
+
+.podium__rank {
+  font-size: 11px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+/* 🆕 Очки рейтинга — десктоп */
+.podium__score {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  background: rgba(10, 10, 15, 0.9);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  color: color-mix(in srgb, var(--accent) 80%, #fff);
+  letter-spacing: 0.4px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.podium__score svg {
+  color: var(--accent);
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 60%, transparent));
+}
+
+.podium__card {
+  display: block;
+  width: 100%;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.55))
+  drop-shadow(0 0 18px color-mix(in srgb, var(--accent) 40%, transparent));
+  transition: transform 0.25s ease;
+}
+
+.podium__card:hover { transform: translateY(-3px) scale(1.01); }
+
+/* ============================================
+   MOBILE PODIUM
+   ============================================ */
+.mobile-podium {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.mobile-podium__row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  position: relative;
+  overflow: visible;
+}
+
+.mobile-podium__row--rank1 {
+  border-color: color-mix(in srgb, #facc15 45%, transparent);
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.06), transparent 60%), var(--bg-card);
+  box-shadow: 0 0 30px -12px rgba(250, 204, 21, 0.4);
+}
+
+.mobile-podium__row--rank2 {
+  border-color: color-mix(in srgb, #cbd5e1 35%, transparent);
+}
+
+.mobile-podium__row--rank3 {
+  border-color: color-mix(in srgb, #f59e0b 35%, transparent);
+}
+
+.mobile-podium__rank-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mobile-podium__medal { display: block; }
+
+.mobile-podium__card {
+  display: block;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
+}
+
+/* 🆕 Очки — мобилка */
+.mobile-podium__score {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  padding: 4px 8px;
+  background: color-mix(in srgb, var(--accent) 18%, rgba(10, 10, 15, 0.9));
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  color: color-mix(in srgb, var(--accent) 80%, #fff);
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   REST
+   ============================================ */
+.rest { margin-top: 12px; }
+
+.rest__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 4px 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.rest__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.rest__count {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.rest__grid {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.player-row {
-  display: flex;
+.rest__row {
+  display: grid;
+  grid-template-columns: 48px 56px 1fr;
   align-items: center;
-  gap: 14px;
-  padding: 12px 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  gap: 12px;
+  padding: 6px 10px 6px 4px;
   border-radius: 12px;
-  transition: border-color 0.15s, background 0.15s, transform 0.15s;
-}
-
-.player-row:hover {
-  border-color: var(--border-hover);
-  background: var(--bg-card-hover);
-  transform: translateY(-1px);
-}
-
-.player-main {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex: 1;
-  min-width: 0;
   text-decoration: none;
   color: inherit;
+  cursor: pointer;
+  transition: background 0.18s ease;
 }
 
-/* === AVATAR === */
+.rest__row:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
 
-.player-avatar {
-  position: relative;
-  width: 46px;
-  height: 46px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border-radius: 11px;
-  color: #fff;
-  font-size: 18px;
-  font-weight: 800;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-}
-
-/* фоны по тиру, если нет аватарки */
-.tier-bg-S { background: linear-gradient(135deg, #facc15, #d97706); }
-.tier-bg-A { background: linear-gradient(135deg, #f97316, #c2410c); }
-.tier-bg-B { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-.tier-bg-C { background: linear-gradient(135deg, #06b6d4, #0e7490); }
-.tier-bg-D { background: linear-gradient(135deg, #22c55e, #15803d); }
-.tier-bg-E { background: linear-gradient(135deg, #6b7280, #374151); }
-
-.player-avatar-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
-}
-
-/* === INFO === */
-
-.player-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.player-name {
-  font-size: 15px;
-  font-weight: 700;
-  margin-bottom: 2px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.player-bio {
-  font-size: 12.5px;
-  color: var(--text-dim);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* === STATS === */
-
-.player-stats {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
-}
-
-.player-tier {
-  width: 42px;
-  height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  font-size: 17px;
-  font-weight: 900;
-  border: 1px solid currentColor;
-}
-
-.tier-S { color: #facc15; background: rgba(250, 204, 21, 0.08); }
-.tier-A { color: #f97316; background: rgba(249, 115, 22, 0.08); }
-.tier-B { color: #8b5cf6; background: rgba(139, 92, 246, 0.08); }
-.tier-C { color: #06b6d4; background: rgba(6, 182, 212, 0.08); }
-.tier-D { color: #22c55e; background: rgba(34, 197, 94, 0.08); }
-.tier-E { color: #6b7280; background: rgba(107, 114, 128, 0.08); }
-
-.player-score {
-  display: flex;
-  align-items: baseline;
-  gap: 1px;
-  min-width: 52px;
-  justify-content: flex-end;
-  color: var(--text-dim);
-  font-weight: 800;
-}
-
-.player-score__value {
-  font-size: 14px;
-  color: var(--text);
-}
-
-.player-score__unit {
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-/* === ACTION === */
-
-.player-action {
-  flex-shrink: 0;
-}
-
-/* ============================================
-   PAGINATION
-   ============================================ */
-
-.pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin-top: 26px;
-}
-
-.pagination__btn {
+.rest__rank {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 40px;
-  padding: 0 16px;
-  color: var(--text);
+  justify-content: center;
+  height: 32px;
+  min-width: 32px;
+  padding: 0 8px;
+  color: var(--text-dim);
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.3px;
 }
 
-.pagination__btn:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: color-mix(in srgb, var(--accent) 60%, #fff);
-  transform: translateY(-1px);
+/* 🆕 Очки — rest */
+.rest__score {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  min-width: 48px;
+  padding: 0 8px;
+  color: color-mix(in srgb, var(--accent) 70%, #fff);
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-card));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.3px;
 }
 
-.pagination__btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.pagination__page {
-  color: var(--text-dim);
-  font-size: 13px;
-  font-weight: 600;
-  min-width: 60px;
-  text-align: center;
-}
-
-.pagination__page strong {
-  color: var(--text);
-  font-weight: 800;
-}
+.rest__header { min-width: 0; }
 
 /* ============================================
-   MOBILE
+   АДАПТИВ
    ============================================ */
 
+@media (max-width: 900px) {
+  .rating-page { width: calc(100% - 32px); margin: 24px auto 48px; }
+  .rating-head__title { font-size: 24px; }
+
+  .mountain { min-height: 440px; aspect-ratio: 1200 / 620; }
+
+  .podium__slot--rank1 {
+    left: 50%;
+    top: 18%;
+    width: clamp(180px, 28%, 260px);
+  }
+
+  .podium__slot--rank2 {
+    left: 26%;
+    top: 60%;
+    width: clamp(150px, 22%, 220px);
+  }
+
+  .podium__slot--rank3 {
+    left: 74%;
+    top: 82%;
+    width: clamp(150px, 22%, 220px);
+  }
+}
+
 @media (max-width: 640px) {
-  .players-page {
+  .rating-page {
     width: calc(100% - 24px);
-    margin: 20px auto;
+    margin: 16px auto 40px;
   }
 
-  .page-head__text h1 {
-    font-size: 22px;
-  }
-
-  .filters {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .search-input,
-  .tier-select {
-    min-height: 42px;
-    font-size: 14px;
-  }
-
-  .player-row {
+  .rating-head {
     flex-direction: column;
     align-items: stretch;
-    gap: 10px;
-    padding: 12px 14px;
+    gap: 14px;
   }
 
-  .player-main {
-    display: grid;
-    grid-template-columns: 46px 1fr auto;
-    align-items: center;
-    gap: 12px;
+  .rating-head__title { font-size: 22px; }
+  .rating-head__sub { font-size: 12.5px; }
+
+  .mode-tabs {
+    width: 100%;
+    justify-content: stretch;
   }
 
-  .player-avatar {
-    width: 44px;
-    height: 44px;
-    font-size: 16px;
-    border-radius: 10px;
+  .mode-tab {
+    flex: 1;
+    justify-content: center;
+    padding: 9px 10px;
+    font-size: 12.5px;
   }
 
-  .player-info {
-    min-width: 0;
+  .sub-tabs {
+    gap: 6px;
+    padding: 0;
+    margin-bottom: 18px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+  }
+  .sub-tabs::-webkit-scrollbar { display: none; }
+
+  .sub-tab {
+    padding: 6px 11px;
+    font-size: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
-  .player-name {
-    font-size: 14.5px;
-  }
+  .mountain { display: none; }
+  .mobile-podium { display: flex; }
 
-  .player-bio {
-    font-size: 11.5px;
-  }
+  .rest__head { padding-bottom: 10px; margin-bottom: 10px; }
+  .rest__title { font-size: 13px; letter-spacing: 0.6px; }
 
-  .player-stats {
+  .rest__row {
+    grid-template-columns: 36px 44px 1fr;
     gap: 8px;
+    padding: 4px 6px 4px 2px;
   }
 
-  .player-tier {
-    width: 36px;
-    height: 36px;
-    font-size: 14px;
+  .rest__rank {
+    height: 28px;
+    min-width: 28px;
+    font-size: 11px;
     border-radius: 8px;
   }
 
-  .player-score {
-    min-width: 42px;
-  }
-
-  .player-score__value {
-    font-size: 13px;
-  }
-
-  /* FriendButton на всю ширину */
-  .player-action {
-    display: flex;
-  }
-
-  .player-action :deep(button),
-  .player-action :deep(a) {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .pagination {
-    gap: 8px;
-  }
-
-  .pagination__btn {
-    flex: 1;
-    justify-content: center;
-    min-height: 42px;
-  }
-
-  .pagination__page {
-    min-width: auto;
+  .rest__score {
+    height: 28px;
+    min-width: 40px;
+    font-size: 11px;
   }
 }
 </style>

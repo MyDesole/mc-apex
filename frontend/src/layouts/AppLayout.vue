@@ -10,6 +10,9 @@ import TierTestBanner from '@/components/TierTestBanner.vue'
 import NotificationToast from '@/components/NotificationToast.vue'
 import { useRealtimeNotifications } from '@/composables/useRealtimeNotifications'
 import { useRealtimeMessages } from '@/composables/useRealtimeMessages'
+import { useTitleBlink } from '@/composables/useTitleBlink'
+
+const { startBlink, stopBlink } = useTitleBlink()
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -75,13 +78,21 @@ function onClickOutside(e) {
 }
 
 // При новом realtime-сообщении увеличиваем счётчик
-watch(latestMessage, () => {
+watch(latestMessage, (m) => {
+  if (!m) return
+
   loadChatUnread()
+
+  // Если мы НЕ в мессенджере — мигаем title
+  if (!route.path.startsWith('/messages')) {
+    startBlink()
+  }
 })
 
 // При уходе с чата на другую страницу тоже обновим счётчик
 watch(() => route.path, (path) => {
   if (path.startsWith('/messages')) {
+    stopBlink()
     setTimeout(loadChatUnread, 500)
   }
 })
