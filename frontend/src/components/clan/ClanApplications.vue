@@ -1,3 +1,56 @@
+<script setup>
+import { onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
+import { clansApi } from '@/services/clans.js'
+
+const props = defineProps({
+  clan: { type: Object, required: true },
+  canManage: { type: Boolean, default: false },
+})
+
+const emit = defineEmits(['refresh'])
+
+const loading = ref(true)
+const applications = ref([])
+const processing = ref(null)
+
+async function load() {
+  loading.value = true
+  try {
+    const data = await clansApi.applications(props.clan.id)
+    applications.value = data.applications || []
+  } catch (e) {
+    console.error(e)
+  } finally {
+    loading.value = false
+  }
+}
+
+async function accept(app) {
+  processing.value = app.id
+  try {
+    await clansApi.acceptApplication(props.clan.id, app.id)
+    await load()
+    emit('refresh')
+  } finally {
+    processing.value = null
+  }
+}
+
+async function decline(app) {
+  processing.value = app.id
+  try {
+    await clansApi.declineApplication(props.clan.id, app.id)
+    await load()
+    emit('refresh')
+  } finally {
+    processing.value = null
+  }
+}
+
+onMounted(load)
+</script>
+
 <template>
   <div class="applications">
     <div class="section-head">
