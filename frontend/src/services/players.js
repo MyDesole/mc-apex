@@ -1,42 +1,71 @@
 import { api } from './api.js'
 
+/**
+ * Собирает FormData из объекта с учётом типов значений.
+ *
+ * Разница между undefined и null принципиальна:
+ *   - undefined — поле не трогаем, сервер оставит текущее значение;
+ *   - null      — поле очищаем. Отправляем пустую строку: middleware
+ *                 Laravel (ConvertEmptyStringsToNull) превратит её в null.
+ *
+ * Раньше null отбрасывался наравне с undefined, поэтому выбор
+ * «Без эффекта» не доходил до сервера и эффект оставался надетым.
+ * Пустой массив отправляем как [0] => '', чтобы валидация «array»
+ * прошла и коллекция действительно очистилась.
+ */
+function buildFormData(payload) {
+    const fd = new FormData()
+
+    for (const [key, value] of Object.entries(payload)) {
+        // Поле не участвует в запросе — оставляем как есть
+        if (value === undefined) continue
+
+        if (value === null) {
+            fd.append(key, '')
+            continue
+        }
+
+        if (value instanceof File) {
+            fd.append(key, value)
+            continue
+        }
+
+        if (Array.isArray(value)) {
+            if (value.length === 0) {
+                // Пустой массив: одно пустое значение, чтобы ключ существовал
+                fd.append(`${key}[0]`, '')
+            } else {
+                value.forEach((v, i) => fd.append(`${key}[${i}]`, v))
+            }
+            continue
+        }
+
+        if (typeof value === 'boolean') {
+            fd.append(key, value ? '1' : '0')
+            continue
+        }
+
+        fd.append(key, value)
+    }
+
+    return fd
+}
+
 export const playersApi = {
     // === Профиль: обновление (рамки, эффекты, био и т.д.) ===
     updateProfile(payload) {
-        const fd = new FormData()
+        const fd = buildFormData(payload)
         fd.append('_method', 'PUT')
-
-        for (const [key, value] of Object.entries(payload)) {
-            if (value === undefined || value === null) continue
-
-            if (Array.isArray(value)) {
-                value.forEach((v, i) => {
-                    fd.append(`${key}[${i}]`, v)
-                })
-            } else if (value instanceof File) {
-                fd.append(key, value)
-            } else if (typeof value === 'boolean') {
-                fd.append(key, value ? '1' : '0')
-            } else {
-                fd.append(key, value)
-            }
-        }
 
         return api.post('/players/me/profile', fd)
     },
 
     // === Аватар / обложка (файлы) ===
     updateMe(payload) {
-        const fd = new FormData()
-        fd.append('_method', 'PUT')   // ← спуф метода
+        const fd = buildFormData(payload)
+        fd.append('_method', 'PUT')
 
-        for (const [key, value] of Object.entries(payload)) {
-            if (value === undefined || value === null) continue
-            if (value instanceof File) fd.append(key, value)
-            else fd.append(key, value)
-        }
-
-        return api.post('/players/me', fd)   // ← именно POST, не PUT
+        return api.post('/players/me', fd)
     },
 
     removeCardBackground() {
@@ -66,31 +95,12 @@ export const playersApi = {
         return api.post(`/recommendations/${recommendationId}/hide`)
     },
 
-    /**
-     * Рейтинг с курсорной пагинацией.
-     *
-     * @param {object} options mode / cursor / limit / search / tier / clanId
-     */
-    ranking({ mode = 'overall', cursor = null, limit = 30, search = '', tier = '', clanId = null } = {}) {
-        const params = new URLSearchParams()
-
-        params.set('mode', mode)
-        params.set('limit', String(limit))
-
-        if (cursor?.score !== undefined) params.set('cursor_score', String(cursor.score))
-        if (cursor?.id) params.set('cursor_id', String(cursor.id))
-        if (cursor?.offset) params.set('offset', String(cursor.offset))
-        if (search) params.set('search', search)
-        if (tier) params.set('tier', tier)
-        if (clanId) params.set('clan_id', String(clanId))
-
-        return api.get(`/ranking?${params.toString()}`)
+    // === Публичные ===
+    show(idOrNick) {
+        return api.get(`/players/${idOrNick}`)
     },
 
-    // Постраничный список игроков (обычная пагинация Laravel)
-    list(params = {}) {
-        const query = new URLSearchParams(params).toString()
-
-        return api.get(`/players${query ? '?' + query : ''}`)
+    top() {
+        return api.get('/players/top')
     },
 }
