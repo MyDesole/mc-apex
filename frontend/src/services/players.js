@@ -77,6 +77,13 @@ export const playersApi = {
         return api.put('/players/me/aspects', payload)
     },
 
+    ranking(params = {}) {
+        return api.get('/ranking', {
+            params,
+        })
+    },
+
+
     removeAvatar() {
         return api.post('/players/me/avatar/remove')
     },
