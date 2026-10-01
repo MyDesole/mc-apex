@@ -93,7 +93,7 @@ async function copyInviteLink() {
   if (!referral.value?.link) return
 
   try {
-    await navigator.clipboard.writeText(referral.value.link)
+    await navigator.clipboard.writeText('https://mc-apex.ru/register?ref=' + referral.value.code)
     copied.value = true
     setTimeout(() => { copied.value = false }, 2000)
   } catch (e) {
