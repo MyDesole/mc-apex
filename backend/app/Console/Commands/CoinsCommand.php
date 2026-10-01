@@ -7,43 +7,39 @@ use App\Models\User;
 use App\Services\CoinService;
 use Illuminate\Console\Command;
 
-/**
- * Начисление и списание ApexCoin из консоли.
- *
- * Примеры:
- *   php artisan apex:coins 6                          # показать баланс
- *   php artisan apex:coins 6 1000000                  # выдать 1 000 000
- *   php artisan apex:coins 6 1000000 --reason="тест"  # с причиной
- *   php artisan apex:coins 6 500 --remove             # списать 500
- *   php artisan apex:coins all 100 --force            # выдать всем игрокам
- *
- * Про минус: Symfony Console принимает «-500» за опцию, поэтому для списания
- * используй флаг --remove с положительной суммой.
- */
 class CoinsCommand extends Command
 {
     protected $signature = 'apex:coins
                             {user : ID игрока или all — для всех игроков}
-                            {amount? : Сколько начислить (для списания — с флагом --remove)}
-                            {--remove : Списать указанную сумму вместо начисления}
-                            {--reason= : Причина, попадёт в леджер}
-                            {--force : Не спрашивать подтверждения при массовой выдаче}';
+                            {amount? : Сколько начислить или списать}
+                            {--remove : Списать указанную сумму}
+                            {--reset : Обнулить всё, кроме daily bonus и подарков}
+                            {--reason= : Причина операции}
+                            {--force : Не спрашивать подтверждения}';
 
-    protected $description = 'Выдать или списать ApexCoin игроку по ID (все операции пишутся в леджер)';
+    protected $description = 'Управление ApexCoin игрока или всех игроков';
 
     public function handle(): int
     {
         $target = (string) $this->argument('user');
         $amount = $this->argument('amount');
 
-        // Без суммы — просто показываем баланс
+        // Обнуление с сохранением daily bonus и подарков
+        if ($this->option('reset')) {
+            if ($target === 'all') {
+                return $this->resetEveryone();
+            }
+
+            return $this->resetOne($target);
+        }
+
+        // Без суммы — показать баланс
         if ($amount === null) {
             return $this->showBalance($target);
         }
 
         $amount = (int) $amount;
 
-        // --remove делает сумму отрицательной; отрицательный аргумент тоже понимаем
         if ($this->option('remove') && $amount > 0) {
             $amount = -$amount;
         }
@@ -54,15 +50,16 @@ class CoinsCommand extends Command
         }
 
         $reason = $this->option('reason')
-            ?: ($amount > 0 ? 'Начисление из консоли' : 'Списание из консоли');
+            ?: ($amount > 0
+                ? 'Начисление из консоли'
+                : 'Списание из консоли');
 
-        // Массовая выдача
         if ($target === 'all') {
             return $this->creditEveryone($amount, $reason);
         }
 
         if (! is_numeric($target)) {
-            $this->error("ID игрока должен быть числом или 'all', получено: {$target}");
+            $this->error("ID игрока должен быть числом или 'all'.");
             return self::FAILURE;
         }
 
@@ -95,7 +92,7 @@ class CoinsCommand extends Command
         }
 
         if ($applied === 0) {
-            $this->warn('Ничего не изменилось (сумма 0 или операция уже применена).');
+            $this->warn('Баланс не изменился.');
             return self::SUCCESS;
         }
 
@@ -126,9 +123,16 @@ class CoinsCommand extends Command
             return self::SUCCESS;
         }
 
-        $this->warn("Будет изменён баланс у {$total} игроков на " . ($amount > 0 ? '+' : '') . $amount . ' ApexCoin.');
+        $this->warn(
+            "Будет изменён баланс у {$total} игроков на "
+            . ($amount > 0 ? '+' : '')
+            . "{$amount} ApexCoin."
+        );
 
-        if (! $this->option('force') && ! $this->confirm('Продолжить?', false)) {
+        if (
+            ! $this->option('force')
+            && ! $this->confirm('Продолжить?', false)
+        ) {
             $this->error('Отменено.');
             return self::FAILURE;
         }
@@ -139,23 +143,227 @@ class CoinsCommand extends Command
         $done = 0;
         $failed = 0;
 
-        User::query()->chunkById(200, function ($users) use ($amount, $reason, $bar, &$done, &$failed) {
-            foreach ($users as $user) {
-                try {
-                    if (CoinService::credit($user, $amount, CoinTransaction::SOURCE_ADMIN, $reason) !== 0) {
-                        $done++;
+        User::query()->chunkById(
+            200,
+            function ($users) use (
+                $amount,
+                $reason,
+                $bar,
+                &$done,
+                &$failed
+            ) {
+                foreach ($users as $user) {
+                    try {
+                        if (
+                            CoinService::credit(
+                                $user,
+                                $amount,
+                                CoinTransaction::SOURCE_ADMIN,
+                                $reason
+                            ) !== 0
+                        ) {
+                            $done++;
+                        }
+                    } catch (\RuntimeException $e) {
+                        $failed++;
                     }
-                } catch (\RuntimeException $e) {
-                    $failed++;
-                }
 
-                $bar->advance();
+                    $bar->advance();
+                }
             }
-        });
+        );
 
         $bar->finish();
         $this->newLine(2);
-        $this->info("Начислено: {$done}, пропущено с ошибкой: {$failed}.");
+
+        $this->info("Изменено: {$done}, ошибок: {$failed}.");
+
+        return $failed > 0
+            ? self::FAILURE
+            : self::SUCCESS;
+    }
+
+    /**
+     * Оставляет daily_bonus + gift_in,
+     * всё остальное списывает.
+     */
+    private function resetEveryone(): int
+    {
+        $total = User::where('apex_coins', '>', 0)->count();
+
+        if ($total === 0) {
+            $this->info('У игроков уже нулевой баланс.');
+            return self::SUCCESS;
+        }
+
+        $this->warn("Будет обработано игроков: {$total}");
+        $this->warn('Сохраняются: daily_bonus и gift_in.');
+        $this->warn('Остальные ApexCoin будут списаны.');
+
+        if (
+            ! $this->option('force')
+            && ! $this->confirm('Точно продолжить?', false)
+        ) {
+            $this->error('Отменено.');
+            return self::FAILURE;
+        }
+
+        $bar = $this->output->createProgressBar($total);
+        $bar->start();
+
+        $done = 0;
+        $skipped = 0;
+        $failed = 0;
+
+        User::query()
+            ->where('apex_coins', '>', 0)
+            ->chunkById(200, function ($users) use (
+                $bar,
+                &$done,
+                &$skipped,
+                &$failed
+            ) {
+                foreach ($users as $user) {
+                    try {
+                        $current = (int) $user->apex_coins;
+
+                        $keep = (int) CoinTransaction::query()
+                            ->where('user_id', $user->id)
+                            ->whereIn('source', [
+                                CoinTransaction::SOURCE_DAILY_BONUS,
+                                CoinTransaction::SOURCE_GIFT_IN,
+                            ])
+                            ->where('amount', '>', 0)
+                            ->sum('amount');
+
+                        // Нельзя оставить больше текущего баланса
+                        $keep = min($keep, $current);
+
+                        $remove = $current - $keep;
+
+                        if ($remove <= 0) {
+                            $skipped++;
+                            $bar->advance();
+                            continue;
+                        }
+
+                        CoinService::credit(
+                            $user,
+                            -$remove,
+                            CoinTransaction::SOURCE_ADMIN,
+                            $this->option('reason')
+                                ?: 'Очистка баланса кроме daily bonus и подарков',
+                            null,
+                            [
+                                'meta' => [
+                                    'via' => 'artisan apex:coins',
+                                    'action' => 'reset',
+                                    'kept' => $keep,
+                                    'removed' => $remove,
+                                ],
+                            ]
+                        );
+
+                        $done++;
+                    } catch (\Throwable $e) {
+                        $failed++;
+                    }
+
+                    $bar->advance();
+                }
+            });
+
+        $bar->finish();
+        $this->newLine(2);
+
+        $this->info("Списано у игроков: {$done}");
+        $this->info("Без изменений: {$skipped}");
+
+        if ($failed > 0) {
+            $this->error("Ошибок: {$failed}");
+        }
+
+        return $failed > 0
+            ? self::FAILURE
+            : self::SUCCESS;
+    }
+
+    private function resetOne(string $target): int
+    {
+        if (! is_numeric($target)) {
+            $this->error('ID игрока должен быть числом.');
+            return self::FAILURE;
+        }
+
+        $user = User::find((int) $target);
+
+        if (! $user) {
+            $this->error("Игрок с ID {$target} не найден.");
+            return self::FAILURE;
+        }
+
+        $current = (int) $user->apex_coins;
+
+        $keep = (int) CoinTransaction::query()
+            ->where('user_id', $user->id)
+            ->whereIn('source', [
+                CoinTransaction::SOURCE_DAILY_BONUS,
+                CoinTransaction::SOURCE_GIFT_IN,
+            ])
+            ->where('amount', '>', 0)
+            ->sum('amount');
+
+        $keep = min($keep, $current);
+        $remove = $current - $keep;
+
+        if ($remove <= 0) {
+            $this->info(
+                "{$user->username}: баланс {$current} ApexCoin, "
+                . 'списывать нечего.'
+            );
+
+            return self::SUCCESS;
+        }
+
+        $this->warn(
+            "{$user->username}: баланс {$current}, "
+            . "останется {$keep}, будет списано {$remove}."
+        );
+
+        if (
+            ! $this->option('force')
+            && ! $this->confirm('Продолжить?', false)
+        ) {
+            $this->error('Отменено.');
+            return self::FAILURE;
+        }
+
+        try {
+            CoinService::credit(
+                $user,
+                -$remove,
+                CoinTransaction::SOURCE_ADMIN,
+                $this->option('reason')
+                    ?: 'Очистка баланса кроме daily bonus и подарков',
+                null,
+                [
+                    'meta' => [
+                        'via' => 'artisan apex:coins',
+                        'action' => 'reset',
+                        'kept' => $keep,
+                        'removed' => $remove,
+                    ],
+                ]
+            );
+        } catch (\RuntimeException $e) {
+            $this->error($e->getMessage());
+            return self::FAILURE;
+        }
+
+        $this->info(
+            "{$user->username}: было {$current}, "
+            . "оставлено {$keep}, списано {$remove}."
+        );
 
         return self::SUCCESS;
     }
@@ -173,6 +381,11 @@ class CoinsCommand extends Command
             );
 
             return self::SUCCESS;
+        }
+
+        if (! is_numeric($target)) {
+            $this->error("ID игрока должен быть числом или 'all'.");
+            return self::FAILURE;
         }
 
         $user = User::find((int) $target);

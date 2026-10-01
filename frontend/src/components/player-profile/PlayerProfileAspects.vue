@@ -22,8 +22,8 @@ const modes = {
 }
 
 const stats = [
-  { key: 'block_placing', label: 'Block Placing' },
-  { key: 'rotka', label: 'Rotka' },
+  { key: 'block_placing', label: 'Block Placement' },
+  { key: 'rotka', label: 'Rod' },
   { key: 'movement', label: 'Movement' },
   { key: 'aim', label: 'Aim' },
   { key: 'game_sense', label: 'Game Sense' },
@@ -70,10 +70,7 @@ function maxScore(data) {
 <template>
   <section v-if="availableModes.length" class="aspects">
     <div class="section-head">
-      <div>
-        <span class="section-kicker">ХАРАКТЕРИСТИКИ</span>
-        <h3 class="section-title">Игровые аспекты</h3>
-      </div>
+
 
       <span class="section-line"></span>
     </div>
