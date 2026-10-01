@@ -26,6 +26,17 @@ const props = defineProps({
     type: String,
     default: '',
   },
+
+  /**
+   * Компактная версия профиля.
+   *
+   * false — полноценный header
+   * true  — компактный header до ~200px
+   */
+  compact: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['edit'])
@@ -153,16 +164,6 @@ const avatarFrameStyle = computed(() => {
   }
 
   return {}
-})
-
-const avatarFrameColor = computed(() => {
-  const frame = avatarFrame.value
-
-  if (!frame || frame.id === 'default') {
-    return playerAccent.value
-  }
-
-  return frame.color || playerAccent.value
 })
 
 const avatarFrameGlow = computed(() => {
@@ -313,7 +314,11 @@ const coverStyle = computed(() => {
   <section
       class="profile-header"
       :class="{
-        [`profile-header--effect-${effectId}`]: hasProfileEffect,
+        'profile-header--compact': compact,
+
+        [`profile-header--effect-${effectId}`]:
+            hasProfileEffect,
+
         'profile-header--effect-animated':
             profileEffect.animated,
       }"
@@ -343,6 +348,7 @@ const coverStyle = computed(() => {
 
     <!-- =====================================================
          FULL PROFILE EFFECT
+         Works for both normal and compact modes
          ===================================================== -->
 
     <div
@@ -353,7 +359,7 @@ const coverStyle = computed(() => {
 
     <!-- Legendary particles -->
     <div
-        v-if="effectId === 'legendary'"
+        v-if="effectId === 'legendary' && !compact"
         class="profile-header__effect-particles"
         aria-hidden="true"
     >
@@ -369,9 +375,11 @@ const coverStyle = computed(() => {
 
     <!-- =====================================================
          TIER WATERMARK
+         Normal mode only
          ===================================================== -->
 
     <div
+        v-if="!compact"
         class="profile-header__tier-watermark"
         aria-hidden="true"
     >
@@ -386,7 +394,7 @@ const coverStyle = computed(() => {
 
       <div class="profile-header__eyebrow">
         <span class="profile-header__eyebrow-dot" />
-        PLAYER PROFILE
+        {{ compact ? 'PLAYER' : 'PLAYER PROFILE' }}
       </div>
 
       <button
@@ -419,10 +427,165 @@ const coverStyle = computed(() => {
     </div>
 
     <!-- =====================================================
-         MAIN CONTENT
+         COMPACT CONTENT
          ===================================================== -->
 
-    <div class="profile-header__content">
+    <div
+        v-if="compact"
+        class="profile-header__compact-content"
+    >
+
+      <!-- Avatar -->
+      <div class="profile-header__compact-avatar-wrap">
+
+        <div
+            class="profile-header__avatar-glow"
+            :style="{
+              '--avatar-frame-color': avatarFrameGlow,
+            }"
+        />
+
+        <div
+            class="profile-header__avatar-frame profile-header__avatar-frame--compact"
+            :class="{
+              'profile-header__avatar-frame--custom':
+                  hasAvatarFrame,
+
+              'profile-header__avatar-frame--glow':
+                  avatarFrame.glow,
+            }"
+            :style="{
+              ...avatarFrameStyle,
+              '--avatar-frame-color': avatarFrameGlow,
+            }"
+        >
+          <div class="profile-header__avatar-frame-inner">
+
+            <div class="profile-header__avatar">
+
+              <img
+                  v-if="avatarUrl"
+                  :src="avatarUrl"
+                  :alt="displayName"
+              >
+
+              <span v-else>
+                {{ displayName.charAt(0).toUpperCase() }}
+              </span>
+
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Compact identity -->
+      <div class="profile-header__compact-identity">
+
+        <div class="profile-header__compact-tier">
+
+          <span class="profile-header__compact-tier-icon">
+            {{ tierShort }}
+          </span>
+
+          <span class="profile-header__compact-tier-info">
+            <span class="profile-header__compact-tier-name">
+              {{ tierLabel }}
+            </span>
+
+            <span class="profile-header__compact-tier-subtitle">
+              {{ tierSubtitle }}
+            </span>
+          </span>
+
+        </div>
+
+        <div class="profile-header__compact-name-row">
+
+          <h1 class="profile-header__compact-name">
+            {{ displayNameWithClan }}
+          </h1>
+
+          <span
+              v-if="roleLabel"
+              class="profile-header__role"
+              :class="`profile-header__role--${user.role}`"
+          >
+            {{ roleLabel }}
+          </span>
+
+        </div>
+
+        <div
+            v-if="user.username && user.username !== displayName"
+            class="profile-header__compact-username"
+        >
+          @{{ user.username }}
+        </div>
+
+        <div class="profile-header__compact-meta">
+
+          <span
+              v-if="playerStatus"
+              class="profile-header__compact-status"
+          >
+            <i />
+            {{ playerStatus }}
+          </span>
+
+          <span
+              v-if="level !== null"
+              class="profile-header__compact-chip"
+          >
+            LVL {{ level }}
+          </span>
+
+          <span
+              v-if="rankPosition !== null"
+              class="profile-header__compact-chip"
+          >
+            #{{ rankPosition }}
+          </span>
+
+          <span
+              v-if="user.days_on_platform !== undefined"
+              class="profile-header__compact-chip"
+          >
+            {{ user.days_on_platform }}D
+          </span>
+
+        </div>
+
+      </div>
+
+      <!-- Compact progress -->
+      <div
+          v-if="tierProgress !== null"
+          class="profile-header__compact-progress"
+      >
+        <div
+            class="profile-header__compact-progress-value"
+            :style="{
+              height: `${tierProgress}%`,
+            }"
+        />
+
+        <span>
+          {{ Number(tierProgress).toFixed(0) }}
+        </span>
+      </div>
+
+    </div>
+
+    <!-- =====================================================
+         NORMAL CONTENT
+         ===================================================== -->
+
+    <div
+        v-else
+        class="profile-header__content"
+    >
 
       <!-- ===================================================
            AVATAR
@@ -472,7 +635,6 @@ const coverStyle = computed(() => {
 
         </div>
 
-
       </div>
 
       <!-- ===================================================
@@ -481,15 +643,40 @@ const coverStyle = computed(() => {
 
       <div class="profile-header__identity">
 
-        <!-- =================================================
-             TIER
-             ================================================= -->
+        <!-- Tier -->
+        <div class="tier-display">
 
+          <div class="tier-display__icon">
+            <div class="tier-display__icon-inner">
+              {{ tierShort }}
+            </div>
+          </div>
 
-        <!-- =================================================
-             NAME + ROLE
-             ================================================= -->
+          <div class="tier-display__info">
 
+            <div class="tier-display__eyebrow">
+              CURRENT TIER
+            </div>
+
+            <div class="tier-display__name">
+              {{ tierLabel }}
+            </div>
+
+            <div class="tier-display__subtitle">
+              {{ tierSubtitle }}
+            </div>
+
+          </div>
+
+          <div class="tier-display__ornament">
+            <span />
+            <span />
+            <span />
+          </div>
+
+        </div>
+
+        <!-- Name -->
         <div class="profile-header__name-row">
 
           <h1 class="profile-header__name">
@@ -506,15 +693,15 @@ const coverStyle = computed(() => {
 
         </div>
 
-        <!-- =================================================
-             USERNAME
-             ================================================= -->
+        <!-- Username -->
+        <p
+            v-if="user.username"
+            class="profile-header__username"
+        >
+          @{{ user.username }}
+        </p>
 
-
-        <!-- =================================================
-             STATUS
-             ================================================= -->
-
+        <!-- Status -->
         <div
             v-if="playerStatus"
             class="profile-header__status-text"
@@ -523,10 +710,7 @@ const coverStyle = computed(() => {
           {{ playerStatus }}
         </div>
 
-        <!-- =================================================
-             BIO
-             ================================================= -->
-
+        <!-- Bio -->
         <p
             v-if="user.bio"
             class="profile-header__bio"
@@ -534,10 +718,7 @@ const coverStyle = computed(() => {
           {{ user.bio }}
         </p>
 
-        <!-- =================================================
-             QUOTE
-             ================================================= -->
-
+        <!-- Quote -->
         <div
             v-if="playerQuote"
             class="profile-header__quote"
@@ -557,10 +738,7 @@ const coverStyle = computed(() => {
           </span>
         </div>
 
-        <!-- =================================================
-             STATS
-             ================================================= -->
-
+        <!-- Stats -->
         <div class="profile-header__stats">
 
           <div
@@ -617,10 +795,7 @@ const coverStyle = computed(() => {
 
         </div>
 
-        <!-- =================================================
-             TIER PROGRESS
-             ================================================= -->
-
+        <!-- Tier Progress -->
         <div
             v-if="tierProgress !== null"
             class="tier-progress"
@@ -656,15 +831,39 @@ const coverStyle = computed(() => {
 
     <!-- =====================================================
          RIGHT RANK EMBLEM
+         Normal mode only
          ===================================================== -->
 
+    <div
+        v-if="!compact"
+        class="profile-header__rank-mark"
+        aria-hidden="true"
+    >
 
+      <div class="rank-mark__outer">
+
+        <div class="rank-mark__middle">
+
+          <div class="rank-mark__inner">
+            {{ tierShort }}
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="rank-mark__label">
+        {{ tierLabel }}
+      </div>
+
+    </div>
 
     <!-- =====================================================
          BOTTOM DECORATION
          ===================================================== -->
 
     <div
+        v-if="!compact"
         class="profile-header__peak"
         aria-hidden="true"
     >
@@ -786,7 +985,7 @@ const coverStyle = computed(() => {
 }
 
 /* =========================================================
-   BASE ATMOSPHERE
+   ATMOSPHERE
    ========================================================= */
 
 .profile-header__aurora {
@@ -869,7 +1068,7 @@ const coverStyle = computed(() => {
 }
 
 /* =========================================================
-   FULL PROFILE EFFECT
+   PROFILE EFFECT
    ========================================================= */
 
 .profile-header__effect {
@@ -887,10 +1086,6 @@ const coverStyle = computed(() => {
 
   will-change: transform, opacity;
 }
-
-/* =========================================================
-   GLOW
-   ========================================================= */
 
 .profile-header--effect-glow .profile-header__effect {
   background:
@@ -917,10 +1112,6 @@ const coverStyle = computed(() => {
 
   opacity: 0.72;
 }
-
-/* =========================================================
-   PULSE
-   ========================================================= */
 
 .profile-header--effect-pulse .profile-header__effect {
   background:
@@ -951,10 +1142,6 @@ const coverStyle = computed(() => {
       profilePulse 2.2s ease-in-out infinite;
 }
 
-/* =========================================================
-   GRADIENT
-   ========================================================= */
-
 .profile-header--effect-gradient .profile-header__effect {
   inset: -50%;
 
@@ -970,10 +1157,6 @@ const coverStyle = computed(() => {
   animation:
       profileGradient 7s ease-in-out infinite;
 }
-
-/* =========================================================
-   FIRE
-   ========================================================= */
 
 .profile-header--effect-fire .profile-header__effect {
   inset: 15% -15% -40%;
@@ -1007,10 +1190,6 @@ const coverStyle = computed(() => {
       profileFire 1.4s ease-in-out infinite alternate;
 }
 
-/* =========================================================
-   ICE
-   ========================================================= */
-
 .profile-header--effect-ice .profile-header__effect {
   background:
       radial-gradient(
@@ -1036,10 +1215,6 @@ const coverStyle = computed(() => {
   animation:
       profileIce 4s ease-in-out infinite;
 }
-
-/* =========================================================
-   LEGENDARY
-   ========================================================= */
 
 .profile-header--effect-legendary .profile-header__effect {
   inset: -45%;
@@ -1079,7 +1254,7 @@ const coverStyle = computed(() => {
 }
 
 /* =========================================================
-   LEGENDARY PARTICLES
+   PARTICLES
    ========================================================= */
 
 .profile-header__effect-particles {
@@ -1158,7 +1333,7 @@ const coverStyle = computed(() => {
 }
 
 /* =========================================================
-   TIER WATERMARK
+   WATERMARK
    ========================================================= */
 
 .profile-header__tier-watermark {
@@ -1311,7 +1486,7 @@ const coverStyle = computed(() => {
 }
 
 /* =========================================================
-   CONTENT
+   NORMAL CONTENT
    ========================================================= */
 
 .profile-header__content {
@@ -1475,57 +1650,6 @@ const coverStyle = computed(() => {
 
   object-fit: cover;
   object-position: center;
-}
-
-/* =========================================================
-   ONLINE
-   ========================================================= */
-
-.profile-header__online {
-  position: absolute;
-
-  left: 50%;
-  bottom: 5px;
-
-  z-index: 10;
-
-  transform: translateX(-50%);
-
-  display: inline-flex;
-  align-items: center;
-
-  gap: 5px;
-
-  padding: 4px 8px;
-
-  color: rgba(255, 255, 255, 0.65);
-
-  background: rgba(7, 7, 15, 0.92);
-
-  border: 1px solid rgba(255, 255, 255, 0.08);
-
-  border-radius: 6px;
-
-  font-size: 8px;
-  font-weight: 900;
-
-  letter-spacing: 1px;
-
-  white-space: nowrap;
-
-  backdrop-filter: blur(10px);
-}
-
-.profile-header__online span {
-  width: 5px;
-  height: 5px;
-
-  border-radius: 50%;
-
-  background: #22c55e;
-
-  box-shadow:
-      0 0 8px rgba(34, 197, 94, 0.8);
 }
 
 /* =========================================================
@@ -2133,7 +2257,7 @@ const coverStyle = computed(() => {
 }
 
 /* =========================================================
-   RIGHT RANK MARK
+   RANK MARK
    ========================================================= */
 
 .profile-header__rank-mark {
@@ -2292,7 +2416,7 @@ const coverStyle = computed(() => {
 }
 
 /* =========================================================
-   BOTTOM PEAK
+   BOTTOM DECORATION
    ========================================================= */
 
 .profile-header__peak {
@@ -2401,6 +2525,440 @@ const coverStyle = computed(() => {
           var(--player-accent) 45%,
           transparent
       );
+}
+
+/* =========================================================
+   COMPACT MODE
+   ========================================================= */
+
+.profile-header--compact {
+  min-height: 190px;
+
+  height: 190px;
+
+  margin: -24px -24px 20px;
+
+  padding: 18px 22px 20px;
+}
+
+/*
+ * Compact layout:
+ *
+ * ┌─────────────────────────────────────────────┐
+ * │ PLAYER                         Настроить    │
+ * │                                             │
+ * │  [AVATAR]  [D] D TIER   [CLAN] Name  ADMIN │
+ * │            CURRENT RANK       status chips  │
+ * │                                             │
+ * │  ─────────────────────────────────────────  │
+ * └─────────────────────────────────────────────┘
+ */
+
+.profile-header__compact-content {
+  position: relative;
+
+  z-index: 15;
+
+  display: flex;
+  align-items: center;
+
+  gap: 16px;
+
+  min-width: 0;
+
+  height: 122px;
+
+  padding-top: 10px;
+}
+
+/* Compact avatar */
+
+.profile-header__compact-avatar-wrap {
+  position: relative;
+
+  flex: 0 0 auto;
+
+  width: 76px;
+  height: 76px;
+
+  display: grid;
+  place-items: center;
+}
+
+.profile-header__avatar-frame--compact {
+  width: 70px;
+  height: 70px;
+
+  padding: 3px;
+}
+
+.profile-header__avatar-frame--compact .profile-header__avatar {
+  font-size: 25px;
+}
+
+.profile-header__compact-avatar-wrap
+.profile-header__avatar-glow {
+  inset: -12px;
+}
+
+/* Compact identity */
+
+.profile-header__compact-identity {
+  min-width: 0;
+
+  flex: 1 1 auto;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+
+  gap: 5px;
+}
+
+/* Compact tier */
+
+.profile-header__compact-tier {
+  display: inline-flex;
+  align-items: center;
+
+  width: fit-content;
+
+  gap: 7px;
+
+  min-width: 0;
+
+  margin-bottom: 1px;
+}
+
+.profile-header__compact-tier-icon {
+  display: grid;
+  place-items: center;
+
+  width: 27px;
+  height: 27px;
+
+  flex-shrink: 0;
+
+  border: 1px solid
+  color-mix(
+      in srgb,
+      var(--player-accent) 55%,
+      transparent
+  );
+
+  background:
+      linear-gradient(
+          145deg,
+          color-mix(
+              in srgb,
+              var(--player-accent) 30%,
+              #11121f
+          ),
+          #07070f
+      );
+
+  clip-path: polygon(
+      50% 0%,
+      92% 20%,
+      100% 50%,
+      92% 80%,
+      50% 100%,
+      8% 80%,
+      0% 50%,
+      8% 20%
+  );
+
+  color: #fff;
+
+  font-size: 8px;
+  font-weight: 1000;
+
+  text-shadow:
+      0 0 8px var(--player-accent);
+
+  filter:
+      drop-shadow(
+          0 0 7px
+          color-mix(
+              in srgb,
+              var(--player-accent) 50%,
+              transparent
+          )
+      );
+}
+
+.profile-header__compact-tier-info {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-header__compact-tier-name {
+  color: rgba(255, 255, 255, 0.82);
+
+  font-size: 9px;
+  line-height: 1;
+
+  font-weight: 950;
+
+  letter-spacing: 0.8px;
+}
+
+.profile-header__compact-tier-subtitle {
+  margin-top: 2px;
+
+  color:
+      color-mix(
+          in srgb,
+          var(--player-accent) 80%,
+          white
+      );
+
+  font-size: 6px;
+  font-weight: 900;
+
+  letter-spacing: 1px;
+}
+
+/* Compact name */
+
+.profile-header__compact-name-row {
+  display: flex;
+  align-items: center;
+
+  flex-wrap: nowrap;
+
+  gap: 7px;
+
+  min-width: 0;
+}
+
+.profile-header__compact-name {
+  min-width: 0;
+
+  margin: 0;
+
+  overflow: hidden;
+
+  color: #fff;
+
+  font-size: clamp(20px, 2.4vw, 28px);
+
+  line-height: 1;
+
+  font-weight: 1000;
+
+  letter-spacing: -0.8px;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+
+  text-shadow:
+      0 2px 15px rgba(0, 0, 0, 0.5),
+      0 0 25px
+      color-mix(
+          in srgb,
+          var(--player-accent) 12%,
+          transparent
+      );
+}
+
+.profile-header--compact .profile-header__role {
+  min-height: 19px;
+
+  flex: 0 0 auto;
+
+  padding: 0 6px;
+
+  font-size: 6px;
+
+  letter-spacing: 0.6px;
+
+  border-radius: 4px;
+}
+
+/* Compact username */
+
+.profile-header__compact-username {
+  color: rgba(255, 255, 255, 0.28);
+
+  font-size: 8px;
+  font-weight: 700;
+
+  line-height: 1;
+}
+
+/* Compact meta */
+
+.profile-header__compact-meta {
+  display: flex;
+  align-items: center;
+
+  flex-wrap: nowrap;
+
+  gap: 5px;
+
+  min-width: 0;
+
+  overflow: hidden;
+}
+
+.profile-header__compact-status {
+  display: inline-flex;
+  align-items: center;
+
+  min-width: 0;
+
+  max-width: 180px;
+
+  gap: 4px;
+
+  overflow: hidden;
+
+  color: rgba(255, 255, 255, 0.42);
+
+  font-size: 7px;
+  font-weight: 700;
+
+  font-style: italic;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+.profile-header__compact-status i {
+  width: 4px;
+  height: 4px;
+
+  flex: 0 0 auto;
+
+  border-radius: 50%;
+
+  background: var(--player-accent);
+
+  box-shadow:
+      0 0 7px
+      color-mix(
+          in srgb,
+          var(--player-accent) 80%,
+          transparent
+      );
+}
+
+.profile-header__compact-chip {
+  flex: 0 0 auto;
+
+  padding: 3px 5px;
+
+  color: rgba(255, 255, 255, 0.4);
+
+  background: rgba(255, 255, 255, 0.04);
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+
+  border-radius: 4px;
+
+  font-size: 6px;
+  font-weight: 900;
+
+  letter-spacing: 0.5px;
+}
+
+/* Compact vertical score */
+
+.profile-header__compact-progress {
+  position: relative;
+
+  flex: 0 0 auto;
+
+  width: 4px;
+  height: 72px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.07);
+
+  box-shadow:
+      inset 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+.profile-header__compact-progress-value {
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  border-radius: inherit;
+
+  background:
+      linear-gradient(
+          to top,
+          color-mix(
+              in srgb,
+              var(--player-accent) 55%,
+              transparent
+          ),
+          var(--player-accent),
+          rgba(255, 255, 255, 0.9)
+      );
+
+  box-shadow:
+      0 0 12px
+      color-mix(
+          in srgb,
+          var(--player-accent) 70%,
+          transparent
+      );
+}
+
+.profile-header__compact-progress span {
+  position: absolute;
+
+  left: 50%;
+  bottom: -18px;
+
+  transform: translateX(-50%);
+
+  color:
+      color-mix(
+          in srgb,
+          var(--player-accent) 75%,
+          white
+      );
+
+  font-size: 6px;
+  font-weight: 900;
+}
+
+/* =========================================================
+   COMPACT EFFECT TUNING
+   ========================================================= */
+
+.profile-header--compact .profile-header__effect {
+  opacity: 0.55;
+}
+
+.profile-header--compact.profile-header--effect-fire
+.profile-header__effect {
+  inset: 5% -20% -45%;
+}
+
+.profile-header--compact.profile-header--effect-gradient
+.profile-header__effect {
+  inset: -80%;
+}
+
+.profile-header--compact.profile-header--effect-legendary
+.profile-header__effect {
+  inset: -70%;
+  opacity: 0.48;
 }
 
 /* =========================================================
@@ -2613,14 +3171,6 @@ const coverStyle = computed(() => {
     inset: -12px;
   }
 
-  .profile-header__online {
-    bottom: 6px;
-
-    padding: 3px 6px;
-
-    font-size: 7px;
-  }
-
   .profile-header__name {
     font-size: 32px;
 
@@ -2661,85 +3211,140 @@ const coverStyle = computed(() => {
   }
 }
 
-@media (max-width: 560px) {
-  .profile-header__content {
-    gap: 14px;
+/* =========================================================
+   COMPACT RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .profile-header--compact {
+    height: 170px;
+
+    min-height: 170px;
+
+    margin: -16px -16px 18px;
+
+    padding: 15px 16px 17px;
   }
 
-  .profile-header__name-row {
-    gap: 7px;
+  .profile-header__compact-content {
+    height: 108px;
+
+    gap: 12px;
+
+    padding-top: 5px;
   }
 
-  .profile-header__role {
-    min-height: 22px;
-
-    padding: 0 7px;
-
-    font-size: 7px;
+  .profile-header__compact-avatar-wrap {
+    width: 62px;
+    height: 62px;
   }
 
-  .profile-header__stats {
-    gap: 5px;
+  .profile-header__avatar-frame--compact {
+    width: 58px;
+    height: 58px;
   }
 
-  .profile-header__stat {
-    padding: 6px 8px;
+  .profile-header__compact-name {
+    font-size: 21px;
+  }
+
+  .profile-header__compact-tier-name {
+    font-size: 8px;
+  }
+
+  .profile-header__compact-status {
+    max-width: 110px;
+  }
+
+  .profile-header__compact-progress {
+    height: 60px;
   }
 }
 
 @media (max-width: 480px) {
-  .profile-header__topline {
-    align-items: flex-start;
+  .profile-header--compact {
+    height: 155px;
+
+    min-height: 155px;
+
+    padding: 13px 14px 15px;
   }
 
-  .profile-header__edit {
-    padding: 0 9px;
+  .profile-header--compact .profile-header__eyebrow {
+    font-size: 8px;
   }
 
-  .profile-header__edit svg {
+  .profile-header__compact-content {
+    height: 96px;
+
+    gap: 9px;
+  }
+
+  .profile-header__compact-avatar-wrap {
+    width: 52px;
+    height: 52px;
+  }
+
+  .profile-header__avatar-frame--compact {
+    width: 49px;
+    height: 49px;
+  }
+
+  .profile-header__compact-name {
+    font-size: 18px;
+
+    letter-spacing: -0.5px;
+  }
+
+  .profile-header__compact-tier-icon {
+    width: 23px;
+    height: 23px;
+
+    font-size: 7px;
+  }
+
+  .profile-header__compact-tier-name {
+    font-size: 7px;
+  }
+
+  .profile-header__compact-tier-subtitle {
+    font-size: 5px;
+  }
+
+  .profile-header__compact-meta {
+    gap: 3px;
+  }
+
+  .profile-header__compact-status {
+    max-width: 80px;
+
+    font-size: 6px;
+  }
+
+  .profile-header__compact-chip {
+    padding: 2px 4px;
+
+    font-size: 5px;
+  }
+
+  .profile-header__compact-progress {
+    width: 3px;
+    height: 52px;
+  }
+
+  .profile-header__compact-progress span {
     display: none;
   }
 
-  .profile-header__content {
-    display: block;
+  .profile-header--compact .profile-header__edit {
+    min-height: 28px;
+
+    padding: 0 8px;
+
+    font-size: 9px;
   }
 
-  .profile-header__avatar-wrap {
-    margin-bottom: 26px;
-  }
-
-  .profile-header__rank-mark {
-    display: none;
-  }
-
-  .profile-header__tier-watermark {
-    right: -15%;
-
-    bottom: -5%;
-
-    font-size: 150px;
-
-    opacity: 0.4;
-  }
-
-  .profile-header__name {
-    font-size: 31px;
-  }
-
-  .tier-display {
-    width: 100%;
-    max-width: 280px;
-  }
-
-  .tier-display__name {
-    font-size: 15px;
-  }
-
-  .profile-header__effect {
-    opacity: 0.5;
-  }
-
-  .profile-header--effect-legendary .profile-header__effect-particles {
+  .profile-header--compact .profile-header__edit svg {
     display: none;
   }
 }
