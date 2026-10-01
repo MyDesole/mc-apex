@@ -22,6 +22,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'status', 'quote', 'favorite_clan_id',
         'featured_achievements', 'profile_visibility', 'card_background',
         'favorite_modes', 'discord_tag',
+        'apex_coins', 'apex_coins_spent', 'equipped_badges',
+        'referral_code', 'referred_by',
         'is_verified', 'verified_reason', 'clan_joined_at',
     ];
 
@@ -103,10 +105,38 @@ class User extends Authenticatable implements MustVerifyEmail
         'favorite_modes' => 'array',
         'featured_achievements' => 'array',
         'is_verified' => 'boolean',
+        'apex_coins' => 'integer',
+        'apex_coins_spent' => 'integer',
+        'equipped_badges' => 'array',
+        'referred_by' => 'integer',
         'clan_joined_at' => 'datetime',
 
     ];
 
+
+    /**
+     * Операции с ApexCoin.
+     */
+    public function coinTransactions(): HasMany
+    {
+        return $this->hasMany(CoinTransaction::class);
+    }
+
+    /**
+     * Купленная косметика.
+     */
+    public function inventory(): HasMany
+    {
+        return $this->hasMany(UserInventory::class);
+    }
+
+    /**
+     * Надетые бейджи из магазина.
+     */
+    public function getBadgesAttribute(): array
+    {
+        return $this->equipped_badges ?? [];
+    }
     public function getCardBackgroundUrlAttribute(): ?string
     {
         return $this->card_background ? asset('storage/' . $this->card_background) : null;

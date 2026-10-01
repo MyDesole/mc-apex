@@ -11,6 +11,7 @@ import AdminTournaments from '@/components/admin/AdminTournaments.vue'
 import AdminAchievements from '@/components/admin/AdminAchievements.vue'
 import AdminHome from '@/components/admin/AdminHome.vue'
 import AdminNews from '@/components/admin/AdminNews.vue'
+import AdminShop from '@/components/admin/AdminShop.vue'
 import AdminVerification from '@/components/admin/AdminVerification.vue'
 
 const auth = useAuthStore()
@@ -163,6 +164,18 @@ onMounted(() => {
         </svg>
         Новости
       </button>
+
+      <!-- МАГАЗИН И ЭКОНОМИКА -->
+      <button
+          :class="{ active: tab === 'shop' }"
+          @click="tab = 'shop'"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M3 6h18M16 10a4 4 0 0 1-8 0" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Магазин
+      </button>
     </nav>
 
     <div class="admin-content">
@@ -174,6 +187,7 @@ onMounted(() => {
       <AdminAchievements v-else-if="tab === 'achievements' && isAdmin" />
       <AdminHome v-else-if="tab === 'home' && isAdmin" />
       <AdminNews v-else-if="tab === 'news' && isAdmin" />
+      <AdminShop v-else-if="tab === 'shop'" />
       <AdminVerification v-else-if="tab === 'verification' && isAdmin" />
 
     </div>

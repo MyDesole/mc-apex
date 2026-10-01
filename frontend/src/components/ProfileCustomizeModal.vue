@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { playersApi } from '@/services/players.js'
 import { achievementsApi } from '@/services/achievements.js'
+import { shopApi } from '@/services/shop.js'
 import {
   AVATAR_FRAMES,
   PROFILE_EFFECTS,
@@ -16,6 +17,13 @@ const emit = defineEmits(['close', 'updated'])
 const user = computed(() => auth.user)
 
 const tab = ref('style') // style | info | achievements
+
+// Владение косметикой из магазина (чтобы нельзя было надеть некупленное)
+const ownedFrames = ref(new Set())
+const ownedEffects = ref(new Set())
+const ownedAccents = ref(new Set())
+const paidAccents = ref(new Set())
+const shopLoading = ref(false)
 
 const form = ref({
   avatar_frame: user.value?.avatar_frame ?? 'default',
@@ -178,6 +186,42 @@ async function loadAchievements() {
   }
 }
 
+// Купленная косметика: какие рамки/эффекты/акценты можно надевать
+async function loadOwned() {
+  shopLoading.value = true
+  try {
+    const data = await shopApi.inventory()
+    const items = data.items ?? []
+
+    ownedFrames.value = new Set(
+      items.filter((i) => i.type === 'avatar_frame').map((i) => i.effect_value).filter(Boolean)
+    )
+    ownedEffects.value = new Set(
+      items.filter((i) => i.type === 'profile_effect').map((i) => i.effect_value).filter(Boolean)
+    )
+    ownedAccents.value = new Set(
+      items.filter((i) => i.type === 'accent_color').map((i) => i.effect_value).filter(Boolean)
+    )
+  } catch (e) {
+    console.error('Не удалось загрузить инвентарь косметики', e)
+  } finally {
+    shopLoading.value = false
+  }
+
+  // Какие акценты продаются в магазине (нельзя надевать бесплатно, пока не купил)
+  try {
+    const catalog = await shopApi.catalog()
+    paidAccents.value = new Set(
+      (catalog.items ?? [])
+        .filter((i) => i.type === 'accent_color')
+        .map((i) => i.effect_value)
+        .filter(Boolean)
+    )
+  } catch (e) {
+    console.error('Не удалось загрузить каталог', e)
+  }
+}
+
 // === Сохранение ===
 
 async function submit() {
@@ -228,7 +272,10 @@ async function submit() {
   }
 }
 
-onMounted(loadAchievements)
+onMounted(() => {
+  loadAchievements()
+  loadOwned()
+})
 
 onBeforeUnmount(() => {
   if (avatarPreview.value?.startsWith('blob:')) {
@@ -365,13 +412,17 @@ onBeforeUnmount(() => {
             <!-- Рамка -->
             <section class="section">
               <h3 class="section__title">Рамка аватара</h3>
+              <p class="section__hint">
+                Купленное в магазине доступно сразу; остальное — <RouterLink :to="{ name: 'shop' }" class="link">купить в магазине</RouterLink>.
+              </p>
               <div class="frames-grid">
                 <button
                     v-for="f in AVATAR_FRAMES"
                     :key="f.id"
                     type="button"
                     class="frame-btn"
-                    :class="{ active: form.avatar_frame === f.id }"
+                    :class="{ active: form.avatar_frame === f.id, locked: f.id !== 'default' && !ownedFrames.has(f.id) }"
+                    :disabled="f.id !== 'default' && !ownedFrames.has(f.id)"
                     @click="form.avatar_frame = f.id"
                 >
                   <div
@@ -394,7 +445,8 @@ onBeforeUnmount(() => {
                     :key="e.id ?? 'none'"
                     type="button"
                     class="effect-btn"
-                    :class="{ active: form.profile_effect === e.id }"
+                    :class="{ active: form.profile_effect === e.id, locked: e.id !== null && !ownedEffects.has(e.id) }"
+                    :disabled="e.id !== null && !ownedEffects.has(e.id)"
                     @click="form.profile_effect = e.id"
                 >
                   {{ e.name }}
@@ -411,8 +463,9 @@ onBeforeUnmount(() => {
                     :key="c"
                     type="button"
                     class="color-btn"
-                    :class="{ active: form.accent_color === c }"
+                    :class="{ active: form.accent_color === c, locked: paidAccents.has(c) && !ownedAccents.has(c) }"
                     :style="{ background: c }"
+                    :disabled="paidAccents.has(c) && !ownedAccents.has(c)"
                     @click="form.accent_color = c"
                 />
                 <input
@@ -2225,4 +2278,11 @@ textarea:focus-visible {
     transition: none;
   }
 }
+
+/* Владение косметикой (магазин) */
+.locked { opacity: 0.35; cursor: not-allowed; filter: grayscale(0.7); }
+.locked:hover { transform: none; }
+.section__hint { margin: -6px 0 12px; color: var(--text-dim, #8888a0); font-size: 13px; }
+.link { color: var(--accent-light, #8b5cf6); text-decoration: none; }
+.link:hover { text-decoration: underline; }
 </style>

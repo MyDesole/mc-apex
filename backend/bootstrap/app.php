@@ -26,7 +26,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'broadcasting/auth',
         ]);
-        $middleware->appendToGroup('auth:sanctum', [
+        // Проверка бана во всей группе api: для гостей middleware ничего
+        // не делает, а на защищённых роутах выполняется после аутентификации.
+        // Раньше здесь создавалась группа-тень с именем алиаса, из-за неё
+        // аутентификация не работала ни на одном роуте, а гость получал 500
+        // вместо 401.
+        $middleware->appendToGroup('api', [
             \App\Http\Middleware\EnsureUserIsNotBanned::class,
         ]);
     })

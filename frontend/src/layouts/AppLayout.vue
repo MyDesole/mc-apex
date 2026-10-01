@@ -8,6 +8,7 @@ import { chatApi } from '@/services/chat.js'
 
 import UserName from '@/components/UserName.vue'
 import VerifyEmailBanner from '@/components/VerifyEmailBanner.vue'
+import CoinBadge from '@/components/CoinBadge.vue'
 import TierTestBanner from '@/components/TierTestBanner.vue'
 import NotificationToast from '@/components/NotificationToast.vue'
 
@@ -227,6 +228,9 @@ watch(mobileMenuOpen, (open) => {
 
           <template v-else>
 
+            <!-- APEXCOIN -->
+            <CoinBadge />
+
             <!-- ЧАТ -->
             <RouterLink
                 to="/messages"
@@ -365,7 +369,14 @@ watch(mobileMenuOpen, (open) => {
                     <span class="dropdown-icon">◉</span>
                     <span>Профиль</span>
                   </RouterLink>
-
+                  <RouterLink
+                      to="/inventory"
+                      class="dropdown-item"
+                      @click="menuOpen = false"
+                  >
+                    <span class="dropdown-icon">◇</span>
+                    <span>Инвентарь</span>
+                  </RouterLink>
                   <RouterLink
                       to="/friends"
                       class="dropdown-item"
@@ -526,6 +537,15 @@ watch(mobileMenuOpen, (open) => {
             >
               <span class="mobile-icon">◉</span>
               <span>Профиль</span>
+            </RouterLink>
+
+            <RouterLink
+                to="/inventory"
+                class="dropdown-item"
+                @click="menuOpen = false"
+            >
+              <span class="dropdown-icon">◇</span>
+              <span>Инвентарь</span>
             </RouterLink>
 
             <RouterLink

@@ -2,6 +2,7 @@
 import { onMounted, ref, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { friendsApi } from '@/services/friends.js'
+import GiftCoinsButton from '@/components/GiftCoinsButton.vue'
 import UserName from "@/components/UserName.vue";
 
 const loading = ref(true)
@@ -95,6 +96,8 @@ const currentList = computed(() => {
           >
             Принять
           </button>
+
+          <GiftCoinsButton v-if="tab === 'friends'" :user="user" />
 
           <button
               v-if="tab === 'friends' || tab === 'outgoing'"

@@ -23,6 +23,9 @@ class AchievementService
             'earned_at' => now(),
         ]);
 
+        // Награда в ApexCoin за ачивку (идемпотентно на стороне CoinService)
+        \App\Services\RewardService::forAchievement($user, $achievement);
+
         // 👇 уведомление
         $user->notify(new \App\Notifications\AchievementGrantedNotification($achievement));
 

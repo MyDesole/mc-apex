@@ -147,6 +147,9 @@ class TierTestController extends Controller
 
             \App\Services\AchievementService::check($user);
 
+            // ApexCoin за пройденный тир-тест (идемпотентно по id теста)
+            \App\Services\RewardService::forTierTest($tierTest->fresh());
+
             $user->notify(new \App\Notifications\TierTestCompletedNotification($tierTest));
         }
 

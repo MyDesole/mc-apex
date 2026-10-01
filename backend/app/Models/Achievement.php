@@ -10,11 +10,13 @@ class Achievement extends Model
     protected $fillable = [
         'code', 'name', 'description', 'icon',
         'color', 'rarity', 'points',
+        'coin_reward',
         'is_system', 'is_active',
     ];
 
     protected $casts = [
         'is_system' => 'boolean',
+        'coin_reward' => 'integer',
         'is_active' => 'boolean',
     ];
 

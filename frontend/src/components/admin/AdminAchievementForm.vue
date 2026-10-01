@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { adminApi } from '@/services/admin.js'
+import AppIcon from '@/components/AppIcon.vue'
 
 const props = defineProps({
   achievement: { type: Object, default: null },
@@ -17,6 +18,7 @@ const form = ref({
   color: props.achievement?.color ?? '#7c3aed',
   rarity: props.achievement?.rarity ?? 'common',
   points: props.achievement?.points ?? 10,
+  coin_reward: props.achievement?.coin_reward ?? null,
   code: props.achievement?.code ?? '',
 })
 
@@ -65,9 +67,9 @@ const rarityLabels = {
 }
 
 const iconPresets = [
-  '🏆', '👑', '⚔️', '🛡️', '🔥', '⚡', '💎', '🌟',
-  '🎯', '📊', '🤝', '🌐', '✨', '🎮', '🎨', '🚀',
-  '💀', '🗡️', '🩸', '🥇', '🥈', '🥉', '🎖️', '🏅',
+  'trophy', 'crown', 'sword', 'shield', 'flame', 'bolt', 'gem', 'star',
+  'target', 'chart', 'handshake', 'globe', 'sparkles', 'rocket', 'palette', 'medal',
+  'leaf', 'snow', 'heart', 'send', 'coin', 'gift', 'doc', 'frame',
 ]
 </script>
 
@@ -84,7 +86,7 @@ const iconPresets = [
 
         <!-- Превью -->
         <div class="preview" :style="{ '--color': previewColor }">
-          <div class="preview__icon">{{ form.icon }}</div>
+          <AppIcon class="preview__icon" :icon="form.icon" :size="30" />
           <div class="preview__info">
             <div class="preview__name">{{ form.name || 'Название ачивки' }}</div>
             <div class="preview__desc">
@@ -128,14 +130,14 @@ const iconPresets = [
                 :class="{ active: form.icon === icon }"
                 @click="form.icon = icon"
             >
-              {{ icon }}
+              <AppIcon :icon="icon" :size="20" />
             </button>
             <input
                 v-model="form.icon"
                 type="text"
-                maxlength="4"
+                maxlength="20"
                 class="icon-input"
-                placeholder="Или свой"
+                placeholder="Или имя иконки"
             />
           </div>
         </div>
@@ -183,6 +185,19 @@ const iconPresets = [
                 min="0"
                 max="10000"
             />
+          </div>
+
+          <div class="field">
+            <label>Награда в ApexCoin</label>
+            <input
+                v-model.number="form.coin_reward"
+                type="number"
+                min="0"
+                placeholder="пусто — по формуле"
+            />
+            <small class="hint">
+              Пусто — награда считается как база + очки × множитель (админка → Магазин → Награды).
+            </small>
           </div>
         </div>
 

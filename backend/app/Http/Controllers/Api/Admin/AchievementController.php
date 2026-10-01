@@ -59,6 +59,7 @@ class AchievementController extends Controller
             'icon' => ['required', 'string', 'max:32'],
             'color' => ['required', 'string', 'max:16'],
             'rarity' => ['required', 'in:common,rare,epic,legendary'],
+            'coin_reward' => ['nullable', 'integer', 'min:0', 'max:1000000'],
             'points' => ['required', 'integer', 'min:0', 'max:10000'],
             'code' => ['nullable', 'string', 'max:64', 'unique:achievements,code'],
         ]);
@@ -88,6 +89,7 @@ class AchievementController extends Controller
             'icon' => ['sometimes', 'string', 'max:32'],
             'color' => ['sometimes', 'string', 'max:16'],
             'rarity' => ['sometimes', 'in:common,rare,epic,legendary'],
+            'coin_reward' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:1000000'],
             'points' => ['sometimes', 'integer', 'min:0', 'max:10000'],
             'is_active' => ['sometimes', 'boolean'],
         ]);

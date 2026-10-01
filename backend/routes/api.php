@@ -32,6 +32,12 @@ use App\Http\Controllers\Api\Admin\ClanStatsController as AdminClanStatsControll
 use App\Http\Controllers\Api\Admin\CommentController as AdminCommentController;
 use App\Http\Controllers\Api\Admin\TournamentController as AdminTournamentController;
 use App\Http\Controllers\Api\Admin\SiteSettingsController;
+
+// === Магазин и ApexCoin ===
+use App\Http\Controllers\Api\ShopController;
+use App\Http\Controllers\Api\WalletController;
+use App\Http\Controllers\Api\GiftController;
+use App\Http\Controllers\Api\Admin\ShopController as AdminShopController;
 use App\Http\Controllers\Api\Admin\NewsController as AdminNewsController;
 
 /*
@@ -66,6 +72,20 @@ Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $requ
     return redirect(config('app.frontend_url') . '/profile?verified=1');
 })->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
 
+
+/*
+|--------------------------------------------------------------------------
+| МАГАЗИН (публично) — apex:shop-public
+|--------------------------------------------------------------------------
+| Точные пути объявлены раньше параметрического: Laravel берёт первый
+| совпавший роут, поэтому '{shopItem}' ушёл бы в конец блока.
+*/
+Route::get('/shop', [ShopController::class, 'index']);
+Route::get('/shop/priority-candidates', [ShopController::class, 'priorityCandidates'])
+    ->middleware('auth:sanctum');
+Route::get('/shop/inventory', [ShopController::class, 'inventory'])
+    ->middleware('auth:sanctum');
+Route::get('/shop/{shopItem}', [ShopController::class, 'show'])->whereNumber('shopItem');
 Route::get('/players/{user}/recommendations', [ProfileRecommendationController::class, 'index'])
     ->whereNumber('user');
 
@@ -165,6 +185,46 @@ Route::middleware('auth:sanctum')->group(function () {
     | ИГРОКИ
     |----------------------------------------------------------------------
     */
+
+    /*
+    |----------------------------------------------------------------------
+    | APEXCOIN: КОШЕЛЁК — apex:shop-wallet
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('wallet')->group(function () {
+        Route::get('/', [WalletController::class, 'index']);
+        Route::get('/transactions', [WalletController::class, 'transactions']);
+        Route::post('/daily-bonus', [WalletController::class, 'claimDaily']);
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | МАГАЗИН: ПОКУПКА И НАДЕВАНИЕ — apex:shop-buy
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('shop')->group(function () {
+        Route::post('/{shopItem}/purchase', [ShopController::class, 'purchase'])->whereNumber('shopItem');
+        Route::post('/{shopItem}/equip', [ShopController::class, 'equip'])->whereNumber('shopItem');
+        Route::post('/{shopItem}/unequip', [ShopController::class, 'unequip'])->whereNumber('shopItem');
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | ПРИМЕНЕНИЕ КУПЛЕННОГО ПРИОРИТЕТА — apex:shop-priority
+    |----------------------------------------------------------------------
+    */
+    Route::post('/tier-tests/{tierTest}/priority', [ShopController::class, 'applyPriority'])
+        ->whereNumber('tierTest');
+
+    /*
+    |----------------------------------------------------------------------
+    | ПОДАРКИ ВАЛЮТЫ ДРУЗЬЯМ — apex:shop-gifts
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('gifts')->group(function () {
+        Route::get('/limits', [GiftController::class, 'limits']);
+        Route::post('/{user}', [GiftController::class, 'store'])->whereNumber('user');
+    });
     Route::get('/players/{user}/achievements', [AchievementController::class, 'user'])->whereNumber('user');
     Route::get('/players/{user}/tier-history', [TierTestController::class, 'history'])->whereNumber('user');
 
@@ -304,6 +364,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:moderator,admin')->prefix('admin')->group(function () {
 
         // --- КЛАНЫ ---
+
+        // --- МАГАЗИН: КАТАЛОГ И НАГРАДЫ — apex:shop-admin ---
+        Route::get('/shop-items', [AdminShopController::class, 'index']);
+        Route::post('/shop-items', [AdminShopController::class, 'store']);
+        Route::put('/shop-items/{shopItem}', [AdminShopController::class, 'update'])->whereNumber('shopItem');
+        Route::delete('/shop-items/{shopItem}', [AdminShopController::class, 'destroy'])->whereNumber('shopItem');
+        Route::post('/shop-items/{shopItem}/toggle', [AdminShopController::class, 'toggle'])->whereNumber('shopItem');
+        Route::get('/shop-rewards', [AdminShopController::class, 'rewards']);
+        Route::put('/shop-rewards', [AdminShopController::class, 'updateRewards']);
         Route::get('/clans', [AdminClanController::class, 'index']);
         Route::post('/clans/{clan}/stats', [AdminClanStatsController::class, 'update'])->whereNumber('clan');
         Route::put('/clans/{clan}/stats', [AdminClanStatsController::class, 'set'])->whereNumber('clan');
@@ -350,7 +419,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // --- ЮЗЕРЫ ---
         // СНАЧАЛА статические!
-        Route::get('/users', [AdminUserController::class, 'index']);
+    
+        // --- APEXCOIN: НАЧИСЛЕНИЯ И ЛЕДЖЕР — apex:shop-coins ---
+        Route::post('/users/{user}/coins', [AdminShopController::class, 'grantCoins'])->whereNumber('user');
+        Route::get('/coin-transactions', [AdminShopController::class, 'transactions']);
+    Route::get('/users', [AdminUserController::class, 'index']);
         Route::get('/users/verified', [AdminUserController::class, 'verified']);
 
         // ПОТОМ динамические

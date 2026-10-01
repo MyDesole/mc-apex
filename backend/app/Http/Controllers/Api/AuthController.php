@@ -116,6 +116,18 @@ class AuthController extends Controller
         ];
     }
 
+    /**
+     * Генерирует уникальный код приглашения.
+     */
+    private static function generateReferralCode(): string
+    {
+        do {
+            $code = strtoupper(Str::random(8));
+        } while (User::where('referral_code', $code)->exists());
+
+        return $code;
+    }
+
     public function sendVerificationCode(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -190,6 +202,7 @@ class AuthController extends Controller
             ],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'verification_token' => ['required', 'string'],
+            'referral_code' => ['nullable', 'string', 'max:32'],
         ]);
 
         $email = cache()->pull('email_verified:' . $validated['verification_token']);
@@ -206,11 +219,24 @@ class AuthController extends Controller
             ]);
         }
 
+        $referrer = null;
+
+        if (!empty($validated['referral_code'])) {
+            $referrer = User::where('referral_code', $validated['referral_code'])->first();
+        }
+
         $user = User::create([
             'username' => $validated['username'],
             'email' => $email,
             'password' => $validated['password'],
+            'referral_code' => self::generateReferralCode(),
+            'referred_by' => $referrer?->id,
         ]);
+
+        if ($referrer) {
+            // Награда пригласившему за нового игрока
+            \App\Services\RewardService::forReferral($referrer, $user);
+        }
 
         $user->markEmailAsVerified();
 

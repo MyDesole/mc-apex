@@ -12,6 +12,7 @@ class TierTest extends Model
         'contact_type', 'contact_value', 'preferred_time',
         'mode', 'status', 'scheduled_at', 'completed_at',
         'result_tier', 'result_score', 'aspects', 'notes',
+        'is_priority', 'priority_purchased_at', 'priority_price_paid', 'priority_weight',
         'block_placing', 'rotka', 'movement', 'building', 'ppl', 'bed_play',   // ← добавили
     ];
 
@@ -20,6 +21,10 @@ class TierTest extends Model
         'completed_at' => 'datetime',
         'claimed_at' => 'datetime',
         'aspects' => 'array',
+        'is_priority' => 'boolean',
+        'priority_purchased_at' => 'datetime',
+        'priority_price_paid' => 'integer',
+        'priority_weight' => 'integer',
         'result_score' => 'decimal:2',
     ];
 

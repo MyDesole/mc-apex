@@ -51,6 +51,12 @@ class TierTestController extends Controller
             $query->whereNull('claimed_by');
         }
 
+        // Приоритетные заявки (купленный буст) — вне очереди, внутри группы FIFO
+        $tests = $query
+            ->orderByDesc('is_priority')
+            ->orderByDesc('priority_weight')
+            ->orderBy('created_at')
+            ->paginate(30);
         $tests = $query->orderByDesc('created_at')->paginate(30);
 
         return response()->json($tests);
@@ -188,6 +194,8 @@ class TierTestController extends Controller
 
             $user = $tierTest->user->fresh();
             $user->recalcTierFromAspects();
+            // ApexCoin за пройденный тир-тест (идемпотентно по id теста)
+            \App\Services\RewardService::forTierTest($tierTest->fresh());
             AchievementService::check($user);
         });
 
