@@ -36,14 +36,47 @@ const editReplyBody = ref('')
 
 const topicId = computed(() => route.params.id)
 
-/** На каком сообщении отвечаем — для подписи над формой. */
 const parentReply = computed(() => {
   if (!replyParent.value) return null
-
   return findReply(replies.value, replyParent.value.id)
 })
 
-/** Ищем ответ в дереве по id. */
+const replyProgress = computed(() => {
+  return Math.min(100, Math.round((replyBody.value.length / 20000) * 100))
+})
+
+const topicCategoryColor = computed(() => {
+  return topic.value?.category?.color || 'var(--accent)'
+})
+
+const topicInitial = computed(() => {
+  return (topic.value?.author?.username || 'И').charAt(0).toUpperCase()
+})
+
+const topicStatus = computed(() => {
+  if (topic.value?.is_locked) {
+    return {
+      label: 'Закрыто',
+      icon: 'close',
+      class: 'status--locked',
+    }
+  }
+
+  if (topic.value?.is_pinned) {
+    return {
+      label: 'Закреплено',
+      icon: 'target',
+      class: 'status--pinned',
+    }
+  }
+
+  return {
+    label: 'Активно',
+    icon: 'sparkles',
+    class: 'status--active',
+  }
+})
+
 function findReply(list, id) {
   for (const item of list) {
     if (item.id === id) return item
@@ -136,7 +169,6 @@ async function startEditReply(reply) {
   editingReply.value = reply
   editReplyBody.value = reply.body
 
-  // Форма правки — прямо в ветке
   setTimeout(() => {
     document.querySelector(`[data-edit-for="${reply.id}"]`)?.scrollIntoView({
       behavior: 'smooth',
@@ -149,10 +181,13 @@ async function saveReply() {
   if (!editingReply.value) return
 
   try {
-    await forumApi.updateReply(editingReply.value.id, { body: editReplyBody.value })
+    await forumApi.updateReply(editingReply.value.id, {
+      body: editReplyBody.value,
+    })
 
     editingReply.value = null
     notice.value = 'Сообщение обновлено.'
+
     await load()
   } catch (e) {
     error.value = e.message || 'Не удалось сохранить сообщение.'
@@ -170,7 +205,9 @@ async function removeReply(reply) {
 
   try {
     await forumApi.deleteReply(reply.id)
+
     notice.value = 'Сообщение удалено.'
+
     await load()
   } catch (e) {
     error.value = e.message || 'Не удалось удалить сообщение.'
@@ -210,6 +247,7 @@ async function saveTopic() {
 
     editingTopic.value = false
     notice.value = 'Тема обновлена.'
+
     await load()
   } catch (e) {
     error.value = e.message || 'Не удалось сохранить тему.'
@@ -221,17 +259,22 @@ async function removeTopic() {
 
   try {
     await forumApi.deleteTopic(topicId.value)
+
     router.push({ name: 'forum' })
   } catch (e) {
     error.value = e.message || 'Не удалось удалить тему.'
   }
 }
 
-async function formatDate(value) {
+function formatDate(value) {
   if (!value) return ''
 
   return new Date(value).toLocaleString('ru-RU', {
-    day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 
@@ -244,612 +287,1944 @@ onMounted(load)
 </script>
 
 <template>
-  <main class="topic">
-    <RouterLink class="back" :to="{ name: 'forum' }">
-      ← Назад к форуму
-    </RouterLink>
+  <main class="topic-page">
+    <div class="topic-page__ambient" />
 
-    <p v-if="loading" class="state">Загружаем тему…</p>
-    <p v-else-if="error && !topic" class="alert">{{ error }}</p>
+    <div class="topic-page__container">
+      <!-- Навигация -->
+      <div class="topic-nav">
+        <RouterLink class="back-link" :to="{ name: 'forum' }">
+          <span class="back-link__icon">
+            <AppIcon icon="send" :size="14" />
+          </span>
 
-    <template v-else-if="topic">
-      <p v-if="error" class="alert">{{ error }}</p>
-      <p v-if="notice" class="notice">{{ notice }}</p>
+          <span>
+            <small>APEX COMMUNITY</small>
+            Назад к форуму
+          </span>
+        </RouterLink>
 
-      <!-- Тема -->
-      <article class="post post--topic">
-        <header class="post__head">
-          <div class="post__author">
-            <span class="post__avatar">
-              <img v-if="topic.author?.avatar_url" :src="topic.author.avatar_url" :alt="topic.author.username">
-              <template v-else>{{ (topic.author?.username || 'И').charAt(0).toUpperCase() }}</template>
-            </span>
+        <div v-if="topic" class="topic-nav__id">
+          THREAD #{{ topic.id }}
+        </div>
+      </div>
 
-            <span class="post__author-info">
-              <span class="post__author-name">
-                <RouterLink v-if="topic.author" :to="{ name: 'player', params: { id: topic.author.id } }">
-                  {{ topic.author.username }}
-                </RouterLink>
-                <template v-else>Удалён</template>
+      <!-- Loading -->
+      <div v-if="loading" class="state-card">
+        <div class="state-card__icon">
+          <AppIcon icon="sparkles" :size="24" />
+        </div>
 
-                <span v-if="topic.author?.is_media" class="tag tag--media">
-                  <AppIcon icon="star" :size="11" /> Медийка
+        <div>
+          <strong>Загружаем тему</strong>
+          <span>Подготавливаем обсуждение…</span>
+        </div>
+
+        <div class="loader-dots">
+          <i />
+          <i />
+          <i />
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div v-else-if="error && !topic" class="alert alert--error">
+        <span class="alert__icon">
+          <AppIcon icon="close" :size="16" />
+        </span>
+
+        <div>
+          <strong>Не удалось открыть тему</strong>
+          <span>{{ error }}</span>
+        </div>
+      </div>
+
+      <template v-else-if="topic">
+        <!-- Alerts -->
+        <div v-if="error" class="alert alert--error">
+          <span class="alert__icon">
+            <AppIcon icon="close" :size="16" />
+          </span>
+
+          <span>{{ error }}</span>
+        </div>
+
+        <div v-if="notice" class="alert alert--success">
+          <span class="alert__icon">
+            <AppIcon icon="check" :size="16" />
+          </span>
+
+          <span>{{ notice }}</span>
+        </div>
+
+        <!-- Hero / Topic -->
+        <article class="topic-card">
+          <div
+              class="topic-card__accent"
+              :style="{ background: topicCategoryColor }"
+          />
+
+          <header class="topic-card__header">
+            <div class="topic-card__author">
+              <RouterLink
+                  v-if="topic.author"
+                  class="author-avatar"
+                  :to="{ name: 'player', params: { id: topic.author.id } }"
+              >
+                <img
+                    v-if="topic.author.avatar_url"
+                    :src="topic.author.avatar_url"
+                    :alt="topic.author.username"
+                >
+
+                <template v-else>
+                  {{ topicInitial }}
+                </template>
+              </RouterLink>
+
+              <div v-else class="author-avatar">
+                {{ topicInitial }}
+              </div>
+
+              <div class="author-info">
+                <div class="author-info__name">
+                  <RouterLink
+                      v-if="topic.author"
+                      :to="{ name: 'player', params: { id: topic.author.id } }"
+                  >
+                    {{ topic.author.username }}
+                  </RouterLink>
+
+                  <template v-else>
+                    Удалённый пользователь
+                  </template>
+
+                  <span
+                      v-if="topic.author?.is_verified"
+                      class="verified"
+                      title="Верифицирован"
+                  >
+                    <AppIcon icon="check" :size="10" />
+                  </span>
+
+                  <span
+                      v-if="topic.author?.is_media"
+                      class="media-badge"
+                  >
+                    <AppIcon icon="star" :size="10" />
+                    МЕДИЙКА
+                  </span>
+                </div>
+
+                <span class="author-info__date">
+                  {{ formatDate(topic.created_at) }}
                 </span>
-                <span v-if="topic.author?.is_verified" class="verified" title="Верифицирован">✓</span>
+              </div>
+            </div>
+
+            <div class="topic-card__badges">
+              <span
+                  class="status-badge"
+                  :class="topicStatus.class"
+              >
+                <AppIcon :icon="topicStatus.icon" :size="11" />
+                {{ topicStatus.label }}
               </span>
-              <span class="post__date">{{ formatDate(topic.created_at) }}</span>
+
+              <RouterLink
+                  v-if="topic.category"
+                  class="category-badge"
+                  :style="{
+                  '--category-color': topicCategoryColor,
+                }"
+                  :to="{
+                  name: 'forum',
+                  query: { category: topic.category.slug },
+                }"
+              >
+                <span class="category-badge__dot" />
+                {{ topic.category.name }}
+              </RouterLink>
+            </div>
+          </header>
+
+          <template v-if="editingTopic">
+            <div class="topic-editor">
+              <div class="field">
+                <label>Заголовок</label>
+
+                <input
+                    v-model="editTitle"
+                    class="input"
+                    type="text"
+                    maxlength="200"
+                >
+              </div>
+
+              <div class="field">
+                <label>Содержание</label>
+
+                <textarea
+                    v-model="editBody"
+                    class="textarea"
+                    rows="9"
+                />
+              </div>
+
+              <div class="editor-actions">
+                <button
+                    class="btn btn--ghost"
+                    type="button"
+                    @click="editingTopic = false"
+                >
+                  Отмена
+                </button>
+
+                <button
+                    class="btn btn--primary"
+                    type="button"
+                    @click="saveTopic"
+                >
+                  <AppIcon icon="check" :size="15" />
+                  Сохранить изменения
+                </button>
+              </div>
+            </div>
+          </template>
+
+          <template v-else>
+            <div class="topic-card__eyebrow">
+              <span>DISCUSSION</span>
+              <i />
+              <span>COMMUNITY</span>
+            </div>
+
+            <h1 class="topic-card__title">
+              {{ topic.title }}
+            </h1>
+
+            <div class="topic-card__body">
+              {{ topic.body }}
+            </div>
+          </template>
+
+          <!-- Attachments -->
+          <div
+              v-if="topic.attachments?.length"
+              class="attachments"
+          >
+            <div class="section-label">
+              <AppIcon icon="frame" :size="13" />
+              Вложения
+            </div>
+
+            <div class="attachments__grid">
+              <template
+                  v-for="file in topic.attachments"
+                  :key="file.id"
+              >
+                <a
+                    v-if="file.is_image"
+                    :href="file.url"
+                    target="_blank"
+                    rel="noopener"
+                    class="attachment-image"
+                >
+                  <img
+                      :src="file.url"
+                      :alt="file.name"
+                  >
+
+                  <span class="attachment-image__overlay">
+                    <AppIcon icon="send" :size="15" />
+                  </span>
+                </a>
+
+                <a
+                    v-else
+                    :href="file.url"
+                    target="_blank"
+                    rel="noopener"
+                    class="attachment-file"
+                >
+                  <span class="attachment-file__icon">
+                    <AppIcon icon="doc" :size="16" />
+                  </span>
+
+                  <span class="attachment-file__content">
+                    <strong>{{ file.name }}</strong>
+                    <small>{{ file.size }}</small>
+                  </span>
+
+                  <AppIcon
+                      class="attachment-file__arrow"
+                      icon="send"
+                      :size="13"
+                  />
+                </a>
+              </template>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <footer class="topic-card__footer">
+            <button
+                class="like-button"
+                :class="{ 'like-button--active': topic.liked }"
+                type="button"
+                @click="toggleTopicLike"
+            >
+              <span class="like-button__icon">
+                <AppIcon icon="heart" :size="15" />
+              </span>
+
+              <span>{{ topic.likes_count }}</span>
+            </button>
+
+            <div class="topic-stat">
+              <AppIcon icon="target" :size="14" />
+              <span>{{ topic.views }}</span>
+              <small>просмотров</small>
+            </div>
+
+            <div class="topic-stat">
+              <AppIcon icon="send" :size="14" />
+              <span>{{ repliesCount }}</span>
+              <small>ответов</small>
+            </div>
+
+            <div class="topic-card__spacer" />
+
+            <button
+                v-if="topic.can_edit"
+                class="action-link"
+                type="button"
+                @click="startEditTopic"
+            >
+              <AppIcon icon="palette" :size="13" />
+              Редактировать
+            </button>
+
+            <button
+                v-if="topic.can_delete"
+                class="action-link action-link--danger"
+                type="button"
+                @click="removeTopic"
+            >
+              <AppIcon icon="trash" :size="13" />
+              Удалить
+            </button>
+          </footer>
+        </article>
+
+        <!-- Replies heading -->
+        <div class="replies-header">
+          <div>
+            <div class="section-eyebrow">
+              APEX / COMMUNITY
+            </div>
+
+            <h2>
+              Ответы
+              <span>{{ repliesCount }}</span>
+            </h2>
+          </div>
+
+          <div class="replies-header__meta">
+            <AppIcon icon="send" :size="13" />
+            {{ repliesCount ? 'ОБСУЖДЕНИЕ АКТИВНО' : 'БУДЬ ПЕРВЫМ' }}
+          </div>
+        </div>
+
+        <!-- Empty replies -->
+        <div
+            v-if="!replies.length"
+            class="empty-replies"
+        >
+          <div class="empty-replies__icon">
+            <AppIcon icon="send" :size="22" />
+          </div>
+
+          <strong>Пока никто не ответил</strong>
+
+          <span>
+            Начни обсуждение первым — твой ответ будет первым в этой теме.
+          </span>
+        </div>
+
+        <!-- Replies -->
+        <div v-else class="replies">
+          <ForumReplyNode
+              v-for="reply in replies"
+              :key="reply.id"
+              :reply="reply"
+              :can-reply="canReply"
+              @reply="setReplyParent"
+              @like="toggleLike"
+              @edit="startEditReply"
+              @delete="removeReply"
+          />
+        </div>
+
+        <!-- Reply edit -->
+        <div
+            v-if="editingReply"
+            class="edit-card"
+            :data-edit-for="editingReply.id"
+        >
+          <div class="edit-card__head">
+            <div class="edit-card__icon">
+              <AppIcon icon="palette" :size="16" />
+            </div>
+
+            <div>
+              <small>EDIT MESSAGE</small>
+              <strong>
+                Правка сообщения
+                {{ editingReply.author?.username }}
+              </strong>
+            </div>
+
+            <button
+                type="button"
+                class="icon-button"
+                @click="editingReply = null"
+            >
+              <AppIcon icon="close" :size="15" />
+            </button>
+          </div>
+
+          <textarea
+              v-model="editReplyBody"
+              class="textarea"
+              rows="5"
+          />
+
+          <div class="edit-card__actions">
+            <button
+                class="btn btn--ghost"
+                type="button"
+                @click="editingReply = null"
+            >
+              Отмена
+            </button>
+
+            <button
+                class="btn btn--primary"
+                type="button"
+                @click="saveReply"
+            >
+              <AppIcon icon="check" :size="15" />
+              Сохранить
+            </button>
+          </div>
+        </div>
+
+        <!-- Reply form -->
+        <section
+            v-if="canReply"
+            class="reply-form"
+        >
+          <div class="reply-form__top">
+            <div>
+              <div class="section-eyebrow">
+                APEX / REPLY
+              </div>
+
+              <h3>
+                <template v-if="parentReply">
+                  Ответ для
+                  <strong>
+                    {{ parentReply.author?.username || 'сообщения' }}
+                  </strong>
+                </template>
+
+                <template v-else>
+                  Ваш ответ
+                </template>
+              </h3>
+            </div>
+
+            <button
+                v-if="parentReply"
+                class="cancel-reply"
+                type="button"
+                @click="clearReplyParent"
+            >
+              <AppIcon icon="close" :size="13" />
+              Отменить
+            </button>
+          </div>
+
+          <div
+              v-if="parentReply"
+              class="reply-context"
+          >
+            <span class="reply-context__line" />
+
+            <div>
+              <small>
+                ОТВЕТ НА СООБЩЕНИЕ {{ parentReply.author?.username }}
+              </small>
+
+              <p>
+                {{ (parentReply.body || '').slice(0, 220) }}
+                <span v-if="parentReply.body?.length > 220">…</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="reply-form__editor">
+            <textarea
+                id="reply-input"
+                v-model="replyBody"
+                class="textarea textarea--reply"
+                rows="6"
+                maxlength="20000"
+                :placeholder="
+                replyParent
+                  ? 'Ответь на сообщение…'
+                  : 'Напиши ответ…'
+              "
+            />
+
+            <div class="reply-form__progress">
+              <span
+                  :style="{ width: `${replyProgress}%` }"
+              />
+            </div>
+          </div>
+
+          <ForumAttachmentsInput
+              v-model="replyAttachments"
+          />
+
+          <div class="reply-form__bottom">
+            <div class="reply-hint">
+              <span class="reply-hint__count">
+                {{ replyBody.length }}
+              </span>
+              <span>/ 20000 символов</span>
+              <i />
+              <span>вложенность до {{ maxDepth }} уровней</span>
+            </div>
+
+            <button
+                class="btn btn--primary btn--send"
+                type="button"
+                :disabled="sending || !replyBody.trim()"
+                @click="sendReply"
+            >
+              <AppIcon
+                  :icon="sending ? 'sparkles' : 'send'"
+                  :size="15"
+              />
+
+              {{ sending ? 'Отправляем…' : 'Отправить ответ' }}
+            </button>
+          </div>
+        </section>
+
+        <!-- Locked / login -->
+        <div
+            v-else-if="auth.isAuthenticated"
+            class="closed-state"
+        >
+          <div class="closed-state__icon">
+            <AppIcon icon="close" :size="18" />
+          </div>
+
+          <div>
+            <strong>Тема закрыта</strong>
+            <span>Новые ответы в этой теме запрещены.</span>
+          </div>
+        </div>
+
+        <div
+            v-else
+            class="login-state"
+        >
+          <div class="login-state__icon">
+            <AppIcon icon="shield" :size="18" />
+          </div>
+
+          <div>
+            <strong>Хочешь присоединиться?</strong>
+            <span>
+              <RouterLink
+                  class="action-link"
+                  :to="{
+                  name: 'login',
+                  query: { redirect: route.fullPath },
+                }"
+              >
+                Войди в аккаунт
+              </RouterLink>
+              , чтобы ответить в теме.
             </span>
           </div>
-
-          <div class="post__badges">
-            <span v-if="topic.is_pinned" class="flag flag--pin">Закреплено</span>
-            <span v-if="topic.is_locked" class="flag flag--lock">Закрыто</span>
-            <RouterLink
-                v-if="topic.category"
-                class="flag"
-                :style="{ '--flag-color': topic.category.color || 'var(--accent)' }"
-                :to="{ name: 'forum', query: { category: topic.category.slug } }"
-            >
-              {{ topic.category.name }}
-            </RouterLink>
-          </div>
-        </header>
-
-        <template v-if="editingTopic">
-          <input v-model="editTitle" class="input" type="text" maxlength="200">
-          <textarea v-model="editBody" class="textarea" rows="8" />
-
-          <div class="post__edit-actions">
-            <button class="btn btn-secondary" type="button" @click="editingTopic = false">Отмена</button>
-            <button class="btn btn-primary" type="button" @click="saveTopic">Сохранить</button>
-          </div>
-        </template>
-
-        <template v-else>
-          <h1 class="post__title">{{ topic.title }}</h1>
-          <div class="post__body">{{ topic.body }}</div>
-        </template>
-
-        <div v-if="topic.attachments?.length" class="attachments">
-          <template v-for="file in topic.attachments" :key="file.id">
-            <a
-                v-if="file.is_image"
-                :href="file.url"
-                target="_blank"
-                rel="noopener"
-                class="attachments__image"
-            >
-              <img :src="file.url" :alt="file.name">
-            </a>
-            <a v-else :href="file.url" target="_blank" rel="noopener" class="attachments__file">
-              <AppIcon icon="doc" :size="15" />
-              {{ file.name }} <span class="attachments__size">{{ file.size }}</span>
-            </a>
-          </template>
         </div>
-
-        <footer class="post__foot">
-          <button
-              class="like"
-              :class="{ 'like--on': topic.liked }"
-              type="button"
-              @click="toggleTopicLike"
-          >
-            <AppIcon icon="heart" :size="15" />
-            {{ topic.likes_count }}
-          </button>
-
-          <span class="post__stat">
-            <AppIcon icon="target" :size="14" /> {{ topic.views }} просмотров
-          </span>
-          <span class="post__stat">
-            <AppIcon icon="send" :size="14" /> {{ repliesCount }} ответов
-          </span>
-
-          <span class="post__spacer" />
-
-          <button v-if="topic.can_edit" class="link" type="button" @click="startEditTopic">
-            Редактировать
-          </button>
-          <button v-if="topic.can_delete" class="link link--danger" type="button" @click="removeTopic">
-            Удалить
-          </button>
-        </footer>
-      </article>
-
-      <!-- Ветки ответов -->
-      <h2 class="replies__title">
-        Ответы <span class="replies__count">{{ repliesCount }}</span>
-      </h2>
-
-      <p v-if="!replies.length" class="state state--sm">
-        Ответов пока нет — будь первым.
-      </p>
-
-      <div v-else class="replies">
-        <ForumReplyNode
-            v-for="reply in replies"
-            :key="reply.id"
-            :reply="reply"
-            :can-reply="canReply"
-            @reply="setReplyParent"
-            @like="toggleLike"
-            @edit="startEditReply"
-            @delete="removeReply"
-        />
-      </div>
-
-      <!-- Правка выбранного сообщения -->
-      <div v-if="editingReply" class="edit-box" :data-edit-for="editingReply.id">
-        <div class="edit-box__title">
-          Правка сообщения {{ editingReply.author?.username }}
-        </div>
-
-        <textarea v-model="editReplyBody" class="textarea" rows="4" />
-
-        <div class="edit-box__actions">
-          <button class="btn btn-secondary" type="button" @click="editingReply = null">Отмена</button>
-          <button class="btn btn-primary" type="button" @click="saveReply">Сохранить</button>
-        </div>
-      </div>
-
-      <!-- Форма ответа -->
-      <section v-if="canReply" class="reply-form">
-        <h3 class="reply-form__title">
-          <template v-if="parentReply">
-            <span class="reply-form__to">
-              Ответ для <b>{{ parentReply.author?.username || 'сообщения' }}</b>
-            </span>
-            <button class="link" type="button" @click="clearReplyParent">отменить</button>
-          </template>
-          <template v-else>Ваш ответ</template>
-        </h3>
-
-        <p v-if="parentReply" class="reply-form__quote">
-          {{ (parentReply.body || '').slice(0, 160) }}
-        </p>
-
-        <textarea
-            id="reply-input"
-            v-model="replyBody"
-            class="textarea"
-            rows="5"
-            maxlength="20000"
-            :placeholder="replyParent ? 'Ответь на сообщение…' : 'Напиши ответ…'"
-        />
-
-        <ForumAttachmentsInput v-model="replyAttachments" />
-
-        <div class="reply-form__actions">
-          <span class="reply-form__hint">
-            {{ replyBody.length }} / 20000
-            · вложенность до {{ maxDepth }} уровней
-          </span>
-
-          <button
-              class="btn btn-primary"
-              type="button"
-              :disabled="sending || !replyBody.trim()"
-              @click="sendReply"
-          >
-            {{ sending ? 'Отправляем…' : 'Отправить' }}
-          </button>
-        </div>
-      </section>
-
-      <p v-else-if="auth.isAuthenticated" class="state state--sm">
-        Тема закрыта — новые ответы запрещены.
-      </p>
-
-      <p v-else class="state state--sm">
-        <RouterLink class="link" :to="{ name: 'login', query: { redirect: route.fullPath } }">
-          Войди
-        </RouterLink>, чтобы ответить в теме.
-      </p>
-    </template>
+      </template>
+    </div>
   </main>
 </template>
 
 <style scoped>
-.topic {
-  width: min(920px, calc(100% - 40px));
-  margin: 34px auto 80px;
+.topic-page {
+  position: relative;
+  min-height: 100%;
+  padding: 34px 0 90px;
+  overflow: hidden;
 }
 
-.back {
-  display: inline-block;
-  margin-bottom: 16px;
-  color: var(--text-dim);
-  font-size: 13px;
-  font-weight: 600;
+.topic-page__ambient {
+  position: absolute;
+  top: -260px;
+  left: 50%;
+  width: 760px;
+  height: 500px;
+  pointer-events: none;
+  transform: translateX(-50%);
+  background:
+      radial-gradient(
+          circle,
+          color-mix(in srgb, var(--accent) 13%, transparent) 0%,
+          transparent 68%
+      );
+  filter: blur(10px);
 }
 
-.back:hover {
-  color: var(--accent-light);
+.topic-page__container {
+  position: relative;
+  z-index: 1;
+  width: min(1040px, calc(100% - 40px));
+  margin: 0 auto;
 }
 
-.post {
-  padding: 18px 20px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 13px;
-  margin-bottom: 10px;
-}
+/* =========================
+   Navigation
+   ========================= */
 
-.post--topic {
-  border-left: 3px solid var(--accent);
-}
-
-.post__head {
+.topic-nav {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.post__author {
-  display: flex;
-  gap: 10px;
   align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
 }
 
-.post__avatar {
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  color: var(--text-dim);
+  transition:
+      color 0.2s ease,
+      transform 0.2s ease;
+}
+
+.back-link:hover {
+  color: var(--text);
+  transform: translateX(-3px);
+}
+
+.back-link__icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  overflow: hidden;
-  color: #fff;
-  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  width: 34px;
+  height: 34px;
+  color: var(--accent-light);
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(139, 92, 246, 0.18);
   border-radius: 10px;
-  font-size: 15px;
-  font-weight: 800;
-  flex-shrink: 0;
 }
 
-.post__avatar img {
+.back-link__icon :deep(svg) {
+  transform: rotate(180deg);
+}
+
+.back-link span:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.back-link small {
+  color: var(--text-muted);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 1.4px;
+}
+
+.topic-nav__id {
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+}
+
+/* =========================
+   Alerts / states
+   ========================= */
+
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 13px 16px;
+  border: 1px solid;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.alert > span:last-child {
+  min-width: 0;
+}
+
+.alert strong,
+.alert span {
+  display: block;
+}
+
+.alert--error {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.24);
+}
+
+.alert--success {
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.22);
+}
+
+.alert__icon {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 9px;
+}
+
+.state-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 140px;
+  padding: 26px;
+  color: var(--text-dim);
+  background:
+      linear-gradient(
+          135deg,
+          rgba(139, 92, 246, 0.08),
+          transparent 50%
+      ),
+      var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.state-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: var(--accent-light);
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 12px;
+}
+
+.state-card > div:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.state-card strong {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.state-card span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.loader-dots {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.loader-dots i {
+  width: 5px;
+  height: 5px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse 1s infinite ease-in-out;
+}
+
+.loader-dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.loader-dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes pulse {
+  0%,
+  70%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+
+  35% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+/* =========================
+   Topic card
+   ========================= */
+
+.topic-card {
+  position: relative;
+  overflow: hidden;
+  padding: 24px 26px 18px;
+  background:
+      radial-gradient(
+          circle at 90% 0%,
+          rgba(139, 92, 246, 0.08),
+          transparent 32%
+      ),
+      var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow:
+      0 18px 60px rgba(0, 0, 0, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.topic-card:hover {
+  border-color: var(--border-hover);
+}
+
+.topic-card__accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  opacity: 0.9;
+  box-shadow: 0 0 22px currentColor;
+}
+
+.topic-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.topic-card__author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.author-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  overflow: hidden;
+  color: #fff;
+  background:
+      linear-gradient(
+          135deg,
+          #9b72ff,
+          #5b21b6
+      );
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  border-radius: 12px;
+  box-shadow: 0 8px 22px rgba(109, 40, 217, 0.22);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.author-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.post__author-info {
+.author-info {
   display: flex;
   flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 
-.post__author-name {
-  display: inline-flex;
+.author-info__name {
+  display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 7px;
   color: var(--text);
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 800;
 }
 
-.post__author-name a:hover {
+.author-info__name a {
+  color: var(--text);
+}
+
+.author-info__name a:hover {
   color: var(--accent-light);
 }
 
-.post__date {
+.author-info__date {
   color: var(--text-muted);
-  font-size: 11px;
-}
-
-.post__badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.flag {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 9px;
-  color: var(--flag-color, var(--text-dim));
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 999px;
   font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.flag--pin { color: #fbbf24; background: rgba(251, 191, 36, 0.12); }
-.flag--lock { color: #9ca3af; background: rgba(156, 163, 175, 0.12); }
-
-.tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.tag--media {
-  color: #f472b6;
-  background: linear-gradient(135deg, rgba(244, 114, 182, 0.18), rgba(168, 85, 247, 0.18));
-  border: 1px solid rgba(244, 114, 182, 0.45);
 }
 
 .verified {
-  color: #38bdf8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  color: #67e8f9;
+  background: rgba(34, 211, 238, 0.1);
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  border-radius: 50%;
 }
 
-.post__title {
-  margin: 0 0 10px;
-  font-size: 21px;
+.media-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  color: #f9a8d4;
+  background: rgba(236, 72, 153, 0.08);
+  border: 1px solid rgba(236, 72, 153, 0.22);
+  border-radius: 999px;
+  font-size: 8px;
   font-weight: 900;
-  line-height: 1.3;
+  letter-spacing: 0.5px;
 }
 
-.post__body {
+.topic-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.status-badge,
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 9px;
+  border: 1px solid;
+  border-radius: 8px;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.status--active {
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.07);
+  border-color: rgba(34, 197, 94, 0.18);
+}
+
+.status--pinned {
+  color: #fcd34d;
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.status--locked {
+  color: var(--text-muted);
+  background: rgba(156, 163, 175, 0.06);
+  border-color: rgba(156, 163, 175, 0.16);
+}
+
+.category-badge {
+  color: var(--category-color);
+  background: color-mix(
+      in srgb,
+      var(--category-color) 7%,
+      transparent
+  );
+  border-color: color-mix(
+      in srgb,
+      var(--category-color) 22%,
+      transparent
+  );
+}
+
+.category-badge__dot {
+  width: 5px;
+  height: 5px;
+  background: currentColor;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.topic-card__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+  color: var(--text-muted);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 1.6px;
+}
+
+.topic-card__eyebrow i {
+  width: 18px;
+  height: 1px;
+  background: var(--border-hover);
+}
+
+.topic-card__title {
+  max-width: 850px;
+  margin: 0 0 15px;
   color: var(--text);
-  font-size: 14.5px;
-  line-height: 1.65;
+  word-break: break-word;
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 950;
+  line-height: 1.12;
+  letter-spacing: -0.7px;
+}
+
+.topic-card__body {
+  max-width: 880px;
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1.75;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
-.post__foot {
+.topic-card__footer {
   display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
   align-items: center;
-  margin-top: 14px;
-  padding-top: 12px;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 24px;
+  padding-top: 15px;
   border-top: 1px solid var(--border);
 }
 
-.post__stat {
+.topic-card__spacer {
+  flex: 1;
+}
+
+.like-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  padding: 4px 10px 4px 5px;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  transition: 0.2s ease;
+}
+
+.like-button:hover,
+.like-button--active {
+  color: #f472b6;
+  background: rgba(244, 114, 182, 0.08);
+  border-color: rgba(244, 114, 182, 0.25);
+}
+
+.like-button__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(244, 114, 182, 0.08);
+  border-radius: 7px;
+}
+
+.topic-stat {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   color: var(--text-muted);
-  font-size: 12px;
-}
-
-.post__spacer {
-  flex: 1;
-}
-
-.post__edit-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  margin-top: 10px;
-}
-
-.like {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  color: var(--text-dim);
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
-}
-
-.like:hover {
-  color: #f472b6;
-  border-color: rgba(244, 114, 182, 0.5);
-}
-
-.like--on {
-  color: #f472b6;
-  background: rgba(244, 114, 182, 0.12);
-  border-color: rgba(244, 114, 182, 0.5);
-}
-
-.attachments {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.attachments__image img {
-  max-width: 260px;
-  max-height: 200px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-}
-
-.attachments__file {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 13px;
-  color: var(--text-dim);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  font-size: 13px;
-}
-
-.attachments__size {
-  color: var(--text-muted);
   font-size: 11px;
 }
 
-/* Ветки */
-.replies__title {
-  margin: 26px 0 12px;
-  font-size: 17px;
+.topic-stat :deep(svg) {
+  opacity: 0.7;
+}
+
+.topic-stat span {
+  color: var(--text-dim);
   font-weight: 800;
 }
 
-.replies__count {
+.topic-stat small {
+  font-size: 10px;
+}
+
+.action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
   color: var(--text-muted);
-  font-weight: 600;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  transition: 0.2s ease;
+}
+
+.action-link:hover {
+  color: var(--accent-light);
+  background: rgba(139, 92, 246, 0.07);
+}
+
+.action-link--danger:hover {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.07);
+}
+
+/* =========================
+   Attachments
+   ========================= */
+
+.attachments {
+  margin-top: 22px;
+}
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 9px;
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.attachments__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.attachment-image {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  max-width: 280px;
+  max-height: 210px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--bg);
+}
+
+.attachment-image img {
+  display: block;
+  width: 100%;
+  max-height: 210px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.attachment-image:hover img {
+  transform: scale(1.03);
+}
+
+.attachment-image__overlay {
+  position: absolute;
+  right: 9px;
+  bottom: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: #fff;
+  background: rgba(10, 8, 18, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.attachment-image:hover .attachment-image__overlay {
+  opacity: 1;
+}
+
+.attachment-file {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 210px;
+  padding: 9px 11px;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: 0.2s ease;
+}
+
+.attachment-file:hover {
+  color: var(--text);
+  border-color: var(--border-hover);
+  transform: translateY(-1px);
+}
+
+.attachment-file__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 31px;
+  height: 31px;
+  flex: 0 0 31px;
+  color: var(--accent-light);
+  background: rgba(139, 92, 246, 0.08);
+  border-radius: 8px;
+}
+
+.attachment-file__content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.attachment-file__content strong {
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment-file__content small {
+  color: var(--text-muted);
+  font-size: 9px;
+}
+
+.attachment-file__arrow {
+  color: var(--text-muted);
+  transform: rotate(180deg);
+}
+
+/* =========================
+   Replies
+   ========================= */
+
+.replies-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 38px 2px 14px;
+}
+
+.section-eyebrow {
+  margin-bottom: 4px;
+  color: var(--accent-light);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+}
+
+.replies-header h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+}
+
+.replies-header h2 span {
+  margin-left: 5px;
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+.replies-header__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.9px;
 }
 
 .replies {
-  background: var(--bg-card);
+  padding: 4px 18px;
+  background:
+      linear-gradient(
+          180deg,
+          rgba(139, 92, 246, 0.025),
+          transparent 25%
+      ),
+      var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 13px;
-  padding: 0 18px;
+  border-radius: 16px;
 }
 
-.reply__avatar-fallback {
-  display: none;
-}
-
-/* Правка сообщения */
-.edit-box {
-  margin-top: 16px;
-  padding: 16px 18px;
-  background: var(--bg-card);
-  border: 1px solid var(--accent);
-  border-radius: 12px;
-}
-
-.edit-box__title {
-  margin-bottom: 10px;
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.edit-box__actions {
+.empty-replies {
   display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  margin-top: 10px;
-}
-
-/* Форма ответа */
-.reply-form {
-  margin-top: 22px;
-  padding: 18px 20px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 13px;
-}
-
-.reply-form__title {
-  display: flex;
-  gap: 10px;
   align-items: center;
-  margin: 0 0 10px;
-  font-size: 15px;
-  font-weight: 700;
+  flex-direction: column;
+  gap: 7px;
+  padding: 45px 24px;
+  text-align: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
 }
 
-.reply-form__to b {
+.empty-replies__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 4px;
   color: var(--accent-light);
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(139, 92, 246, 0.18);
+  border-radius: 13px;
 }
 
-.reply-form__quote {
-  margin: 0 0 10px;
-  padding: 9px 13px;
-  color: var(--text-dim);
-  background: var(--bg);
-  border-left: 3px solid var(--accent);
-  border-radius: 8px;
-  font-size: 13px;
-  font-style: italic;
+.empty-replies strong {
+  color: var(--text);
+  font-size: 14px;
 }
 
-.reply-form__actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.empty-replies > span {
+  max-width: 380px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* =========================
+   Editor
+   ========================= */
+
+.topic-editor,
+.edit-card {
   margin-top: 12px;
 }
 
-.reply-form__hint {
-  color: var(--text-muted);
-  font-size: 12px;
+.field {
+  margin-bottom: 12px;
 }
 
-/* Поля */
+.field label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
 .input,
 .textarea {
   width: 100%;
-  padding: 11px 14px;
   color: var(--text);
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 9px;
-  font-family: inherit;
-  font-size: 14px;
+  border-radius: 10px;
   outline: none;
-  transition: border-color 0.2s ease;
+  font-family: inherit;
+  transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease;
+}
+
+.input {
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.textarea {
+  padding: 12px 14px;
+  resize: vertical;
+  font-size: 13px;
+  line-height: 1.65;
 }
 
 .input:focus,
 .textarea:focus {
-  border-color: var(--accent);
+  background: rgba(139, 92, 246, 0.025);
+  border-color: rgba(139, 92, 246, 0.55);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.07);
 }
 
-.input {
-  margin-bottom: 10px;
-  font-weight: 700;
+.editor-actions,
+.edit-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
 }
 
-.textarea {
-  resize: vertical;
-  line-height: 1.6;
-}
-
-.link {
-  color: var(--accent-light);
-  background: transparent;
-  border: 0;
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 15px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  cursor: pointer;
   font: inherit;
-  font-size: 13px;
+  font-size: 11px;
+  font-weight: 800;
+  transition:
+      transform 0.18s ease,
+      border-color 0.18s ease,
+      background 0.18s ease,
+      box-shadow 0.18s ease;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.btn--ghost {
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--border);
+}
+
+.btn--ghost:hover {
+  color: var(--text);
+  border-color: var(--border-hover);
+}
+
+.btn--primary {
+  color: #fff;
+  background:
+      linear-gradient(
+          135deg,
+          #8b5cf6,
+          #6d28d9
+      );
+  border-color: rgba(167, 139, 250, 0.5);
+  box-shadow:
+      0 7px 20px rgba(109, 40, 217, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.btn--primary:not(:disabled):hover {
+  box-shadow:
+      0 10px 28px rgba(109, 40, 217, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+/* =========================
+   Edit reply
+   ========================= */
+
+.edit-card {
+  padding: 18px;
+  background:
+      linear-gradient(
+          135deg,
+          rgba(139, 92, 246, 0.07),
+          transparent 55%
+      ),
+      var(--bg-card);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 15px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.14);
+}
+
+.edit-card__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.edit-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  color: var(--accent-light);
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.18);
+  border-radius: 9px;
+}
+
+.edit-card__head > div:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.edit-card__head small {
+  color: var(--text-muted);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.edit-card__head strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 29px;
+  height: 29px;
+  margin-left: auto;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
   cursor: pointer;
 }
 
-.link:hover {
-  text-decoration: underline;
+.icon-button:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--border);
 }
 
-.link--danger {
+/* =========================
+   Reply form
+   ========================= */
+
+.reply-form {
+  position: relative;
+  margin-top: 22px;
+  padding: 20px;
+  overflow: hidden;
+  background:
+      radial-gradient(
+          circle at 100% 0%,
+          rgba(139, 92, 246, 0.09),
+          transparent 35%
+      ),
+      var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.14);
+}
+
+.reply-form::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  content: '';
+  background: linear-gradient(
+      90deg,
+      transparent,
+      var(--accent),
+      transparent
+  );
+  opacity: 0.5;
+}
+
+.reply-form__top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 14px;
+}
+
+.reply-form__top h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.reply-form__top h3 strong {
+  color: var(--accent-light);
+}
+
+.cancel-reply {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.cancel-reply:hover {
   color: #f87171;
+  background: rgba(239, 68, 68, 0.06);
 }
 
-.state {
-  padding: 40px 0;
+.reply-context {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: rgba(139, 92, 246, 0.035);
+  border: 1px solid rgba(139, 92, 246, 0.1);
+  border-radius: 9px;
+}
+
+.reply-context__line {
+  width: 2px;
+  flex: 0 0 2px;
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+.reply-context div {
+  min-width: 0;
+}
+
+.reply-context small {
+  color: var(--text-muted);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+}
+
+.reply-context p {
+  margin: 4px 0 0;
+  overflow: hidden;
   color: var(--text-dim);
-  text-align: center;
+  font-size: 11px;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.state--sm {
-  padding: 20px 0;
-  font-size: 13px;
+.reply-form__editor {
+  position: relative;
 }
 
-.alert {
-  margin: 0 0 16px;
-  padding: 12px 16px;
-  color: #fca5a5;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  border-radius: 10px;
-  font-size: 13px;
+.textarea--reply {
+  min-height: 130px;
+  padding-bottom: 17px;
 }
 
-.notice {
-  margin: 0 0 16px;
-  padding: 12px 16px;
-  color: #86efac;
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.35);
-  border-radius: 10px;
-  font-size: 13px;
+.reply-form__progress {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  left: 1px;
+  height: 2px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 0 0 9px 9px;
+}
+
+.reply-form__progress span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(
+      90deg,
+      #6d28d9,
+      #a78bfa
+  );
+  transition: width 0.15s ease;
+}
+
+.reply-form__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 12px;
+}
+
+.reply-hint {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 9px;
+}
+
+.reply-hint__count {
+  color: var(--text-dim);
+  font-weight: 800;
+}
+
+.reply-hint i {
+  width: 3px;
+  height: 3px;
+  background: var(--border-hover);
+  border-radius: 50%;
+}
+
+.btn--send {
+  min-height: 40px;
+  padding: 0 17px;
+}
+
+/* =========================
+   Closed / login
+   ========================= */
+
+.closed-state,
+.login-state {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 15px 17px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+}
+
+.closed-state__icon,
+.login-state__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 9px;
+}
+
+.closed-state__icon {
+  color: var(--text-muted);
+  background: rgba(156, 163, 175, 0.07);
+}
+
+.login-state__icon {
+  color: var(--accent-light);
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.closed-state div:last-child,
+.login-state div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.closed-state strong,
+.login-state strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.closed-state span,
+.login-state span {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.login-state .action-link {
+  display: inline;
+  padding: 0;
+  color: var(--accent-light);
+  font-size: inherit;
+}
+
+/* =========================
+   Responsive
+   ========================= */
+
+@media (max-width: 700px) {
+  .topic-page {
+    padding-top: 20px;
+    padding-bottom: 50px;
+  }
+
+  .topic-page__container {
+    width: min(100% - 24px, 1040px);
+  }
+
+  .topic-nav {
+    margin-bottom: 14px;
+  }
+
+  .topic-nav__id {
+    display: none;
+  }
+
+  .topic-card {
+    padding: 18px 16px 15px;
+    border-radius: 14px;
+  }
+
+  .topic-card__header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .topic-card__badges {
+    justify-content: flex-start;
+  }
+
+  .topic-card__title {
+    font-size: 24px;
+  }
+
+  .topic-card__body {
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .topic-card__footer {
+    gap: 6px;
+  }
+
+  .topic-card__spacer {
+    display: none;
+  }
+
+  .action-link {
+    padding: 6px;
+  }
+
+  .replies-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+    margin-top: 28px;
+  }
+
+  .replies {
+    padding: 2px 10px;
+    border-radius: 13px;
+  }
+
+  .reply-form {
+    padding: 16px;
+  }
+
+  .reply-form__bottom {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .reply-hint {
+    order: 2;
+  }
+
+  .btn--send {
+    width: 100%;
+  }
+
+  .attachment-image {
+    max-width: 100%;
+  }
+
+  .attachment-file {
+    width: 100%;
+  }
+}
+
+@media (max-width: 460px) {
+  .back-link span:last-child {
+    font-size: 12px;
+  }
+
+  .topic-card__author {
+    width: 100%;
+  }
+
+  .author-avatar {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .topic-card__title {
+    font-size: 21px;
+  }
+
+  .topic-stat small {
+    display: none;
+  }
+
+  .topic-stat {
+    padding: 5px 7px;
+    background: rgba(255, 255, 255, 0.025);
+    border-radius: 7px;
+  }
+
+  .topic-card__footer {
+    align-items: stretch;
+  }
+
+  .like-button {
+    margin-right: auto;
+  }
+
+  .edit-card__actions,
+  .editor-actions {
+    flex-direction: column-reverse;
+  }
+
+  .edit-card__actions .btn,
+  .editor-actions .btn {
+    width: 100%;
+  }
 }
 </style>
