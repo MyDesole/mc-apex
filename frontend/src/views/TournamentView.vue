@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { onMounted, ref, computed } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { tournamentsApi } from '@/services/tournaments.js'
@@ -48,7 +49,7 @@ async function register() {
 }
 
 async function withdraw() {
-  if (!confirm('Снять заявку?')) return
+  if (!await confirmDialog('Снять заявку?')) return
   await tournamentsApi.withdraw(route.params.id)
   await load()
 }

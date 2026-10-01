@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { computed, onMounted, ref } from 'vue'
 import { myClanApi } from '@/services/myClan.js'
 import { useAuthStore } from '@/stores/auth'
@@ -61,7 +62,7 @@ function setCategory(value) {
   load()
 }
 
-function onFile(e) {
+async function onFile(e) {
   form.value.file = e.target.files[0]
 }
 
@@ -84,7 +85,7 @@ async function download(resource) {
 }
 
 async function remove(resource) {
-  if (!confirm('Удалить ресурс?')) return
+  if (!await confirmDialog('Удалить ресурс?')) return
   await myClanApi.deleteResource(resource.id)
   await load()
 }
@@ -122,7 +123,7 @@ function lightboxNext() {
   lightbox.value = resources.value[nextIdx]
 }
 
-function onKey(e) {
+async function onKey(e) {
   if (!lightbox.value) return
   if (e.key === 'Escape') closeLightbox()
   if (e.key === 'ArrowLeft') lightboxPrev()

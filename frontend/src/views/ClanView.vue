@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog, prompt as promptDialog } from '@/utils/dialog.js'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { clansApi } from '@/services/clans.js'
@@ -54,14 +55,14 @@ async function load() {
 }
 
 async function apply() {
-  const message = prompt('Сообщение лидеру (опционально):')
+  const message = await promptDialog('Сообщение лидеру (опционально):')
   if (message === null) return
   await clansApi.apply(route.params.id, message)
   await load()
 }
 
 async function leave() {
-  if (!confirm('Покинуть клан?')) return
+  if (!await confirmDialog('Покинуть клан?')) return
   await clansApi.leave(route.params.id)
   await load()
 }
@@ -76,7 +77,7 @@ const socialLabels = {
   vk: 'VK',
   website: 'Сайт',
 }
-function onApplicationsChanged() {
+async function onApplicationsChanged() {
   applicationsCount.value = 0
   load()
 }

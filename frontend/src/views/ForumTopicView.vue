@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { forumApi } from '@/services/forum.js'
@@ -131,7 +132,7 @@ async function toggleLike(reply) {
   }
 }
 
-function startEditReply(reply) {
+async function startEditReply(reply) {
   editingReply.value = reply
   editReplyBody.value = reply.body
 
@@ -165,7 +166,7 @@ async function removeReply(reply) {
       ? 'Удалить это сообщение вместе со всеми ответами в ветке?'
       : 'Удалить это сообщение?'
 
-  if (!confirm(message)) return
+  if (!await confirmDialog(message)) return
 
   try {
     await forumApi.deleteReply(reply.id)
@@ -194,7 +195,7 @@ async function toggleTopicLike() {
   }
 }
 
-function startEditTopic() {
+async function startEditTopic() {
   editingTopic.value = true
   editTitle.value = topic.value.title
   editBody.value = topic.value.body
@@ -216,7 +217,7 @@ async function saveTopic() {
 }
 
 async function removeTopic() {
-  if (!confirm('Удалить тему? Действие необратимо.')) return
+  if (!await confirmDialog('Удалить тему? Действие необратимо.')) return
 
   try {
     await forumApi.deleteTopic(topicId.value)
@@ -226,7 +227,7 @@ async function removeTopic() {
   }
 }
 
-function formatDate(value) {
+async function formatDate(value) {
   if (!value) return ''
 
   return new Date(value).toLocaleString('ru-RU', {

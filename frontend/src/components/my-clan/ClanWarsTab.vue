@@ -1,4 +1,5 @@
 <script setup>
+import { alert as alertDialog, confirm as confirmDialog } from '@/utils/dialog.js'
 import { computed, onMounted, ref } from 'vue'
 import { clansApi } from '@/services/clans.js'
 import { useAuthStore } from '@/stores/auth'
@@ -76,7 +77,7 @@ async function loadAvailableClans() {
 }
 
 // === ДЕЙСТВИЯ ===
-function openChallenge() {
+async function openChallenge() {
   showChallenge.value = true
   challengeForm.value = { opponent_id: null, scheduled_at: '', notes: '' }
   loadAvailableClans()
@@ -84,7 +85,7 @@ function openChallenge() {
 
 async function submitChallenge() {
   if (!challengeForm.value.opponent_id) {
-    alert('Выбери клан-соперник')
+    await alertDialog('Выбери клан-соперник')
     return
   }
 
@@ -97,7 +98,7 @@ async function submitChallenge() {
     showChallenge.value = false
     await load()
   } catch (e) {
-    alert(e.message || 'Ошибка')
+    await alertDialog(e.message || 'Ошибка')
   } finally {
     processing.value = null
   }
@@ -109,26 +110,26 @@ async function accept(war) {
     await clansApi.acceptWar(war.id)
     await load()
   } catch (e) {
-    alert(e.message || 'Ошибка')
+    await alertDialog(e.message || 'Ошибка')
   } finally {
     processing.value = null
   }
 }
 
 async function decline(war) {
-  if (!confirm('Отклонить вызов?')) return
+  if (!await confirmDialog('Отклонить вызов?')) return
   processing.value = war.id
   try {
     await clansApi.declineWar(war.id)
     await load()
   } catch (e) {
-    alert(e.message || 'Ошибка')
+    await alertDialog(e.message || 'Ошибка')
   } finally {
     processing.value = null
   }
 }
 
-function openResult(war) {
+async function openResult(war) {
   resultWar.value = war
   resultForm.value = {
     challenger_score: war.challenger_score ?? 0,
@@ -146,7 +147,7 @@ async function submitResult() {
     resultWar.value = null
     await load()
   } catch (e) {
-    alert(e.message || 'Ошибка')
+    await alertDialog(e.message || 'Ошибка')
   } finally {
     processing.value = null
   }
@@ -157,11 +158,11 @@ function isParticipant(war) {
   return (war.participants || []).some(p => p.user_id === auth.user?.id)
 }
 
-function myParticipants(war) {
+async function myParticipants(war) {
   return (war.participants || []).filter(p => p.clan_id === props.clan.id)
 }
 
-function enemyParticipants(war) {
+async function enemyParticipants(war) {
   return (war.participants || []).filter(p => p.clan_id !== props.clan.id)
 }
 
@@ -171,7 +172,7 @@ async function joinWar(war) {
     await clansApi.joinWar(war.id)
     await load()
   } catch (e) {
-    alert(e.message || 'Ошибка')
+    await alertDialog(e.message || 'Ошибка')
   } finally {
     processing.value = null
   }
@@ -183,14 +184,14 @@ async function leaveWar(war) {
     await clansApi.leaveWar(war.id)
     await load()
   } catch (e) {
-    alert(e.message || 'Ошибка')
+    await alertDialog(e.message || 'Ошибка')
   } finally {
     processing.value = null
   }
 }
 
 // === ХЕЛПЕРЫ ===
-function formatDate(d) {
+async function formatDate(d) {
   if (!d) return '—'
   return new Date(d).toLocaleString('ru-RU', {
     day: '2-digit',

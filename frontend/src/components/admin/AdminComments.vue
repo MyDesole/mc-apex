@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { adminApi } from '@/services/admin.js'
@@ -34,12 +35,12 @@ watch(search, () => {
 watch(page, load)
 
 async function remove(comment) {
-  if (!confirm('Удалить комментарий?')) return
+  if (!await confirmDialog('Удалить комментарий?')) return
   await adminApi.deleteComment(comment.id)
   await load()
 }
 
-function formatDate(date) {
+async function formatDate(date) {
   return new Date(date).toLocaleString('ru-RU')
 }
 

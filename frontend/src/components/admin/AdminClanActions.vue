@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { ref } from 'vue'
 import { adminApi } from '@/services/admin.js'
 import AdminBanClanModal from './AdminBanClanModal.vue'
@@ -17,26 +18,26 @@ const modals = ref({
 })
 
 async function unban() {
-  if (!confirm(`Разбанить [${props.clan.tag}] ${props.clan.name}?`)) return
+  if (!await confirmDialog(`Разбанить [${props.clan.tag}] ${props.clan.name}?`)) return
   await adminApi.unbanClan(props.clan.id)
   emit('updated')
 }
 
 async function removeAvatar() {
-  if (!confirm('Снять аватар клана?')) return
+  if (!await confirmDialog('Снять аватар клана?')) return
   await adminApi.removeClanAvatar(props.clan.id)
   emit('updated')
 }
 
 async function removeCover() {
-  if (!confirm('Снять подложку клана?')) return
+  if (!await confirmDialog('Снять подложку клана?')) return
   await adminApi.removeClanCover(props.clan.id)
   emit('updated')
 }
 
 async function destroyClan() {
-  if (!confirm(`УДАЛИТЬ клан [${props.clan.tag}] ${props.clan.name}? Это необратимо.`)) return
-  if (!confirm('Точно уверен? Все данные клана будут потеряны.')) return
+  if (!await confirmDialog(`УДАЛИТЬ клан [${props.clan.tag}] ${props.clan.name}? Это необратимо.`)) return
+  if (!await confirmDialog('Точно уверен? Все данные клана будут потеряны.')) return
   await adminApi.destroyClan(props.clan.id)
   emit('updated')
 }
@@ -51,7 +52,7 @@ function open(key) {
   modals.value[key] = true
 }
 
-function onUpdated() {
+async function onUpdated() {
   closeAll()
   emit('updated')
 }

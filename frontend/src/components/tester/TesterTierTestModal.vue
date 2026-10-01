@@ -1,4 +1,5 @@
 <script setup>
+import { alert as alertDialog, confirm as confirmDialog, prompt as promptDialog } from '@/utils/dialog.js'
 import { computed, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { testerApi } from '@/services/tester.js'
@@ -42,7 +43,7 @@ const ASPECT_LABELS = {
 const labels = computed(() => ASPECT_LABELS[test.value.mode] ?? ASPECT_LABELS.pvp)
 
 // Пустая форма
-function emptyForm() {
+async function emptyForm() {
   return {
     block_placing: 0,
     rotka: 0,
@@ -117,7 +118,7 @@ async function claim() {
 }
 
 async function unclaim() {
-  if (!confirm('Отказаться от заявки?')) return
+  if (!await confirmDialog('Отказаться от заявки?')) return
   processing.value = true
   try {
     await testerApi.unclaim(test.value.id)
@@ -130,7 +131,7 @@ async function unclaim() {
 }
 
 async function complete() {
-  if (!confirm(`Провести тест? Итог: тир ${tier.value} (${percent.value}%)`)) return
+  if (!await confirmDialog(`Провести тест? Итог: тир ${tier.value} (${percent.value}%)`)) return
 
   processing.value = true
   error.value = ''
@@ -152,7 +153,7 @@ async function complete() {
 }
 
 async function cancel() {
-  const reason = prompt('Причина отмены (опционально):')
+  const reason = await promptDialog('Причина отмены (опционально):')
   if (reason === null) return
 
   processing.value = true
@@ -166,12 +167,12 @@ async function cancel() {
   }
 }
 
-function copyContact(value) {
+async function copyContact(value) {
   navigator.clipboard.writeText(value)
-  alert('Скопировано: ' + value)
+  await alertDialog('Скопировано: ' + value)
 }
 
-function avatarLetter(username) {
+async function avatarLetter(username) {
   return (username || 'И').charAt(0).toUpperCase()
 }
 </script>

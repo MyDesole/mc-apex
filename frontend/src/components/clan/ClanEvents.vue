@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { onMounted, ref } from 'vue'
 import { clansApi } from '@/services/clans.js'
 import ClanEventComments from './ClanEventComments.vue'
@@ -24,7 +25,7 @@ async function load() {
 }
 const openComments = ref({})
 
-function toggleComments(id) {
+async function toggleComments(id) {
   openComments.value[id] = !openComments.value[id]
 }
 async function submit() {
@@ -38,7 +39,7 @@ async function submit() {
 }
 
 async function remove(event) {
-  if (!confirm('Удалить?')) return
+  if (!await confirmDialog('Удалить?')) return
   await clansApi.deleteEvent(props.clan.id, event.id)
   await load()
 }

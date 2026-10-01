@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { playersApi } from '@/services/players.js'
@@ -67,7 +68,7 @@ function replaceBlobUrl(oldUrl, newFile) {
   return URL.createObjectURL(newFile)
 }
 
-function onAvatarChange(e) {
+async function onAvatarChange(e) {
   const f = e.target.files?.[0]
   if (!f) return
   avatarFile.value = f
@@ -75,7 +76,7 @@ function onAvatarChange(e) {
   e.target.value = ''
 }
 
-function onCoverChange(e) {
+async function onCoverChange(e) {
   const f = e.target.files?.[0]
   if (!f) return
   coverFile.value = f
@@ -83,7 +84,7 @@ function onCoverChange(e) {
   e.target.value = ''
 }
 
-function onCardBgChange(e) {
+async function onCardBgChange(e) {
   const f = e.target.files?.[0]
   if (!f) return
   cardBgFile.value = f
@@ -94,7 +95,7 @@ function onCardBgChange(e) {
 // === Удаление ===
 
 async function removeAvatar() {
-  if (!confirm('Удалить аватар?')) return
+  if (!await confirmDialog('Удалить аватар?')) return
   error.value = ''
   try {
     await playersApi.removeAvatar()
@@ -111,7 +112,7 @@ async function removeAvatar() {
 }
 
 async function removeCover() {
-  if (!confirm('Удалить обложку?')) return
+  if (!await confirmDialog('Удалить обложку?')) return
   error.value = ''
   try {
     await playersApi.removeCover()
@@ -128,7 +129,7 @@ async function removeCover() {
 }
 
 async function removeCardBg() {
-  if (!confirm('Удалить фон карточки?')) return
+  if (!await confirmDialog('Удалить фон карточки?')) return
   error.value = ''
   try {
     await playersApi.removeCardBackground()

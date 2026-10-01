@@ -1,4 +1,5 @@
 <script setup>
+import { alert as alertDialog, confirm as confirmDialog } from '@/utils/dialog.js'
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { clansApi } from '@/services/clans.js'
@@ -53,12 +54,12 @@ async function sendReply(parent) {
     replyBody.value = ''
     await load()
   } catch (e) {
-    alert(e.message || 'Ошибка')
+    await alertDialog(e.message || 'Ошибка')
   }
 }
 
 async function remove(comment) {
-  if (!confirm('Удалить комментарий?')) return
+  if (!await confirmDialog('Удалить комментарий?')) return
   await clansApi.deleteEventComment(props.clanId, props.eventId, comment.id)
   await load()
 }
@@ -90,7 +91,7 @@ function formatDate(date) {
   return d.toLocaleDateString('ru-RU')
 }
 
-function avatarLetter(username) {
+async function avatarLetter(username) {
   return (username || 'И').charAt(0).toUpperCase()
 }
 

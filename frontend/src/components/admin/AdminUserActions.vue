@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { ref } from 'vue'
 import { adminApi } from '@/services/admin.js'
 import AdminBanModal from './AdminBanModal.vue'
@@ -24,7 +25,7 @@ const modals = ref({
 })
 
 async function unban() {
-  if (!confirm(`Разбанить ${props.user.username}?`)) return
+  if (!await confirmDialog(`Разбанить ${props.user.username}?`)) return
   await adminApi.unban(props.user.id)
   emit('updated')
 }
@@ -39,7 +40,7 @@ function open(key) {
   modals.value[key] = true
 }
 
-function onUpdated() {
+async function onUpdated() {
   closeAll()
   emit('updated')
 }

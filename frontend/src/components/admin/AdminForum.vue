@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { onMounted, ref } from 'vue'
 import { adminApi } from '@/services/admin.js'
 import AppIcon from '@/components/AppIcon.vue'
@@ -70,11 +71,11 @@ async function load() {
   }
 }
 
-function createCategory() {
+async function createCategory() {
   editing.value = blankCategory()
 }
 
-function editCategory(category) {
+async function editCategory(category) {
   editing.value = { ...category }
 }
 
@@ -111,11 +112,11 @@ async function saveCategory() {
 async function removeCategory(category) {
   const hasTopics = (category.topics_count ?? 0) > 0
 
-  if (hasTopics && !confirm(`В разделе есть темы. Удалить раздел ВМЕСТЕ с темами «${category.name}»?`)) {
+  if (hasTopics && !await confirmDialog(`В разделе есть темы. Удалить раздел ВМЕСТЕ с темами «${category.name}»?`)) {
     return
   }
 
-  if (!hasTopics && !confirm(`Удалить раздел «${category.name}»?`)) {
+  if (!hasTopics && !await confirmDialog(`Удалить раздел «${category.name}»?`)) {
     return
   }
 
@@ -149,7 +150,7 @@ async function toggleLock(topic) {
 }
 
 async function removeTopic(topic) {
-  if (confirm(`Удалить тему «${topic.title}»?`)) {
+  if (await confirmDialog(`Удалить тему «${topic.title}»?`)) {
     await adminApi.deleteForumTopic(topic.id)
     await loadTopics(topicsPage.value)
     await loadStats()
@@ -162,7 +163,7 @@ async function restoreTopic(topic) {
   await loadStats()
 }
 
-function formatDate(value) {
+async function formatDate(value) {
   if (!value) return '—'
   return new Date(value).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' })
 }

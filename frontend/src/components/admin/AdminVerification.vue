@@ -1,4 +1,5 @@
 <script setup>
+import { alert as alertDialog } from '@/utils/dialog.js'
 import { onMounted, ref, watch, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { adminApi } from '@/services/admin.js'
@@ -53,7 +54,7 @@ function openVerify(user) {
   showModal.value = true
 }
 
-function openUnverify(user) {
+async function openUnverify(user) {
   modalUser.value = user
   modalAction.value = 'unverify'
   modalReason.value = ''
@@ -76,13 +77,13 @@ async function submitModal() {
     modalUser.value = null
     await load()
   } catch (e) {
-    alert(e.message || 'Ошибка')
+    await alertDialog(e.message || 'Ошибка')
   } finally {
     processing.value = null
   }
 }
 
-function closeModal() {
+async function closeModal() {
   showModal.value = false
   modalUser.value = null
   modalReason.value = ''

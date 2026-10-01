@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { computed, ref } from 'vue'
 import { playersApi } from '@/services/players.js'
 import { useAuthStore } from '@/stores/auth'
@@ -26,14 +27,14 @@ const isMine = computed(() =>
     props.myRecommendation?.author_id === auth.user?.id
 )
 
-function openForm() {
+async function openForm() {
   body.value = props.myRecommendation?.body ?? ''
   rating.value = props.myRecommendation?.rating ?? null
   error.value = ''
   showForm.value = true
 }
 
-function closeForm() {
+async function closeForm() {
   showForm.value = false
   error.value = ''
 }
@@ -61,13 +62,13 @@ async function submit() {
 }
 
 async function remove() {
-  if (!confirm('Удалить свой отзыв?')) return
+  if (!await confirmDialog('Удалить свой отзыв?')) return
   await playersApi.deleteRecommendation(props.targetUser.id)
   emit('updated')
 }
 
 async function hide(rec) {
-  if (!confirm('Скрыть этот отзыв у себя в профиле?')) return
+  if (!await confirmDialog('Скрыть этот отзыв у себя в профиле?')) return
   await playersApi.hideRecommendation(rec.id)
   emit('updated')
 }

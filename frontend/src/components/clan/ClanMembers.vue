@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { RouterLink } from 'vue-router'
 import { clansApi } from '@/services/clans.js'
 import UserName from "@/components/UserName.vue";
@@ -12,7 +13,7 @@ const props = defineProps({
 const emit = defineEmits(['refresh'])
 
 async function kick(user) {
-  if (!confirm(`Кикнуть ${user.username}?`)) return
+  if (!await confirmDialog(`Кикнуть ${user.username}?`)) return
   await clansApi.kick(props.clan.id, user.id)
   emit('refresh')
 }

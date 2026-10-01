@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { computed, onMounted, ref } from 'vue'
 import { adminShopApi } from '@/services/adminShop.js'
 import { RARITY_COLORS, TYPE_LABELS, formatCoins } from '@/data/economy.js'
@@ -100,7 +101,7 @@ function startCreate() {
   editing.value = blankItem()
 }
 
-function startEdit(item) {
+async function startEdit(item) {
   editing.value = {
     ...item,
     metadata: item.metadata ?? {},
@@ -157,7 +158,7 @@ async function toggleItem(item) {
 }
 
 async function removeItem(item) {
-  if (!confirm(`Удалить «${item.name}» из магазина? У купивших игроков предмет останется в инвентаре.`)) {
+  if (!await confirmDialog(`Удалить «${item.name}» из магазина? У купивших игроков предмет останется в инвентаре.`)) {
     return
   }
 
@@ -230,7 +231,7 @@ async function grantCoins() {
   }
 }
 
-function sourceLabel(source) {
+async function sourceLabel(source) {
   return {
     tier_test: 'Тир-тест',
     achievement: 'Ачивка',

@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { chatApi } from '@/services/chat.js'
@@ -230,7 +231,7 @@ function startEdit(message) {
   editingBody.value = message.body || ''
 }
 
-function cancelEdit() {
+async function cancelEdit() {
   editingId.value = null
   editingBody.value = ''
 }
@@ -249,7 +250,7 @@ async function saveEdit(message) {
 }
 
 async function removeMessage(message) {
-  if (!confirm('Удалить сообщение?')) return
+  if (!await confirmDialog('Удалить сообщение?')) return
 
   try {
     await chatApi.deleteMessage(message.id)
@@ -651,7 +652,7 @@ function onClickOutsideSearch(e) {
   closeSearch()
 }
 
-function onResizeOrScroll() {
+async function onResizeOrScroll() {
   if (searchOpen.value) {
     computeDropdownPosition()
   }

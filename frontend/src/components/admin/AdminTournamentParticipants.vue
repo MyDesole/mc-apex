@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { computed, onMounted, ref } from 'vue'
 import { adminApi } from '@/services/admin.js'
 
@@ -73,7 +74,7 @@ async function generateBracket() {
     return
   }
 
-  if (!confirm('Сформировать сетку? Текущие матчи будут пересозданы.')) return
+  if (!await confirmDialog('Сформировать сетку? Текущие матчи будут пересозданы.')) return
 
   generating.value = true
 
@@ -111,7 +112,7 @@ function displayName(p) {
   return '—'
 }
 
-function displayAvatar(p) {
+async function displayAvatar(p) {
   if (p.user) return p.user.username.charAt(0).toUpperCase()
   if (p.clan) return p.clan.tag.charAt(0)
   return '?'

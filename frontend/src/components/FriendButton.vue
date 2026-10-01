@@ -1,4 +1,5 @@
 <script setup>
+import { alert as alertDialog } from '@/utils/dialog.js'
 import { computed, ref } from 'vue'
 import { friendsApi } from '@/services/friends.js'
 
@@ -28,7 +29,7 @@ async function add() {
     local.value = { status: 'pending', initiated_by_me: true }
     emit('update', local.value)
   } catch (e) {
-    alert(e.message || 'Ошибка')
+    await alertDialog(e.message || 'Ошибка')
   } finally {
     loading.value = false
   }
@@ -41,7 +42,7 @@ async function accept() {
     local.value = { status: 'accepted', initiated_by_me: false }
     emit('update', local.value)
   } catch (e) {
-    alert(e.message || 'Ошибка')
+    await alertDialog(e.message || 'Ошибка')
   } finally {
     loading.value = false
   }
@@ -54,7 +55,7 @@ async function remove() {
     local.value = null
     emit('update', null)
   } catch (e) {
-    alert(e.message || 'Ошибка')
+    await alertDialog(e.message || 'Ошибка')
   } finally {
     loading.value = false
   }

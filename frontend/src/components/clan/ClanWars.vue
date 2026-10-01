@@ -1,4 +1,5 @@
 <script setup>
+import { prompt as promptDialog } from '@/utils/dialog.js'
 import { ref } from 'vue'
 import { clansApi } from '@/services/clans.js'
 
@@ -36,8 +37,8 @@ async function decline(war) {
 }
 
 async function complete(war) {
-  const c = prompt('Счёт нашего клана?')
-  const o = prompt('Счёт противника?')
+  const c = await promptDialog('Счёт нашего клана?')
+  const o = await promptDialog('Счёт противника?')
   if (!c || !o) return
 
   await clansApi.completeWar(war.id, {

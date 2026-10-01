@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { onMounted, ref } from 'vue'
 import { adminApi } from '@/services/admin.js'
 import AdminNewsForm from './AdminNewsForm.vue'
@@ -19,7 +20,7 @@ async function load() {
 }
 
 async function destroy(item) {
-  if (!confirm(`Удалить новость «${item.title}»?`)) return
+  if (!await confirmDialog(`Удалить новость «${item.title}»?`)) return
   await adminApi.destroyNews(item.id)
   await load()
 }
@@ -51,7 +52,7 @@ const typeLabels = {
   announcement: 'Анонс',
 }
 
-function formatDate(date) {
+async function formatDate(date) {
   return new Date(date).toLocaleString('ru-RU', {
     day: '2-digit',
     month: '2-digit',

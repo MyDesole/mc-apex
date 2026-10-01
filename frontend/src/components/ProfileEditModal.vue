@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { ref } from 'vue'
 import { playersApi } from '@/services/players.js'
 import { useAuthStore } from '@/stores/auth'
@@ -30,14 +31,14 @@ const avatarPreview = ref(props.user.avatar_url)
 const coverFile = ref(null)
 const coverPreview = ref(props.user.cover_url)
 
-function onAvatarChange(e) {
+async function onAvatarChange(e) {
   const file = e.target.files[0]
   if (!file) return
   avatarFile.value = file
   avatarPreview.value = URL.createObjectURL(file)
 }
 
-function onCoverChange(e) {
+async function onCoverChange(e) {
   const file = e.target.files[0]
   if (!file) return
   coverFile.value = file
@@ -45,7 +46,7 @@ function onCoverChange(e) {
 }
 
 async function removeAvatar() {
-  if (!confirm('Удалить аватарку?')) return
+  if (!await confirmDialog('Удалить аватарку?')) return
   await playersApi.removeAvatar()
   avatarFile.value = null
   avatarPreview.value = null
@@ -54,7 +55,7 @@ async function removeAvatar() {
 }
 
 async function removeCover() {
-  if (!confirm('Удалить подложку?')) return
+  if (!await confirmDialog('Удалить подложку?')) return
   await playersApi.removeCover()
   coverFile.value = null
   coverPreview.value = null

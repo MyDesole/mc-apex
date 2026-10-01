@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { adminApi } from '@/services/admin.js'
@@ -58,24 +59,24 @@ function openEdit(t) {
   showForm.value = true
 }
 
-function openParticipants(t) {
+async function openParticipants(t) {
   participantsTournament.value = t
   showParticipants.value = true
 }
 
-function openBracket(t) {
+async function openBracket(t) {
   bracketTournament.value = t
   showBracket.value = true
 }
 
 async function destroy(t) {
-  if (!confirm(`Удалить турнир «${t.name}»?`)) return
-  if (!confirm('Точно уверен? Все матчи и участники будут удалены.')) return
+  if (!await confirmDialog(`Удалить турнир «${t.name}»?`)) return
+  if (!await confirmDialog('Точно уверен? Все матчи и участники будут удалены.')) return
   await adminApi.destroyTournament(t.id)
   await load()
 }
 
-function onUpdated() {
+async function onUpdated() {
   showForm.value = false
   showParticipants.value = false
   load()

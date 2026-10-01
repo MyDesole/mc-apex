@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { adminApi } from '@/services/admin.js'
@@ -33,7 +34,7 @@ watch(search, () => {
 watch(page, load)
 
 async function remove(event) {
-  if (!confirm(`Удалить пост «${event.title}»?`)) return
+  if (!await confirmDialog(`Удалить пост «${event.title}»?`)) return
   await adminApi.deleteEvent(event.id)
   await load()
 }

@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { onMounted, ref } from 'vue'
 import { myClanApi } from '@/services/myClan.js'
 import { useAuthStore } from '@/stores/auth'
@@ -79,12 +80,12 @@ async function lockTopic(topic) {
 }
 
 async function removeTopic(topic) {
-  if (!confirm('Удалить топик?')) return
+  if (!await confirmDialog('Удалить топик?')) return
   await myClanApi.deleteTopic(topic.id)
   await load()
 }
 
-function formatDate(d) {
+async function formatDate(d) {
   const date = new Date(d)
   const diff = Math.floor((new Date() - date) / 1000)
   if (diff < 60) return 'только что'

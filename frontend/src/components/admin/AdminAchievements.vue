@@ -1,4 +1,5 @@
 <script setup>
+import { alert as alertDialog, confirm as confirmDialog } from '@/utils/dialog.js'
 import { onMounted, ref, watch } from 'vue'
 import { adminApi } from '@/services/admin.js'
 import AdminAchievementForm from './AdminAchievementForm.vue'
@@ -38,24 +39,24 @@ watch(search, () => {
 
 watch([rarityFilter, filter], load)
 
-function openCreate() {
+async function openCreate() {
   editing.value = null
   showForm.value = true
 }
 
-function openEdit(a) {
+async function openEdit(a) {
   editing.value = a
   showForm.value = true
 }
 
 async function destroy(a) {
-  if (!confirm(`Удалить ачивку «${a.name}»?`)) return
+  if (!await confirmDialog(`Удалить ачивку «${a.name}»?`)) return
   processing.value = a.id
   try {
     await adminApi.destroyAchievement(a.id)
     await load()
   } catch (e) {
-    alert(e.message || 'Ошибка')
+    await alertDialog(e.message || 'Ошибка')
   } finally {
     processing.value = null
   }
@@ -71,7 +72,7 @@ async function toggleActive(a) {
   }
 }
 
-function onUpdated() {
+async function onUpdated() {
   showForm.value = false
   load()
 }

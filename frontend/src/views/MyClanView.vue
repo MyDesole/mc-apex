@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
@@ -46,7 +47,7 @@ async function leaveClan() {
       ? 'Вы единственный участник клана. Клан будет РАСПУЩЕН вместе с форумом и ресурсами. Продолжить?'
       : 'Покинуть клан? Вернуться можно будет только по новой заявке.'
 
-  if (!confirm(question)) return
+  if (!await confirmDialog(question)) return
 
   leaving.value = true
   leaveError.value = ''

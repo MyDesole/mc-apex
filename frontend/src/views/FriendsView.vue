@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { onMounted, ref, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { friendsApi } from '@/services/friends.js'
@@ -32,7 +33,7 @@ async function accept(userId) {
 }
 
 async function remove(userId) {
-  if (!confirm('Удалить из друзей?')) return
+  if (!await confirmDialog('Удалить из друзей?')) return
   await friendsApi.remove(userId)
   await load()
 }

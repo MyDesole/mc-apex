@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { myClanApi } from '@/services/myClan.js'
@@ -43,7 +44,7 @@ async function load() {
   }
 }
 
-function openRoleModal(member) {
+async function openRoleModal(member) {
   selectedMember.value = member
   roleForm.value = {
     role: member.role === 'leader' ? 'officer' : member.role,
@@ -65,14 +66,14 @@ async function saveRole() {
 }
 
 async function kick(member) {
-  if (!confirm(`Кикнуть ${member.user.username}?`)) return
+  if (!await confirmDialog(`Кикнуть ${member.user.username}?`)) return
   await myClanApi.kickMember(member.user_id)
   await load()
 }
 
 async function transfer(member) {
-  if (!confirm(`Передать лидерство ${member.user.username}?`)) return
-  if (!confirm('Вы станете офицером. Продолжить?')) return
+  if (!await confirmDialog(`Передать лидерство ${member.user.username}?`)) return
+  if (!await confirmDialog('Вы станете офицером. Продолжить?')) return
   await myClanApi.transferLeadership(member.user_id)
   await load()
 }

@@ -1,4 +1,5 @@
 <script setup>
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { computed, ref, watch } from 'vue'
 import { clansApi } from '@/services/clans.js'
 
@@ -32,14 +33,14 @@ const avatarPreview = ref(props.clan.avatar_url)
 const coverFile = ref(null)
 const coverPreview = ref(props.clan.cover_url)
 
-function onAvatarChange(e) {
+async function onAvatarChange(e) {
   const file = e.target.files[0]
   if (!file) return
   avatarFile.value = file
   avatarPreview.value = URL.createObjectURL(file)
 }
 
-function onCoverChange(e) {
+async function onCoverChange(e) {
   const file = e.target.files[0]
   if (!file) return
   coverFile.value = file
@@ -47,7 +48,7 @@ function onCoverChange(e) {
 }
 
 async function removeAvatar() {
-  if (!confirm('Удалить аватарку?')) return
+  if (!await confirmDialog('Удалить аватарку?')) return
   await clansApi.removeAvatar(props.clan.id)
   avatarFile.value = null
   avatarPreview.value = null
@@ -55,7 +56,7 @@ async function removeAvatar() {
 }
 
 async function removeCover() {
-  if (!confirm('Удалить подложку?')) return
+  if (!await confirmDialog('Удалить подложку?')) return
   await clansApi.removeCover(props.clan.id)
   coverFile.value = null
   coverPreview.value = null
