@@ -644,38 +644,6 @@ const coverStyle = computed(() => {
       <div class="profile-header__identity">
 
         <!-- Tier -->
-        <div class="tier-display">
-
-          <div class="tier-display__icon">
-            <div class="tier-display__icon-inner">
-              {{ tierShort }}
-            </div>
-          </div>
-
-          <div class="tier-display__info">
-
-            <div class="tier-display__eyebrow">
-              CURRENT TIER
-            </div>
-
-            <div class="tier-display__name">
-              {{ tierLabel }}
-            </div>
-
-            <div class="tier-display__subtitle">
-              {{ tierSubtitle }}
-            </div>
-
-          </div>
-
-          <div class="tier-display__ornament">
-            <span />
-            <span />
-            <span />
-          </div>
-
-        </div>
-
         <!-- Name -->
         <div class="profile-header__name-row">
 
@@ -693,13 +661,8 @@ const coverStyle = computed(() => {
 
         </div>
 
-        <!-- Username -->
-        <p
-            v-if="user.username"
-            class="profile-header__username"
-        >
-          @{{ user.username }}
-        </p>
+
+
 
         <!-- Status -->
         <div
@@ -834,29 +797,7 @@ const coverStyle = computed(() => {
          Normal mode only
          ===================================================== -->
 
-    <div
-        v-if="!compact"
-        class="profile-header__rank-mark"
-        aria-hidden="true"
-    >
 
-      <div class="rank-mark__outer">
-
-        <div class="rank-mark__middle">
-
-          <div class="rank-mark__inner">
-            {{ tierShort }}
-          </div>
-
-        </div>
-
-      </div>
-
-      <div class="rank-mark__label">
-        {{ tierLabel }}
-      </div>
-
-    </div>
 
     <!-- =====================================================
          BOTTOM DECORATION

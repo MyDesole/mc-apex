@@ -2,7 +2,6 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { api } from '@/services/api.js'
-import PlayerProfileHeader from '@/components/player-profile/PlayerProfileHeader.vue'
 
 const category = ref('pvp')
 const pvpMode = ref('overall')
@@ -20,6 +19,34 @@ const PVP_MODES = [
   { value: 'pvp', label: 'PvP', color: '#ef4444' },
   { value: 'bedwars', label: 'BedWars', color: '#8b5cf6' },
 ]
+
+const ROLE_LABELS = {
+  admin: 'Администратор',
+  tester: 'Тестер',
+  moderator: 'Модератор',
+}
+
+const TIER_ACCENTS = {
+  'S+': '#fbbf24',
+  S: '#facc15',
+  A: '#f97316',
+  B: '#8b5cf6',
+  C: '#06b6d4',
+  D: '#22c55e',
+  E: '#6b7280',
+}
+
+const AVATAR_FRAMES = {
+  purple: '#7c3aed',
+  cyan: '#06b6d4',
+  green: '#22c55e',
+  gold: '#facc15',
+  orange: '#f97316',
+  pink: '#ec4899',
+  red: '#ef4444',
+  legendary: '#facc15',
+  season1: '#06b6d4',
+}
 
 async function load() {
   if (category.value === 'other') {
@@ -61,16 +88,6 @@ const mobileSlots = computed(() =>
     MOBILE_ORDER.filter(i => i < topThree.value.length)
 )
 
-const TIER_ACCENTS = {
-  'S+': '#fbbf24',
-  S: '#facc15',
-  A: '#f97316',
-  B: '#8b5cf6',
-  C: '#06b6d4',
-  D: '#22c55e',
-  E: '#6b7280',
-}
-
 function accent(player) {
   return TIER_ACCENTS[player?.tier] || '#7c3aed'
 }
@@ -82,6 +99,90 @@ function rankOf(slotIdx) {
 function scoreOf(player) {
   return player?.rating_score ?? 0
 }
+
+function roleLabel(player) {
+  if (!player?.role || player.role === 'player') {
+    return ''
+  }
+
+  return ROLE_LABELS[player.role] || player.role
+}
+
+function avatarFrame(player) {
+  const frame = player?.avatar_frame
+
+  if (!frame || frame === 'default') {
+    return {}
+  }
+
+  if (frame === 'rainbow') {
+    return {
+      '--frame-color': '#7c3aed',
+      '--frame-gradient':
+          'linear-gradient(135deg, #ef4444, #facc15, #22c55e, #06b6d4, #7c3aed)',
+    }
+  }
+
+  if (frame === 'legendary') {
+    return {
+      '--frame-color': '#facc15',
+      '--frame-gradient':
+          'linear-gradient(135deg, #facc15, #f97316, #ef4444)',
+    }
+  }
+
+  if (frame === 'season1') {
+    return {
+      '--frame-color': '#06b6d4',
+      '--frame-gradient':
+          'linear-gradient(135deg, #7c3aed, #06b6d4)',
+    }
+  }
+
+  return {
+    '--frame-color': AVATAR_FRAMES[frame] || accent(player),
+  }
+}
+
+function profileEffectStyle(player) {
+  const effect = player?.profile_effect
+
+  if (!effect) {
+    return {}
+  }
+
+  if (effect === 'legendary') {
+    return {
+      '--effect-color': '#facc15',
+    }
+  }
+
+  if (effect === 'fire') {
+    return {
+      '--effect-color': '#f97316',
+    }
+  }
+
+  if (effect === 'ice') {
+    return {
+      '--effect-color': '#06b6d4',
+    }
+  }
+
+  if (effect === 'glow') {
+    return {
+      '--effect-color': '#7c3aed',
+    }
+  }
+
+  if (effect === 'pulse') {
+    return {
+      '--effect-color': '#06b6d4',
+    }
+  }
+
+  return {}
+}
 </script>
 
 <template>
@@ -90,6 +191,7 @@ function scoreOf(player) {
     <!-- =========================================================
          HEADER
          ========================================================= -->
+
     <header class="rating-head">
       <div class="rating-head__text">
         <div class="rating-head__eyebrow">
@@ -174,7 +276,11 @@ function scoreOf(player) {
     <!-- =========================================================
          SUB TABS
          ========================================================= -->
-    <div v-if="category === 'pvp'" class="sub-tabs">
+
+    <div
+        v-if="category === 'pvp'"
+        class="sub-tabs"
+    >
       <button
           v-for="m in PVP_MODES"
           :key="m.value"
@@ -185,6 +291,7 @@ function scoreOf(player) {
           @click="pvpMode = m.value"
       >
         <span class="sub-tab__dot" />
+
         <span class="sub-tab__label">
           {{ m.label }}
         </span>
@@ -194,7 +301,11 @@ function scoreOf(player) {
     <!-- =========================================================
          LOADING
          ========================================================= -->
-    <div v-if="loading" class="state">
+
+    <div
+        v-if="loading"
+        class="state"
+    >
       <div class="spinner" />
       <span>Загрузка...</span>
     </div>
@@ -202,6 +313,7 @@ function scoreOf(player) {
     <!-- =========================================================
          OTHER
          ========================================================= -->
+
     <div
         v-else-if="category === 'other'"
         class="state state--empty"
@@ -240,11 +352,11 @@ function scoreOf(player) {
       <!-- =======================================================
            DESKTOP MOUNTAIN
            ======================================================= -->
+
       <section
           v-if="topThree.length"
           class="mountain"
       >
-        <!-- Atmospheric background -->
         <div class="mountain__vignette" />
         <div class="mountain__noise" />
 
@@ -256,7 +368,6 @@ function scoreOf(player) {
         >
           <defs>
 
-            <!-- SKY -->
             <linearGradient
                 id="skyGradient"
                 x1="0"
@@ -285,7 +396,6 @@ function scoreOf(player) {
               />
             </linearGradient>
 
-            <!-- HORIZON -->
             <linearGradient
                 id="horizonGradient"
                 x1="0"
@@ -306,7 +416,6 @@ function scoreOf(player) {
               />
             </linearGradient>
 
-            <!-- BACK MOUNTAIN -->
             <linearGradient
                 id="mountainBack"
                 x1="0"
@@ -325,7 +434,6 @@ function scoreOf(player) {
               />
             </linearGradient>
 
-            <!-- MID MOUNTAIN -->
             <linearGradient
                 id="mountainMid"
                 x1="0"
@@ -349,7 +457,6 @@ function scoreOf(player) {
               />
             </linearGradient>
 
-            <!-- MAIN MOUNTAIN -->
             <linearGradient
                 id="mountainMain"
                 x1="0"
@@ -378,7 +485,6 @@ function scoreOf(player) {
               />
             </linearGradient>
 
-            <!-- LEFT FACE -->
             <linearGradient
                 id="leftFace"
                 x1="0"
@@ -405,7 +511,6 @@ function scoreOf(player) {
               />
             </linearGradient>
 
-            <!-- RIGHT FACE -->
             <linearGradient
                 id="rightFace"
                 x1="1"
@@ -426,7 +531,6 @@ function scoreOf(player) {
               />
             </linearGradient>
 
-            <!-- SNOW -->
             <linearGradient
                 id="snow"
                 x1="0"
@@ -453,7 +557,6 @@ function scoreOf(player) {
               />
             </linearGradient>
 
-            <!-- GOLD LIGHT -->
             <radialGradient
                 id="goldGlow"
                 cx="50%"
@@ -485,7 +588,6 @@ function scoreOf(player) {
               />
             </radialGradient>
 
-            <!-- PURPLE LIGHT -->
             <radialGradient
                 id="purpleGlow"
                 cx="50%"
@@ -505,7 +607,6 @@ function scoreOf(player) {
               />
             </radialGradient>
 
-            <!-- MIST -->
             <linearGradient
                 id="mist"
                 x1="0"
@@ -532,7 +633,6 @@ function scoreOf(player) {
               />
             </linearGradient>
 
-            <!-- FILTERS -->
             <filter
                 id="softBlur"
                 x="-30%"
@@ -561,7 +661,7 @@ function scoreOf(player) {
               fill="url(#skyGradient)"
           />
 
-          <!-- HORIZON GLOW -->
+          <!-- HORIZON -->
           <ellipse
               cx="700"
               cy="280"
@@ -578,7 +678,7 @@ function scoreOf(player) {
               fill="url(#purpleGlow)"
           />
 
-          <!-- MOON / APEX LIGHT -->
+          <!-- MOON -->
           <circle
               cx="700"
               cy="120"
@@ -617,7 +717,7 @@ function scoreOf(player) {
             <circle cx="1340" cy="58" r="1.1" opacity=".55" />
           </g>
 
-          <!-- TINY CROSS STARS -->
+          <!-- CROSS STARS -->
           <g stroke="#fff" stroke-linecap="round">
             <path
                 d="M176 88v8M172 92h8"
@@ -744,7 +844,7 @@ function scoreOf(player) {
               opacity=".95"
           />
 
-          <!-- MAIN SNOW CAP -->
+          <!-- SNOW CAP -->
           <path
               d="M700 74
                L628 170
@@ -770,7 +870,7 @@ function scoreOf(player) {
               opacity=".22"
           />
 
-          <!-- MOUNTAIN FACETS -->
+          <!-- FACETS -->
           <path
               d="M700 74 L700 620"
               stroke="#fff"
@@ -792,7 +892,7 @@ function scoreOf(player) {
               opacity=".12"
           />
 
-          <!-- RIDGE HIGHLIGHTS -->
+          <!-- RIDGE -->
           <path
               d="M285 620 L700 74 L1115 620"
               fill="none"
@@ -801,7 +901,7 @@ function scoreOf(player) {
               opacity=".12"
           />
 
-          <!-- SMALL CLIFFS -->
+          <!-- CLIFFS -->
           <path
               d="M520 430 L565 360 L600 420"
               fill="none"
@@ -818,7 +918,7 @@ function scoreOf(player) {
               opacity=".045"
           />
 
-          <!-- FOREGROUND DARK RIDGE -->
+          <!-- FOREGROUND -->
           <path
               d="M0 550
                C160 500 260 515 390 550
@@ -841,7 +941,7 @@ function scoreOf(player) {
               filter="url(#smallBlur)"
           />
 
-          <!-- FOREGROUND PARTICLES -->
+          <!-- PARTICLES -->
           <g fill="#fff">
             <circle cx="150" cy="470" r="1" opacity=".2" />
             <circle cx="265" cy="530" r=".8" opacity=".18" />
@@ -852,7 +952,8 @@ function scoreOf(player) {
           </g>
         </svg>
 
-        <!-- Apex marker -->
+        <!-- APEX -->
+
         <div class="apex-marker">
           <div class="apex-marker__line" />
           <div class="apex-marker__glow" />
@@ -862,6 +963,7 @@ function scoreOf(player) {
         <!-- =====================================================
              PODIUM
              ===================================================== -->
+
         <div class="podium">
           <div
               v-for="slot in podiumSlots"
@@ -869,10 +971,8 @@ function scoreOf(player) {
               class="podium__slot"
               :class="`podium__slot--rank${rankOf(slot)}`"
           >
+            <!-- RANK -->
 
-            <!-- Crown -->
-
-            <!-- Rank badge -->
             <div
                 class="podium__badge"
                 :style="{ '--accent': accent(topThree[slot]) }"
@@ -987,7 +1087,8 @@ function scoreOf(player) {
               </span>
             </div>
 
-            <!-- Score -->
+            <!-- SCORE -->
+
             <div
                 class="podium__score"
                 :style="{ '--accent': accent(topThree[slot]) }"
@@ -1012,7 +1113,8 @@ function scoreOf(player) {
               <small>RATING</small>
             </div>
 
-            <!-- Player -->
+            <!-- PLAYER -->
+
             <RouterLink
                 :to="`/players/${topThree[slot].id}`"
                 class="podium__card"
@@ -1020,12 +1122,57 @@ function scoreOf(player) {
             >
               <div class="podium__card-glow" />
 
-              <PlayerProfileHeader
-                  compact
-                  :user="topThree[slot]"
-                  size="md"
-                  :cover-url="topThree[slot].cover_url"
-              />
+              <div
+                  class="rank-player"
+                  :class="{
+                    'rank-player--legendary':
+                        topThree[slot].profile_effect === 'legendary'
+                  }"
+                  :style="profileEffectStyle(topThree[slot])"
+              >
+                <div class="rank-player__avatar-wrap">
+                  <img
+                      :src="topThree[slot].avatar_url"
+                      :alt="topThree[slot].username"
+                      class="rank-player__avatar"
+                  />
+
+                  <span
+                      v-if="topThree[slot].avatar_frame && topThree[slot].avatar_frame !== 'default'"
+                      class="rank-player__frame"
+                      :class="`rank-player__frame--${topThree[slot].avatar_frame}`"
+                      :style="avatarFrame(topThree[slot])"
+                  />
+
+                  <span class="rank-player__online" />
+                </div>
+
+                <div class="rank-player__body">
+                  <div class="rank-player__top">
+                    <span class="rank-player__tier">
+                      {{ topThree[slot].tier || '—' }}
+                    </span>
+
+                    <span
+                        v-if="topThree[slot].clan_tag"
+                        class="rank-player__clan"
+                    >
+                      [{{ topThree[slot].clan_tag }}]
+                    </span>
+                  </div>
+
+                  <div class="rank-player__name">
+                    {{ topThree[slot].username }}
+                  </div>
+
+                  <div
+                      v-if="roleLabel(topThree[slot])"
+                      class="rank-player__role"
+                  >
+                    {{ roleLabel(topThree[slot]) }}
+                  </div>
+                </div>
+              </div>
             </RouterLink>
           </div>
         </div>
@@ -1034,6 +1181,7 @@ function scoreOf(player) {
       <!-- =======================================================
            MOBILE PODIUM
            ======================================================= -->
+
       <section
           v-if="topThree.length"
           class="mobile-podium"
@@ -1046,7 +1194,6 @@ function scoreOf(player) {
             :style="{ '--accent': accent(topThree[slot]) }"
         >
           <div class="mobile-podium__rank-wrap">
-
             <svg
                 v-if="slot === 0"
                 class="mobile-podium__medal"
@@ -1151,11 +1298,58 @@ function scoreOf(player) {
               :to="`/players/${topThree[slot].id}`"
               class="mobile-podium__card"
           >
-            <PlayerProfileHeader
-                compact
-                :user="topThree[slot]"
-                :cover-url="topThree[slot].cover_url"
-            />
+            <div
+                class="rank-player rank-player--mobile"
+                :class="{
+                  'rank-player--legendary':
+                      topThree[slot].profile_effect === 'legendary'
+                }"
+                :style="{
+                  '--accent': accent(topThree[slot]),
+                  ...profileEffectStyle(topThree[slot])
+                }"
+            >
+              <div class="rank-player__avatar-wrap">
+                <img
+                    :src="topThree[slot].avatar_url"
+                    :alt="topThree[slot].username"
+                    class="rank-player__avatar"
+                />
+
+                <span
+                    v-if="topThree[slot].avatar_frame && topThree[slot].avatar_frame !== 'default'"
+                    class="rank-player__frame"
+                    :class="`rank-player__frame--${topThree[slot].avatar_frame}`"
+                    :style="avatarFrame(topThree[slot])"
+                />
+              </div>
+
+              <div class="rank-player__body">
+                <div class="rank-player__top">
+                  <span class="rank-player__tier">
+                    {{ topThree[slot].tier || '—' }}
+                  </span>
+
+                  <span
+                      v-if="topThree[slot].clan_tag"
+                      class="rank-player__clan"
+                  >
+                    [{{ topThree[slot].clan_tag }}]
+                  </span>
+                </div>
+
+                <div class="rank-player__name">
+                  {{ topThree[slot].username }}
+                </div>
+
+                <div
+                    v-if="roleLabel(topThree[slot])"
+                    class="rank-player__role"
+                >
+                  {{ roleLabel(topThree[slot]) }}
+                </div>
+              </div>
+            </div>
           </RouterLink>
 
           <span class="mobile-podium__score">
@@ -1178,6 +1372,7 @@ function scoreOf(player) {
       <!-- =======================================================
            REST
            ======================================================= -->
+
       <section
           v-if="rest.length"
           class="rest"
@@ -1225,17 +1420,58 @@ function scoreOf(player) {
               {{ scoreOf(p) }}
             </span>
 
-            <PlayerProfileHeader
-                compact
-                :user="p"
-                :cover-url="p.cover_url"
-                class="rest__header"
-            />
+            <div
+                class="rest-player"
+                :class="{
+                  'rest-player--legendary':
+                      p.profile_effect === 'legendary'
+                }"
+                :style="profileEffectStyle(p)"
+            >
+              <div class="rest-player__avatar-wrap">
+                <img
+                    :src="p.avatar_url"
+                    :alt="p.username"
+                    class="rest-player__avatar"
+                />
+
+                <span
+                    v-if="p.avatar_frame && p.avatar_frame !== 'default'"
+                    class="rest-player__frame"
+                    :class="`rest-player__frame--${p.avatar_frame}`"
+                    :style="avatarFrame(p)"
+                />
+              </div>
+
+              <div class="rest-player__info">
+                <div class="rest-player__name">
+                  <span
+                      v-if="p.clan_tag"
+                      class="rest-player__clan"
+                  >
+                    [{{ p.clan_tag }}]
+                  </span>
+
+                  {{ p.username }}
+                </div>
+
+                <div class="rest-player__meta">
+                  <span class="rest-player__tier">
+                    {{ p.tier || '—' }}
+                  </span>
+
+                  <span v-if="roleLabel(p)">
+                    {{ roleLabel(p) }}
+                  </span>
+                </div>
+              </div>
+            </div>
           </RouterLink>
         </div>
       </section>
 
       <!-- EMPTY -->
+
       <div
           v-if="!players.length"
           class="state state--empty"
@@ -1268,7 +1504,9 @@ function scoreOf(player) {
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
+
   margin-bottom: 18px;
+
   flex-wrap: wrap;
 }
 
@@ -1276,8 +1514,11 @@ function scoreOf(player) {
   display: flex;
   align-items: center;
   gap: 8px;
+
   margin-bottom: 7px;
+
   color: #64748b;
+
   font-size: 9px;
   font-weight: 900;
   letter-spacing: 2px;
@@ -1286,16 +1527,20 @@ function scoreOf(player) {
 .rating-head__eyebrow-line {
   width: 22px;
   height: 1px;
+
   background: #facc15;
+
   box-shadow: 0 0 8px rgba(250, 204, 21, .6);
 }
 
 .rating-head__title {
   margin: 0 0 6px;
+
   color: var(--text);
+
   font-size: 30px;
   font-weight: 950;
-  letter-spacing: -0.8px;
+  letter-spacing: -.8px;
 }
 
 .apex {
@@ -1308,6 +1553,7 @@ function scoreOf(player) {
 
   -webkit-background-clip: text;
   background-clip: text;
+
   color: transparent;
 
   filter:
@@ -1317,7 +1563,9 @@ function scoreOf(player) {
 
 .rating-head__sub {
   margin: 0;
+
   color: var(--text-dim);
+
   font-size: 13.5px;
 }
 
@@ -1333,13 +1581,18 @@ function scoreOf(player) {
 .mode-tabs {
   display: inline-flex;
   gap: 5px;
+
   padding: 4px;
+
   background: rgba(10, 10, 18, .72);
+
   border: 1px solid var(--border);
   border-radius: 13px;
+
   box-shadow:
       0 10px 30px rgba(0, 0, 0, .2),
       inset 0 1px rgba(255, 255, 255, .025);
+
   backdrop-filter: blur(12px);
 }
 
@@ -1348,10 +1601,12 @@ function scoreOf(player) {
   align-items: center;
   justify-content: center;
   gap: 6px;
+
   padding: 8px 14px;
 
   color: var(--text-dim);
   background: transparent;
+
   border: 0;
   border-radius: 9px;
 
@@ -1360,6 +1615,7 @@ function scoreOf(player) {
   font-weight: 750;
 
   cursor: pointer;
+
   transition:
       color .2s ease,
       background .2s ease,
@@ -1404,8 +1660,10 @@ function scoreOf(player) {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+
   margin-bottom: 24px;
   padding: 0 4px;
+
   animation: fadeIn .2s ease;
 }
 
@@ -1430,6 +1688,7 @@ function scoreOf(player) {
 
   color: var(--text-dim);
   background: rgba(10, 10, 18, .35);
+
   border: 1px solid var(--border);
   border-radius: 999px;
 
@@ -1438,11 +1697,13 @@ function scoreOf(player) {
   font-weight: 700;
 
   cursor: pointer;
+
   transition: all .18s ease;
 }
 
 .sub-tab:hover {
   color: var(--text);
+
   border-color: color-mix(
       in srgb,
       var(--tab-color) 30%,
@@ -1453,6 +1714,7 @@ function scoreOf(player) {
 .sub-tab__dot {
   width: 7px;
   height: 7px;
+
   border-radius: 50%;
 
   background: var(--tab-color);
@@ -1481,6 +1743,7 @@ function scoreOf(player) {
 
 .sub-tab--active .sub-tab__dot {
   opacity: 1;
+
   box-shadow: 0 0 9px var(--tab-color);
 }
 
@@ -1497,7 +1760,9 @@ function scoreOf(player) {
   padding: 90px 20px;
 
   text-align: center;
+
   color: var(--text-dim);
+
   font-size: 14px;
 }
 
@@ -1507,6 +1772,7 @@ function scoreOf(player) {
 
 .state__title {
   color: var(--text);
+
   font-size: 16px;
   font-weight: 800;
 }
@@ -1515,8 +1781,10 @@ function scoreOf(player) {
   max-width: 280px;
 
   color: var(--text-muted);
+
   font-size: 12.5px;
   line-height: 1.5;
+
   text-align: center;
 }
 
@@ -1528,6 +1796,7 @@ function scoreOf(player) {
   color-mix(in srgb, var(--accent) 25%, transparent);
 
   border-top-color: var(--accent);
+
   border-radius: 50%;
 
   animation: spin .8s linear infinite;
@@ -1548,6 +1817,7 @@ function scoreOf(player) {
 
   width: 100%;
   min-height: 520px;
+
   margin-bottom: 42px;
 
   aspect-ratio: 1400 / 620;
@@ -1659,6 +1929,7 @@ function scoreOf(player) {
 .apex-marker__glow {
   width: 5px;
   height: 5px;
+
   margin-bottom: 5px;
 
   border-radius: 50%;
@@ -1717,6 +1988,7 @@ function scoreOf(player) {
 .podium__slot--rank1 {
   top: 20%;
   left: 50%;
+
   z-index: 3;
 
   width: clamp(220px, 30%, 350px);
@@ -1738,52 +2010,6 @@ function scoreOf(player) {
   z-index: 1;
 
   width: clamp(180px, 24%, 290px);
-}
-
-/* ============================================================
-   CROWN
-   ============================================================ */
-
-.podium__crown {
-  position: absolute;
-  top: -38px;
-
-  color: #facc15;
-
-  filter:
-      drop-shadow(0 0 7px rgba(250, 204, 21, .7))
-      drop-shadow(0 0 18px rgba(250, 204, 21, .3));
-
-  animation: crownFloat 2.5s ease-in-out infinite;
-}
-
-.podium__crown-glow {
-  position: absolute;
-
-  top: 10px;
-  left: 50%;
-
-  width: 55px;
-  height: 22px;
-
-  transform: translateX(-50%);
-
-  border-radius: 50%;
-
-  background: rgba(250, 204, 21, .2);
-
-  filter: blur(12px);
-}
-
-@keyframes crownFloat {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-5px);
-  }
 }
 
 /* ============================================================
@@ -1948,6 +2174,293 @@ function scoreOf(player) {
 }
 
 /* ============================================================
+   RANK PLAYER
+   ============================================================ */
+
+.rank-player {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  width: 100%;
+  min-width: 0;
+
+  padding: 8px 10px;
+
+  overflow: hidden;
+
+  background:
+      linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--accent) 10%, transparent),
+          rgba(8, 8, 14, .82)
+      );
+
+  border: 1px solid
+  color-mix(in srgb, var(--accent) 22%, var(--border));
+
+  border-radius: 14px;
+
+  box-shadow:
+      inset 0 1px rgba(255,255,255,.04),
+      0 10px 25px rgba(0,0,0,.2);
+}
+
+.rank-player::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+      radial-gradient(
+          circle at 0% 50%,
+          color-mix(in srgb, var(--accent) 20%, transparent),
+          transparent 55%
+      );
+
+  opacity: .7;
+}
+
+.rank-player--legendary {
+  border-color:
+      color-mix(in srgb, var(--effect-color) 55%, var(--border));
+
+  box-shadow:
+      inset 0 1px rgba(255,255,255,.06),
+      0 0 25px
+      color-mix(in srgb, var(--effect-color) 18%, transparent);
+}
+
+.rank-player--legendary::after {
+  content: "";
+
+  position: absolute;
+  inset: -50%;
+
+  background:
+      conic-gradient(
+          from 0deg,
+          transparent,
+          rgba(250,204,21,.08),
+          transparent,
+          rgba(249,115,22,.08),
+          transparent
+      );
+
+  animation: legendarySpin 5s linear infinite;
+
+  pointer-events: none;
+}
+
+@keyframes legendarySpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================
+   RANK AVATAR
+   ============================================================ */
+
+.rank-player__avatar-wrap {
+  position: relative;
+  z-index: 2;
+
+  flex: 0 0 auto;
+
+  width: 54px;
+  height: 54px;
+}
+
+.rank-player__avatar {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  background: #090910;
+
+  border: 2px solid
+  color-mix(in srgb, var(--accent) 45%, transparent);
+
+  border-radius: 12px;
+
+  box-shadow:
+      0 0 20px
+      color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.rank-player__frame {
+  position: absolute;
+  z-index: 3;
+
+  inset: -3px;
+
+  border-radius: 14px;
+
+  pointer-events: none;
+}
+
+.rank-player__frame--purple {
+  border: 2px solid #7c3aed;
+  box-shadow: 0 0 12px #7c3aed;
+}
+
+.rank-player__frame--cyan {
+  border: 2px solid #06b6d4;
+  box-shadow: 0 0 12px #06b6d4;
+}
+
+.rank-player__frame--green {
+  border: 2px solid #22c55e;
+  box-shadow: 0 0 12px #22c55e;
+}
+
+.rank-player__frame--gold {
+  border: 2px solid #facc15;
+  box-shadow: 0 0 14px rgba(250,204,21,.65);
+}
+
+.rank-player__frame--orange {
+  border: 2px solid #f97316;
+  box-shadow: 0 0 14px rgba(249,115,22,.6);
+}
+
+.rank-player__frame--pink {
+  border: 2px solid #ec4899;
+  box-shadow: 0 0 14px rgba(236,72,153,.6);
+}
+
+.rank-player__frame--red {
+  border: 2px solid #ef4444;
+  box-shadow: 0 0 14px rgba(239,68,68,.6);
+}
+
+.rank-player__frame--rainbow {
+  border: 2px solid transparent;
+
+
+}
+
+.rank-player__frame--legendary {
+  border: 2px solid transparent;
+
+
+
+  box-shadow:
+      0 0 10px #facc15,
+      0 0 25px rgba(249,115,22,.45);
+}
+
+.rank-player__frame--season1 {
+  border: 2px solid transparent;
+
+
+
+  box-shadow:
+      0 0 14px rgba(124,58,237,.4);
+}
+
+.rank-player__online {
+  position: absolute;
+  z-index: 4;
+
+  right: -2px;
+  bottom: -2px;
+
+  width: 10px;
+  height: 10px;
+
+  border: 2px solid #08080f;
+  border-radius: 50%;
+
+  background: #22c55e;
+}
+
+/* ============================================================
+   RANK INFO
+   ============================================================ */
+
+.rank-player__body {
+  position: relative;
+  z-index: 2;
+
+  min-width: 0;
+}
+
+.rank-player__top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  margin-bottom: 2px;
+}
+
+.rank-player__tier {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 25px;
+  height: 20px;
+
+  padding: 0 6px;
+
+  color: var(--accent);
+
+  background:
+      color-mix(in srgb, var(--accent) 12%, transparent);
+
+  border: 1px solid
+  color-mix(in srgb, var(--accent) 35%, transparent);
+
+  border-radius: 6px;
+
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.rank-player__clan {
+  color: var(--text-muted);
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.rank-player__name {
+  overflow: hidden;
+
+  color: #fff;
+
+  font-size: 14px;
+  font-weight: 900;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rank-player__role {
+  margin-top: 1px;
+
+  overflow: hidden;
+
+  color: var(--text-muted);
+
+  font-size: 9px;
+  font-weight: 700;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
    MOBILE PODIUM
    ============================================================ */
 
@@ -1961,16 +2474,19 @@ function scoreOf(player) {
 }
 
 .mobile-podium__row {
+  position: relative;
+
   display: grid;
 
   grid-template-columns: 40px minmax(0, 1fr) auto;
 
   align-items: center;
+
   gap: 12px;
 
-  position: relative;
-
   padding: 10px 12px;
+
+  overflow: visible;
 
   background:
       linear-gradient(
@@ -1982,8 +2498,6 @@ function scoreOf(player) {
 
   border: 1px solid var(--border);
   border-radius: 14px;
-
-  overflow: visible;
 
   box-shadow:
       0 8px 25px rgba(0, 0, 0, .12);
@@ -2032,9 +2546,6 @@ function scoreOf(player) {
   text-decoration: none;
 
   cursor: pointer;
-
-  filter:
-      drop-shadow(0 5px 12px rgba(0, 0, 0, .3));
 }
 
 .mobile-podium__score {
@@ -2047,6 +2558,9 @@ function scoreOf(player) {
 
   padding: 5px 8px;
 
+  color:
+      color-mix(in srgb, var(--accent) 82%, #fff);
+
   background:
       color-mix(
           in srgb,
@@ -2058,9 +2572,6 @@ function scoreOf(player) {
   color-mix(in srgb, var(--accent) 42%, transparent);
 
   border-radius: 999px;
-
-  color:
-      color-mix(in srgb, var(--accent) 82%, #fff);
 
   font-size: 12px;
   font-weight: 950;
@@ -2116,11 +2627,13 @@ function scoreOf(player) {
 
   min-width: 25px;
   height: 22px;
+
   padding: 0 7px;
 
   color: var(--text-muted);
 
   background: var(--bg-card);
+
   border: 1px solid var(--border);
   border-radius: 999px;
 
@@ -2168,67 +2681,166 @@ function scoreOf(player) {
   transform: translateX(2px);
 }
 
-.rest__rank {
-  display: inline-flex;
+/* ============================================================
+   REST PLAYER
+   ============================================================ */
+
+.rest-player {
+  position: relative;
+
+  display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 10px;
 
-  height: 32px;
-  min-width: 32px;
-  padding: 0 8px;
+  min-width: 0;
 
-  color: var(--text-dim);
-
-  background: var(--bg-card);
-
-  border: 1px solid var(--border);
-  border-radius: 9px;
-
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: .3px;
+  padding: 2px 0;
 }
 
-.rest__score {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
+.rest-player--legendary::after {
+  content: "";
 
-  height: 32px;
-  min-width: 48px;
-  padding: 0 8px;
-
-  color:
-      color-mix(in srgb, var(--accent) 75%, #fff);
+  position: absolute;
+  inset: -10px;
 
   background:
-      color-mix(
-          in srgb,
-          var(--accent) 9%,
-          var(--bg-card)
+      radial-gradient(
+          ellipse at left,
+          rgba(250,204,21,.1),
+          transparent 65%
       );
 
+  pointer-events: none;
+}
+
+.rest-player__avatar-wrap {
+  position: relative;
+
+  flex: 0 0 auto;
+
+  width: 34px;
+  height: 34px;
+}
+
+.rest-player__avatar {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
   border: 1px solid
-  color-mix(
-      in srgb,
-      var(--accent) 28%,
-      var(--border)
-  );
+  color-mix(in srgb, var(--accent) 30%, var(--border));
 
   border-radius: 9px;
+}
+
+.rest-player__frame {
+  position: absolute;
+  inset: -2px;
+
+  border-radius: 10px;
+
+  pointer-events: none;
+}
+
+.rest-player__frame--purple {
+  border: 1px solid #7c3aed;
+}
+
+.rest-player__frame--cyan {
+  border: 1px solid #06b6d4;
+}
+
+.rest-player__frame--green {
+  border: 1px solid #22c55e;
+}
+
+.rest-player__frame--gold {
+  border: 1px solid #facc15;
+  box-shadow: 0 0 8px rgba(250,204,21,.5);
+}
+
+.rest-player__frame--orange {
+  border: 1px solid #f97316;
+}
+
+.rest-player__frame--pink {
+  border: 1px solid #ec4899;
+}
+
+.rest-player__frame--red {
+  border: 1px solid #ef4444;
+}
+
+.rest-player__frame--rainbow {
+  border: 1px solid transparent;
+
+  background:
+      linear-gradient(#090910, #090910) padding-box,
+      var(--frame-gradient) border-box;
+}
+
+.rest-player__frame--legendary {
+  border: 1px solid transparent;
+
+  background:
+      linear-gradient(#090910, #090910) padding-box,
+      var(--frame-gradient) border-box;
+
+  box-shadow:
+      0 0 8px rgba(250,204,21,.6);
+}
+
+.rest-player__frame--season1 {
+  border: 1px solid transparent;
+
+  background:
+      linear-gradient(#090910, #090910) padding-box,
+      var(--frame-gradient) border-box;
+}
+
+.rest-player__info {
+  position: relative;
+  z-index: 1;
+
+  min-width: 0;
+}
+
+.rest-player__name {
+  overflow: hidden;
+
+  color: var(--text);
 
   font-size: 12px;
-  font-weight: 900;
-  letter-spacing: .3px;
+  font-weight: 850;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.rest__score svg {
+.rest-player__clan {
+  margin-right: 4px;
+
+  color: var(--text-muted);
+}
+
+.rest-player__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  margin-top: 2px;
+
+  color: var(--text-muted);
+
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.rest-player__tier {
   color: var(--accent);
-}
-
-.rest__header {
-  min-width: 0;
 }
 
 /* ============================================================
@@ -2238,6 +2850,7 @@ function scoreOf(player) {
 @media (max-width: 900px) {
   .rating-page {
     width: calc(100% - 32px);
+
     margin: 24px auto 48px;
   }
 
@@ -2247,29 +2860,38 @@ function scoreOf(player) {
 
   .mountain {
     min-height: 450px;
+
     aspect-ratio: 1400 / 650;
   }
 
   .podium__slot--rank1 {
     top: 20%;
     left: 50%;
+
     width: clamp(180px, 28%, 260px);
   }
 
   .podium__slot--rank2 {
     top: 61%;
     left: 25%;
+
     width: clamp(150px, 22%, 220px);
   }
 
   .podium__slot--rank3 {
     top: 81%;
     left: 75%;
+
     width: clamp(150px, 22%, 220px);
   }
 
   .apex-marker {
     top: 8%;
+  }
+
+  .rank-player__avatar-wrap {
+    width: 48px;
+    height: 48px;
   }
 }
 
@@ -2280,12 +2902,14 @@ function scoreOf(player) {
 @media (max-width: 640px) {
   .rating-page {
     width: calc(100% - 24px);
+
     margin: 16px auto 40px;
   }
 
   .rating-head {
     flex-direction: column;
     align-items: stretch;
+
     gap: 14px;
   }
 
@@ -2295,6 +2919,7 @@ function scoreOf(player) {
 
   .rating-head__title {
     font-size: 22px;
+
     letter-spacing: -.5px;
   }
 
@@ -2337,16 +2962,56 @@ function scoreOf(player) {
     padding: 6px 11px;
 
     font-size: 12px;
+
     white-space: nowrap;
   }
 
-  /* Hide desktop mountain */
+  /* Desktop mountain remains unchanged,
+     but mobile uses compact podium. */
+
   .mountain {
     display: none;
   }
 
   .mobile-podium {
     display: flex;
+  }
+
+  .rank-player {
+    padding: 6px 8px;
+
+    gap: 9px;
+
+    border-radius: 11px;
+  }
+
+  .rank-player__avatar-wrap {
+    width: 42px;
+    height: 42px;
+  }
+
+  .rank-player__avatar {
+    border-radius: 10px;
+  }
+
+  .rank-player__name {
+    font-size: 12.5px;
+  }
+
+  .rank-player__tier {
+    height: 18px;
+
+    min-width: 23px;
+
+    font-size: 9px;
+  }
+
+  .rank-player__clan {
+    font-size: 9px;
+  }
+
+  .rank-player__role {
+    font-size: 8px;
   }
 
   .rest__head {
@@ -2356,6 +3021,7 @@ function scoreOf(player) {
 
   .rest__title {
     font-size: 13px;
+
     letter-spacing: .6px;
   }
 
@@ -2403,16 +3069,31 @@ function scoreOf(player) {
 
   .mobile-podium__row {
     grid-template-columns: 34px minmax(0, 1fr) auto;
+
     gap: 9px;
 
-    padding: 9px 9px;
+    padding: 9px;
   }
 
   .mobile-podium__score {
     min-width: 43px;
+
     padding: 5px 6px;
 
     font-size: 11px;
+  }
+
+  .rank-player__avatar-wrap {
+    width: 38px;
+    height: 38px;
+  }
+
+  .rank-player__name {
+    font-size: 12px;
+  }
+
+  .rank-player__role {
+    display: none;
   }
 }
 </style>
