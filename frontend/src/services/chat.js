@@ -62,10 +62,28 @@ export const chatApi = {
         })
     },
 
-    // Загрузить файл к будущему сообщению
+    /**
+     * Загрузить один файл к будущему сообщению.
+     */
     upload(file) {
         const data = new FormData()
         data.append('file', file)
+
+        return api.post('/chat/attachments', data)
+    },
+
+    /**
+     * Загрузить пачку файлов одним запросом.
+     *
+     * Сервер принимает массив files и возвращает список загруженного.
+     * Так пачка уходит одним обращением вместо N последовательных.
+     *
+     * @param {File[]} files
+     */
+    uploadMany(files) {
+        const data = new FormData()
+
+        files.forEach((file) => data.append('files[]', file))
 
         return api.post('/chat/attachments', data)
     },

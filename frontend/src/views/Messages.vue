@@ -1014,7 +1014,7 @@ onUnmounted(() => {
           <div v-if="error" class="chat__error">{{ error }}</div>
 
           <div v-if="activeConversation" class="chat__attach-row">
-            <ChatAttachmentsInput v-model="pendingAttachments" />
+            <ChatAttachmentsInput v-model="pendingAttachments" :max="10" />
           </div>
 
           <form class="chat__form" @submit.prevent="sendMessage">

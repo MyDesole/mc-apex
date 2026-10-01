@@ -352,6 +352,23 @@ class ChatService
         ]);
     }
 
+    /**
+     * Загрузить пачку файлов одним запросом.
+     *
+     * @param  array<int, UploadedFile>  $files
+     * @return array<int, MessageAttachment>
+     */
+    public function uploadAttachments(User $me, array $files): array
+    {
+        $result = [];
+
+        foreach ($files as $file) {
+            $result[] = $this->uploadAttachment($me, $file);
+        }
+
+        return $result;
+    }
+
     public function attachmentPath(MessageAttachment $attachment): string
     {
         abort_unless(Storage::disk('public')->exists($attachment->path), 404);

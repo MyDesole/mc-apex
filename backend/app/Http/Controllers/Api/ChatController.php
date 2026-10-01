@@ -150,18 +150,31 @@ class ChatController extends Controller
 
     /* ----------------------------- Вложения ----------------------------- */
 
+    /**
+     * Загрузка вложений: один файл (file) или пачка (files).
+     *
+     * Возвращаем оба ключа, чтобы старый клиент продолжал работать:
+     * attachment — первый файл, attachments — весь список.
+     */
     public function uploadAttachment(UploadAttachmentRequest $request): JsonResponse
     {
-        $attachment = $this->chat->uploadAttachment($request->user(), $request->file('file'));
+        $attachments = $this->chat->uploadAttachments(
+            $request->user(),
+            $request->filesToStore()
+        );
+
+        $payload = array_map(fn (MessageAttachment $file) => [
+            'id' => $file->id,
+            'name' => $file->original_name,
+            'url' => $file->url,
+            'size' => $file->human_size,
+            'is_image' => $file->is_image,
+        ], $attachments);
 
         return response()->json([
-            'attachment' => [
-                'id' => $attachment->id,
-                'name' => $attachment->original_name,
-                'url' => $attachment->url,
-                'size' => $attachment->human_size,
-                'is_image' => $attachment->is_image,
-            ],
+            'attachments' => $payload,
+            // Обратная совместимость: раньше ответ содержал один файл
+            'attachment' => $payload[0] ?? null,
         ], 201);
     }
 
