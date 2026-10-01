@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { adminApi } from '@/services/admin.js'
 import AdminUserActions from './AdminUserActions.vue'
+import { userLink } from '@/utils/links.js'
 
 const users = ref([])
 const loading = ref(true)
@@ -45,6 +46,7 @@ watch([roleFilter, bannedFilter], () => {
 watch(page, load)
 
 const roleLabels = {
+  media: 'Медийка',
   user: 'Пользователь',
   tester: 'Тестер',
   moderator: 'Модератор',
@@ -73,6 +75,7 @@ onMounted(load)
         <option value="">Все роли</option>
         <option value="user">Пользователи</option>
         <option value="tester">Тестеры</option>
+        <option value="media">Медийки</option>
         <option value="moderator">Модераторы</option>
         <option value="admin">Администраторы</option>
       </select>
@@ -100,7 +103,7 @@ onMounted(load)
           :class="{ 'user-row--banned': user.is_banned }"
       >
         <RouterLink
-            :to="`/players/${user.id}`"
+            :to="userLink(user)"
             class="user-main"
         >
           <div class="user-avatar">
@@ -336,6 +339,11 @@ onMounted(load)
   color: #06b6d4;
   background: rgba(6, 182, 212, 0.1);
   border-color: rgba(6, 182, 212, 0.3);
+}
+
+.role-media {
+  color: #f9a8d4;
+  background: rgba(236, 72, 153, 0.14);
 }
 
 .role-moderator {

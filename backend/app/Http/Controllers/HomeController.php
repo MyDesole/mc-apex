@@ -29,6 +29,7 @@ class HomeController extends Controller
             });
 
         $clans = Clan::query()
+            ->where('is_banned', false)
             ->with('leader:id,username,avatar')
             ->orderByDesc('power')
             ->limit(10)
@@ -67,7 +68,7 @@ class HomeController extends Controller
 
         // топ игроков
         $players = \App\Models\User::query()
-            ->whereNotIn('role', ['admin', 'moder', 'tester'])   // ← исключаем персонал
+            ->excludeStaff()   // персонал в топ не попадает, медийка участвует
             ->with('clanMember.clan:id,tag,banner_color')
             ->orderByDesc('tier_score')
             ->limit(10)

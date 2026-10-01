@@ -126,7 +126,15 @@ class CoinService
      */
     public static function gift(User $from, User $to, int $amount): array
     {
-        $gift = config('apex.coins.gift');
+        // Правила подарков берём через ShopSettingService, чтобы значения,
+        // изменённые в админке, действительно применялись.
+        $gift = [
+            'enabled' => ShopSettingService::getBool('gift.enabled'),
+            'min' => ShopSettingService::getInt('gift.min'),
+            'max' => ShopSettingService::getInt('gift.max'),
+            'daily_limit' => ShopSettingService::getInt('gift.daily_limit'),
+            'fee_percent' => ShopSettingService::getInt('gift.fee_percent'),
+        ];
 
         if (! $gift['enabled']) {
             throw new RuntimeException('Подарки временно отключены.');
@@ -187,7 +195,9 @@ class CoinService
 
     public static function dailyBonusAvailable(User $user): bool
     {
-        if (! config('apex.coins.daily_bonus.enabled')) {
+        // Флаг читаем через настройки, а не напрямую из config:
+        // иначе переключатель в админке ни на что не влиял.
+        if (! ShopSettingService::getBool('daily_bonus.enabled')) {
             return false;
         }
 
@@ -206,7 +216,7 @@ class CoinService
             return 0;
         }
 
-        $amount = (int) (ShopSettingService::get('daily_bonus.amount') ?? config('apex.coins.daily_bonus.amount'));
+        $amount = ShopSettingService::getInt('daily_bonus.amount');
 
         return self::credit(
             $user,
@@ -229,14 +239,14 @@ class CoinService
      */
     public static function earnedBySource(User $user): array
     {
-        return array_values(
-            CoinTransaction::where('user_id', $user->id)
-                ->where('amount', '>', 0)
-                ->selectRaw('source, sum(amount) as total')
-                ->groupBy('source')
-                ->pluck('total', 'source')
-                ->map(fn ($v) => (int) $v)
-                ->all()
-        );
+        // Ключи важны: фронтенд показывает расшифровку «откуда монеты».
+        // array_values() здесь срезал названия источников.
+        return CoinTransaction::where('user_id', $user->id)
+            ->where('amount', '>', 0)
+            ->selectRaw('source, sum(amount) as total')
+            ->groupBy('source')
+            ->pluck('total', 'source')
+            ->map(fn ($v) => (int) $v)
+            ->all();
     }
 }

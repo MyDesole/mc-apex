@@ -3,10 +3,14 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { notificationsApi } from '@/services/notification.js'
+import { useRealtimeNotifications } from '@/composables/useRealtimeNotifications'
 import AppIcon from '@/components/AppIcon.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
+
+// Общий счётчик с шапкой сайта: без этого бейдж в шапке не сбрасывался
+const { setUnreadCount, decrementUnread } = useRealtimeNotifications()
 
 const loading = ref(true)
 const notifications = ref([])
@@ -118,6 +122,7 @@ async function load() {
 
     notifications.value = data.notifications?.data || []
     unread.value = data.unread_count || 0
+    setUnreadCount(unread.value)
   } catch (e) {
     console.error(e)
   } finally {
@@ -130,7 +135,11 @@ async function open(notification) {
 
   try {
     if (!notification.read_at) {
-      await notificationsApi.markAsRead(notification.id)
+      const result = await notificationsApi.markAsRead(notification.id)
+
+      notification.read_at = new Date().toISOString()
+      unread.value = Math.max(0, unread.value - 1)
+      setUnreadCount(result?.unread_count ?? unread.value)
     }
 
     const data = notification.data || {}
@@ -188,7 +197,17 @@ async function markAll() {
   markingAll.value = true
 
   try {
-    await notificationsApi.markAllAsRead()
+    const result = await notificationsApi.markAllAsRead()
+
+    // Сразу обнуляем оба счётчика, не дожидаясь перезагрузки списка
+    unread.value = 0
+    setUnreadCount(result?.unread_count ?? 0)
+
+    notifications.value = notifications.value.map((n) => ({
+      ...n,
+      read_at: n.read_at || new Date().toISOString(),
+    }))
+
     await load()
   } catch (e) {
     console.error(e)

@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\GrantCoinsRequest;
+use App\Http\Requests\Admin\StoreShopItemRequest;
+use App\Http\Requests\Admin\UpdateShopRewardsRequest;
 use App\Models\CoinTransaction;
 use App\Models\ShopItem;
 use App\Models\User;
@@ -41,9 +44,9 @@ class ShopController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreShopItemRequest $request): JsonResponse
     {
-        $validated = $this->validateItem($request);
+        $validated = $request->validated();
 
         $validated['slug'] = $validated['slug'] ?? Str::slug($validated['name']);
 
@@ -52,9 +55,9 @@ class ShopController extends Controller
         return response()->json(['item' => $item], 201);
     }
 
-    public function update(Request $request, ShopItem $shopItem): JsonResponse
+    public function update(StoreShopItemRequest $request, ShopItem $shopItem): JsonResponse
     {
-        $validated = $this->validateItem($request, $shopItem);
+        $validated = $request->validated();
 
         $shopItem->update($validated);
 
@@ -94,23 +97,12 @@ class ShopController extends Controller
         ]);
     }
 
-    public function updateRewards(Request $request): JsonResponse
+    public function updateRewards(UpdateShopRewardsRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'tier_test.per_tier' => ['sometimes', 'array'],
-            'tier_test.per_tier.*' => ['integer', 'min:0', 'max:1000000'],
-            'tier_test.first_test_bonus' => ['sometimes', 'integer', 'min:0', 'max:1000000'],
-            'achievement.base' => ['sometimes', 'integer', 'min:0', 'max:1000000'],
-            'achievement.per_point' => ['sometimes', 'integer', 'min:0', 'max:1000000'],
-            'daily_bonus.amount' => ['sometimes', 'integer', 'min:0', 'max:1000000'],
-            'daily_bonus.enabled' => ['sometimes', 'boolean'],
-            'gift.fee_percent' => ['sometimes', 'integer', 'min:0', 'max:50'],
-            'gift.daily_limit' => ['sometimes', 'integer', 'min:0', 'max:10000000'],
-            'sources' => ['sometimes', 'array'],
-            'sources.*' => ['boolean'],
-        ]);
-
-        foreach ($validated as $key => $value) {
+        // Админка присылает плоские ключи с точкой, сторонние клиенты —
+        // вложенные массивы. В базу всегда пишем плоский вид: читатели
+        // (ShopSettingService::get, RewardService) ищут именно такие ключи.
+        foreach ($request->allFlat() as $key => $value) {
             ShopSettingService::put($key, $value);
         }
 
@@ -123,12 +115,9 @@ class ShopController extends Controller
     /**
      * Начислить или списать монеты вручную — «свои способы начисления».
      */
-    public function grantCoins(Request $request, User $user): JsonResponse
+    public function grantCoins(GrantCoinsRequest $request, User $user): JsonResponse
     {
-        $validated = $request->validate([
-            'amount' => ['required', 'integer', 'min:-1000000', 'max:1000000', 'not_in:0'],
-            'reason' => ['nullable', 'string', 'max:191'],
-        ]);
+        $validated = $request->validated();
 
         try {
             CoinService::credit(
@@ -167,22 +156,15 @@ class ShopController extends Controller
         return response()->json($query->paginate(50));
     }
 
-    private function validateItem(Request $request, ?ShopItem $item = null): array
-    {
-        return $request->validate([
-            'name' => [$item ? 'sometimes' : 'required', 'string', 'max:128'],
-            'slug' => ['nullable', 'string', 'max:64', 'unique:shop_items,slug' . ($item ? ',' . $item->id : '')],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'type' => [$item ? 'sometimes' : 'required', 'in:avatar_frame,profile_effect,accent_color,card_background,badge,tier_priority,coin_bundle'],
-            'rarity' => ['nullable', 'in:common,rare,epic,legendary'],
-            'effect_value' => ['nullable', 'string', 'max:128'],
-            'price' => ['required', 'integer', 'min:0', 'max:10000000'],
-            'is_active' => ['nullable', 'boolean'],
-            'sort_order' => ['nullable', 'integer', 'min:0'],
-            'is_consumable' => ['nullable', 'boolean'],
-            'is_repeatable' => ['nullable', 'boolean'],
-            'max_quantity' => ['nullable', 'integer', 'min:1', 'max:1000'],
-            'metadata' => ['nullable', 'array'],
-        ]);
-    }
+    /**
+     * Разворачивает вложенный вид настроек в плоские ключи с точкой.
+     *
+     * Из {'tier_test' => ['first_test_bonus' => 7]} получается
+     * ['tier_test.first_test_bonus' => 7]. Значения-массивы (например
+     * таблица per_tier) остаются массивом, но ключ становится плоским.
+     *
+     * @param  array<string, mixed>  $validated
+     * @return array<string, mixed>
+     */
+
 }

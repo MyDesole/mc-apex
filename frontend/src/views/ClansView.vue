@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { clansApi } from '@/services/clans.js'
+import { clanLink } from '@/utils/links.js'
 
 const clans = ref([])
 const loading = ref(true)
@@ -157,7 +158,7 @@ onMounted(load)
       <RouterLink
           v-for="clan in clans"
           :key="clan.id"
-          :to="`/clans/${clan.id}`"
+          :to="clanLink(clan)"
           class="clan-card"
           :class="{ highlighted: clan.is_highlighted }"
       >

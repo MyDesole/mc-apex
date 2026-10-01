@@ -15,6 +15,7 @@ class CoinTransaction extends Model
     public const SOURCE_GIFT_OUT = 'gift_out';
     public const SOURCE_PURCHASE = 'purchase';
     public const SOURCE_ADMIN = 'admin';
+    public const SOURCE_REFERRAL = 'referral';
     public const SOURCE_OTHER = 'other';
 
     protected $fillable = [

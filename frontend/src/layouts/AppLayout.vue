@@ -189,6 +189,11 @@ watch(mobileMenuOpen, (open) => {
             <span>Кланы</span>
           </RouterLink>
 
+          <RouterLink to="/forum" class="nav-link">
+            <span class="nav-icon">✉</span>
+            <span>Форум</span>
+          </RouterLink>
+
           <RouterLink to="/tournaments" class="nav-link">
             <span class="nav-icon">♛</span>
             <span>Турниры</span>
@@ -499,6 +504,11 @@ watch(mobileMenuOpen, (open) => {
           <RouterLink to="/clans" class="mobile-nav-link">
             <span class="mobile-icon">♜</span>
             <span>Кланы</span>
+          </RouterLink>
+
+          <RouterLink to="/forum" class="mobile-nav-link">
+            <span class="mobile-icon">✉</span>
+            <span>Форум</span>
           </RouterLink>
 
           <RouterLink to="/tournaments" class="mobile-nav-link">

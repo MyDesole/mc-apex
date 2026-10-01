@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { testerApi } from '@/services/tester.js'
 import { useAuthStore } from '@/stores/auth'
+import { userLink } from '@/utils/links.js'
 
 const props = defineProps({
   tierTest: { type: Object, required: true },
@@ -190,7 +191,7 @@ function avatarLetter(username) {
         <div v-if="error" class="error">{{ error }}</div>
 
         <!-- Игрок -->
-        <RouterLink :to="`/players/${test.user.id}`" class="player-card">
+        <RouterLink :to="userLink(test.user)" class="player-card">
           <div class="avatar">
             <img v-if="test.user.avatar_url" :src="test.user.avatar_url" class="avatar-img" />
             <template v-else>{{ avatarLetter(test.user.username) }}</template>

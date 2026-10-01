@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\BanClanRequest;
 use App\Models\Clan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -10,15 +11,11 @@ use Illuminate\Support\Facades\Storage;
 
 class ClanController extends Controller
 {
-    public function ban(Request $request, Clan $clan): JsonResponse
+    public function ban(BanClanRequest $request, Clan $clan): JsonResponse
     {
-        $validated = $request->validate([
-            'reason' => ['nullable', 'string', 'max:500'],
-        ]);
-
         $clan->update([
             'is_banned' => true,
-            'ban_reason' => $validated['reason'] ?? 'Нарушение правил',
+            'ban_reason' => $request->input('reason') ?? 'Нарушение правил',
         ]);
 
         return response()->json(['clan' => $clan->fresh()]);

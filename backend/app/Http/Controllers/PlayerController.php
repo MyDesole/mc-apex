@@ -2,355 +2,103 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Friendship;
-use App\Models\PlayerAspect;
-use App\Models\PlayerAspectBedwars;
-use App\Models\PlayerAspectPvp;
+use App\Http\Requests\Player\UpdateAspectsRequest;
+use App\Http\Requests\Player\UpdateMeRequest;
+use App\Http\Controllers\Concerns\ResolvesFromUrl;
+use App\Http\Requests\Player\UpdateProfileRequest;
 use App\Models\User;
-use App\Services\AchievementService;
+use App\Services\PlayerProfileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
+/**
+ * Профиль игрока. Контроллер тонкий: валидация — в FormRequest,
+ * логика и работа с файлами — в PlayerProfileService.
+ */
 class PlayerController extends Controller
 {
-    public function index(Request $request): JsonResponse
-    {
-        $me = $request->user();
+    use ResolvesFromUrl;
 
-        $query = User::query()
-            ->with('clanMember.clan:id,name,tag,banner_color');
-
-        if ($search = $request->query('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        if ($tier = $request->query('tier')) {
-            $query->where('tier', $tier);
-        }
-
-        $players = $query->orderByDesc('tier_score')->paginate(20);
-
-        // friendship map (как было)
-        $ids = collect($players->items())->pluck('id')->all();
-
-        $friendships = Friendship::where(function ($q) use ($me, $ids) {
-            $q->where('user_id', $me->id)->whereIn('friend_id', $ids);
-        })->orWhere(function ($q) use ($me, $ids) {
-            $q->where('friend_id', $me->id)->whereIn('user_id', $ids);
-        })->get();
-
-        $statusMap = [];
-        foreach ($friendships as $f) {
-            $otherId = $f->user_id === $me->id ? $f->friend_id : $f->user_id;
-            $statusMap[$otherId] = [
-                'status' => $f->status,
-                'initiated_by_me' => $f->user_id === $me->id,
-            ];
-        }
-
-        $players->getCollection()->transform(function ($player) use ($statusMap) {
-            $player->friendship = $statusMap[$player->id] ?? null;
-            return $player;
-        });
-
-        return response()->json($players);
+    public function __construct(
+        private readonly PlayerProfileService $profiles,
+    ) {
     }
 
-    public function rating(Request $request): JsonResponse
+    /**
+     * Профиль игрока. Открыт и гостям, поэтому $me может быть null.
+     */
+    public function show(Request $request, string $user): JsonResponse
     {
-        $mode = $request->query('mode', 'overall');
+        $player = $this->resolveUser($user);
 
-        $players = User::query()
-            ->with(['aspectPvp', 'aspectBedwars', 'clanMember.clan:id,name,tag,banner_color'])
-            ->whereNotIn('role', ['admin', 'moderator', 'tester'])
-            ->get();
-
-        $mapped = $players->map(function ($user) use ($mode) {
-            $pvp = $user->aspectPvp;
-            $bw  = $user->aspectBedwars;
-
-            $pvpSum = $pvp
-                ? $pvp->block_placing + $pvp->rotka + $pvp->movement + $pvp->aim + $pvp->game_sense
-                : 0;
-
-            $bwSum = $bw
-                ? $bw->pvp + $bw->game_sense + $bw->bed_play + $bw->teamplay + $bw->building
-                : 0;
-
-            $score = match ($mode) {
-                'pvp'     => $pvpSum,
-                'bedwars' => $bwSum,
-                default   => (int) round(($pvpSum + $bwSum) / 2),
-            };
-
-            return [
-                'id' => $user->id,
-                'username' => $user->username,
-                'avatar_url' => $user->avatar_url,
-                'tier' => $user->tier,
-                'tier_score' => $score,
-                'clan_tag' => $user->clan_tag,
-                'clan_color' => $user->clan_color,
-                'rating_score' => $score,
-                'is_verified' => $user->is_verified,
-                'accent_color' => $user->accent_color,
-                'banner_color' => $user->banner_color,
-                'quote' => $user->quote,
-                'status' => $user->status,
-                'bio' => $user->bio,
-                'cover_url' => $user->cover_url,
-                'profile_effect' => $user->profile_effect,
-                'avatar_frame' => $user->avatar_frame,
-            ];
-        })
-            ->filter(fn ($p) => $p['rating_score'] > 0)
-            ->sortByDesc('rating_score')
-            ->values();
-
-        return response()->json(['data' => $mapped]);
+        return response()->json(
+            $this->profiles->view($player, $request->user())
+        );
     }
 
-    public function updateProfile(Request $request): JsonResponse
+    public function updateMe(UpdateMeRequest $request): JsonResponse
     {
-        $user = $request->user();
+        $user = $this->profiles->updateMe(
+            user: $request->user(),
+            data: $request->safe()->except(['avatar', 'cover']),
+            files: array_filter([
+                'avatar' => $request->file('avatar'),
+                'cover' => $request->file('cover'),
+            ]),
+        );
 
-        $validated = $request->validate([
-            'avatar_frame' => ['nullable', 'string', 'max:32'],
-            'profile_effect' => ['nullable', 'string', 'max:32'],
-            'accent_color' => ['nullable', 'string', 'max:16'],
-            'status' => ['nullable', 'string', 'max:64'],
-            'quote' => ['nullable', 'string', 'max:160'],
-            'bio' => ['nullable', 'string', 'max:500'],
-            'favorite_clan_id' => ['nullable', 'exists:clans,id'],
-            'featured_achievements' => ['nullable', 'array', 'max:6'],
-            'featured_achievements.*' => ['integer', 'exists:achievements,id'],
-            'profile_visibility' => ['nullable', 'in:public,friends,private'],
-
-            // новые
-            'discord_tag' => ['nullable', 'string', 'max:64'],
-            'favorite_modes' => ['nullable', 'array'],
-            'favorite_modes.*' => ['string', 'in:bedwars,skywars,duels,pvp,survival,other'],
-
-            // файл
-            'card_background' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-        ]);
-
-        // загрузка кастомного фона
-        if ($request->hasFile('card_background')) {
-            if ($user->card_background) {
-                Storage::disk('public')->delete($user->card_background);
-            }
-
-            $validated['card_background'] = $request
-                ->file('card_background')
-                ->store("users/{$user->id}/backgrounds", 'public');
-        }
-
-        unset($validated['card_background_file']); // если было
-
-        $user->update($validated);
-
-        return response()->json(['user' => $user->fresh()]);
+        return response()->json(['user' => $user]);
     }
 
-    public function removeCardBackground(Request $request): JsonResponse
+    public function updateProfile(UpdateProfileRequest $request): JsonResponse
     {
-        $user = $request->user();
+        $user = $this->profiles->updateProfile(
+            user: $request->user(),
+            data: $request->safe()->except(['card_background']),
+            files: array_filter(['card_background' => $request->file('card_background')]),
+        );
 
-        if ($user->card_background) {
-            Storage::disk('public')->delete($user->card_background);
-            $user->update(['card_background' => null]);
-        }
-
-        return response()->json(['user' => $user->fresh()]);
+        return response()->json(['user' => $user]);
     }
 
-    public function show(Request $request, User $user): JsonResponse
+    public function updateAspects(UpdateAspectsRequest $request): JsonResponse
     {
-        $user->load([
-            'aspectPvp',       // ← вместо 'aspects'
-            'aspectBedwars',   // ← вместо 'aspects'
-            'tierTests' => fn ($q) => $q->latest()->limit(10),
-            'clanMember.clan',
-            'achievements',
-            'friendsList',
-            'friendsOf',
-        ]);
+        $data = $request->validated();
 
+        // mode — это переключатель набора полей, в саму запись он не входит
+        unset($data['mode']);
 
-        $me = $request->user();
+        $result = $this->profiles->updateAspects(
+            user: $request->user(),
+            mode: $request->mode(),
+            values: $data,
+        );
 
-        $recommendations = \App\Models\ProfileRecommendation::where('target_id', $user->id)
-            ->where('is_hidden', false)
-            ->with('author:id,username,avatar,tier,is_verified,accent_color,banner_color')
-            ->latest()
-            ->limit(20)
-            ->get();
-
-        $myRecommendation = null;
-        if ($me) {
-            $myRecommendation = \App\Models\ProfileRecommendation::where('target_id', $user->id)
-                ->where('author_id', $me->id)
-                ->first();
-        }
-
-        $friendship = Friendship::where(function ($q) use ($me, $user) {
-            $q->where('user_id', $me->id)->where('friend_id', $user->id);
-        })->orWhere(function ($q) use ($me, $user) {
-            $q->where('user_id', $user->id)->where('friend_id', $me->id);
-        })->first();
-
-        $position = null;
-        $total = 0;
-
-        if ($user->tier_score > 0) {
-            $position = User::where('tier_score', '>', $user->tier_score)->count() + 1;
-            $total = User::where('tier_score', '>', 0)->count();
-        }
-
-        // 👇 Собираем aspects вручную
-        $userArray = $user->toArray();
-        $userArray['aspects'] = [
-            'pvp' => $user->aspectPvp,
-            'bedwars' => $user->aspectBedwars,
-        ];
-
-        $userArray['all_achievements'] = $user->achievements->map(fn ($a) => [
-            'id' => $a->id,
-            'name' => $a->name,
-            'icon' => $a->icon,
-            'color' => $a->color,
-            'description' => $a->description,
-            'points' => $a->points,
-            'earned_at' => $a->pivot->earned_at ?? null,
-        ])->values();
-
-        return response()->json([
-            'user' => $userArray,
-            'friendship' => $friendship ? [
-                'status' => $friendship->status,
-                'initiated_by_me' => $friendship->user_id === $me->id,
-            ] : null,
-            'rank' => [
-                'position' => $position,
-                'total' => $total,
-            ],
-            'recommendations' => $recommendations,
-            'my_recommendation' => $myRecommendation,
-            'can_recommend' => $me ? ($me->id !== $user->id && $me->isFriendsWith($user->id)) : false,
-        ]);
-    }
-
-    public function updateMe(Request $request): JsonResponse
-    {
-        $user = $request->user();
-
-        $validated = $request->validate([
-            'bio' => ['nullable', 'string', 'max:500'],
-            'banner_color' => ['nullable', 'string', 'max:16'],
-
-            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
-            'cover' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-
-            'socials' => ['nullable', 'array'],
-            'socials.discord' => ['nullable', 'string', 'max:255'],
-            'socials.telegram' => ['nullable', 'string', 'max:255'],
-            'socials.youtube' => ['nullable', 'string', 'max:255'],
-            'socials.vk' => ['nullable', 'string', 'max:255'],
-            'socials.website' => ['nullable', 'string', 'max:255'],  // ← без 'url', чтобы не резало
-        ]);
-
-        if ($request->hasFile('avatar')) {
-            if ($user->avatar) {
-                Storage::disk('public')->delete($user->avatar);
-            }
-
-            $validated['avatar'] = $request
-                ->file('avatar')
-                ->store("users/{$user->id}", 'public');
-        }
-
-        if ($request->hasFile('cover')) {
-            if ($user->cover_path) {
-                Storage::disk('public')->delete($user->cover_path);
-            }
-
-            $validated['cover_path'] = $request
-                ->file('cover')
-                ->store("users/{$user->id}/covers", 'public');
-        }
-
-        unset($validated['cover']);
-
-        $user->update($validated);
-        \App\Services\AchievementService::check($user);
-        return response()->json(['user' => $user->fresh()]);
+        return response()->json($result);
     }
 
     public function removeAvatar(Request $request): JsonResponse
     {
-        $user = $request->user();
-
-        if ($user->avatar) {
-            Storage::disk('public')->delete($user->avatar);
-            $user->update(['avatar' => null]);
-        }
-
-        return response()->json(['user' => $user->fresh()]);
+        return response()->json(['user' => $this->profiles->removeAvatar($request->user())]);
     }
 
     public function removeCover(Request $request): JsonResponse
     {
-        $user = $request->user();
-
-        if ($user->cover_path) {
-            Storage::disk('public')->delete($user->cover_path);
-            $user->update(['cover_path' => null]);
-        }
-
-        return response()->json(['user' => $user->fresh()]);
+        return response()->json(['user' => $this->profiles->removeCover($request->user())]);
     }
 
-    public function updateAspects(Request $request): JsonResponse
+    public function removeCardBackground(Request $request): JsonResponse
     {
-        $mode = $request->input('mode');
+        return response()->json([
+            'user' => $this->profiles->removeCardBackground($request->user()),
+        ]);
+    }
 
-        if ($mode === 'pvp') {
-            $validated = $request->validate([
-                'block_placing' => ['required', 'integer', 'min:0', 'max:20'],
-                'rotka' => ['required', 'integer', 'min:0', 'max:20'],
-                'movement' => ['required', 'integer', 'min:0', 'max:20'],
-                'aim' => ['required', 'integer', 'min:0', 'max:20'],
-                'game_sense' => ['required', 'integer', 'min:0', 'max:20'],
-            ]);
-
-            $aspect = PlayerAspectPvp::updateOrCreate(
-                ['user_id' => $request->user()->id],
-                $validated
-            );
-        } else {
-            $validated = $request->validate([
-                'pvp' => ['required', 'integer', 'min:0', 'max:20'],
-                'game_sense' => ['required', 'integer', 'min:0', 'max:20'],
-                'bed_play' => ['required', 'integer', 'min:0', 'max:20'],
-                'teamplay' => ['required', 'integer', 'min:0', 'max:20'],
-                'building' => ['required', 'integer', 'min:0', 'max:20'],
-            ]);
-
-            $aspect = PlayerAspectBedwars::updateOrCreate(
-                ['user_id' => $request->user()->id],
-                $validated
-            );
-        }
-
-        $user = $request->user();
-        $user->recalcTierFromAspects();
-        AchievementService::check($user);
-
-        return response()->json(['aspect' => $aspect, 'user' => $user->fresh()]);
+    /**
+     * Игрок из URL: число — это id, иначе ник (без учёта регистра).
+     */
+    private function resolveUser(string $value): User
+    {
+        return $this->resolveFromUrl(User::class, $value, 'username', 'Игрок не найден.');
     }
 }

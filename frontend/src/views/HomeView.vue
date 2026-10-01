@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { homeApi } from '@/services/home.js'
 import UserName from '@/components/UserName.vue'
+import { userLink, clanLink } from '@/utils/links.js'
 
 const loading = ref(true)
 
@@ -610,7 +611,7 @@ onMounted(async () => {
               <!-- SECOND -->
               <RouterLink
                   v-if="topPlayers[1]"
-                  :to="`/players/${topPlayers[1].id}`"
+                  :to="userLink(topPlayers[1])"
                   class="podium-card podium-card--second"
               >
                 <div class="podium-card__ambient" />
@@ -657,7 +658,7 @@ onMounted(async () => {
               <!-- FIRST -->
               <RouterLink
                   v-if="topPlayers[0]"
-                  :to="`/players/${topPlayers[0].id}`"
+                  :to="userLink(topPlayers[0])"
                   class="podium-card podium-card--first"
               >
                 <div class="podium-card__stars">
@@ -731,7 +732,7 @@ onMounted(async () => {
               <!-- THIRD -->
               <RouterLink
                   v-if="topPlayers[2]"
-                  :to="`/players/${topPlayers[2].id}`"
+                  :to="userLink(topPlayers[2])"
                   class="podium-card podium-card--third"
               >
                 <div class="podium-card__ambient" />
@@ -784,7 +785,7 @@ onMounted(async () => {
               <RouterLink
                   v-for="(player, index) in restPlayers"
                   :key="player.id"
-                  :to="`/players/${player.id}`"
+                  :to="userLink(player)"
                   class="rank-row"
               >
                 <div class="rank-row__position">
@@ -923,7 +924,7 @@ onMounted(async () => {
               <!-- SECOND -->
               <RouterLink
                   v-if="topClans[1]"
-                  :to="`/clans/${topClans[1].id}`"
+                  :to="clanLink(topClans[1])"
                   class="clan-podium clan-podium--second"
                   :style="{
                   '--clan-color': clanColor(topClans[1]),
@@ -973,7 +974,7 @@ onMounted(async () => {
               <!-- FIRST -->
               <RouterLink
                   v-if="topClans[0]"
-                  :to="`/clans/${topClans[0].id}`"
+                  :to="clanLink(topClans[0])"
                   class="clan-podium clan-podium--first"
                   :style="{
                   '--clan-color': clanColor(topClans[0]),
@@ -1040,7 +1041,7 @@ onMounted(async () => {
               <!-- THIRD -->
               <RouterLink
                   v-if="topClans[2]"
-                  :to="`/clans/${topClans[2].id}`"
+                  :to="clanLink(topClans[2])"
                   class="clan-podium clan-podium--third"
                   :style="{
                   '--clan-color': clanColor(topClans[2]),
@@ -1096,7 +1097,7 @@ onMounted(async () => {
               <RouterLink
                   v-for="(clan, index) in restClans"
                   :key="clan.id"
-                  :to="`/clans/${clan.id}`"
+                  :to="clanLink(clan)"
                   class="clan-row"
                   :class="{
                   'clan-row--highlighted': clan.is_highlighted,

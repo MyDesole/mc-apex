@@ -14,6 +14,11 @@ class Message extends Model
         'reply_to_id',
         'forwarded_from_user_id',
         'body',
+        'edited_at',
+    ];
+
+    protected $casts = [
+        'edited_at' => 'datetime',
     ];
 
     public function conversation(): BelongsTo
@@ -44,5 +49,13 @@ class Message extends Model
     public function reads(): HasMany
     {
         return $this->hasMany(MessageRead::class);
+    }
+
+    /**
+     * Вложения сообщения: картинки и файлы.
+     */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(MessageAttachment::class);
     }
 }

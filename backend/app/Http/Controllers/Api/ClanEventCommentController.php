@@ -3,84 +3,54 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Clan\ClanEventCommentRequest;
 use App\Models\Clan;
 use App\Models\ClanEvent;
 use App\Models\ClanEventComment;
-use App\Models\ClanMember;
+use App\Services\ClanEventCommentService;
+use App\Services\ClanService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * Комментарии к событиям клана. Логика — в ClanEventCommentService,
+ * проверка руководства — в ClanService.
+ */
 class ClanEventCommentController extends Controller
 {
+    public function __construct(
+        private readonly ClanEventCommentService $comments,
+        private readonly ClanService $clans,
+    ) {
+    }
+
     public function index(Request $request, Clan $clan, ClanEvent $event): JsonResponse
     {
-        abort_if($event->clan_id !== $clan->id, 404);
-
-        // только участники клана видят комментарии
-        abort_unless($clan->isMember($request->user()->id), 403);
-
-        $comments = ClanEventComment::where('clan_event_id', $event->id)
-            ->whereNull('parent_id')
-            ->with([
-                'user:id,username,avatar,tier',
-                'replies.user:id,username,avatar,tier',
-            ])
-            ->latest()
-            ->get();
-
-        return response()->json(['comments' => $comments]);
-    }
-
-    public function store(Request $request, Clan $clan, ClanEvent $event): JsonResponse
-    {
-        abort_if($event->clan_id !== $clan->id, 404);
-        abort_unless($clan->isMember($request->user()->id), 403);
-
-        $validated = $request->validate([
-            'body' => ['required', 'string', 'min:1', 'max:1000'],
-            'parent_id' => ['nullable', 'exists:clan_event_comments,id'],
-        ]);
-
-        if (!empty($validated['parent_id'])) {
-            $parent = ClanEventComment::find($validated['parent_id']);
-            abort_if($parent->clan_event_id !== $event->id, 422, 'Родительский комментарий из другого ивента.');
-        }
-
-        $comment = ClanEventComment::create([
-            'clan_event_id' => $event->id,
-            'user_id' => $request->user()->id,
-            'parent_id' => $validated['parent_id'] ?? null,
-            'body' => trim($validated['body']),
-        ]);
-
         return response()->json([
-            'comment' => $comment->load('user:id,username,avatar,tier'),
-        ], 201);
+            'comments' => $this->comments->list($clan, $event, $request->user()),
+        ]);
     }
 
-    public function destroy(Request $request, Clan $clan, ClanEvent $event, ClanEventComment $comment): JsonResponse
+    public function store(ClanEventCommentRequest $request, Clan $clan, ClanEvent $event): JsonResponse
     {
-        abort_if($event->clan_id !== $clan->id, 404);
-        abort_if($comment->clan_event_id !== $event->id, 404);
+        $comment = $this->comments->create(
+            clan: $clan,
+            event: $event,
+            user: $request->user(),
+            data: $request->validated(),
+        );
 
-        $user = $request->user();
+        return response()->json(['comment' => $comment], 201);
+    }
 
-        $canDelete = $comment->user_id === $user->id
-            || $clan->isLeader($user->id)
-            || $this->isOfficer($clan, $user->id);
-
-        abort_unless($canDelete, 403);
-
-        $comment->delete();
+    public function destroy(
+        Request $request,
+        Clan $clan,
+        ClanEvent $event,
+        ClanEventComment $comment,
+    ): JsonResponse {
+        $this->comments->delete($clan, $event, $comment, $request->user(), $this->clans);
 
         return response()->json(['ok' => true]);
-    }
-
-    private function isOfficer(Clan $clan, int $userId): bool
-    {
-        return ClanMember::where('clan_id', $clan->id)
-            ->where('user_id', $userId)
-            ->where('role', 'officer')
-            ->exists();
     }
 }

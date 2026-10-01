@@ -1,10 +1,23 @@
 <script setup>
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
+
+// Код приглашения из ссылки ?ref=CODE
+const inviteCode = ref(null)
+
+onMounted(() => {
+  const code = route.query.ref
+
+  if (code) {
+    inviteCode.value = String(code).trim().toUpperCase()
+    auth.setReferralCode(inviteCode.value)
+  }
+})
 
 // 1 — email, 2 — код, 3 — ник/пароль
 const step = ref(1)
@@ -100,6 +113,10 @@ function resendCode() {
         <div class="auth-heading">
           <h1>Создать аккаунт</h1>
           <p>Сначала подтвердим вашу почту</p>
+        </div>
+
+        <div v-if="inviteCode" class="invite-note">
+          Тебя пригласили по коду <b>{{ inviteCode }}</b> — после регистрации получишь стартовый бонус ApexCoin.
         </div>
 
         <form @submit.prevent="sendCode">
@@ -289,6 +306,19 @@ function resendCode() {
   font-size: 12px;
   color: #f87171;
 }
+
+.invite-note {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.invite-note b { color: #fff; }
 
 .auth-options--stack {
   flex-direction: column;

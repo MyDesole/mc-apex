@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { clansApi } from '@/services/clans.js'
+import { clanLink } from '@/utils/links.js'
 
 const router = useRouter()
 
@@ -35,7 +36,7 @@ async function submit() {
       is_open: form.value.is_open,
     })
 
-    router.push(`/clans/${data.clan.id}`)
+    router.push(clanLink(data.clan))
   } catch (e) {
     if (e.status === 422 && e.errors) {
       errors.value = e.errors

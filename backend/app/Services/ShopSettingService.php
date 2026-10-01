@@ -23,20 +23,31 @@ class ShopSettingService
             return $stored;
         }
 
-        // Дефолт: явный аргумент, иначе соответствующее значение из config/apex.php
-        return $default ?? config('apex.coins.' . $key, config('apex.' . $key));
+        // Дефолт: явный аргумент, иначе значение из config/apex.php.
+        // Проверяем именно передан ли аргумент: явный 0 (или false) — это
+        // осмысленный дефолт, но раньше он через ?? перекрывал config,
+        // из-за чего first_test_bonus из конфига не начислялся никогда.
+        return func_num_args() > 1
+            ? $default
+            : config('apex.coins.' . $key, config('apex.' . $key));
     }
 
+    /**
+     * Целое значение настройки. Без второго аргумента берётся config-дефолт.
+     */
     public static function getInt(string $key, int $default = 0): int
     {
-        $value = self::get($key, $default);
+        $value = func_num_args() > 1 ? self::get($key, $default) : self::get($key);
 
         return is_numeric($value) ? (int) $value : $default;
     }
 
+    /**
+     * Булево значение настройки. Без второго аргумента берётся config-дефолт.
+     */
     public static function getBool(string $key, bool $default = false): bool
     {
-        $value = self::get($key, $default);
+        $value = func_num_args() > 1 ? self::get($key, $default) : self::get($key);
 
         return is_bool($value) ? $value : (bool) $value;
     }

@@ -5,6 +5,8 @@ import { chatApi } from '@/services/chat.js'
 import { useAuthStore } from '@/stores/auth'
 import { useRealtimeMessages } from '@/composables/useRealtimeMessages'
 import UserName from '@/components/UserName.vue'
+import ChatAttachmentsInput from '@/components/chat/ChatAttachmentsInput.vue'
+import { userLink } from '@/utils/links.js'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -53,8 +55,27 @@ const directPartner = computed(() => {
 
 function goToPlayer(userId) {
   if (!userId) return
-  router.push(`/players/${userId}`)
+  router.push(userLink({ id: userId }))
 }
+
+// Курсорная пагинация истории
+const oldestId = ref(null)
+const hasMoreHistory = ref(false)
+const loadingOlder = ref(false)
+
+// Вложения к следующему сообщению
+const pendingAttachments = ref([])
+const previewImage = ref(null)
+
+// Сколько сообщений рендерим одновременно (виртуальный скролл)
+const RENDER_WINDOW = 80
+const renderLimit = ref(RENDER_WINDOW)
+
+const visibleMessages = computed(() =>
+    messages.value.slice(Math.max(0, messages.value.length - renderLimit.value))
+)
+
+const hiddenCount = computed(() => Math.max(0, messages.value.length - visibleMessages.value.length))
 
 async function loadConversations() {
   loadingList.value = true
@@ -73,9 +94,14 @@ async function openConversation(id) {
   error.value = ''
 
   try {
-    const data = await chatApi.show(id)
+    const data = await chatApi.show(id, { limit: 40 })
+
     activeConversation.value = data.conversation
     messages.value = data.messages ?? []
+
+    oldestId.value = data.oldest_id ?? messages.value[0]?.id ?? null
+    hasMoreHistory.value = Boolean(data.has_more)
+    renderLimit.value = RENDER_WINDOW
 
     const idx = conversations.value.findIndex(c => c.id === data.conversation.id)
     if (idx !== -1) {
@@ -96,19 +122,84 @@ async function openConversation(id) {
   }
 }
 
-async function sendMessage() {
-  if (!body.value.trim() || !activeConversation.value) return
+/**
+ * Подгрузить предыдущую страницу истории (скролл вверх).
+ * Сохраняем позицию: запоминаем высоту до вставки и компенсируем после.
+ */
+async function loadOlder() {
+  if (!activeConversation.value || !hasMoreHistory.value || loadingOlder.value) return
 
+  loadingOlder.value = true
+
+  const el = messagesEl.value
+  const heightBefore = el?.scrollHeight ?? 0
+  const topBefore = el?.scrollTop ?? 0
+
+  try {
+    const data = await chatApi.show(activeConversation.value.id, {
+      beforeId: oldestId.value,
+      limit: 40,
+      markRead: false,
+    })
+
+    const older = data.messages ?? []
+
+    if (older.length) {
+      messages.value = [...older, ...messages.value]
+      oldestId.value = data.oldest_id ?? older[0]?.id ?? oldestId.value
+
+      // Показываем все загруженные, окно рендера расширяем
+      renderLimit.value += older.length
+    }
+
+    hasMoreHistory.value = Boolean(data.has_more)
+  } catch (e) {
+    error.value = e.message || 'Не удалось загрузить историю'
+  } finally {
+    loadingOlder.value = false
+
+    await nextTick()
+
+    if (el) {
+      // Возвращаем пользователя к тому же сообщению
+      el.scrollTop = topBefore + (el.scrollHeight - heightBefore)
+    }
+  }
+}
+
+/** Автоподгрузка при приближении к верху. */
+function onMessagesScroll() {
+  const el = messagesEl.value
+  if (!el) return
+
+  // Показать скрытые ранее сообщения
+  if (renderLimit.value < messages.value.length && el.scrollTop < 400) {
+    renderLimit.value = Math.min(messages.value.length, renderLimit.value + RENDER_WINDOW)
+  }
+
+  if (el.scrollTop < 160) {
+    loadOlder()
+  }
+}
+
+async function sendMessage() {
   const text = body.value.trim()
+  const attachmentIds = pendingAttachments.value.map((a) => a.id)
+
+  if ((!text && !attachmentIds.length) || !activeConversation.value) return
+
   const replyId = replyTo.value?.id ?? null
+  const attachmentsBackup = [...pendingAttachments.value]
 
   body.value = ''
   replyTo.value = null
+  pendingAttachments.value = []
   sending.value = true
 
   try {
-    const data = await chatApi.send(activeConversation.value.id, text, replyId)
+    const data = await chatApi.send(activeConversation.value.id, text, replyId, attachmentIds)
     messages.value.push(data.message)
+    renderLimit.value = RENDER_WINDOW
 
     const idx = conversations.value.findIndex(c => c.id === activeConversation.value.id)
     if (idx !== -1) {
@@ -122,9 +213,49 @@ async function sendMessage() {
   } catch (e) {
     error.value = e.message || 'Не удалось отправить'
     body.value = text
+    pendingAttachments.value = attachmentsBackup
     replyTo.value = replyId ? messages.value.find(m => m.id === replyId) : null
   } finally {
     sending.value = false
+  }
+}
+
+/* ---------- Редактирование и удаление своих сообщений ---------- */
+
+const editingId = ref(null)
+const editingBody = ref('')
+
+function startEdit(message) {
+  editingId.value = message.id
+  editingBody.value = message.body || ''
+}
+
+function cancelEdit() {
+  editingId.value = null
+  editingBody.value = ''
+}
+
+async function saveEdit(message) {
+  try {
+    const data = await chatApi.updateMessage(message.id, editingBody.value)
+
+    const idx = messages.value.findIndex((m) => m.id === message.id)
+    if (idx !== -1) messages.value[idx] = { ...messages.value[idx], ...data.message }
+
+    cancelEdit()
+  } catch (e) {
+    error.value = e.message || 'Не удалось сохранить изменения'
+  }
+}
+
+async function removeMessage(message) {
+  if (!confirm('Удалить сообщение?')) return
+
+  try {
+    await chatApi.deleteMessage(message.id)
+    messages.value = messages.value.filter((m) => m.id !== message.id)
+  } catch (e) {
+    error.value = e.message || 'Не удалось удалить сообщение'
   }
 }
 
@@ -683,12 +814,35 @@ onUnmounted(() => {
           </div>
         </header>
 
-        <div ref="messagesEl" class="chat__messages scroll-thin">
+        <div
+            ref="messagesEl"
+            class="chat__messages scroll-thin"
+            @scroll.passive="onMessagesScroll"
+        >
           <div v-if="loadingChat" class="chat__loading">Загрузка...</div>
 
           <template v-else-if="messages.length">
+            <button
+                v-if="hasMoreHistory"
+                class="chat__load-older"
+                type="button"
+                :disabled="loadingOlder"
+                @click="loadOlder"
+            >
+              {{ loadingOlder ? 'Загружаем…' : 'Показать более ранние сообщения' }}
+            </button>
+
+            <button
+                v-if="hiddenCount"
+                class="chat__load-older"
+                type="button"
+                @click="renderLimit += RENDER_WINDOW"
+            >
+              Показать ещё {{ Math.min(hiddenCount, RENDER_WINDOW) }} из {{ hiddenCount }} скрытых
+            </button>
+
             <div
-                v-for="m in messages"
+                v-for="m in visibleMessages"
                 :key="m.id"
                 :data-message-id="m.id"
                 class="msg"
@@ -727,8 +881,46 @@ onUnmounted(() => {
                     <div class="msg__reply-body">{{ m.reply_to.body }}</div>
                   </div>
 
-                  <div class="msg__content">
+                  <!-- Вложения: картинки превью, файлы плашкой -->
+                  <div v-if="m.attachments?.length" class="msg__attachments">
+                    <template v-for="file in m.attachments" :key="file.id">
+                      <button
+                          v-if="file.is_image"
+                          class="msg__image"
+                          type="button"
+                          @click="previewImage = file"
+                      >
+                        <img :src="file.url" :alt="file.name" loading="lazy">
+                      </button>
+                      <a
+                          v-else
+                          class="msg__file"
+                          :href="file.url"
+                          target="_blank"
+                          rel="noopener"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <path d="M14 2v6h6" />
+                        </svg>
+                        <span class="msg__file-name">{{ file.name }}</span>
+                        <span class="msg__file-size">{{ file.size }}</span>
+                      </a>
+                    </template>
+                  </div>
+
+                  <!-- Режим редактирования -->
+                  <div v-if="editingId === m.id" class="msg__edit">
+                    <textarea v-model="editingBody" class="msg__edit-input" rows="3" />
+                    <div class="msg__edit-actions">
+                      <button type="button" class="msg__edit-btn" @click="cancelEdit">Отмена</button>
+                      <button type="button" class="msg__edit-btn msg__edit-btn--primary" @click="saveEdit(m)">Сохранить</button>
+                    </div>
+                  </div>
+
+                  <div v-else class="msg__content">
                     <span class="msg__text">{{ m.body }}</span>
+                    <span v-if="m.edited_at" class="msg__edited">изменено</span>
 
                     <span class="msg__meta">
                       <span class="msg__time">
@@ -769,6 +961,20 @@ onUnmounted(() => {
                     <path d="M4 18v-2a4 4 0 0 1 4-4h12" />
                   </svg>
                 </button>
+
+                <template v-if="m.user?.id === auth.user?.id">
+                  <button class="msg__action" type="button" title="Изменить" @click="startEdit(m)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 20h9" />
+                      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
+                    </svg>
+                  </button>
+                  <button class="msg__action msg__action--danger" type="button" title="Удалить" @click="removeMessage(m)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 6h18M8 6V4h8v2M6 6l1 16h10l1-16" />
+                    </svg>
+                  </button>
+                </template>
               </div>
             </div>
           </template>
@@ -776,6 +982,12 @@ onUnmounted(() => {
           <div v-else class="chat__empty-mini">
             Сообщений ещё нет. Напиши первым.
           </div>
+        </div>
+
+        <!-- Полноэкранный просмотр картинки -->
+        <div v-if="previewImage" class="chat__image-preview" @click.self="previewImage = null">
+          <img :src="previewImage.url" :alt="previewImage.name">
+          <button class="chat__image-preview-close" type="button" @click="previewImage = null">×</button>
         </div>
 
         <footer class="chat__footer">
@@ -801,6 +1013,10 @@ onUnmounted(() => {
 
           <div v-if="error" class="chat__error">{{ error }}</div>
 
+          <div v-if="activeConversation" class="chat__attach-row">
+            <ChatAttachmentsInput v-model="pendingAttachments" />
+          </div>
+
           <form class="chat__form" @submit.prevent="sendMessage">
             <textarea
                 ref="inputEl"
@@ -811,7 +1027,12 @@ onUnmounted(() => {
                 rows="1"
                 @keydown.enter.exact.prevent="sendMessage"
             />
-            <button class="chat__send" type="submit" :disabled="sending || !body.trim()">
+            <button
+                class="chat__send"
+                type="submit"
+                :disabled="sending || (!body.trim() && !pendingAttachments.length)"
+                :title="pendingAttachments.length && !body.trim() ? 'Отправить файлы' : 'Отправить'"
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M22 2 11 13" />
                 <path d="M22 2l-7 20-4-9-9-4 20-7z" />
@@ -1025,6 +1246,174 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* --- Курсорная пагинация и виртуальное окно --- */
+.chat__load-older {
+  display: block;
+  width: 100%;
+  margin: 4px 0 10px;
+  padding: 9px;
+  color: #8888a0;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed #22222e;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease;
+}
+
+.chat__load-older:hover:not(:disabled) {
+  color: #e2e2e8;
+  border-color: #343443;
+}
+
+.chat__load-older:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* --- Вложения в сообщениях --- */
+.msg__attachments {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.msg__image {
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  border: 1px solid #22222e;
+  border-radius: 10px;
+  cursor: zoom-in;
+  max-width: 280px;
+}
+
+.msg__image img {
+  display: block;
+  width: 100%;
+  max-height: 260px;
+  object-fit: cover;
+}
+
+.msg__file {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 11px;
+  color: #c9c9d6;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid #22222e;
+  border-radius: 9px;
+  font-size: 12px;
+  max-width: 280px;
+}
+
+.msg__file:hover {
+  border-color: #343443;
+}
+
+.msg__file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msg__file-size {
+  color: #5e5e70;
+  flex-shrink: 0;
+}
+
+.msg__edited {
+  margin-left: 6px;
+  color: #5e5e70;
+  font-size: 10px;
+  font-style: italic;
+}
+
+/* --- Редактирование сообщения --- */
+.msg__edit {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.msg__edit-input {
+  width: 100%;
+  min-width: 220px;
+  padding: 8px 10px;
+  color: #e2e2e8;
+  background: #0a0a0f;
+  border: 1px solid #343443;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
+}
+
+.msg__edit-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.msg__edit-btn {
+  padding: 5px 11px;
+  color: #8888a0;
+  background: transparent;
+  border: 1px solid #22222e;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.msg__edit-btn--primary {
+  color: #fff;
+  background: #7c3aed;
+  border-color: #7c3aed;
+}
+
+.msg__action--danger:hover {
+  color: #f87171;
+}
+
+/* --- Панель вложений к сообщению --- */
+.chat__attach-row {
+  padding: 8px 12px 0;
+}
+
+/* --- Просмотр картинки во весь экран --- */
+.chat__image-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  background: rgba(0, 0, 0, 0.88);
+}
+
+.chat__image-preview img {
+  max-width: 92vw;
+  max-height: 88vh;
+  border-radius: 10px;
+}
+
+.chat__image-preview-close {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  color: #fff;
+  background: transparent;
+  border: 0;
+  font-size: 30px;
+  line-height: 1;
+  cursor: pointer;
+}
 /* ============================================
    КРАСИВЫЙ СКРОЛЛБАР
    ============================================ */

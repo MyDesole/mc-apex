@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { clansApi } from '@/services/clans.js'
 import { useAuthStore } from '@/stores/auth'
+import { userLink } from '@/utils/links.js'
 
 const props = defineProps({
   clanId: { type: [Number, String], required: true },
@@ -144,7 +145,7 @@ onMounted(load)
       >
         <div class="comment-main">
           <RouterLink
-              :to="`/players/${comment.user.id}`"
+              :to="userLink(comment.user)"
               class="avatar"
           >
             <img
@@ -160,7 +161,7 @@ onMounted(load)
           <div class="comment-body">
             <div class="comment-head">
               <RouterLink
-                  :to="`/players/${comment.user.id}`"
+                  :to="userLink(comment.user)"
                   class="comment-author"
               >
                 {{ comment.user.username }}
@@ -200,7 +201,7 @@ onMounted(load)
           >
             <div class="comment-main">
               <RouterLink
-                  :to="`/players/${reply.user.id}`"
+                  :to="userLink(reply.user)"
                   class="avatar avatar--sm"
               >
                 <img
@@ -216,7 +217,7 @@ onMounted(load)
               <div class="comment-body">
                 <div class="comment-head">
                   <RouterLink
-                      :to="`/players/${reply.user.id}`"
+                      :to="userLink(reply.user)"
                       class="comment-author"
                   >
                     {{ reply.user.username }}

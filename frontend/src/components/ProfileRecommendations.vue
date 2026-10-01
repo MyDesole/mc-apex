@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { playersApi } from '@/services/players.js'
 import { useAuthStore } from '@/stores/auth'
 import UserName from '@/components/UserName.vue'
+import { userLink } from '@/utils/links.js'
 
 const props = defineProps({
   targetUser: { type: Object, required: true },
@@ -140,7 +141,7 @@ async function hide(rec) {
           :class="{ 'rec--mine': rec.author_id === auth.user?.id }"
       >
         <div class="rec__head">
-          <RouterLink :to="`/players/${rec.author.id}`" class="rec__author">
+          <RouterLink :to="userLink(rec.author)" class="rec__author">
             <div class="rec__avatar">
               <img v-if="rec.author.avatar_url" :src="rec.author.avatar_url" :alt="rec.author.username" />
               <template v-else>{{ (rec.author.username || 'И').charAt(0).toUpperCase() }}</template>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Profile\RecommendationRequest;
 use App\Models\ProfileRecommendation;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -39,7 +40,7 @@ class ProfileRecommendationController extends Controller
     /**
      * Создать/обновить отзыв.
      */
-    public function store(Request $request, User $user): JsonResponse
+    public function store(RecommendationRequest $request, User $user): JsonResponse
     {
         $me = $request->user();
 
@@ -55,10 +56,7 @@ class ProfileRecommendationController extends Controller
             ]);
         }
 
-        $validated = $request->validate([
-            'body' => ['required', 'string', 'min:10', 'max:280'],
-            'rating' => ['nullable', 'integer', 'min:1', 'max:5'],
-        ]);
+        $validated = $request->validated();
 
         $rec = ProfileRecommendation::updateOrCreate(
             [

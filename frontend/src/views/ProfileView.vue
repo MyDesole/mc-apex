@@ -10,6 +10,7 @@ import TierTestForm from '@/components/TierTestForm.vue'
 
 import { api } from '@/services/api.js'
 import { useAuthStore } from '@/stores/auth'
+import { userLink } from '@/utils/links.js'
 
 const auth = useAuthStore()
 
@@ -40,7 +41,7 @@ async function loadRecommendations() {
 
   try {
     const data = await api.get(
-        `/players/${auth.user.id}`
+        userLink(auth.user)
     )
 
     recommendations.value =

@@ -72,20 +72,39 @@ class TournamentController extends Controller
 
         $user = $request->user();
 
-        // проверка по тиру
+        // Проверка по тиру.
+        // S+ обязан быть в списке: раньше его там не было, array_search
+        // возвращал false, и S+ обходил любые ограничения.
         if ($tournament->min_tier || $tournament->max_tier) {
-            $order = ['E', 'D', 'C', 'B', 'A', 'S'];
-            $userIdx = array_search($user->tier, $order);
+            $order = ['E', 'D', 'C', 'B', 'A', 'S', 'S+'];
+
+            $userIdx = array_search($user->tier, $order, true);
+
+            abort_if($userIdx === false, 422, 'Неизвестный тир игрока.');
 
             if ($tournament->min_tier) {
-                $minIdx = array_search($tournament->min_tier, $order);
-                abort_if($userIdx < $minIdx, 422, "Нужен тир {$tournament->min_tier} или выше.");
+                $minIdx = array_search($tournament->min_tier, $order, true);
+                abort_if(
+                    $minIdx === false || $userIdx < $minIdx,
+                    422,
+                    "Нужен тир {$tournament->min_tier} или выше."
+                );
             }
 
             if ($tournament->max_tier) {
-                $maxIdx = array_search($tournament->max_tier, $order);
-                abort_if($userIdx > $maxIdx, 422, "Нужен тир {$tournament->max_tier} или ниже.");
+                $maxIdx = array_search($tournament->max_tier, $order, true);
+                abort_if(
+                    $maxIdx === false || $userIdx > $maxIdx,
+                    422,
+                    "Нужен тир {$tournament->max_tier} или ниже."
+                );
             }
+        }
+
+        // Клановый турнир: без клана заявка создавала участника
+        // с user_id = null и clan_id = null — «фантомный» слот в сетке.
+        if ($tournament->type === 'clan') {
+            abort_if(! $user->clanMember, 422, 'Нужно состоять в клане.');
         }
 
         // проверка на дубликат

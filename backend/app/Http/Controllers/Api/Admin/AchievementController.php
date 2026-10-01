@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\AchievementRequest;
 use App\Models\Achievement;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -51,18 +52,9 @@ class AchievementController extends Controller
     /**
      * Создать новую ачивку.
      */
-    public function store(Request $request): JsonResponse
+    public function store(AchievementRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:80'],
-            'description' => ['required', 'string', 'max:255'],
-            'icon' => ['required', 'string', 'max:32'],
-            'color' => ['required', 'string', 'max:16'],
-            'rarity' => ['required', 'in:common,rare,epic,legendary'],
-            'coin_reward' => ['nullable', 'integer', 'min:0', 'max:1000000'],
-            'points' => ['required', 'integer', 'min:0', 'max:10000'],
-            'code' => ['nullable', 'string', 'max:64', 'unique:achievements,code'],
-        ]);
+        $validated = $request->validated();
 
         // если code не задан — генерируем
         $validated['code'] = $validated['code']
@@ -79,20 +71,11 @@ class AchievementController extends Controller
     /**
      * Обновить ачивку.
      */
-    public function update(Request $request, Achievement $achievement): JsonResponse
+    public function update(AchievementRequest $request, Achievement $achievement): JsonResponse
     {
         // системные ачивки нельзя переименовать код, но можно менять
         // название, иконку, цвет, очки
-        $validated = $request->validate([
-            'name' => ['sometimes', 'string', 'max:80'],
-            'description' => ['sometimes', 'string', 'max:255'],
-            'icon' => ['sometimes', 'string', 'max:32'],
-            'color' => ['sometimes', 'string', 'max:16'],
-            'rarity' => ['sometimes', 'in:common,rare,epic,legendary'],
-            'coin_reward' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:1000000'],
-            'points' => ['sometimes', 'integer', 'min:0', 'max:10000'],
-            'is_active' => ['sometimes', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         // системную ачивку нельзя деактивировать
         if ($achievement->is_system && isset($validated['is_active']) && !$validated['is_active']) {

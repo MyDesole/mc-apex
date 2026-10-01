@@ -48,6 +48,14 @@ return [
             'amount' => 40,
         ],
 
+        // Пригласительные ссылки
+        'referral' => [
+            // Сколько получает пригласивший за нового игрока
+            'amount' => 200,
+            // Приветственный бонус самому новичку
+            'welcome_bonus' => 50,
+        ],
+
         // Подарки друзьям
         'gift' => [
             'enabled' => true,
@@ -66,7 +74,7 @@ return [
             'admin' => true,
             'tournament' => false,
             'clan_war' => false,
-            'referral' => false,
+            'referral' => true,
         ],
     ],
 

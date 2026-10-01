@@ -10,6 +10,7 @@ const loading = ref(false)
 
 const roles = [
   { value: 'user', label: 'Пользователь', desc: 'Обычный игрок' },
+  { value: 'media', label: 'Медийка', desc: 'Ютубер или стример: участвует в топах, особый вид профиля' },
   { value: 'tester', label: 'Тестер', desc: 'Проводит тир-тесты' },
   { value: 'moderator', label: 'Модератор', desc: 'Следит за контентом' },
   { value: 'admin', label: 'Администратор', desc: 'Полный доступ' },

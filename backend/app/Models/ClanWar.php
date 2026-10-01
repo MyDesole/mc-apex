@@ -12,7 +12,7 @@ class ClanWar extends Model
         'challenger_clan_id', 'opponent_clan_id', 'created_by',
         'status', 'scheduled_at',
         'challenger_score', 'opponent_score',
-        'winner_clan_id', 'notes',
+        'winner_clan_id', 'outcome', 'notes',
     ];
 
     protected $casts = [

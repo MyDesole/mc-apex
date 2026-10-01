@@ -3,6 +3,7 @@ import { onMounted, ref, watch, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { adminApi } from '@/services/admin.js'
 import UserName from '@/components/UserName.vue'
+import { userLink } from '@/utils/links.js'
 
 const users = ref([])
 const loading = ref(true)
@@ -158,7 +159,7 @@ onMounted(load)
           class="row"
           :class="{ 'row--verified': user.is_verified }"
       >
-        <RouterLink :to="`/players/${user.id}`" class="row__main">
+        <RouterLink :to="userLink(user)" class="row__main">
           <div class="user-avatar">
             <img
                 v-if="user.avatar_url"

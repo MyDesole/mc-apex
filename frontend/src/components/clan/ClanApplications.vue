@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { clansApi } from '@/services/clans.js'
+import { userLink } from '@/utils/links.js'
 
 const props = defineProps({
   clan: { type: Object, required: true },
@@ -82,7 +83,7 @@ onMounted(load)
           class="app-card"
       >
         <RouterLink
-            :to="`/players/${app.user.id}`"
+            :to="userLink(app.user)"
             class="app-user"
         >
           <div class="avatar">

@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { adminApi } from '@/services/admin.js'
+import { userLink, clanLink } from '@/utils/links.js'
 
 const comments = ref([])
 const loading = ref(true)
@@ -60,13 +61,13 @@ onMounted(load)
     <div v-else class="list">
       <div v-for="c in comments" :key="c.id" class="comment-row">
         <div class="comment-main">
-          <RouterLink :to="`/players/${c.user.id}`" class="author">
+          <RouterLink :to="userLink(c.user)" class="author">
             {{ c.user.username }}
           </RouterLink>
 
           <span class="where">
                         в
-                        <RouterLink :to="`/clans/${c.event.clan_id}`">
+                        <RouterLink :to="clanLink({ id: c.event.clan_id })">
                             [{{ c.event.clan?.tag }}] {{ c.event.clan?.name }}
                         </RouterLink>
                         · «{{ c.event.title }}»

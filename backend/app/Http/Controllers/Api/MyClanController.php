@@ -37,9 +37,14 @@ class MyClanController extends Controller
             'stats' => [
                 'members' => $clan->members()->count(),
                 'applications' => $clan->applications()->count(),
-                'wars_active' => \App\Models\ClanWar::where('challenger_clan_id', $clan->id)
-                    ->orWhere('opponent_clan_id', $clan->id)
-                    ->whereIn('status', ['pending', 'accepted'])
+                // Группировка обязательна: без неё AND/OR давал
+                // «challenger = X OR (opponent = X AND status IN ...)»
+                // и активными считались все войны, где клан — challenger.
+                'wars_active' => \App\Models\ClanWar::whereIn('status', ['pending', 'accepted'])
+                    ->where(function ($q) use ($clan) {
+                        $q->where('challenger_clan_id', $clan->id)
+                            ->orWhere('opponent_clan_id', $clan->id);
+                    })
                     ->count(),
                 'forum_topics' => $clan->forumTopics()->count(),
                 'resources' => $clan->resources()->count(),

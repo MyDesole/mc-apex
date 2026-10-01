@@ -2,6 +2,7 @@
 import { RouterLink } from 'vue-router'
 import { clansApi } from '@/services/clans.js'
 import UserName from "@/components/UserName.vue";
+import { userLink } from '@/utils/links.js'
 
 const props = defineProps({
   clan: Object,
@@ -35,7 +36,7 @@ async function kick(user) {
           class="member-card"
       >
         <RouterLink
-            :to="`/players/${m.user.id}`"
+            :to="userLink(m.user)"
             class="member-main"
         >
           <div

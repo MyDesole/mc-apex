@@ -3,13 +3,21 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Shop\PurchaseRequest;
 use App\Models\ShopItem;
 use App\Models\TierTest;
 use App\Services\RewardService;
 use App\Services\ShopService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use RuntimeException;
 
+/**
+ * Магазин. Контроллер тонкий: логика покупок — в ShopService.
+ *
+ * Ошибки бизнес-правил (не хватает монет, лимит бейджей) сервис
+ * превращает в ответ 422 — контроллер о них не знает.
+ */
 class ShopController extends Controller
 {
     /**
@@ -50,21 +58,9 @@ class ShopController extends Controller
         return response()->json(['item' => ShopService::presentItem($shopItem)]);
     }
 
-    /**
-     * Купить предмет.
-     */
-    public function purchase(Request $request, ShopItem $shopItem): JsonResponse
+    public function purchase(PurchaseRequest $request, ShopItem $shopItem): JsonResponse
     {
-        $validated = $request->validate([
-            'tier_test_id' => ['nullable', 'integer', 'exists:tier_tests,id'],
-            'quantity' => ['nullable', 'integer', 'min:1', 'max:10'],
-        ]);
-
-        try {
-            $result = ShopService::purchase($request->user(), $shopItem, $validated);
-        } catch (\RuntimeException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
-        }
+        $result = ShopService::purchaseOrFail($request->user(), $shopItem, $request->validated());
 
         return response()->json([
             'message' => "«{$shopItem->name}» куплено.",
@@ -75,16 +71,9 @@ class ShopController extends Controller
         ], 201);
     }
 
-    /**
-     * Надеть предмет.
-     */
     public function equip(Request $request, ShopItem $shopItem): JsonResponse
     {
-        try {
-            $inventory = ShopService::equip($request->user(), $shopItem);
-        } catch (\RuntimeException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
-        }
+        $inventory = ShopService::equipOrFail($request->user(), $shopItem);
 
         return response()->json([
             'message' => "«{$shopItem->name}» надето.",
@@ -92,16 +81,9 @@ class ShopController extends Controller
         ]);
     }
 
-    /**
-     * Снять предмет.
-     */
     public function unequip(Request $request, ShopItem $shopItem): JsonResponse
     {
-        try {
-            $inventory = ShopService::unequip($request->user(), $shopItem);
-        } catch (\RuntimeException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
-        }
+        $inventory = ShopService::unequipOrFail($request->user(), $shopItem);
 
         return response()->json([
             'message' => "«{$shopItem->name}» снято.",
@@ -110,7 +92,7 @@ class ShopController extends Controller
     }
 
     /**
-     * Заявки, к которым можно применить приоритет, и число купленных зарядов.
+     * Заявки, к которым можно применить приоритет, и число зарядов.
      */
     public function priorityCandidates(Request $request): JsonResponse
     {
@@ -123,15 +105,11 @@ class ShopController extends Controller
     }
 
     /**
-     * Применить ранее купленный приоритет к конкретной заявке.
+     * Применить купленный приоритет к конкретной заявке.
      */
     public function applyPriority(Request $request, TierTest $tierTest): JsonResponse
     {
-        try {
-            ShopService::applyPriority($request->user(), $tierTest);
-        } catch (\RuntimeException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
-        }
+        ShopService::applyPriorityOrFail($request->user(), $tierTest);
 
         $fresh = $tierTest->fresh();
 
@@ -146,4 +124,9 @@ class ShopController extends Controller
             'inventory' => ShopService::inventory($request->user()),
         ]);
     }
+
+    /**
+     * Выполнить операцию магазина, превратив бизнес-ошибку в 422.
+     * Один обработчик вместо try/catch в каждом методе.
+     */
 }

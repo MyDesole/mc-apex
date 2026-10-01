@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { clansApi } from '@/services/clans.js'
+import { userLink } from '@/utils/links.js'
 
 const props = defineProps({
   clan: { type: Object, required: true },
@@ -54,7 +55,7 @@ onMounted(load)
 
     <div v-else class="list">
       <div v-for="app in applications" :key="app.id" class="app">
-        <RouterLink :to="`/players/${app.user.id}`" class="app__main">
+        <RouterLink :to="userLink(app.user)" class="app__main">
           <div class="avatar">
             <img v-if="app.user.avatar_url" :src="app.user.avatar_url" />
             <template v-else>{{ app.user.username?.charAt(0).toUpperCase() }}</template>

@@ -1,26 +1,61 @@
 import { onUnmounted, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 
+/*
+ * Состояние на уровне модуля: все компоненты, которые вызывают
+ * useRealtimeNotifications(), получают ОДИН И ТОТ ЖЕ счётчик.
+ *
+ * Раньше ref создавался внутри функции, поэтому у шапки и страницы
+ * уведомлений были разные счётчики: «прочитать всё» на странице не
+ * сбрасывало бейдж в шапке, и помогала только перезагрузка.
+ */
+const unreadCount = ref(0)
+const latestNotification = ref(null)
+const newNotificationArrived = ref(false)
+
+let channel = null
+let subscribedUserId = null
+
 export function useRealtimeNotifications() {
     const auth = useAuthStore()
 
-    // Текущее количество непрочитанных (реактивно)
-    const unreadCount = ref(0)
+    /** Принудительно задать счётчик (например, после «прочитать всё»). */
+    function setUnreadCount(value) {
+        unreadCount.value = Math.max(0, Number(value) || 0)
+    }
 
-    // Последнее прилетевшее уведомление (для тоста)
-    const latestNotification = ref(null)
+    /** Пересчитать счётчик с сервера. */
+    async function refreshUnreadCount() {
+        if (!auth.isAuthenticated) {
+            unreadCount.value = 0
+            return
+        }
 
-    // Флаг для тоста — чтобы различать «пришло новое» от «загрузили из БД»
-    const newNotificationArrived = ref(false)
+        try {
+            const { notificationsApi } = await import('@/services/notification.js')
+            const data = await notificationsApi.list()
 
-    let channel = null
+            unreadCount.value = data.unread_count ?? 0
+        } catch (e) {
+            // тихо: счётчик не критичен для работы страницы
+        }
+    }
+
+    function decrementUnread() {
+        if (unreadCount.value > 0) {
+            unreadCount.value--
+        }
+    }
 
     function subscribe() {
         if (!auth.user?.id || !window.Echo) return
 
-        // Отписываемся на всякий случай, если уже были подписаны
+        // Уже подписаны на этого пользователя — не дублируем канал
+        if (channel && subscribedUserId === auth.user.id) return
+
         unsubscribe()
 
+        subscribedUserId = auth.user.id
         channel = window.Echo.private(`App.Models.User.${auth.user.id}`)
 
         channel.listen('.notification.created', (payload) => {
@@ -28,7 +63,6 @@ export function useRealtimeNotifications() {
             latestNotification.value = payload
             newNotificationArrived.value = true
 
-            // Сбрасываем флаг через секунду, чтобы тост не висел вечно
             setTimeout(() => {
                 newNotificationArrived.value = false
             }, 100)
@@ -36,10 +70,12 @@ export function useRealtimeNotifications() {
     }
 
     function unsubscribe() {
-        if (channel && auth.user?.id) {
-            window.Echo.leave(`App.Models.User.${auth.user.id}`)
-            channel = null
+        if (channel && subscribedUserId) {
+            window.Echo?.leave(`App.Models.User.${subscribedUserId}`)
         }
+
+        channel = null
+        subscribedUserId = null
     }
 
     // Следим за сменой юзера — переподписываемся
@@ -47,16 +83,24 @@ export function useRealtimeNotifications() {
         () => auth.user?.id,
         (id) => {
             unsubscribe()
-            if (id) subscribe()
+
+            if (id) {
+                subscribe()
+            } else {
+                unreadCount.value = 0
+            }
         },
         { immediate: true }
     )
-
-    onUnmounted(unsubscribe)
 
     return {
         unreadCount,
         latestNotification,
         newNotificationArrived,
+        setUnreadCount,
+        refreshUnreadCount,
+        decrementUnread,
+        subscribe,
+        unsubscribe,
     }
 }

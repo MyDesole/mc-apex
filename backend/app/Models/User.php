@@ -9,10 +9,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Concerns\HasRoles;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     protected $fillable = [
         'username', 'email', 'email_verified_at', 'password', 'avatar', 'cover_path',
@@ -141,25 +142,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->card_background ? asset('storage/' . $this->card_background) : null;
     }
-    public function isAdmin(): bool
-    {
-        return $this->role === 'admin';
-    }
-
-    public function isModerator(): bool
-    {
-        return in_array($this->role, ['moderator', 'admin']);
-    }
-
-    public function isTester(): bool
-    {
-        return in_array($this->role, ['tester', 'admin']);
-    }
-
-    public function hasRole(string ...$roles): bool
-    {
-        return in_array($this->role, $roles);
-    }
+    // Роли (isAdmin/isModerator/isTester/isMedia/isStaff/hasRole) — в трейте HasRoles
 
     public function isBanned(): bool
     {
@@ -337,10 +320,18 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isFriendsWith(int $userId): bool
     {
-        return Friendship::where(function ($q) use ($userId) {
-            $q->where('user_id', $this->id)->where('friend_id', $userId);
-        })->orWhere(function ($q) use ($userId) {
-            $q->where('user_id', $userId)->where('friend_id', $this->id);
-        })->where('status', 'accepted')->exists();
+        // Статус должен применяться к ОБЕИМ веткам: без группировки
+        // AND/OR давал «(A AND B) OR (B AND A AND accepted)», и заявка
+        // в друзья без подтверждения считалась дружбой.
+        return Friendship::where('status', 'accepted')
+            ->where(function ($q) use ($userId) {
+                $q->where('user_id', $this->id)->where('friend_id', $userId);
+            })
+            ->orWhere(function ($q) use ($userId) {
+                $q->where('status', 'accepted')
+                    ->where('user_id', $userId)
+                    ->where('friend_id', $this->id);
+            })
+            ->exists();
     }
 }

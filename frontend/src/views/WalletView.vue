@@ -19,6 +19,10 @@ const dailyAvailable = ref(false)
 const dailyAmount = ref(0)
 const giftLimits = ref({})
 
+// Пригласительные ссылки
+const referral = ref(null)
+const copied = ref(false)
+
 const transactions = ref([])
 const page = ref(1)
 const lastPage = ref(1)
@@ -60,6 +64,7 @@ async function load() {
     dailyAvailable.value = Boolean(data.daily_bonus_available)
     dailyAmount.value = data.daily_bonus_amount ?? 0
     giftLimits.value = data.gift_limits ?? {}
+    referral.value = data.referral ?? null
 
     await loadTransactions(1)
   } catch (e) {
@@ -81,6 +86,18 @@ async function loadTransactions(nextPage = 1) {
     lastPage.value = data.last_page ?? 1
   } catch (e) {
     error.value = e.message || 'Не удалось загрузить историю операций.'
+  }
+}
+
+async function copyInviteLink() {
+  if (!referral.value?.link) return
+
+  try {
+    await navigator.clipboard.writeText(referral.value.link)
+    copied.value = true
+    setTimeout(() => { copied.value = false }, 2000)
+  } catch (e) {
+    error.value = 'Не удалось скопировать ссылку — скопируй вручную.'
   }
 }
 
@@ -563,6 +580,75 @@ onMounted(load)
                 />
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================
+           INVITES
+           =================================================== -->
+
+      <section
+          v-if="referral"
+          class="panel referral"
+      >
+        <header class="panel__head">
+          <div>
+            <span class="panel__eyebrow">
+              INVITE FRIENDS
+            </span>
+
+            <h2 class="panel__title">
+              Пригласительные ссылки
+            </h2>
+          </div>
+
+          <span class="panel__count">
+            {{ referral.invited_count }}
+          </span>
+        </header>
+
+        <p class="referral__lead">
+          Отправь ссылку другу. Когда он зарегистрируется — ты получишь
+          <b>₳ {{ formatCoins(referral.reward_per_invite) }}</b>, а он стартовый бонус.
+        </p>
+
+        <div class="referral__row">
+          <input
+              class="referral__input"
+              type="text"
+              readonly
+              :value="referral.link"
+              @focus="$event.target.select()"
+          >
+
+          <button
+              class="btn btn-primary"
+              type="button"
+              @click="copyInviteLink"
+          >
+            {{ copied ? 'Скопировано' : 'Скопировать' }}
+          </button>
+        </div>
+
+        <div class="referral__meta">
+          <span>Твой код: <b>{{ referral.code }}</b></span>
+          <span>Пришло по ссылке: <b>{{ referral.invited_count }}</b></span>
+        </div>
+
+        <div
+            v-if="referral.invited_users?.length"
+            class="referral__list"
+        >
+          <div
+              v-for="u in referral.invited_users"
+              :key="u.id"
+              class="referral__user"
+          >
+            <span class="referral__user-name">{{ u.username }}</span>
+            <span class="referral__user-date">
+              {{ new Date(u.joined_at).toLocaleDateString('ru-RU') }}
+            </span>
           </div>
         </div>
       </section>
@@ -2555,4 +2641,25 @@ onMounted(load)
     transition-duration: .01ms !important;
   }
 }
+
+/* Пригласительные ссылки */
+.referral__lead { margin: 0 0 14px; color: var(--text-dim); font-size: 14px; line-height: 1.6; }
+.referral__lead b { color: #facc15; }
+.referral__row { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.referral__input {
+  flex: 1 1 260px;
+  min-width: 0;
+  padding: 10px 14px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-size: 13px;
+}
+.referral__meta { display: flex; gap: 18px; flex-wrap: wrap; color: var(--text-dim); font-size: 13px; margin-bottom: 12px; }
+.referral__meta b { color: var(--text); }
+.referral__list { display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--border); padding-top: 12px; }
+.referral__user { display: flex; justify-content: space-between; font-size: 13px; }
+.referral__user-name { color: var(--text); font-weight: 600; }
+.referral__user-date { color: var(--text-muted); }
 </style>

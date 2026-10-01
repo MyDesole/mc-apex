@@ -9,29 +9,48 @@ class NotificationController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $notifications = $request->user()
-            ->notifications()
-            ->latest()
-            ->paginate(20);
+        $user = $request->user();
+
+        $notifications = $user->notifications()->latest()->paginate(20);
 
         return response()->json([
             'notifications' => $notifications,
-            'unread_count' => $request->user()->unreadNotifications()->count(),
+            'unread_count' => $user->unreadNotifications()->count(),
         ]);
     }
 
     public function markAsRead(Request $request, string $id): JsonResponse
     {
-        $notification = $request->user()->notifications()->findOrFail($id);
+        $user = $request->user();
+
+        $notification = $user->notifications()->findOrFail($id);
         $notification->markAsRead();
 
-        return response()->json(['ok' => true]);
+        // Возвращаем актуальный счётчик, чтобы фронт не перезапрашивал список
+        return response()->json([
+            'ok' => true,
+            'unread_count' => $user->unreadNotifications()->count(),
+        ]);
     }
 
     public function markAllAsRead(Request $request): JsonResponse
     {
-        $request->user()->unreadNotifications->markAsRead();
+        $user = $request->user();
 
-        return response()->json(['ok' => true]);
+        // Прямой запрос вместо $user->unreadNotifications->markAsRead():
+        // ленивая коллекция могла быть уже загружена и содержать устаревшие данные,
+        // из-за чего часть уведомлений оставалась непрочитанной
+        // и бейдж не пропадал до перезагрузки страницы.
+        $updated = $user->unreadNotifications()->update(['read_at' => now()]);
+
+        // Сбрасываем загруженные связи, иначе счётчик вернёт старое значение
+        $user->unsetRelation('unreadNotifications');
+        $user->unsetRelation('notifications');
+
+        return response()->json([
+            'ok' => true,
+            'unread_count' => 0,
+            'marked' => $updated,
+        ]);
     }
 }

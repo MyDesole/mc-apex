@@ -11,6 +11,9 @@ export const useAuthStore = defineStore('auth', () => {
     // токен, выданный после успешной проверки кода
     const verificationToken = ref(null)
 
+    // код приглашения из ссылки ?ref=CODE
+    const referralCode = ref(null)
+
     const isAuthenticated = computed(() => !!user.value)
 
     async function fetchMe() {
@@ -106,6 +109,7 @@ export const useAuthStore = defineStore('auth', () => {
                 password,
                 password_confirmation: passwordConfirmation,
                 verification_token: verificationToken.value,
+                referral_code: referralCode.value,
             })
 
             // сбрасываем одноразовый токен — он уже использован
@@ -123,6 +127,13 @@ export const useAuthStore = defineStore('auth', () => {
 
     function resetVerification() {
         verificationToken.value = null
+    }
+
+    /**
+     * Запомнить код приглашения из ссылки (?ref=CODE).
+     */
+    function setReferralCode(code) {
+        referralCode.value = code ? String(code).trim().toUpperCase() : null
     }
 
     async function logout() {
@@ -170,7 +181,9 @@ export const useAuthStore = defineStore('auth', () => {
         initialized,
         isAuthenticated,
         verificationToken,
+        referralCode,
         fetchMe,
+        setReferralCode,
         resetPassword,
         forgotPassword,
         login,

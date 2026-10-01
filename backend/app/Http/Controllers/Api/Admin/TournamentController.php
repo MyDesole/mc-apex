@@ -3,6 +3,10 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\SetTournamentSeedsRequest;
+use App\Http\Requests\Admin\StoreTournamentRequest;
+use App\Http\Requests\Admin\UpdateTournamentMatchRequest;
+use App\Http\Requests\Admin\UpdateTournamentRequest;
 use App\Models\Tournament;
 use App\Models\TournamentMatch;
 use App\Models\TournamentParticipant;
@@ -26,25 +30,9 @@ class TournamentController extends Controller
         return response()->json($tournaments);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreTournamentRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
-            'description' => ['nullable', 'string', 'max:5000'],
-            'type' => ['required', 'in:solo,clan'],
-            'format' => ['required', 'in:single_elim,double_elim,round_robin'],
-            'prize_pool' => ['nullable', 'numeric', 'min:0'],
-            'prize_currency' => ['nullable', 'string', 'max:8'],
-            'prize_description' => ['nullable', 'string', 'max:255'],
-            'min_tier' => ['nullable', 'in:S,A,B,C,D,E'],
-            'max_tier' => ['nullable', 'in:S,A,B,C,D,E'],
-            'max_participants' => ['required', 'integer', 'min:2', 'max:128'],
-            'registration_starts_at' => ['nullable', 'date'],
-            'registration_ends_at' => ['nullable', 'date', 'after:registration_starts_at'],
-            'starts_at' => ['nullable', 'date'],
-            'ends_at' => ['nullable', 'date', 'after:starts_at'],
-            'banner' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-        ]);
+        $validated = $request->validated();
 
         if ($request->hasFile('banner')) {
             $validated['banner'] = $request->file('banner')->store('tournaments', 'public');
@@ -59,25 +47,9 @@ class TournamentController extends Controller
         return response()->json(['tournament' => $tournament], 201);
     }
 
-    public function update(Request $request, Tournament $tournament): JsonResponse
+    public function update(UpdateTournamentRequest $request, Tournament $tournament): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => ['sometimes', 'string', 'max:120'],
-            'description' => ['nullable', 'string', 'max:5000'],
-            'type' => ['sometimes', 'in:solo,clan'],
-            'format' => ['sometimes', 'in:single_elim,double_elim,round_robin'],
-            'status' => ['sometimes', 'in:draft,registration,ongoing,completed,cancelled'],
-            'prize_pool' => ['nullable', 'numeric', 'min:0'],
-            'prize_currency' => ['nullable', 'string', 'max:8'],
-            'prize_description' => ['nullable', 'string', 'max:255'],
-            'min_tier' => ['nullable', 'in:S,A,B,C,D,E'],
-            'max_tier' => ['nullable', 'in:S,A,B,C,D,E'],
-            'max_participants' => ['sometimes', 'integer', 'min:2', 'max:128'],
-            'registration_starts_at' => ['nullable', 'date'],
-            'registration_ends_at' => ['nullable', 'date'],
-            'starts_at' => ['nullable', 'date'],
-            'ends_at' => ['nullable', 'date'],
-        ]);
+        $validated = $request->validated();
 
         $tournament->update($validated);
 
@@ -120,13 +92,9 @@ class TournamentController extends Controller
         return response()->json(['participant' => $participant->fresh()]);
     }
 
-    public function setSeeds(Request $request, Tournament $tournament): JsonResponse
+    public function setSeeds(SetTournamentSeedsRequest $request, Tournament $tournament): JsonResponse
     {
-        $validated = $request->validate([
-            'seeds' => ['required', 'array'],
-            'seeds.*.id' => ['required', 'exists:tournament_participants,id'],
-            'seeds.*.seed' => ['required', 'integer', 'min:1'],
-        ]);
+        $validated = $request->validated();
 
         foreach ($validated['seeds'] as $item) {
             TournamentParticipant::where('id', $item['id'])
@@ -169,19 +137,22 @@ class TournamentController extends Controller
         ]);
     }
 
-    public function updateMatch(Request $request, Tournament $tournament, TournamentMatch $match): JsonResponse
+    public function updateMatch(UpdateTournamentMatchRequest $request, Tournament $tournament, TournamentMatch $match): JsonResponse
     {
         abort_if($match->tournament_id !== $tournament->id, 404);
 
-        $validated = $request->validate([
-            'score1' => ['nullable', 'integer', 'min:0'],
-            'score2' => ['nullable', 'integer', 'min:0'],
-            'winner_id' => ['nullable', 'exists:tournament_participants,id'],
-            'status' => ['sometimes', 'in:pending,ready,live,completed,cancelled'],
-            'scheduled_at' => ['nullable', 'date'],
-        ]);
+        $validated = $request->validated();
 
-        if (!empty($validated['winner_id'])) {
+        if (! empty($validated['winner_id'])) {
+            // Победитель обязан быть участником ЭТОГО турнира: правило
+            // exists:tournament_participants проверяло только существование,
+            // и в следующий матч мог пройти чужой участник.
+            $belongs = TournamentParticipant::where('id', $validated['winner_id'])
+                ->where('tournament_id', $tournament->id)
+                ->exists();
+
+            abort_unless($belongs, 422, 'Победитель не участвует в этом турнире.');
+
             $validated['status'] = 'completed';
             $validated['completed_at'] = now();
         }

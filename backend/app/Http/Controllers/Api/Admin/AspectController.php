@@ -3,28 +3,33 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\PlayerAspect;
-use App\Models\TierTest;
-use App\Models\User;
+use App\Http\Requests\Admin\ConductTierTestRequest;
+use App\Http\Requests\Admin\UpdateUserAspectsRequest;
 use App\Services\AchievementService;
+use App\Services\TierTestService;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
+/**
+ * Аспекты игрока со стороны админки.
+ *
+ * Прямая правка аспектов и ручное проведение тир-теста.
+ * Транзакция и награды — в TierTestService.
+ */
 class AspectController extends Controller
 {
-    public function update(Request $request, User $user): JsonResponse
-    {
-        $validated = $request->validate([
-            'mode' => ['required', 'in:pvp,bedwars'],
-            'block_placing' => ['required', 'integer', 'min:0', 'max:20'],
-            'rotka' => ['required', 'integer', 'min:0', 'max:20'],
-            'movement' => ['required', 'integer', 'min:0', 'max:20'],
-            'aim' => ['required', 'integer', 'min:0', 'max:20'],
-            'game_sense' => ['required', 'integer', 'min:0', 'max:20'],
-        ]);
+    public function __construct(
+        private readonly TierTestService $tierTests,
+    ) {
+    }
 
-        // Создаём/обновляем нужную модель аспектов
+    public function update(UpdateUserAspectsRequest $request, User $user): JsonResponse
+    {
+        $validated = $request->validated();
+
+        // ВНИМАНИЕ: у админского эндпоинта исторически свой маппинг полей для
+        // bedwars — приходят имена pvp-набора, а ложатся в bedwars-колонки.
+        // Так к нему обращается админка, поэтому поведение сохранено.
         if ($validated['mode'] === 'pvp') {
             \App\Models\PlayerAspectPvp::updateOrCreate(
                 ['user_id' => $user->id],
@@ -52,79 +57,20 @@ class AspectController extends Controller
         return response()->json(['user' => $user->fresh()]);
     }
 
-    public function conductTierTest(Request $request, User $user): JsonResponse
+    public function conductTierTest(ConductTierTestRequest $request, User $user): JsonResponse
     {
-        $validated = $request->validate([
-            'mode' => ['required', 'in:pvp,bedwars'],
-            'aspects' => ['required', 'array'],
-            'notes' => ['nullable', 'string', 'max:1000'],
-        ]);
+        $validated = $request->validated();
 
-        if ($validated['mode'] === 'pvp') {
-            $aspects = $request->validate([
-                'aspects.block_placing' => ['required', 'integer', 'min:0', 'max:20'],
-                'aspects.rotka' => ['required', 'integer', 'min:0', 'max:20'],
-                'aspects.movement' => ['required', 'integer', 'min:0', 'max:20'],
-                'aspects.aim' => ['required', 'integer', 'min:0', 'max:20'],
-                'aspects.game_sense' => ['required', 'integer', 'min:0', 'max:20'],
-            ])['aspects'];
-
-            $sum = array_sum($aspects);
-        } else {
-            $aspects = $request->validate([
-                'aspects.pvp' => ['required', 'integer', 'min:0', 'max:20'],
-                'aspects.game_sense' => ['required', 'integer', 'min:0', 'max:20'],
-                'aspects.bed_play' => ['required', 'integer', 'min:0', 'max:20'],
-                'aspects.teamplay' => ['required', 'integer', 'min:0', 'max:20'],
-                'aspects.building' => ['required', 'integer', 'min:0', 'max:20'],
-            ])['aspects'];
-
-            $sum = array_sum($aspects);
-        }
-
-        $percent = $sum; // без *2
-
-        $tier = match (true) {
-            $percent >= 71 => 'A',
-            $percent >= 56 => 'B',
-            $percent >= 41 => 'C',
-            $percent >= 21 => 'D',
-            default => 'E',
-        };
-
-        DB::transaction(function () use ($user, $validated, $aspects, $percent, $tier, $request) {
-            $test = TierTest::create([
-                'user_id' => $user->id,
-                'tester_id' => $request->user()->id,
-                'mode' => $validated['mode'],
-                'status' => 'completed',
-                'completed_at' => now(),
-                'result_tier' => $tier,
-                'result_score' => $percent,
-                'aspects' => $aspects,
-                'notes' => $validated['notes'] ?? null,
-            ]);
-
-            if ($validated['mode'] === 'pvp') {
-                \App\Models\PlayerAspectPvp::updateOrCreate(
-                    ['user_id' => $user->id],
-                    $aspects
-                );
-            } else {
-                \App\Models\PlayerAspectBedwars::updateOrCreate(
-                    ['user_id' => $user->id],
-                    $aspects
-                );
-            }
-
-            $user->refresh();
-            $user->recalcTierFromAspects();
-            AchievementService::check($user);
-
-            $user->notify(new \App\Notifications\TierTestCompletedNotification($test));
-        });
+        $test = $this->tierTests->conductManually(
+            player: $user,
+            tester: $request->user(),
+            mode: $validated['mode'],
+            aspects: $validated['aspects'],
+            notes: $validated['notes'] ?? null,
+        );
 
         return response()->json([
+            'tier_test' => $test,
             'user' => $user->fresh(),
         ], 201);
     }

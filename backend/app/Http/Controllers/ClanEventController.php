@@ -2,36 +2,41 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Clan\CreateClanEventRequest;
 use App\Models\Clan;
 use App\Models\ClanEvent;
-use App\Models\ClanMember;
+use App\Services\ClanService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * События клана. Контроллер тонкий: дублирующая проверка руководства
+ * убрана — используется ClanService::isStaff().
+ */
 class ClanEventController extends Controller
 {
-    public function index(Clan $clan): JsonResponse
-    {
-        $events = $clan->events()
-            ->with('author:id,username,avatar')
-            ->paginate(20);
-
-        return response()->json($events);
+    public function __construct(
+        private readonly ClanService $clans,
+    ) {
     }
 
-    public function store(Request $request, Clan $clan): JsonResponse
+    public function index(Clan $clan): JsonResponse
     {
-        abort_unless($this->canManage($clan, $request->user()->id), 403);
+        return response()->json(
+            $clan->events()->with('author:id,username,avatar')->paginate(20)
+        );
+    }
 
-        $validated = $request->validate([
-            'type' => ['required', 'in:announcement,event,training'],
-            'title' => ['required', 'string', 'max:120'],
-            'body' => ['nullable', 'string', 'max:5000'],
-            'starts_at' => ['nullable', 'date'],
-        ]);
+    public function store(CreateClanEventRequest $request, Clan $clan): JsonResponse
+    {
+        abort_unless(
+            $request->user()->can('createEvent', $clan),
+            403,
+            'Создавать события может руководство клана.'
+        );
 
         $event = ClanEvent::create([
-            ...$validated,
+            ...$request->validated(),
             'clan_id' => $clan->id,
             'author_id' => $request->user()->id,
         ]);
@@ -42,21 +47,17 @@ class ClanEventController extends Controller
     public function destroy(Request $request, Clan $clan, ClanEvent $event): JsonResponse
     {
         abort_if($event->clan_id !== $clan->id, 404);
+
+        // Офицер может создавать события, значит должен уметь и удалять:
+        // раньше удалить можно было только своё или будучи лидером.
         abort_unless(
-            $clan->isLeader($request->user()->id) || $event->author_id === $request->user()->id,
-            403
+            $request->user()->can('deleteEvent', [$clan, $event->author_id]),
+            403,
+            'Нет прав на удаление события.'
         );
 
         $event->delete();
 
         return response()->json(['ok' => true]);
-    }
-
-    private function canManage(Clan $clan, int $userId): bool
-    {
-        return ClanMember::where('clan_id', $clan->id)
-            ->where('user_id', $userId)
-            ->whereIn('role', ['leader', 'officer'])
-            ->exists();
     }
 }

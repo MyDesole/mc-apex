@@ -12,6 +12,7 @@ import AdminAchievements from '@/components/admin/AdminAchievements.vue'
 import AdminHome from '@/components/admin/AdminHome.vue'
 import AdminNews from '@/components/admin/AdminNews.vue'
 import AdminShop from '@/components/admin/AdminShop.vue'
+import AdminForum from '@/components/admin/AdminForum.vue'
 import AdminVerification from '@/components/admin/AdminVerification.vue'
 
 const auth = useAuthStore()
@@ -24,6 +25,7 @@ const isModerator = computed(() => ['moderator', 'admin'].includes(role.value))
 
 const roleLabels = {
   user: 'Пользователь',
+  media: 'Медийка',
   tester: 'Тестер',
   moderator: 'Модератор',
   admin: 'Администратор',
@@ -176,6 +178,17 @@ onMounted(() => {
         </svg>
         Магазин
       </button>
+
+      <!-- ФОРУМ -->
+      <button
+          :class="{ active: tab === 'forum' }"
+          @click="tab = 'forum'"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Форум
+      </button>
     </nav>
 
     <div class="admin-content">
@@ -188,6 +201,7 @@ onMounted(() => {
       <AdminHome v-else-if="tab === 'home' && isAdmin" />
       <AdminNews v-else-if="tab === 'news' && isAdmin" />
       <AdminShop v-else-if="tab === 'shop'" />
+      <AdminForum v-else-if="tab === 'forum'" />
       <AdminVerification v-else-if="tab === 'verification' && isAdmin" />
 
     </div>
@@ -241,6 +255,12 @@ onMounted(() => {
   color: #06b6d4;
   background: rgba(6, 182, 212, 0.1);
   border-color: rgba(6, 182, 212, 0.3);
+}
+
+.role-media {
+  color: #f9a8d4;
+  background: rgba(236, 72, 153, 0.14);
+  border-color: rgba(236, 72, 153, 0.4);
 }
 
 .role-moderator {

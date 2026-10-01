@@ -128,6 +128,61 @@ class RewardService
     }
 
     /**
+     * Награда пригласившему за нового игрока.
+     * Идемпотентно: за одного приглашённого — одна награда.
+     */
+    public static function forReferral(User $referrer, User $invited): int
+    {
+        if (! ShopSettingService::sourceEnabled(CoinTransaction::SOURCE_REFERRAL)) {
+            return 0;
+        }
+
+        $amount = ShopSettingService::getInt('referral.amount', (int) config('apex.coins.referral.amount'));
+
+        if ($amount <= 0) {
+            return 0;
+        }
+
+        return CoinService::credit(
+            $referrer,
+            $amount,
+            CoinTransaction::SOURCE_REFERRAL,
+            "Приглашён игрок {$invited->username}",
+            'referral:' . $invited->id,
+            [
+                'reference_type' => User::class,
+                'reference_id' => $invited->id,
+                'actor_id' => $invited->id,
+                'meta' => ['invited_username' => $invited->username],
+            ]
+        );
+    }
+
+    /**
+     * Приветственный бонус новому игроку, пришедшему по ссылке.
+     */
+    public static function welcomeBonus(User $invited): int
+    {
+        if (! ShopSettingService::sourceEnabled(CoinTransaction::SOURCE_REFERRAL)) {
+            return 0;
+        }
+
+        $amount = ShopSettingService::getInt('referral.welcome_bonus', (int) config('apex.coins.referral.welcome_bonus'));
+
+        if ($amount <= 0) {
+            return 0;
+        }
+
+        return CoinService::credit(
+            $invited,
+            $amount,
+            CoinTransaction::SOURCE_REFERRAL,
+            'Бонус за регистрацию по приглашению',
+            'referral_welcome:' . $invited->id
+        );
+    }
+
+    /**
      * Таблица наград по тирам — для витрины «сколько дают за тест».
      */
     public static function tierTable(): array

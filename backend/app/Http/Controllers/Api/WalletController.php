@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\CoinService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -10,13 +11,51 @@ use Illuminate\Http\Request;
 class WalletController extends Controller
 {
     /**
+     * Уникальный код приглашения.
+     */
+    private static function generateReferralCode(): string
+    {
+        do {
+            $code = strtoupper(\Illuminate\Support\Str::random(8));
+        } while (User::where('referral_code', $code)->exists());
+
+        return $code;
+    }
+
+    /**
      * Баланс и сводка по источникам начислений.
      */
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
 
+        // Код приглашения: генерируем при первом обращении
+        if (! $user->referral_code) {
+            $user->forceFill(['referral_code' => self::generateReferralCode()])->save();
+        }
+
+        $invited = User::where('referred_by', $user->id)->count();
+
         return response()->json([
+            'referral' => [
+                'code' => $user->referral_code,
+                'link' => rtrim((string) config('app.frontend_url'), '/') . '/register?ref=' . $user->referral_code,
+                'invited_count' => $invited,
+                'reward_per_invite' => (int) (\App\Services\ShopSettingService::getInt(
+                    'referral.amount',
+                    (int) config('apex.coins.referral.amount')
+                )),
+                'invited_users' => User::where('referred_by', $user->id)
+                    ->latest()
+                    ->limit(10)
+                    ->get(['id', 'username', 'avatar', 'created_at'])
+                    ->map(fn ($u) => [
+                        'id' => $u->id,
+                        'username' => $u->username,
+                        'avatar_url' => $u->avatar_url,
+                        'joined_at' => $u->created_at?->toIso8601String(),
+                    ]),
+            ],
             'balance' => (int) $user->apex_coins,
             'spent' => (int) $user->apex_coins_spent,
             'earned' => (int) $user->apex_coins + (int) $user->apex_coins_spent,

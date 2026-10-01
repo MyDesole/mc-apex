@@ -1,7 +1,9 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { api } from '@/services/api.js'
+import { playersApi } from '@/services/players.js'
+import { userLink } from '@/utils/links.js'
 
 const category = ref('pvp')
 const pvpMode = ref('overall')
@@ -24,6 +26,7 @@ const ROLE_LABELS = {
   admin: 'Администратор',
   tester: 'Тестер',
   moderator: 'Модератор',
+  media: 'Медийка',
 }
 
 const TIER_ACCENTS = {
@@ -48,6 +51,23 @@ const AVATAR_FRAMES = {
   season1: '#06b6d4',
 }
 
+// --- Курсорная пагинация рейтинга ---
+const PAGE_SIZE = 30
+const cursor = ref(null)
+const hasMore = ref(false)
+const loadingMore = ref(false)
+
+// Виртуальное окно: рендерим не весь список сразу, а растущую порцию.
+// Полные данные остаются в players, поэтому позиции и подиум не ломаются.
+const RENDER_STEP = 60
+const renderLimit = ref(RENDER_STEP)
+
+const visiblePlayers = computed(() => players.value.slice(0, renderLimit.value))
+const hiddenCount = computed(() => Math.max(0, players.value.length - visiblePlayers.value.length))
+
+const topThree = computed(() => visiblePlayers.value.slice(0, 3))
+const rest = computed(() => visiblePlayers.value.slice(3))
+
 async function load() {
   if (category.value === 'other') {
     players.value = []
@@ -56,10 +76,19 @@ async function load() {
   }
 
   loading.value = true
+  cursor.value = null
+  hasMore.value = false
+  renderLimit.value = RENDER_STEP
 
   try {
-    const data = await api.get(`/players/rating?mode=${pvpMode.value}`)
-    players.value = (data.data ?? []).slice(0, 10)
+    const data = await playersApi.ranking({
+      mode: pvpMode.value,
+      limit: PAGE_SIZE,
+    })
+
+    players.value = data.data ?? []
+    cursor.value = data.next_cursor
+    hasMore.value = Boolean(data.has_more)
   } catch (e) {
     console.error(e)
     players.value = []
@@ -68,11 +97,68 @@ async function load() {
   }
 }
 
-onMounted(load)
-watch([category, pvpMode], load)
+/** Догрузить следующую страницу по курсору. */
+async function loadMore() {
+  if (loadingMore.value || !hasMore.value || !cursor.value) return
 
-const topThree = computed(() => players.value.slice(0, 3))
-const rest = computed(() => players.value.slice(3))
+  loadingMore.value = true
+
+  try {
+    const data = await playersApi.ranking({
+      mode: pvpMode.value,
+      limit: PAGE_SIZE,
+      cursor: cursor.value,
+    })
+
+    const known = new Set(players.value.map((p) => p.id))
+    const fresh = (data.data ?? []).filter((p) => !known.has(p.id))
+
+    players.value = [...players.value, ...fresh]
+    cursor.value = data.next_cursor
+    hasMore.value = Boolean(data.has_more)
+
+    // Показываем догруженное
+    renderLimit.value += RENDER_STEP
+  } catch (e) {
+    console.error(e)
+  } finally {
+    loadingMore.value = false
+  }
+}
+
+function showMoreRendered() {
+  renderLimit.value += RENDER_STEP
+  window.scrollBy({ top: 300, behavior: 'smooth' })
+}
+
+/**
+ * Автоподгрузка при скролле: срабатывает, когда пользователь
+ * подошёл к концу видимого списка.
+ */
+function onWindowScroll() {
+  const scrolled = window.innerHeight + window.scrollY
+  const total = document.documentElement.scrollHeight
+
+  if (total - scrolled > 700) return
+
+  if (hiddenCount.value > 0) {
+    renderLimit.value += RENDER_STEP
+    return
+  }
+
+  loadMore()
+}
+
+onMounted(() => {
+  load()
+  window.addEventListener('scroll', onWindowScroll, { passive: true })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', onWindowScroll)
+})
+
+watch([category, pvpMode], load)
 
 const PODIUM_ORDER = [1, 0, 2]
 const MOBILE_ORDER = [0, 1, 2]
@@ -955,7 +1041,7 @@ function scorePercent(player) {
             </div>
 
             <RouterLink
-                :to="`/players/${topThree[slot].id}`"
+                :to="userLink(topThree[slot])"
                 class="podium__card"
                 :style="{ '--accent': accent(topThree[slot]) }"
             >
@@ -1052,7 +1138,7 @@ function scorePercent(player) {
           </div>
 
           <RouterLink
-              :to="`/players/${topThree[slot].id}`"
+              :to="userLink(topThree[slot])"
               class="mobile-podium__card"
           >
             <div
@@ -1174,7 +1260,7 @@ function scorePercent(player) {
           <RouterLink
               v-for="(p, i) in rest"
               :key="p.id"
-              :to="`/players/${p.id}`"
+              :to="userLink(p)"
               class="rest__row"
               :style="{ '--accent': accent(p) }"
           >
@@ -1182,7 +1268,7 @@ function scorePercent(player) {
 
             <div class="rest__rank">
               <span class="rest__rank-number">
-                #{{ i + 4 }}
+                #{{ p.position ?? (i + 4) }}
               </span>
 
               <span class="rest__rank-line" />
@@ -1312,6 +1398,32 @@ function scorePercent(player) {
             </span>
           </RouterLink>
         </div>
+
+        <!-- Подгрузка: сначала раскрываем уже загруженное, затем тянем следующую страницу -->
+        <div v-if="hiddenCount || hasMore" class="rating-more">
+          <button
+              v-if="hiddenCount"
+              class="rating-more__btn"
+              type="button"
+              @click="showMoreRendered"
+          >
+            Показать ещё {{ Math.min(hiddenCount, RENDER_STEP) }} из {{ hiddenCount }}
+          </button>
+
+          <button
+              v-else
+              class="rating-more__btn"
+              type="button"
+              :disabled="loadingMore"
+              @click="loadMore"
+          >
+            {{ loadingMore ? 'Загружаем…' : 'Загрузить следующих' }}
+          </button>
+        </div>
+
+        <div v-else-if="players.length" class="rating-more__end">
+          Это весь рейтинг — {{ players.length }} игроков
+        </div>
       </section>
 
       <!-- EMPTY -->
@@ -1330,6 +1442,55 @@ function scorePercent(player) {
 </template>
 
 <style scoped>
+/* ============================================================
+   ПОДГРУЗКА РЕЙТИНГА (курсорная пагинация + виртуальное окно)
+   ============================================================ */
+
+.rating-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.rating-more__btn {
+  min-height: 42px;
+  padding: 0 22px;
+  color: var(--text, #e2e2e8);
+  background: var(--bg-card, #12121a);
+  border: 1px solid var(--border, #22222e);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+}
+
+.rating-more__btn:hover:not(:disabled) {
+  background: var(--bg-card-hover, #1a1a26);
+  border-color: var(--accent, #7c3aed);
+  transform: translateY(-1px);
+}
+
+.rating-more__btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.rating-more__end {
+  margin-top: 20px;
+  color: var(--text-muted, #5e5e70);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* Браузер пропускает отрисовку строк за пределами экрана —
+   это виртуализация без ручного расчёта высот */
+.rest__row,
+:deep(.rest__row) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 88px;
+}
+
 /* ============================================================
    PAGE
    ============================================================ */

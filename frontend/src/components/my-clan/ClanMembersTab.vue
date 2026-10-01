@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { myClanApi } from '@/services/myClan.js'
 import { useAuthStore } from '@/stores/auth'
+import { userLink } from '@/utils/links.js'
 
 const props = defineProps({
   clan: { type: Object, required: true },
@@ -102,7 +103,7 @@ onMounted(load)
           class="member"
           :class="`member--${m.role}`"
       >
-        <RouterLink :to="`/players/${m.user.id}`" class="member__main">
+        <RouterLink :to="userLink(m.user)" class="member__main">
           <div class="avatar">
             <img v-if="m.user.avatar_url" :src="m.user.avatar_url" />
             <template v-else>{{ m.user.username?.charAt(0).toUpperCase() }}</template>

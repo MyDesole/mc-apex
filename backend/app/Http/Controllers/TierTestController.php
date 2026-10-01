@@ -2,13 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TierTest\CreateTierTestRequest;
+use App\Http\Requests\TierTest\UpdateTierTestRequest;
 use App\Models\TierTest;
 use App\Models\User;
+use App\Services\TierTestService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class TierTestController extends Controller
 {
+    public function __construct(
+        private readonly TierTestService $tierTests,
+    ) {
+    }
+
     public function index(Request $request): JsonResponse
     {
         $userId = $request->user()->id;
@@ -31,15 +39,9 @@ class TierTestController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(CreateTierTestRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'mode' => ['required', 'in:pvp,bedwars'],
-            'contact_type' => ['required', 'in:discord,telegram'],
-            'contact_value' => ['required', 'string', 'max:128'],
-            'preferred_time' => ['required', 'string', 'max:128'],
-            'notes' => ['nullable', 'string', 'max:1000'],
-        ]);
+        $validated = $request->validated();
 
         $test = TierTest::create([
             'user_id' => $request->user()->id,
@@ -72,36 +74,18 @@ class TierTestController extends Controller
     }
     public function show(Request $request, TierTest $tierTest): JsonResponse
     {
-        $this->authorizeAccess($request, $tierTest);
+        $this->tierTests->assertCanAccess($tierTest, $request->user());
 
         return response()->json([
             'tier_test' => $tierTest->load(['user', 'tester']),
         ]);
     }
 
-    public function update(Request $request, TierTest $tierTest): JsonResponse
+    public function update(UpdateTierTestRequest $request, TierTest $tierTest): JsonResponse
     {
-        $this->authorizeAccess($request, $tierTest);
+        $this->tierTests->assertCanAccess($tierTest, $request->user());
 
-        $validated = $request->validate([
-            'status' => ['sometimes', 'in:pending,in_progress,completed,cancelled'],
-            'result_tier' => ['nullable', 'in:S+,S,A,B,C,D,E'],
-            'result_score' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'aspects' => ['nullable', 'array'],
-
-            // валидация конкретных полей аспектов (универсальная для обоих режимов)
-            'aspects.block_placing' => ['nullable', 'integer', 'min:0', 'max:20'],
-            'aspects.rotka' => ['nullable', 'integer', 'min:0', 'max:20'],
-            'aspects.movement' => ['nullable', 'integer', 'min:0', 'max:20'],
-            'aspects.aim' => ['nullable', 'integer', 'min:0', 'max:20'],
-            'aspects.game_sense' => ['nullable', 'integer', 'min:0', 'max:20'],
-            'aspects.pvp' => ['nullable', 'integer', 'min:0', 'max:20'],
-            'aspects.bed_play' => ['nullable', 'integer', 'min:0', 'max:20'],
-            'aspects.teamplay' => ['nullable', 'integer', 'min:0', 'max:20'],
-            'aspects.building' => ['nullable', 'integer', 'min:0', 'max:20'],
-
-            'notes' => ['nullable', 'string'],
-        ]);
+        $validated = $request->validated();
 
         if (($validated['status'] ?? null) === 'completed') {
             $validated['completed_at'] = now();
@@ -156,12 +140,4 @@ class TierTestController extends Controller
         return response()->json(['tier_test' => $tierTest->fresh()]);
     }
 
-    private function authorizeAccess(Request $request, TierTest $tierTest): void
-    {
-        $userId = $request->user()->id;
-        abort_unless(
-            $tierTest->user_id === $userId || $tierTest->tester_id === $userId,
-            403
-        );
-    }
 }

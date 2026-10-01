@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { adminApi } from '@/services/admin.js'
 
 const props = defineProps({
@@ -46,6 +46,46 @@ async function reject(p) {
     await load()
   } finally {
     processing.value = null
+  }
+}
+
+// --- Генерация турнирной сетки ---
+const generating = ref(false)
+const generateError = ref('')
+const generateOk = ref('')
+
+const approvedCount = computed(() =>
+    participants.value.filter((p) => p.status === 'approved').length
+)
+
+const canGenerate = computed(() =>
+    approvedCount.value >= 2 && props.tournament.format === 'single_elim'
+)
+
+async function generateBracket() {
+  generateError.value = ''
+  generateOk.value = ''
+
+  if (!canGenerate.value) {
+    generateError.value = approvedCount.value < 2
+        ? 'Нужно минимум 2 одобренных участника — сейчас ' + approvedCount.value + '.'
+        : 'Генерация поддерживается только для формата single_elim.'
+    return
+  }
+
+  if (!confirm('Сформировать сетку? Текущие матчи будут пересозданы.')) return
+
+  generating.value = true
+
+  try {
+    const data = await adminApi.generateBracket(props.tournament.id)
+
+    generateOk.value = 'Сетка создана: матчей ' + (data.matches?.length ?? 0) + '. Открой вкладку «Сетка».'
+    emit('updated')
+  } catch (e) {
+    generateError.value = e.message || 'Не удалось сформировать сетку.'
+  } finally {
+    generating.value = false
   }
 }
 
@@ -162,6 +202,31 @@ onMounted(load)
           </div>
         </template>
       </div>
+
+      <!-- Генерация сетки: логично делать сразу после одобрения участников -->
+      <section class="bracket-gen">
+        <div class="bracket-gen__info">
+          <div class="bracket-gen__title">Турнирная сетка</div>
+          <div class="bracket-gen__sub">
+            Одобрено участников: <b>{{ approvedCount }}</b>
+            <template v-if="tournament.format !== 'single_elim'">
+              · формат <b>{{ tournament.format }}</b> — генерация пока только для single_elim
+            </template>
+          </div>
+        </div>
+
+        <button
+            class="btn-generate"
+            type="button"
+            :disabled="generating || !canGenerate"
+            @click="generateBracket"
+        >
+          {{ generating ? 'Формируем…' : 'Сформировать сетку' }}
+        </button>
+      </section>
+
+      <p v-if="generateError" class="gen-msg gen-msg--error">{{ generateError }}</p>
+      <p v-if="generateOk" class="gen-msg gen-msg--ok">{{ generateOk }}</p>
 
       <footer class="modal-foot">
         <button class="btn-cancel" @click="$emit('close')">Закрыть</button>
@@ -424,5 +489,78 @@ onMounted(load)
   color: var(--text-dim);
   background: transparent;
   border: 1px solid var(--border);
+}
+
+/* --- Генерация сетки --- */
+.bracket-gen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 24px 14px;
+  padding: 14px 16px;
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: 12px;
+}
+
+.bracket-gen__title {
+  color: var(--text, #e2e2e8);
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.bracket-gen__sub {
+  color: var(--text-dim, #8888a0);
+  font-size: 12px;
+}
+
+.bracket-gen__sub b {
+  color: var(--text, #e2e2e8);
+}
+
+.btn-generate {
+  min-height: 40px;
+  padding: 0 18px;
+  color: #fff;
+  background: var(--accent, #7c3aed);
+  border: 1px solid var(--accent, #7c3aed);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.btn-generate:hover:not(:disabled) {
+  background: var(--accent-light, #8b5cf6);
+  transform: translateY(-1px);
+}
+
+.btn-generate:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.gen-msg {
+  margin: 0 24px 12px;
+  padding: 10px 14px;
+  border-radius: 9px;
+  font-size: 13px;
+}
+
+.gen-msg--error {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.gen-msg--ok {
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.35);
 }
 </style>

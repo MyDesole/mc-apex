@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { tierColor } from '@/composables/useTier.js'
+import AppIcon from '@/components/AppIcon.vue'
 import {
   AVATAR_FRAMES,
   PROFILE_EFFECTS,
@@ -96,14 +97,36 @@ const roleLabel = computed(() => {
     admin: 'Администратор',
     tester: 'Тестер',
     moderator: 'Модератор',
+    media: 'Медийка',
   }
 
   return roles[props.user.role] || null
 })
 
+/** Медийка: ютубер или стример — отдельный акцент в профиле. */
+const isMedia = computed(() => props.user?.role === 'media')
+
 /* =========================================================
    STATUS
    ========================================================= */
+
+const playerBadges = computed(() => {
+  const list = props.user?.equipped_badges
+
+  return Array.isArray(list) ? list.filter((b) => b && b.slug) : []
+})
+
+/**
+ * Короткое имя бейджа: «Бейдж «Ветеран»» -> «Ветеран».
+ */
+function badgeLabel(badge) {
+  const name = String(badge?.name || badge?.slug || '').trim()
+
+  return name
+      .replace(/^бейдж\s*/i, '')
+      .replace(/[«»"]/g, '')
+      .trim() || name
+}
 
 const playerStatus = computed(() => {
   const value = props.user.status
@@ -315,6 +338,9 @@ const coverStyle = computed(() => {
       class="profile-header"
       :class="{
         'profile-header--compact': compact,
+
+        // Медийка: уникальная подсветка карточки
+        'profile-header--media': isMedia,
 
         [`profile-header--effect-${effectId}`]:
             hasProfileEffect,
@@ -663,6 +689,25 @@ const coverStyle = computed(() => {
 
 
 
+
+        <!-- Badges (купленные в магазине) -->
+        <div
+            v-if="playerBadges.length"
+            class="profile-header__badges"
+        >
+          <span
+              v-for="badge in playerBadges"
+              :key="badge.slug"
+              class="profile-badge"
+              :style="{ '--badge-color': badge.color || '#7c3aed' }"
+              :title="badge.name"
+          >
+            <span class="profile-badge__icon">
+              <AppIcon :icon="badge.icon" :size="13" />
+            </span>
+            <span class="profile-badge__text">{{ badgeLabel(badge) }}</span>
+          </span>
+        </div>
 
         <!-- Status -->
         <div
@@ -1816,6 +1861,88 @@ const coverStyle = computed(() => {
 /* =========================================================
    NAME
    ========================================================= */
+
+/* Бейджи из магазина */
+.profile-header__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.profile-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 11px 3px 4px;
+  color: var(--badge-color, #a78bfa);
+  background: rgba(124, 58, 237, 0.1);
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.profile-badge:hover {
+  transform: translateY(-1px);
+  background: rgba(124, 58, 237, 0.18);
+  border-color: var(--badge-color, #7c3aed);
+}
+
+.profile-badge__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--badge-color, #a78bfa);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--badge-color, rgba(124, 58, 237, 0.5));
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.profile-badge__text {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================================================
+   МЕДИЙКА — уникальный вид профиля
+   ========================================================= */
+
+.profile-header--media {
+  position: relative;
+}
+
+/* Розово-фиолетовая подсветка карточки */
+.profile-header--media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+          radial-gradient(circle at 12% 0%, rgba(244, 114, 182, 0.16), transparent 45%),
+          radial-gradient(circle at 88% 100%, rgba(168, 85, 247, 0.14), transparent 45%);
+}
+
+.profile-header__role--media {
+  color: #fff;
+  background: linear-gradient(135deg, #ec4899, #a855f7);
+  border-color: transparent;
+  box-shadow: 0 4px 16px rgba(236, 72, 153, 0.35);
+}
+
+.profile-header__role--media::before {
+  content: '★';
+  margin-right: 5px;
+  font-size: 10px;
+}
 
 .profile-header__name-row {
   display: flex;

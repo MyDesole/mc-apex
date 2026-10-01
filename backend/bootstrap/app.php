@@ -20,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'not.banned' => \App\Http\Middleware\EnsureUserIsNotBanned::class,
             'clan.member' => \App\Http\Middleware\EnsureClanMember::class,
         ]);
+        // API-приложение без веб-роутов входа: гость должен получать 401 JSON,
+        // а не попытку редиректа на несуществующий маршрут login (это давало 500).
+        $middleware->redirectGuestsTo(fn () => null);
+
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);

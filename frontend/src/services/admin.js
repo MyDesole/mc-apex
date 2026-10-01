@@ -174,4 +174,41 @@ export const adminApi = {
     unverifyUser(id) {
         return api.post(`/admin/users/${id}/unverify`)
     },
+
+    // Форум: модерация
+    forumStats() {
+        return api.get('/admin/forum/stats')
+    },
+    forumCategories() {
+        return api.get('/admin/forum/categories')
+    },
+    createForumCategory(payload) {
+        return api.post('/admin/forum/categories', payload)
+    },
+    updateForumCategory(id, payload) {
+        return api.put(`/admin/forum/categories/${id}`, payload)
+    },
+    deleteForumCategory(id, force = false) {
+        return api.delete(`/admin/forum/categories/${id}${force ? '?force=1' : ''}`)
+    },
+    forumTopics(params = {}) {
+        const q = new URLSearchParams(params).toString()
+        return api.get(`/admin/forum/topics${q ? '?' + q : ''}`)
+    },
+    pinForumTopic(id) {
+        return api.post(`/admin/forum/topics/${id}/pin`)
+    },
+    lockForumTopic(id) {
+        return api.post(`/admin/forum/topics/${id}/lock`)
+    },
+    deleteForumTopic(id) {
+        return api.delete(`/admin/forum/topics/${id}`)
+    },
+    restoreForumTopic(id) {
+        return api.post(`/admin/forum/topics/${id}/restore`)
+    },
+    deleteForumReply(id) {
+        return api.delete(`/admin/forum/replies/${id}`)
+    },
+
 }

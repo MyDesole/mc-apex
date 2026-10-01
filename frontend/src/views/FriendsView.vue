@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 import { friendsApi } from '@/services/friends.js'
 import GiftCoinsButton from '@/components/GiftCoinsButton.vue'
 import UserName from "@/components/UserName.vue";
+import { userLink } from '@/utils/links.js'
 
 const loading = ref(true)
 const tab = ref('friends')
@@ -68,7 +69,7 @@ const currentList = computed(() => {
 
     <div v-else class="friends-list">
       <div v-for="user in currentList" :key="user.id" class="friend-row">
-        <RouterLink :to="`/players/${user.id}`" class="friend-main">
+        <RouterLink :to="userLink(user)" class="friend-main">
           <div class="avatar" :class="`tier-bg-${user.tier}`">
             <img
                 v-if="user.avatar_url"

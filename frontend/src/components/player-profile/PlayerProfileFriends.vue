@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import {tierColor} from "@/composables/useTier.js";
+import { userLink } from '@/utils/links.js'
 
 const props = defineProps({
   friends: { type: Array, default: () => [] },
@@ -21,7 +22,7 @@ const list = computed(() => props.friends)
       <RouterLink
           v-for="f in list"
           :key="f.id"
-          :to="`/players/${f.id}`"
+          :to="userLink(f)"
           class="friend-tile"
           @mouseenter="emit('enter', f, $event)"
           @mouseleave="emit('leave')"

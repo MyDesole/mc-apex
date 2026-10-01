@@ -38,6 +38,10 @@ use App\Http\Controllers\Api\ShopController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\GiftController;
 use App\Http\Controllers\Api\Admin\ShopController as AdminShopController;
+
+// === Форум ===
+use App\Http\Controllers\Api\ForumController;
+use App\Http\Controllers\Api\Admin\ForumController as AdminForumController;
 use App\Http\Controllers\Api\Admin\NewsController as AdminNewsController;
 
 /*
@@ -92,7 +96,7 @@ Route::get('/players/{user}/recommendations', [ProfileRecommendationController::
 
 // Home (главная)
 Route::get('/home', [HomeController::class, 'index']);
-Route::get('/top', [HomeController::class, 'top']);
+Route::get('/top', [\App\Http\Controllers\TopController::class, 'index']);
 
 // Новости
 Route::get('/news', [NewsController::class, 'index']);
@@ -106,9 +110,20 @@ Route::get('/tournaments/{tournament}', [TournamentController::class, 'show'])->
 Route::get('/clans', [ClanController::class, 'index']);
 Route::get('/clans/top', [ClanController::class, 'top']);
 
+// Просмотр клана доступен и гостям: /api/clans/Имя_клана или /api/clans/7
+// apex:public-clan-show
+Route::get('/clans/{clan}', [ClanController::class, 'show']);
+
+
 // Игроки (просмотр)
 Route::get('/players', [PlayerController::class, 'index']);
-Route::get('/players/{user}', [PlayerController::class, 'show'])->whereNumber('user');
+
+// Рейтинг с курсорной пагинацией — apex:ranking
+Route::get('/ranking', [\App\Http\Controllers\Api\RankingController::class, 'index']);
+
+// Профиль открывается и по id, и по нику: /api/users/Ник
+Route::get('/players/{user}', [PlayerController::class, 'show']);
+Route::get('/users/{user}', [PlayerController::class, 'show']);
 
 /*
 |--------------------------------------------------------------------------
@@ -116,6 +131,19 @@ Route::get('/players/{user}', [PlayerController::class, 'show'])->whereNumber('u
 |--------------------------------------------------------------------------
 */
 
+
+/*
+|--------------------------------------------------------------------------
+| ФОРУМ (публично) — apex:forum-public
+|--------------------------------------------------------------------------
+*/
+Route::prefix('forum')->group(function () {
+    Route::get('/', [ForumController::class, 'index']);
+    Route::get('/topics', [ForumController::class, 'topics']);
+    Route::get('/search', [ForumController::class, 'search']);
+    Route::get('/topics/{topic}', [ForumController::class, 'show'])->whereNumber('topic');
+    Route::get('/attachments/{attachment}/download', [ForumController::class, 'download'])->whereNumber('attachment');
+});
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/email/verification-notification', function (Request $request) {
@@ -169,6 +197,40 @@ Route::middleware('auth:sanctum')->group(function () {
             ->whereNumber('conversation');
 
         Route::get('/unread-count', [\App\Http\Controllers\Api\ChatController::class, 'unreadCount']);
+
+        // --- ВЛОЖЕНИЯ В ЧАТЕ — apex:chat-attachments ---
+        Route::post('/attachments', [\App\Http\Controllers\Api\ChatController::class, 'uploadAttachment'])
+            ->middleware('throttle:40,1');
+        Route::get('/attachments/{attachment}/download', [\App\Http\Controllers\Api\ChatController::class, 'downloadAttachment'])
+            ->whereNumber('attachment');
+        Route::post('/conversations/{conversation}/read', [\App\Http\Controllers\Api\ChatController::class, 'markConversationRead'])
+            ->whereNumber('conversation');
+        Route::put('/messages/{message}', [\App\Http\Controllers\Api\ChatController::class, 'update'])
+            ->whereNumber('message');
+        Route::delete('/messages/{message}', [\App\Http\Controllers\Api\ChatController::class, 'destroy'])
+            ->whereNumber('message');
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | ФОРУМ: ДЕЙСТВИЯ — apex:forum-actions
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('forum')->group(function () {
+        Route::post('/topics', [ForumController::class, 'store']);
+        Route::put('/topics/{topic}', [ForumController::class, 'update'])->whereNumber('topic');
+        Route::delete('/topics/{topic}', [ForumController::class, 'destroy'])->whereNumber('topic');
+        Route::post('/topics/{topic}/reply', [ForumController::class, 'reply'])->whereNumber('topic');
+
+        Route::put('/replies/{reply}', [ForumController::class, 'updateReply'])->whereNumber('reply');
+        Route::delete('/replies/{reply}', [ForumController::class, 'destroyReply'])->whereNumber('reply');
+
+        Route::post('/like/{type}/{id}', [ForumController::class, 'like'])
+            ->whereIn('type', ['topic', 'reply'])
+            ->whereNumber('id');
+
+        Route::post('/upload', [ForumController::class, 'upload'])
+            ->middleware('throttle:30,1');
     });
     Route::get('/players/rating', [PlayerController::class, 'rating']);
     Route::post('/players/{user}/recommendations', [ProfileRecommendationController::class, 'store'])
@@ -279,8 +341,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Создание
         Route::post('/', [ClanController::class, 'store']);
 
-        // Просмотр (динамический — в конце!)
-        Route::get('/{clan}', [ClanController::class, 'show'])->whereNumber('clan');
+        // Просмотр клана вынесен в публичные маршруты (доступен гостям)
         Route::match(['put', 'post'], '/{clan}', [ClanController::class, 'update'])->whereNumber('clan');
 
         // Заявки
@@ -380,6 +441,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/clans/{clan}/avatar/remove', [AdminClanController::class, 'removeAvatar'])->whereNumber('clan');
         Route::post('/clans/{clan}/cover/remove', [AdminClanController::class, 'removeCover'])->whereNumber('clan');
 
+
+        // --- ФОРУМ: МОДЕРАЦИЯ — apex:forum-admin ---
+        Route::get('/forum/stats', [AdminForumController::class, 'stats']);
+        Route::get('/forum/categories', [AdminForumController::class, 'categories']);
+        Route::post('/forum/categories', [AdminForumController::class, 'storeCategory']);
+        Route::put('/forum/categories/{category}', [AdminForumController::class, 'updateCategory'])->whereNumber('category');
+        Route::delete('/forum/categories/{category}', [AdminForumController::class, 'destroyCategory'])->whereNumber('category');
+
+        Route::get('/forum/topics', [AdminForumController::class, 'topics']);
+        Route::post('/forum/topics/{topic}/pin', [AdminForumController::class, 'pin'])->whereNumber('topic');
+        Route::post('/forum/topics/{topic}/lock', [AdminForumController::class, 'lock'])->whereNumber('topic');
+        Route::delete('/forum/topics/{topic}', [AdminForumController::class, 'destroyTopic'])->whereNumber('topic');
+        Route::post('/forum/topics/{topic}/restore', [AdminForumController::class, 'restoreTopic'])->whereNumber('topic');
+        Route::delete('/forum/replies/{reply}', [AdminForumController::class, 'destroyReply'])->whereNumber('reply');
         // --- КОММЕНТАРИИ ---
         Route::get('/comments', [AdminCommentController::class, 'index']);
         Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->whereNumber('comment');
@@ -475,7 +550,10 @@ Route::middleware(['auth:sanctum', 'clan.member'])->prefix('my-clan')->group(fun
         ->middleware('clan.member:forum');
     Route::delete('/forum/{topic}', [\App\Http\Controllers\Api\ClanForumController::class, 'destroy']);
 
-    // Ресурсы
+    // Ресурсы клана.
+    // Всем действиям нужен контекст клана, иначе контроллер не знал,
+    // к какому клану относится ресурс, и отдавал 404 вместо 403.
+    // Ресурсы клана (группа уже под clan.member — контекст клана доступен)
     Route::get('/resources', [\App\Http\Controllers\Api\ClanResourceController::class, 'index']);
     Route::post('/resources', [\App\Http\Controllers\Api\ClanResourceController::class, 'store'])
         ->middleware('clan.member:resources');

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\BanUserRequest;
+use App\Http\Requests\Admin\VerifyUserRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,15 +37,11 @@ class UserController extends Controller
         return response()->json($users);
     }
 
-    public function verify(Request $request, User $user): JsonResponse
+    public function verify(VerifyUserRequest $request, User $user): JsonResponse
     {
-        $validated = $request->validate([
-            'reason' => ['nullable', 'string', 'max:128'],
-        ]);
-
         $user->update([
             'is_verified' => true,
-            'verified_reason' => $validated['reason'] ?? null,
+            'verified_reason' => $request->input('reason'),
         ]);
 
         return response()->json(['user' => $user->fresh()]);
@@ -119,20 +117,15 @@ class UserController extends Controller
         ]);
     }
 
-    public function ban(Request $request, User $user): JsonResponse
+    public function ban(BanUserRequest $request, User $user): JsonResponse
     {
         abort_if($user->id === $request->user()->id, 422, 'Нельзя забанить себя.');
         abort_if($user->isAdmin(), 422, 'Нельзя забанить администратора.');
 
-        $validated = $request->validate([
-            'reason' => ['required', 'string', 'max:500'],
-            'until' => ['nullable', 'date', 'after:now'],
-        ]);
-
         $user->update([
             'is_banned' => true,
-            'ban_reason' => $validated['reason'],
-            'banned_until' => $validated['until'] ?? null,
+            'ban_reason' => $request->string('reason')->toString(),
+            'banned_until' => $request->input('until'),
             'banned_by' => $request->user()->id,
         ]);
 

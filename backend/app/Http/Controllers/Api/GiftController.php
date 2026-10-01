@@ -3,25 +3,31 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Wallet\GiftCoinsRequest;
 use App\Models\User;
 use App\Services\CoinService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use RuntimeException;
 
+/**
+ * Подарки ApexCoin. Логика — в CoinService, здесь только ответ.
+ */
 class GiftController extends Controller
 {
     /**
-     * Подарить ApexCoin другу.
+     * Подарить ApexCoin игроку.
      */
-    public function store(Request $request, User $user): JsonResponse
+    public function store(GiftCoinsRequest $request, User $user): JsonResponse
     {
-        $validated = $request->validate([
-            'amount' => ['required', 'integer', 'min:1', 'max:1000000'],
-        ]);
-
         try {
-            [$received, $fee] = CoinService::gift($request->user(), $user, (int) $validated['amount']);
-        } catch (\RuntimeException $e) {
+            [$received, $fee] = CoinService::gift(
+                $request->user(),
+                $user,
+                $request->integer('amount')
+            );
+        } catch (RuntimeException $e) {
+            // Бизнес-правила подарка (не друг, лимит, не хватает монет) — это 422
             return response()->json(['message' => $e->getMessage()], 422);
         }
 
@@ -39,7 +45,7 @@ class GiftController extends Controller
     }
 
     /**
-     * Сколько можно подарить сегодня и кому (друзья).
+     * Текущие лимиты подарков.
      */
     public function limits(Request $request): JsonResponse
     {

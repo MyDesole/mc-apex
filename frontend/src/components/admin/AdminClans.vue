@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { adminApi } from '@/services/admin.js'
 import AdminClanActions from './AdminClanActions.vue'
+import { clanLink } from '@/utils/links.js'
 
 const clans = ref([])
 const loading = ref(true)
@@ -80,7 +81,7 @@ onMounted(load)
           :class="{ 'clan-row--banned': clan.is_banned }"
       >
         <RouterLink
-            :to="`/clans/${clan.id}`"
+            :to="clanLink(clan)"
             class="clan-main"
         >
           <div

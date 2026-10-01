@@ -96,6 +96,47 @@ class ShopService
     }
 
     /**
+     * Выполнить операцию магазина, превратив бизнес-ошибку в 422.
+     *
+     * Раньше контроллер оборачивал каждую операцию в try/catch — теперь
+     * это ответственность сервиса, а контроллер просто вызывает метод.
+     */
+    private static function toHttpError(callable $operation): mixed
+    {
+        try {
+            return $operation();
+        } catch (RuntimeException $e) {
+            abort(response()->json(['message' => $e->getMessage()], 422));
+        }
+    }
+
+    /**
+     * Покупка с обработкой бизнес-ошибок.
+     *
+     * @param  array{tier_test_id?: int|null, quantity?: int}  $options
+     * @return array{item: array, balance: int, tier_test: ?array}
+     */
+    public static function purchaseOrFail(User $user, ShopItem $item, array $options = []): array
+    {
+        return self::toHttpError(fn () => self::purchase($user, $item, $options));
+    }
+
+    public static function equipOrFail(User $user, ShopItem $item): mixed
+    {
+        return self::toHttpError(fn () => self::equip($user, $item));
+    }
+
+    public static function unequipOrFail(User $user, ShopItem $item): mixed
+    {
+        return self::toHttpError(fn () => self::unequip($user, $item));
+    }
+
+    public static function applyPriorityOrFail(User $user, TierTest $tierTest): mixed
+    {
+        return self::toHttpError(fn () => self::applyPriority($user, $tierTest));
+    }
+
+    /**
      * Покупка предмета.
      *
      * @param  array{tier_test_id?: int|null, quantity?: int}  $options
@@ -164,7 +205,21 @@ class ShopService
                 ]
             );
 
-            // Набор монет — сразу на баланс, в инвентарь не кладём
+            $inventory = UserInventory::firstOrNew([
+                'user_id' => $user->id,
+                'shop_item_id' => $item->id,
+            ]);
+
+            // Сколько применений даёт одна покупка (у пачки ×5 — пять)
+            $charges = (int) ($item->metadata['charges'] ?? 1);
+            $inventory->quantity = ($inventory->quantity ?? 0) + ($charges * $quantity);
+            $inventory->acquired_at = $inventory->acquired_at ?? now();
+            $inventory->save();
+
+            // Набор монет дополнительно зачисляем на баланс.
+            // Запись в инвентаре всё равно нужна: без неё не работали
+            // проверки «уже куплено» и max_quantity, и набор с
+            // is_repeatable = false можно было покупать бесконечно.
             if ($item->type === ShopItem::TYPE_COIN_BUNDLE) {
                 $amount = (int) ($item->metadata['amount'] ?? 0) * $quantity;
 
@@ -178,20 +233,7 @@ class ShopService
                         ['reference_type' => ShopItem::class, 'reference_id' => $item->id]
                     );
                 }
-
-                return;
             }
-
-            $inventory = UserInventory::firstOrNew([
-                'user_id' => $user->id,
-                'shop_item_id' => $item->id,
-            ]);
-
-            // Сколько применений даёт одна покупка (у пачки ×5 — пять)
-            $charges = (int) ($item->metadata['charges'] ?? 1);
-            $inventory->quantity = ($inventory->quantity ?? 0) + ($charges * $quantity);
-            $inventory->acquired_at = $inventory->acquired_at ?? now();
-            $inventory->save();
 
             if ($tierTest) {
                 self::applyPriorityCharge($user, $item, $tierTest);

@@ -367,6 +367,141 @@ class ApexShopTest extends TestCase
         $this->assertTrue($ownerGold['owned']);
     }
 
+    public function test_invite_registration_links_referrer_and_pays_both_sides(): void
+    {
+        $referrer = $this->user(['apex_coins' => 0, 'referral_code' => 'INVITE01']);
+
+        // Код из ссылки сохраняется при регистрации: проверяем саму связку
+        $invited = $this->user([
+            'username' => 'invited_player',
+            'referred_by' => $referrer->id,
+        ]);
+
+        $this->assertSame($referrer->id, $invited->referred_by);
+
+        // Что делает RewardService при такой связке
+        $balanceBefore = (int) $invited->apex_coins;
+
+        $reward = \App\Services\RewardService::forReferral($referrer, $invited);
+        $welcome = \App\Services\RewardService::welcomeBonus($invited);
+
+        $this->assertGreaterThan(0, $reward);
+        $this->assertGreaterThan(0, $welcome);
+        $this->assertSame($reward, $referrer->fresh()->apex_coins);
+        $this->assertSame($balanceBefore + $welcome, $invited->fresh()->apex_coins);
+
+        // Награда записана в леджер
+        $this->assertDatabaseHas('coin_transactions', [
+            'user_id' => $referrer->id,
+            'source' => 'referral',
+            'amount' => $reward,
+        ]);
+    }
+
+    public function test_referral_reward_is_paid_once_per_invited_user(): void
+    {
+        $referrer = $this->user(['apex_coins' => 0, 'referral_code' => 'INVITE02']);
+        $invited = $this->user(['referred_by' => $referrer->id]);
+
+        \App\Services\RewardService::forReferral($referrer, $invited);
+        $after = $referrer->fresh()->apex_coins;
+
+        \App\Services\RewardService::forReferral($referrer, $invited);
+
+        $this->assertSame($after, $referrer->fresh()->apex_coins);
+    }
+
+    public function test_wallet_returns_invite_link_and_stats(): void
+    {
+        $user = $this->user(['referral_code' => 'MYCODE01']);
+        $this->user(['referred_by' => $user->id]);
+        $this->user(['referred_by' => $user->id]);
+
+        $response = $this->actingAs($user)->getJson('/api/wallet')->assertOk();
+
+        $response->assertJsonPath('referral.code', 'MYCODE01')
+            ->assertJsonPath('referral.invited_count', 2);
+
+        $this->assertStringContainsString('ref=MYCODE01', $response->json('referral.link'));
+    }
+
+    public function test_wallet_generates_referral_code_on_first_request(): void
+    {
+        $user = $this->user(['referral_code' => null]);
+
+        $response = $this->actingAs($user)->getJson('/api/wallet')->assertOk();
+
+        $code = $response->json('referral.code');
+
+        $this->assertNotEmpty($code);
+        $this->assertSame($code, $user->fresh()->referral_code);
+    }
+
+    public function test_badges_are_shown_in_profile_after_equip(): void
+    {
+        $user = $this->user(['apex_coins' => 20000]);
+        $badge = ShopItem::where('slug', 'badge-apex')->firstOrFail();
+
+        $this->actingAs($user)->postJson("/api/shop/{$badge->id}/purchase")->assertCreated();
+        $this->actingAs($user)->postJson("/api/shop/{$badge->id}/equip")->assertOk();
+
+        $badges = $user->fresh()->equipped_badges;
+
+        $this->assertIsArray($badges);
+        $this->assertCount(1, $badges);
+        $this->assertSame('badge-apex', $badges[0]['slug']);
+        $this->assertSame('trophy', $badges[0]['icon']);
+    }
+
+    public function test_badge_equip_limit_is_enforced(): void
+    {
+        $user = $this->user(['apex_coins' => 50000]);
+        $limit = (int) config('apex.shop.max_equipped_badges', 3);
+
+        $badges = ShopItem::where('type', 'badge')->where('is_active', true)->take($limit + 1)->get();
+
+        foreach ($badges as $badge) {
+            $this->actingAs($user)->postJson("/api/shop/{$badge->id}/purchase")->assertCreated();
+        }
+
+        // Первые limit бейджей надеваются
+        foreach ($badges->take($limit) as $badge) {
+            $this->actingAs($user)->postJson("/api/shop/{$badge->id}/equip")->assertOk();
+        }
+
+        // Следующий — уже сверх лимита
+        $this->actingAs($user)
+            ->postJson("/api/shop/{$badges->last()->id}/equip")
+            ->assertStatus(422);
+
+        $this->assertCount($limit, $user->fresh()->equipped_badges);
+    }
+
+    public function test_priority_request_is_exposed_to_tester_api(): void
+    {
+        $player = $this->user(['apex_coins' => 5000]);
+        $tester = $this->user(['role' => 'tester']);
+        $item = ShopItem::where('slug', 'tier-priority-pass')->firstOrFail();
+
+        $test = TierTest::create([
+            'user_id' => $player->id, 'mode' => 'pvp', 'contact_type' => 'discord',
+            'contact_value' => 'a', 'preferred_time' => 'x', 'status' => 'pending',
+        ]);
+
+        $this->actingAs($player)
+            ->postJson("/api/shop/{$item->id}/purchase", ['tier_test_id' => $test->id])
+            ->assertCreated();
+
+        $queue = $this->actingAs($tester)
+            ->getJson('/api/tester/tier-tests?status=pending')
+            ->assertOk()
+            ->json('data');
+
+        // Тестер видит флаг приоритета у заявки
+        $this->assertTrue((bool) $queue[0]['is_priority']);
+        $this->assertSame($test->id, $queue[0]['id']);
+    }
+
     public function test_priority_charge_is_visible_in_inventory(): void
     {
         $player = $this->user(['apex_coins' => 5000]);

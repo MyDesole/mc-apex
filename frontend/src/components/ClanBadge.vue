@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
+import { clanLink } from '@/utils/links.js'
 
 const props = defineProps({
   clanMember: { type: Object, default: null },
@@ -87,7 +88,7 @@ function pluralPower(n) {
   <!-- CLAN -->
   <RouterLink
       v-else
-      :to="`/clans/${clan.id}`"
+      :to="clanLink(clan)"
       class="clan-badge"
       :style="{
       '--clan-color': clan.banner_color || '#7c3aed',
