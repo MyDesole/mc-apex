@@ -25,7 +25,6 @@ function openAchievement(achievement) {
   <section class="showcase">
     <div class="showcase__top">
       <div>
-        <span class="showcase__kicker">ДОСТИЖЕНИЯ</span>
 
         <div class="showcase__title-row">
           <h3 class="showcase__title">Трофеи</h3>

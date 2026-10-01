@@ -11,14 +11,17 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+
   editable: {
     type: Boolean,
     default: false,
   },
+
   coverUrl: {
     type: String,
     default: '',
   },
+
   accent: {
     type: String,
     default: '',
@@ -50,6 +53,70 @@ const avatarUrl = computed(() =>
     props.user.avatar ||
     ''
 )
+
+/* =========================================================
+   CLAN
+   ========================================================= */
+
+const clanTag = computed(() => {
+  const tag = props.user.clan_tag
+
+  if (!tag) {
+    return ''
+  }
+
+  return String(tag).trim()
+})
+
+const displayNameWithClan = computed(() => {
+  if (!clanTag.value) {
+    return displayName.value
+  }
+
+  return `[${clanTag.value}] ${displayName.value}`
+})
+
+/* =========================================================
+   ROLE
+   ========================================================= */
+
+const roleLabel = computed(() => {
+  const roles = {
+    admin: 'Администратор',
+    tester: 'Тестер',
+    moderator: 'Модератор',
+  }
+
+  return roles[props.user.role] || null
+})
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+const playerStatus = computed(() => {
+  const value = props.user.status
+
+  if (!value) {
+    return null
+  }
+
+  return String(value).trim() || null
+})
+
+/* =========================================================
+   QUOTE
+   ========================================================= */
+
+const playerQuote = computed(() => {
+  const value = props.user.quote
+
+  if (!value) {
+    return null
+  }
+
+  return String(value).trim() || null
+})
 
 /* =========================================================
    AVATAR FRAME
@@ -98,9 +165,31 @@ const avatarFrameColor = computed(() => {
   return frame.color || playerAccent.value
 })
 
+const avatarFrameGlow = computed(() => {
+  const frame = avatarFrame.value
+
+  if (!frame || frame.id === 'default') {
+    return playerAccent.value
+  }
+
+  if (frame.id === 'legendary') {
+    return '#facc15'
+  }
+
+  if (frame.id === 'rainbow') {
+    return '#a855f7'
+  }
+
+  if (frame.id === 'season1') {
+    return '#7c3aed'
+  }
+
+  return frame.color || playerAccent.value
+})
+
 /* =========================================================
    PROFILE EFFECT
-   profile_effect affects the ENTIRE HEADER
+   profile_effect affects ENTIRE HEADER
    ========================================================= */
 
 const profileEffect = computed(() =>
@@ -120,7 +209,9 @@ const hasProfileEffect = computed(() =>
 const profileEffectStyle = computed(() => {
   const effect = profileEffect.value
 
-  if (!effect) return {}
+  if (!effect) {
+    return {}
+  }
 
   return {
     '--profile-effect-color':
@@ -164,6 +255,7 @@ const tierProgress = computed(() => {
       props.user.tier_progress ??
       props.user.rank_progress ??
       props.user.progress ??
+      props.user.tier_score ??
       null
 
   if (value === null || value === '') {
@@ -232,7 +324,7 @@ const coverStyle = computed(() => {
   >
 
     <!-- =====================================================
-         BASE BACKGROUND
+         BACKGROUND
          ===================================================== -->
 
     <div
@@ -243,17 +335,14 @@ const coverStyle = computed(() => {
         :style="coverStyle"
     />
 
-    <!-- Base atmosphere -->
     <div class="profile-header__aurora" />
 
-    <!-- Grid -->
     <div class="profile-header__grid" />
 
-    <!-- Noise -->
     <div class="profile-header__noise" />
 
     <!-- =====================================================
-         FULL HEADER PROFILE EFFECT
+         FULL PROFILE EFFECT
          ===================================================== -->
 
     <div
@@ -262,12 +351,14 @@ const coverStyle = computed(() => {
         aria-hidden="true"
     />
 
-    <!-- Additional particles for legendary -->
+    <!-- Legendary particles -->
     <div
         v-if="effectId === 'legendary'"
         class="profile-header__effect-particles"
         aria-hidden="true"
     >
+      <span />
+      <span />
       <span />
       <span />
       <span />
@@ -280,7 +371,10 @@ const coverStyle = computed(() => {
          TIER WATERMARK
          ===================================================== -->
 
-    <div class="profile-header__tier-watermark">
+    <div
+        class="profile-header__tier-watermark"
+        aria-hidden="true"
+    >
       {{ tierShort }}
     </div>
 
@@ -290,10 +384,10 @@ const coverStyle = computed(() => {
 
     <div class="profile-header__topline">
 
-      <span class="profile-header__eyebrow">
+      <div class="profile-header__eyebrow">
         <span class="profile-header__eyebrow-dot" />
         PLAYER PROFILE
-      </span>
+      </div>
 
       <button
           v-if="editable"
@@ -310,6 +404,7 @@ const coverStyle = computed(() => {
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
+            aria-hidden="true"
         >
           <path d="M12 20h9" />
 
@@ -335,15 +430,13 @@ const coverStyle = computed(() => {
 
       <div class="profile-header__avatar-wrap">
 
-        <!-- Avatar-specific ambient glow -->
         <div
             class="profile-header__avatar-glow"
             :style="{
-              '--avatar-frame-color': avatarFrameColor,
+              '--avatar-frame-color': avatarFrameGlow,
             }"
         />
 
-        <!-- Avatar frame -->
         <div
             class="profile-header__avatar-frame"
             :class="{
@@ -355,7 +448,7 @@ const coverStyle = computed(() => {
             }"
             :style="{
               ...avatarFrameStyle,
-              '--avatar-frame-color': avatarFrameColor,
+              '--avatar-frame-color': avatarFrameGlow,
             }"
         >
 
@@ -376,13 +469,9 @@ const coverStyle = computed(() => {
             </div>
 
           </div>
+
         </div>
 
-        <!-- Online -->
-        <div class="profile-header__status">
-          <span />
-          ONLINE
-        </div>
 
       </div>
 
@@ -397,21 +486,46 @@ const coverStyle = computed(() => {
              ================================================= -->
 
 
-
         <!-- =================================================
-             NAME
+             NAME + ROLE
              ================================================= -->
 
-        <h1 class="profile-header__name">
-          {{ displayName }}
-        </h1>
+        <div class="profile-header__name-row">
 
-        <p
-            v-if="user.username && user.username !== displayName"
-            class="profile-header__username"
+          <h1 class="profile-header__name">
+            {{ displayNameWithClan }}
+          </h1>
+
+          <span
+              v-if="roleLabel"
+              class="profile-header__role"
+              :class="`profile-header__role--${user.role}`"
+          >
+            {{ roleLabel }}
+          </span>
+
+        </div>
+
+        <!-- =================================================
+             USERNAME
+             ================================================= -->
+
+
+        <!-- =================================================
+             STATUS
+             ================================================= -->
+
+        <div
+            v-if="playerStatus"
+            class="profile-header__status-text"
         >
-          @{{ user.username }}
-        </p>
+          <span class="profile-header__status-icon" />
+          {{ playerStatus }}
+        </div>
+
+        <!-- =================================================
+             BIO
+             ================================================= -->
 
         <p
             v-if="user.bio"
@@ -419,6 +533,29 @@ const coverStyle = computed(() => {
         >
           {{ user.bio }}
         </p>
+
+        <!-- =================================================
+             QUOTE
+             ================================================= -->
+
+        <div
+            v-if="playerQuote"
+            class="profile-header__quote"
+        >
+          <span class="profile-header__quote-mark">
+            “
+          </span>
+
+          <span class="profile-header__quote-text">
+            {{ playerQuote }}
+          </span>
+
+          <span
+              class="profile-header__quote-mark profile-header__quote-mark--end"
+          >
+            ”
+          </span>
+        </div>
 
         <!-- =================================================
              STATS
@@ -453,15 +590,28 @@ const coverStyle = computed(() => {
           </div>
 
           <div
-              v-if="user.country || user.location"
-              class="profile-header__stat profile-header__stat--location"
+              v-if="user.clan_tag"
+              class="profile-header__stat profile-header__stat--clan"
           >
             <span class="profile-header__stat-label">
-              BASE
+              CLAN
             </span>
 
             <strong>
-              {{ user.country || user.location }}
+              [{{ user.clan_tag }}]
+            </strong>
+          </div>
+
+          <div
+              v-if="user.days_on_platform !== undefined"
+              class="profile-header__stat"
+          >
+            <span class="profile-header__stat-label">
+              DAYS
+            </span>
+
+            <strong>
+              {{ user.days_on_platform }}
             </strong>
           </div>
 
@@ -477,11 +627,15 @@ const coverStyle = computed(() => {
         >
 
           <div class="tier-progress__head">
-            <span>RANK PROGRESS</span>
+
+            <span>
+              TIER SCORE
+            </span>
 
             <strong>
-              {{ tierProgress }}%
+              {{ Number(tierProgress).toFixed(0) }}%
             </strong>
+
           </div>
 
           <div class="tier-progress__track">
@@ -501,7 +655,7 @@ const coverStyle = computed(() => {
     </div>
 
     <!-- =====================================================
-         BIG RIGHT RANK EMBLEM
+         RIGHT RANK EMBLEM
          ===================================================== -->
 
 
@@ -510,13 +664,19 @@ const coverStyle = computed(() => {
          BOTTOM DECORATION
          ===================================================== -->
 
-    <div class="profile-header__peak">
+    <div
+        class="profile-header__peak"
+        aria-hidden="true"
+    >
       <span />
       <span />
       <span />
     </div>
 
-    <div class="profile-header__accent-line" />
+    <div
+        class="profile-header__accent-line"
+        aria-hidden="true"
+    />
 
   </section>
 </template>
@@ -531,12 +691,14 @@ const coverStyle = computed(() => {
 
   position: relative;
 
-  min-height: 370px;
+  min-height: 390px;
 
   margin: -24px -24px 24px;
   padding: 28px;
 
   overflow: hidden;
+
+  isolation: isolate;
 
   background:
       radial-gradient(
@@ -600,7 +762,7 @@ const coverStyle = computed(() => {
 }
 
 .profile-header__cover--image {
-  opacity: 0.7;
+  opacity: 0.72;
 }
 
 .profile-header__cover::after {
@@ -613,13 +775,13 @@ const coverStyle = computed(() => {
       linear-gradient(
           90deg,
           rgba(5, 5, 13, 0.98) 0%,
-          rgba(5, 5, 13, 0.82) 42%,
+          rgba(5, 5, 13, 0.84) 40%,
           rgba(5, 5, 13, 0.38) 100%
       ),
       linear-gradient(
           0deg,
           rgba(5, 5, 13, 0.98) 0%,
-          transparent 65%
+          transparent 68%
       );
 }
 
@@ -633,17 +795,17 @@ const coverStyle = computed(() => {
   z-index: 1;
 
   width: 620px;
-  height: 260px;
+  height: 280px;
 
   right: -130px;
-  top: 20px;
+  top: 10px;
 
   background:
       radial-gradient(
           ellipse,
           color-mix(
               in srgb,
-              var(--player-accent) 34%,
+              var(--player-accent) 36%,
               transparent
           ),
           transparent 70%
@@ -675,11 +837,12 @@ const coverStyle = computed(() => {
 
   background-size: 42px 42px;
 
-  mask-image: linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.8),
-      transparent 92%
-  );
+  mask-image:
+      linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0.8),
+          transparent 92%
+      );
 
   opacity: 0.45;
 
@@ -706,11 +869,12 @@ const coverStyle = computed(() => {
 }
 
 /* =========================================================
-   FULL HEADER EFFECT
+   FULL PROFILE EFFECT
    ========================================================= */
 
 .profile-header__effect {
   position: absolute;
+
   inset: -20%;
 
   z-index: 4;
@@ -724,9 +888,9 @@ const coverStyle = computed(() => {
   will-change: transform, opacity;
 }
 
-/* ---------------------------------------------------------
+/* =========================================================
    GLOW
-   --------------------------------------------------------- */
+   ========================================================= */
 
 .profile-header--effect-glow .profile-header__effect {
   background:
@@ -754,9 +918,9 @@ const coverStyle = computed(() => {
   opacity: 0.72;
 }
 
-/* ---------------------------------------------------------
+/* =========================================================
    PULSE
-   --------------------------------------------------------- */
+   ========================================================= */
 
 .profile-header--effect-pulse .profile-header__effect {
   background:
@@ -781,12 +945,15 @@ const coverStyle = computed(() => {
 
   filter: blur(35px);
 
-  animation: profilePulse 2.2s ease-in-out infinite;
+  opacity: 0.55;
+
+  animation:
+      profilePulse 2.2s ease-in-out infinite;
 }
 
-/* ---------------------------------------------------------
+/* =========================================================
    GRADIENT
-   --------------------------------------------------------- */
+   ========================================================= */
 
 .profile-header--effect-gradient .profile-header__effect {
   inset: -50%;
@@ -800,12 +967,13 @@ const coverStyle = computed(() => {
 
   transform: rotate(-10deg) scale(1.2);
 
-  animation: profileGradient 7s ease-in-out infinite;
+  animation:
+      profileGradient 7s ease-in-out infinite;
 }
 
-/* ---------------------------------------------------------
+/* =========================================================
    FIRE
-   --------------------------------------------------------- */
+   ========================================================= */
 
 .profile-header--effect-fire .profile-header__effect {
   inset: 15% -15% -40%;
@@ -835,12 +1003,13 @@ const coverStyle = computed(() => {
 
   transform-origin: 50% 100%;
 
-  animation: profileFire 1.4s ease-in-out infinite alternate;
+  animation:
+      profileFire 1.4s ease-in-out infinite alternate;
 }
 
-/* ---------------------------------------------------------
+/* =========================================================
    ICE
-   --------------------------------------------------------- */
+   ========================================================= */
 
 .profile-header--effect-ice .profile-header__effect {
   background:
@@ -864,33 +1033,40 @@ const coverStyle = computed(() => {
 
   opacity: 0.8;
 
-  animation: profileIce 4s ease-in-out infinite;
+  animation:
+      profileIce 4s ease-in-out infinite;
 }
 
-/* ---------------------------------------------------------
+/* =========================================================
    LEGENDARY
-   --------------------------------------------------------- */
+   ========================================================= */
 
 .profile-header--effect-legendary .profile-header__effect {
-  inset: -40%;
+  inset: -45%;
 
   background:
       radial-gradient(
           ellipse at 72% 25%,
-          rgba(250, 204, 21, 0.5),
+          rgba(250, 204, 21, 0.55),
           transparent 30%
       ),
       radial-gradient(
           ellipse at 28% 75%,
-          rgba(249, 115, 22, 0.4),
+          rgba(249, 115, 22, 0.42),
           transparent 38%
+      ),
+      radial-gradient(
+          ellipse at 52% 52%,
+          rgba(239, 68, 68, 0.16),
+          transparent 55%
       ),
       conic-gradient(
           from 0deg,
           rgba(250, 204, 21, 0.08),
-          rgba(249, 115, 22, 0.16),
+          rgba(249, 115, 22, 0.18),
           rgba(239, 68, 68, 0.08),
-          rgba(250, 204, 21, 0.14)
+          rgba(250, 204, 21, 0.14),
+          rgba(249, 115, 22, 0.08)
       );
 
   filter: blur(28px);
@@ -929,43 +1105,56 @@ const coverStyle = computed(() => {
       0 0 8px #facc15,
       0 0 18px rgba(249, 115, 22, 0.7);
 
-  animation: legendaryParticle 4s ease-in-out infinite;
+  animation:
+      legendaryParticle 4s ease-in-out infinite;
 }
 
 .profile-header__effect-particles span:nth-child(1) {
-  left: 65%;
-  top: 25%;
-  animation-delay: -1s;
-}
-
-.profile-header__effect-particles span:nth-child(2) {
-  left: 78%;
-  top: 52%;
-  animation-delay: -2.5s;
-}
-
-.profile-header__effect-particles span:nth-child(3) {
   left: 58%;
-  top: 68%;
+  top: 22%;
   animation-delay: -0.5s;
 }
 
+.profile-header__effect-particles span:nth-child(2) {
+  left: 72%;
+  top: 48%;
+  animation-delay: -2.2s;
+}
+
+.profile-header__effect-particles span:nth-child(3) {
+  left: 53%;
+  top: 70%;
+  animation-delay: -1.1s;
+}
+
 .profile-header__effect-particles span:nth-child(4) {
-  left: 88%;
-  top: 32%;
+  left: 87%;
+  top: 30%;
   animation-delay: -3s;
 }
 
 .profile-header__effect-particles span:nth-child(5) {
-  left: 45%;
+  left: 43%;
   top: 18%;
   animation-delay: -1.8s;
 }
 
 .profile-header__effect-particles span:nth-child(6) {
-  left: 82%;
-  top: 78%;
+  left: 80%;
+  top: 76%;
   animation-delay: -3.5s;
+}
+
+.profile-header__effect-particles span:nth-child(7) {
+  left: 68%;
+  top: 82%;
+  animation-delay: -2.8s;
+}
+
+.profile-header__effect-particles span:nth-child(8) {
+  left: 92%;
+  top: 64%;
+  animation-delay: -1.5s;
 }
 
 /* =========================================================
@@ -998,12 +1187,13 @@ const coverStyle = computed(() => {
   user-select: none;
   pointer-events: none;
 
-  -webkit-text-stroke: 1px
-  color-mix(
-      in srgb,
-      var(--player-accent) 16%,
-      transparent
-  );
+  -webkit-text-stroke:
+      1px
+      color-mix(
+          in srgb,
+          var(--player-accent) 16%,
+          transparent
+      );
 
   text-shadow:
       0 0 70px
@@ -1017,7 +1207,7 @@ const coverStyle = computed(() => {
 }
 
 /* =========================================================
-   TOP
+   TOP BAR
    ========================================================= */
 
 .profile-header__topline {
@@ -1044,6 +1234,7 @@ const coverStyle = computed(() => {
   font-weight: 900;
 
   letter-spacing: 1.8px;
+
   text-transform: uppercase;
 }
 
@@ -1063,7 +1254,8 @@ const coverStyle = computed(() => {
           transparent
       );
 
-  animation: pulse 2s ease-in-out infinite;
+  animation:
+      pulse 2s ease-in-out infinite;
 }
 
 .profile-header__edit {
@@ -1132,7 +1324,7 @@ const coverStyle = computed(() => {
 
   gap: 25px;
 
-  min-height: 260px;
+  min-height: 280px;
 
   padding-top: 28px;
 }
@@ -1147,17 +1339,12 @@ const coverStyle = computed(() => {
   flex: 0 0 auto;
 
   width: 122px;
-  height: 145px;
+  height: 150px;
 
   display: flex;
   justify-content: center;
   align-items: flex-start;
 }
-
-/*
- * This glow belongs to the avatar.
- * It does NOT come from profile_effect.
- */
 
 .profile-header__avatar-glow {
   position: absolute;
@@ -1182,10 +1369,6 @@ const coverStyle = computed(() => {
   pointer-events: none;
 }
 
-/* =========================================================
-   AVATAR FRAME
-   ========================================================= */
-
 .profile-header__avatar-frame {
   position: relative;
 
@@ -1208,6 +1391,10 @@ const coverStyle = computed(() => {
   transition:
       transform 0.25s ease,
       filter 0.25s ease;
+}
+
+.profile-header__avatar-frame:hover {
+  transform: translateY(-2px) scale(1.015);
 }
 
 .profile-header__avatar-frame--custom {
@@ -1284,19 +1471,21 @@ const coverStyle = computed(() => {
   width: 100%;
   height: 100%;
 
+  aspect-ratio: 1 / 1;
+
   object-fit: cover;
   object-position: center;
 }
 
 /* =========================================================
-   STATUS
+   ONLINE
    ========================================================= */
 
-.profile-header__status {
+.profile-header__online {
   position: absolute;
 
   left: 50%;
-  bottom: 0;
+  bottom: 5px;
 
   z-index: 10;
 
@@ -1327,7 +1516,7 @@ const coverStyle = computed(() => {
   backdrop-filter: blur(10px);
 }
 
-.profile-header__status span {
+.profile-header__online span {
   width: 5px;
   height: 5px;
 
@@ -1345,10 +1534,12 @@ const coverStyle = computed(() => {
 
 .profile-header__identity {
   min-width: 0;
+
+  max-width: 650px;
 }
 
 /* =========================================================
-   TIER
+   TIER DISPLAY
    ========================================================= */
 
 .tier-display {
@@ -1561,6 +1752,16 @@ const coverStyle = computed(() => {
    NAME
    ========================================================= */
 
+.profile-header__name-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 10px;
+
+  min-width: 0;
+}
+
 .profile-header__name {
   margin: 0;
 
@@ -1584,6 +1785,69 @@ const coverStyle = computed(() => {
       );
 }
 
+/* =========================================================
+   ROLE
+   ========================================================= */
+
+.profile-header__role {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 25px;
+
+  padding: 0 9px;
+
+  border-radius: 6px;
+
+  font-size: 8px;
+  font-weight: 950;
+
+  letter-spacing: 0.8px;
+
+  text-transform: uppercase;
+
+  white-space: nowrap;
+
+  backdrop-filter: blur(10px);
+}
+
+.profile-header__role--admin {
+  color: #facc15;
+
+  background: rgba(250, 204, 21, 0.1);
+
+  border: 1px solid rgba(250, 204, 21, 0.3);
+
+  box-shadow:
+      0 0 16px rgba(250, 204, 21, 0.12);
+}
+
+.profile-header__role--tester {
+  color: #06b6d4;
+
+  background: rgba(6, 182, 212, 0.1);
+
+  border: 1px solid rgba(6, 182, 212, 0.3);
+
+  box-shadow:
+      0 0 16px rgba(6, 182, 212, 0.1);
+}
+
+.profile-header__role--moderator {
+  color: #a855f7;
+
+  background: rgba(168, 85, 247, 0.1);
+
+  border: 1px solid rgba(168, 85, 247, 0.3);
+
+  box-shadow:
+      0 0 16px rgba(168, 85, 247, 0.1);
+}
+
+/* =========================================================
+   USERNAME
+   ========================================================= */
+
 .profile-header__username {
   margin: 8px 0 0;
 
@@ -1593,15 +1857,130 @@ const coverStyle = computed(() => {
   font-weight: 700;
 }
 
-.profile-header__bio {
-  max-width: 520px;
+/* =========================================================
+   STATUS
+   ========================================================= */
 
-  margin: 12px 0 0;
+.profile-header__status-text {
+  display: flex;
+  align-items: center;
+
+  width: fit-content;
+
+  gap: 7px;
+
+  margin-top: 8px;
+
+  color: rgba(255, 255, 255, 0.48);
+
+  font-size: 11px;
+  font-weight: 700;
+
+  font-style: italic;
+}
+
+.profile-header__status-icon {
+  width: 5px;
+  height: 5px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: var(--player-accent);
+
+  box-shadow:
+      0 0 9px
+      color-mix(
+          in srgb,
+          var(--player-accent) 80%,
+          transparent
+      );
+}
+
+/* =========================================================
+   BIO
+   ========================================================= */
+
+.profile-header__bio {
+  max-width: 560px;
+
+  margin: 11px 0 0;
 
   color: rgba(255, 255, 255, 0.55);
 
   font-size: 12px;
   line-height: 1.55;
+}
+
+/* =========================================================
+   QUOTE
+   ========================================================= */
+
+.profile-header__quote {
+  display: flex;
+  align-items: flex-start;
+
+  max-width: 560px;
+
+  margin-top: 13px;
+  padding: 9px 12px;
+
+  color: rgba(255, 255, 255, 0.48);
+
+  background:
+      color-mix(
+          in srgb,
+          var(--player-accent) 4%,
+          rgba(255, 255, 255, 0.025)
+      );
+
+  border-left: 2px solid
+  color-mix(
+      in srgb,
+      var(--player-accent) 65%,
+      transparent
+  );
+
+  border-radius: 0 7px 7px 0;
+
+  backdrop-filter: blur(8px);
+}
+
+.profile-header__quote-mark {
+  flex-shrink: 0;
+
+  margin-right: 4px;
+
+  color:
+      color-mix(
+          in srgb,
+          var(--player-accent) 75%,
+          white
+      );
+
+  font-family: Georgia, serif;
+
+  font-size: 22px;
+  line-height: 14px;
+
+  opacity: 0.7;
+}
+
+.profile-header__quote-mark--end {
+  margin-right: 0;
+  margin-left: 3px;
+
+  align-self: flex-end;
+}
+
+.profile-header__quote-text {
+  font-size: 10px;
+  line-height: 1.5;
+
+  font-weight: 600;
+
+  letter-spacing: 0.1px;
 }
 
 /* =========================================================
@@ -1649,6 +2028,15 @@ const coverStyle = computed(() => {
 
   font-size: 11px;
   font-weight: 900;
+}
+
+.profile-header__stat--clan strong {
+  color:
+      color-mix(
+          in srgb,
+          var(--player-accent) 85%,
+          white
+      );
 }
 
 /* =========================================================
@@ -1904,7 +2292,7 @@ const coverStyle = computed(() => {
 }
 
 /* =========================================================
-   BOTTOM DECORATION
+   BOTTOM PEAK
    ========================================================= */
 
 .profile-header__peak {
@@ -2162,16 +2550,31 @@ const coverStyle = computed(() => {
    RESPONSIVE
    ========================================================= */
 
-@media (max-width: 900px) {
+@media (max-width: 1000px) {
   .profile-header__rank-mark {
-    right: 2%;
+    right: 1%;
 
     opacity: 0.45;
 
     transform:
         translateY(-50%)
         rotate(4deg)
-        scale(0.8);
+        scale(0.78);
+  }
+
+  .profile-header__identity {
+    max-width: 560px;
+  }
+}
+
+@media (max-width: 900px) {
+  .profile-header__rank-mark {
+    opacity: 0.32;
+
+    transform:
+        translateY(-50%)
+        rotate(4deg)
+        scale(0.65);
   }
 }
 
@@ -2210,6 +2613,14 @@ const coverStyle = computed(() => {
     inset: -12px;
   }
 
+  .profile-header__online {
+    bottom: 6px;
+
+    padding: 3px 6px;
+
+    font-size: 7px;
+  }
+
   .profile-header__name {
     font-size: 32px;
 
@@ -2243,6 +2654,36 @@ const coverStyle = computed(() => {
 
   .profile-header--effect-fire .profile-header__effect {
     inset: 20% -25% -25%;
+  }
+
+  .profile-header__quote {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .profile-header__content {
+    gap: 14px;
+  }
+
+  .profile-header__name-row {
+    gap: 7px;
+  }
+
+  .profile-header__role {
+    min-height: 22px;
+
+    padding: 0 7px;
+
+    font-size: 7px;
+  }
+
+  .profile-header__stats {
+    gap: 5px;
+  }
+
+  .profile-header__stat {
+    padding: 6px 8px;
   }
 }
 

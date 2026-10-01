@@ -122,11 +122,13 @@ watch(
 
 <style scoped>
 .container {
-  width: min(900px, calc(100% - 40px));
-  margin: 40px auto;
+  position: relative;
+  width: min(1100px, calc(100% - 40px));
+  margin: 28px auto 60px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 22px;
+  color: #f8fafc;
 }
 
 .blocks {

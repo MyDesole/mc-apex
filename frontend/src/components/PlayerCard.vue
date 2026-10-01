@@ -527,12 +527,8 @@ const profileCompleteness = computed(() => {
               COLLECTION
             </span>
 
-            <h3>Achievements</h3>
           </div>
 
-          <span class="side-panel__number">
-            {{ allAchievements.length }}
-          </span>
         </div>
 
         <PlayerProfileShowcase
