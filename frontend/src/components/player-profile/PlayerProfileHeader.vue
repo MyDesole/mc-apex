@@ -1,451 +1,2305 @@
 <script setup>
 import { computed } from 'vue'
-import UserName from '@/components/UserName.vue'
-import PlayerProfileAvatar from './PlayerProfileAvatar.vue'
-import PlayerProfileMeta from './PlayerProfileMeta.vue'
-import { tierColor } from '@/composables/useTier'
+import { tierColor } from '@/composables/useTier.js'
+import {
+  AVATAR_FRAMES,
+  PROFILE_EFFECTS,
+} from '@/data/profileCustomization'
 
 const props = defineProps({
-  user: { type: Object, required: true },
-  editable: { type: Boolean, default: false },
-  coverUrl: { type: String, default: null },
-  accent: { type: String, default: null },
-  size: { type: String, default: 'md' }, // 'md' | 'sm'
-  compact: { type: Boolean, default: false },
+  user: {
+    type: Object,
+    required: true,
+  },
+  editable: {
+    type: Boolean,
+    default: false,
+  },
+  coverUrl: {
+    type: String,
+    default: '',
+  },
+  accent: {
+    type: String,
+    default: '',
+  },
 })
 
 const emit = defineEmits(['edit'])
 
-const isVerified = computed(() => props.user.is_verified ?? false)
+/* =========================================================
+   PLAYER
+   ========================================================= */
 
-const accentColor = computed(() =>
-    props.accent
-    || props.user.accent_color
-    || props.user.banner_color
-    || tierColor(props.user.tier)
+const playerAccent = computed(() =>
+    props.accent ||
+    props.user.accent_color ||
+    props.user.banner_color ||
+    tierColor(props.user.tier)
 )
 
-const tColor = computed(() => tierColor(props.user.tier))
+const displayName = computed(() =>
+    props.user.nickname ||
+    props.user.username ||
+    props.user.name ||
+    'Игрок'
+)
 
-const effectClass = computed(() => {
-  if (!props.user.profile_effect) return ''
-  return `effect-${props.user.profile_effect}`
+const avatarUrl = computed(() =>
+    props.user.avatar_url ||
+    props.user.avatar ||
+    ''
+)
+
+/* =========================================================
+   AVATAR FRAME
+   avatar_frame affects ONLY avatar
+   ========================================================= */
+
+const avatarFrame = computed(() =>
+    AVATAR_FRAMES.find(
+        frame => frame.id === props.user.avatar_frame
+    ) ?? AVATAR_FRAMES[0]
+)
+
+const hasAvatarFrame = computed(() =>
+    avatarFrame.value?.id !== 'default'
+)
+
+const avatarFrameStyle = computed(() => {
+  const frame = avatarFrame.value
+
+  if (!frame || frame.id === 'default') {
+    return {}
+  }
+
+  if (frame.gradient) {
+    return {
+      background: frame.gradient,
+    }
+  }
+
+  if (frame.color) {
+    return {
+      background: frame.color,
+    }
+  }
+
+  return {}
 })
 
-const headerStyle = computed(() => {
-  const url = props.coverUrl
+const avatarFrameColor = computed(() => {
+  const frame = avatarFrame.value
+
+  if (!frame || frame.id === 'default') {
+    return playerAccent.value
+  }
+
+  return frame.color || playerAccent.value
+})
+
+/* =========================================================
+   PROFILE EFFECT
+   profile_effect affects the ENTIRE HEADER
+   ========================================================= */
+
+const profileEffect = computed(() =>
+    PROFILE_EFFECTS.find(
+        effect => effect.id === props.user.profile_effect
+    ) ?? PROFILE_EFFECTS[0]
+)
+
+const effectId = computed(() =>
+    profileEffect.value?.id || null
+)
+
+const hasProfileEffect = computed(() =>
+    !!effectId.value
+)
+
+const profileEffectStyle = computed(() => {
+  const effect = profileEffect.value
+
+  if (!effect) return {}
+
   return {
-    ...(url ? {
-      backgroundImage: `linear-gradient(rgba(10,10,15,0.45), rgba(10,10,15,0.85)), url(${url})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-    } : {}),
-    '--accent-color': accentColor.value,
+    '--profile-effect-color':
+        effect.color || playerAccent.value,
+
+    '--profile-effect-gradient':
+        effect.gradient || 'none',
   }
 })
 
-// Размер аватара в зависимости от compact/size
-const avatarSize = computed(() => {
-  if (props.compact) return 40
-  return props.size === 'sm' ? 56 : 72
+/* =========================================================
+   TIER
+   ========================================================= */
+
+const tier = computed(() =>
+    props.user.tier || 'UNRANKED'
+)
+
+const tierLabel = computed(() =>
+    String(tier.value)
+        .replace(/_/g, ' ')
+        .toUpperCase()
+)
+
+const tierShort = computed(() => {
+  const value = tierLabel.value
+
+  if (value === 'UNRANKED') {
+    return '—'
+  }
+
+  return value
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .slice(0, 3)
 })
 
-// Размер галочки верификации
-const verifiedSize = computed(() => {
-  if (props.compact) return 12
-  return props.size === 'sm' ? 13 : 16
+const tierProgress = computed(() => {
+  const value =
+      props.user.tier_progress ??
+      props.user.rank_progress ??
+      props.user.progress ??
+      null
+
+  if (value === null || value === '') {
+    return null
+  }
+
+  const number = Number(value)
+
+  if (!Number.isFinite(number)) {
+    return null
+  }
+
+  return Math.max(0, Math.min(100, number))
 })
 
-const quote = computed(() => props.user.quote || null)
-const bio = computed(() => props.user.bio || null)
+const tierSubtitle = computed(() => {
+  if (tier.value === 'UNRANKED') {
+    return 'AWAITING RANK'
+  }
+
+  return props.user.tier_title ||
+      props.user.tier_description ||
+      'CURRENT RANK'
+})
+
+/* =========================================================
+   OTHER DATA
+   ========================================================= */
+
+const rankPosition = computed(() =>
+    props.user.rank_position ??
+    props.user.position ??
+    props.user.rank?.position ??
+    null
+)
+
+const level = computed(() =>
+    props.user.level ??
+    props.user.player_level ??
+    null
+)
+
+const coverStyle = computed(() => {
+  if (!props.coverUrl) {
+    return {}
+  }
+
+  return {
+    backgroundImage: `url(${props.coverUrl})`,
+  }
+})
 </script>
 
 <template>
-  <header
-      class="pp-header"
-      :class="[
-      effectClass,
-      `pp-header--${size}`,
-      { 'pp-header--compact': compact },
-    ]"
-      :style="headerStyle"
+  <section
+      class="profile-header"
+      :class="{
+        [`profile-header--effect-${effectId}`]: hasProfileEffect,
+        'profile-header--effect-animated':
+            profileEffect.animated,
+      }"
+      :style="{
+        '--player-accent': playerAccent,
+        ...profileEffectStyle,
+      }"
   >
-    <div class="pp-header__left">
-      <PlayerProfileAvatar
-          :user="user"
-          :accent="accentColor"
-          :size="avatarSize"
-      />
 
-      <div class="pp-header__info">
-        <h2 class="pp-header__name">
-          <UserName :user="user" />
+    <!-- =====================================================
+         BASE BACKGROUND
+         ===================================================== -->
 
-          <span
-              v-if="isVerified"
-              class="verified"
-              :title="user.verified_reason || 'Подтверждённый аккаунт'"
+    <div
+        class="profile-header__cover"
+        :class="{
+          'profile-header__cover--image': !!coverUrl,
+        }"
+        :style="coverStyle"
+    />
+
+    <!-- Base atmosphere -->
+    <div class="profile-header__aurora" />
+
+    <!-- Grid -->
+    <div class="profile-header__grid" />
+
+    <!-- Noise -->
+    <div class="profile-header__noise" />
+
+    <!-- =====================================================
+         FULL HEADER PROFILE EFFECT
+         ===================================================== -->
+
+    <div
+        v-if="hasProfileEffect"
+        class="profile-header__effect"
+        aria-hidden="true"
+    />
+
+    <!-- Additional particles for legendary -->
+    <div
+        v-if="effectId === 'legendary'"
+        class="profile-header__effect-particles"
+        aria-hidden="true"
+    >
+      <span />
+      <span />
+      <span />
+      <span />
+      <span />
+      <span />
+    </div>
+
+    <!-- =====================================================
+         TIER WATERMARK
+         ===================================================== -->
+
+    <div class="profile-header__tier-watermark">
+      {{ tierShort }}
+    </div>
+
+    <!-- =====================================================
+         TOP BAR
+         ===================================================== -->
+
+    <div class="profile-header__topline">
+
+      <span class="profile-header__eyebrow">
+        <span class="profile-header__eyebrow-dot" />
+        PLAYER PROFILE
+      </span>
+
+      <button
+          v-if="editable"
+          class="profile-header__edit"
+          type="button"
+          @click="emit('edit')"
+      >
+        <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        >
+          <path d="M12 20h9" />
+
+          <path
+              d="M16.5 3.5a2.121 2.121 0 0 1 3 3L8 18l-4 1 1-4Z"
+          />
+        </svg>
+
+        Настроить
+      </button>
+
+    </div>
+
+    <!-- =====================================================
+         MAIN CONTENT
+         ===================================================== -->
+
+    <div class="profile-header__content">
+
+      <!-- ===================================================
+           AVATAR
+           =================================================== -->
+
+      <div class="profile-header__avatar-wrap">
+
+        <!-- Avatar-specific ambient glow -->
+        <div
+            class="profile-header__avatar-glow"
+            :style="{
+              '--avatar-frame-color': avatarFrameColor,
+            }"
+        />
+
+        <!-- Avatar frame -->
+        <div
+            class="profile-header__avatar-frame"
+            :class="{
+              'profile-header__avatar-frame--custom':
+                  hasAvatarFrame,
+
+              'profile-header__avatar-frame--glow':
+                  avatarFrame.glow,
+            }"
+            :style="{
+              ...avatarFrameStyle,
+              '--avatar-frame-color': avatarFrameColor,
+            }"
+        >
+
+          <div class="profile-header__avatar-frame-inner">
+
+            <div class="profile-header__avatar">
+
+              <img
+                  v-if="avatarUrl"
+                  :src="avatarUrl"
+                  :alt="displayName"
+              >
+
+              <span v-else>
+                {{ displayName.charAt(0).toUpperCase() }}
+              </span>
+
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Online -->
+        <div class="profile-header__status">
+          <span />
+          ONLINE
+        </div>
+
+      </div>
+
+      <!-- ===================================================
+           IDENTITY
+           =================================================== -->
+
+      <div class="profile-header__identity">
+
+        <!-- =================================================
+             TIER
+             ================================================= -->
+
+
+
+        <!-- =================================================
+             NAME
+             ================================================= -->
+
+        <h1 class="profile-header__name">
+          {{ displayName }}
+        </h1>
+
+        <p
+            v-if="user.username && user.username !== displayName"
+            class="profile-header__username"
+        >
+          @{{ user.username }}
+        </p>
+
+        <p
+            v-if="user.bio"
+            class="profile-header__bio"
+        >
+          {{ user.bio }}
+        </p>
+
+        <!-- =================================================
+             STATS
+             ================================================= -->
+
+        <div class="profile-header__stats">
+
+          <div
+              v-if="rankPosition !== null"
+              class="profile-header__stat"
           >
-            <svg :width="verifiedSize" :height="verifiedSize" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2l2.4 3.6 4.2.6 3 3-1.2 4.2L22 18l-3 3-4.2-1.2L12 22l-3-2.4-4.2 1.2-3-3 1.2-4.2L2 9.6l3-3 4.2-.6z" fill="#1da1f2" />
-              <path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
-            </svg>
-          </span>
-        </h2>
+            <span class="profile-header__stat-label">
+              RANK
+            </span>
 
-        <template v-if="compact">
-          <p v-if="bio" class="pp-header__bio">{{ bio }}</p>
-          <p v-if="quote" class="pp-header__quote">"{{ quote }}"</p>
-        </template>
+            <strong>
+              #{{ rankPosition }}
+            </strong>
+          </div>
 
-        <!-- ОБЫЧНЫЙ: полная мета -->
-        <PlayerProfileMeta v-else-if="!compact" :user="user" />
+          <div
+              v-if="level !== null"
+              class="profile-header__stat"
+          >
+            <span class="profile-header__stat-label">
+              LEVEL
+            </span>
+
+            <strong>
+              {{ level }}
+            </strong>
+          </div>
+
+          <div
+              v-if="user.country || user.location"
+              class="profile-header__stat profile-header__stat--location"
+          >
+            <span class="profile-header__stat-label">
+              BASE
+            </span>
+
+            <strong>
+              {{ user.country || user.location }}
+            </strong>
+          </div>
+
+        </div>
+
+        <!-- =================================================
+             TIER PROGRESS
+             ================================================= -->
+
+        <div
+            v-if="tierProgress !== null"
+            class="tier-progress"
+        >
+
+          <div class="tier-progress__head">
+            <span>RANK PROGRESS</span>
+
+            <strong>
+              {{ tierProgress }}%
+            </strong>
+          </div>
+
+          <div class="tier-progress__track">
+
+            <div
+                class="tier-progress__value"
+                :style="{
+                  width: `${tierProgress}%`,
+                }"
+            />
+
+          </div>
+
+        </div>
+
       </div>
     </div>
 
-    <div class="pp-header__right">
-      <slot name="actions">
-        <!-- Обычная кнопка -->
-        <button
-            v-if="editable && !compact"
-            class="pp-header__edit"
-            type="button"
-            @click="emit('edit')"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-          Настройки
-        </button>
+    <!-- =====================================================
+         BIG RIGHT RANK EMBLEM
+         ===================================================== -->
 
-        <!-- Компактная иконочная кнопка -->
-        <button
-            v-else-if="editable && compact"
-            class="pp-header__edit pp-header__edit--icon"
-            type="button"
-            aria-label="Настройки"
-            @click="emit('edit')"
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-        </button>
-      </slot>
 
-      <slot name="tier">
-        <div
-            class="pp-header__tier"
-            :class="{
-            'pp-header__tier--sm': size === 'sm',
-            'pp-header__tier--compact': compact,
-          }"
-            :style="{
-            borderColor: tColor,
-            color: tColor,
-            boxShadow: `0 0 20px ${tColor}40`,
-          }"
-        >
-          {{ user.tier }}
-        </div>
-      </slot>
+
+    <!-- =====================================================
+         BOTTOM DECORATION
+         ===================================================== -->
+
+    <div class="profile-header__peak">
+      <span />
+      <span />
+      <span />
     </div>
-  </header>
+
+    <div class="profile-header__accent-line" />
+
+  </section>
 </template>
 
 <style scoped>
-/* ============================================
-   BASE
-   ============================================ */
+/* =========================================================
+   HEADER
+   ========================================================= */
 
-.pp-header {
+.profile-header {
+  --player-accent: #7c3aed;
+
   position: relative;
+
+  min-height: 370px;
+
+  margin: -24px -24px 24px;
+  padding: 28px;
+
+  overflow: hidden;
+
+  background:
+      radial-gradient(
+          circle at 75% 28%,
+          color-mix(
+              in srgb,
+              var(--player-accent) 30%,
+              transparent
+          ),
+          transparent 32%
+      ),
+      linear-gradient(
+          135deg,
+          #090912 0%,
+          #0d0e1e 50%,
+          #07070f 100%
+      );
+
+  border-bottom: 1px solid
+  color-mix(
+      in srgb,
+      var(--player-accent) 35%,
+      rgba(255, 255, 255, 0.06)
+  );
+}
+
+/* =========================================================
+   COVER
+   ========================================================= */
+
+.profile-header__cover {
+  position: absolute;
+  inset: 0;
+
+  z-index: 0;
+
+  background:
+      radial-gradient(
+          ellipse at 75% 15%,
+          color-mix(
+              in srgb,
+              var(--player-accent) 40%,
+              transparent
+          ),
+          transparent 45%
+      ),
+      radial-gradient(
+          ellipse at 15% 90%,
+          color-mix(
+              in srgb,
+              var(--player-accent) 13%,
+              transparent
+          ),
+          transparent 40%
+      );
+
+  background-size: cover;
+  background-position: center;
+
+  opacity: 0.9;
+}
+
+.profile-header__cover--image {
+  opacity: 0.7;
+}
+
+.profile-header__cover::after {
+  content: '';
+
+  position: absolute;
+  inset: 0;
+
+  background:
+      linear-gradient(
+          90deg,
+          rgba(5, 5, 13, 0.98) 0%,
+          rgba(5, 5, 13, 0.82) 42%,
+          rgba(5, 5, 13, 0.38) 100%
+      ),
+      linear-gradient(
+          0deg,
+          rgba(5, 5, 13, 0.98) 0%,
+          transparent 65%
+      );
+}
+
+/* =========================================================
+   BASE ATMOSPHERE
+   ========================================================= */
+
+.profile-header__aurora {
+  position: absolute;
+
+  z-index: 1;
+
+  width: 620px;
+  height: 260px;
+
+  right: -130px;
+  top: 20px;
+
+  background:
+      radial-gradient(
+          ellipse,
+          color-mix(
+              in srgb,
+              var(--player-accent) 34%,
+              transparent
+          ),
+          transparent 70%
+      );
+
+  filter: blur(30px);
+
+  transform: rotate(-12deg);
+
+  pointer-events: none;
+}
+
+.profile-header__grid {
+  position: absolute;
+  inset: 0;
+
+  z-index: 2;
+
+  background-image:
+      linear-gradient(
+          rgba(255, 255, 255, 0.035) 1px,
+          transparent 1px
+      ),
+      linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.035) 1px,
+          transparent 1px
+      );
+
+  background-size: 42px 42px;
+
+  mask-image: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.8),
+      transparent 92%
+  );
+
+  opacity: 0.45;
+
+  pointer-events: none;
+}
+
+.profile-header__noise {
+  position: absolute;
+  inset: 0;
+
+  z-index: 3;
+
+  background-image:
+      radial-gradient(
+          rgba(255, 255, 255, 0.08) 0.6px,
+          transparent 0.6px
+      );
+
+  background-size: 5px 5px;
+
+  opacity: 0.07;
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   FULL HEADER EFFECT
+   ========================================================= */
+
+.profile-header__effect {
+  position: absolute;
+  inset: -20%;
+
+  z-index: 4;
+
+  pointer-events: none;
+
+  opacity: 0.65;
+
+  mix-blend-mode: screen;
+
+  will-change: transform, opacity;
+}
+
+/* ---------------------------------------------------------
+   GLOW
+   --------------------------------------------------------- */
+
+.profile-header--effect-glow .profile-header__effect {
+  background:
+      radial-gradient(
+          ellipse at 72% 38%,
+          color-mix(
+              in srgb,
+              var(--profile-effect-color) 45%,
+              transparent
+          ),
+          transparent 52%
+      ),
+      radial-gradient(
+          ellipse at 20% 75%,
+          color-mix(
+              in srgb,
+              var(--profile-effect-color) 25%,
+              transparent
+          ),
+          transparent 55%
+      );
+
+  filter: blur(30px);
+
+  opacity: 0.72;
+}
+
+/* ---------------------------------------------------------
+   PULSE
+   --------------------------------------------------------- */
+
+.profile-header--effect-pulse .profile-header__effect {
+  background:
+      radial-gradient(
+          ellipse at 75% 30%,
+          color-mix(
+              in srgb,
+              var(--profile-effect-color) 50%,
+              transparent
+          ),
+          transparent 50%
+      ),
+      radial-gradient(
+          ellipse at 20% 80%,
+          color-mix(
+              in srgb,
+              var(--profile-effect-color) 24%,
+              transparent
+          ),
+          transparent 52%
+      );
+
+  filter: blur(35px);
+
+  animation: profilePulse 2.2s ease-in-out infinite;
+}
+
+/* ---------------------------------------------------------
+   GRADIENT
+   --------------------------------------------------------- */
+
+.profile-header--effect-gradient .profile-header__effect {
+  inset: -50%;
+
+  background:
+      var(--profile-effect-gradient);
+
+  opacity: 0.18;
+
+  filter: blur(50px);
+
+  transform: rotate(-10deg) scale(1.2);
+
+  animation: profileGradient 7s ease-in-out infinite;
+}
+
+/* ---------------------------------------------------------
+   FIRE
+   --------------------------------------------------------- */
+
+.profile-header--effect-fire .profile-header__effect {
+  inset: 15% -15% -40%;
+
+  background:
+      radial-gradient(
+          ellipse at 50% 100%,
+          rgba(250, 204, 21, 0.65) 0%,
+          rgba(249, 115, 22, 0.5) 20%,
+          rgba(239, 68, 68, 0.3) 42%,
+          transparent 72%
+      ),
+      radial-gradient(
+          ellipse at 20% 100%,
+          rgba(249, 115, 22, 0.28),
+          transparent 45%
+      ),
+      radial-gradient(
+          ellipse at 80% 100%,
+          rgba(239, 68, 68, 0.24),
+          transparent 45%
+      );
+
+  filter: blur(20px);
+
+  opacity: 0.82;
+
+  transform-origin: 50% 100%;
+
+  animation: profileFire 1.4s ease-in-out infinite alternate;
+}
+
+/* ---------------------------------------------------------
+   ICE
+   --------------------------------------------------------- */
+
+.profile-header--effect-ice .profile-header__effect {
+  background:
+      radial-gradient(
+          ellipse at 75% 20%,
+          rgba(165, 243, 252, 0.55),
+          transparent 30%
+      ),
+      radial-gradient(
+          ellipse at 25% 70%,
+          rgba(6, 182, 212, 0.38),
+          transparent 45%
+      ),
+      linear-gradient(
+          135deg,
+          rgba(6, 182, 212, 0.12),
+          rgba(165, 243, 252, 0.1)
+      );
+
+  filter: blur(24px);
+
+  opacity: 0.8;
+
+  animation: profileIce 4s ease-in-out infinite;
+}
+
+/* ---------------------------------------------------------
+   LEGENDARY
+   --------------------------------------------------------- */
+
+.profile-header--effect-legendary .profile-header__effect {
+  inset: -40%;
+
+  background:
+      radial-gradient(
+          ellipse at 72% 25%,
+          rgba(250, 204, 21, 0.5),
+          transparent 30%
+      ),
+      radial-gradient(
+          ellipse at 28% 75%,
+          rgba(249, 115, 22, 0.4),
+          transparent 38%
+      ),
+      conic-gradient(
+          from 0deg,
+          rgba(250, 204, 21, 0.08),
+          rgba(249, 115, 22, 0.16),
+          rgba(239, 68, 68, 0.08),
+          rgba(250, 204, 21, 0.14)
+      );
+
+  filter: blur(28px);
+
+  opacity: 0.72;
+
+  animation:
+      legendaryRotate 10s linear infinite,
+      legendaryPulse 2.8s ease-in-out infinite;
+}
+
+/* =========================================================
+   LEGENDARY PARTICLES
+   ========================================================= */
+
+.profile-header__effect-particles {
+  position: absolute;
+  inset: 0;
+
+  z-index: 5;
+
+  pointer-events: none;
+}
+
+.profile-header__effect-particles span {
+  position: absolute;
+
+  width: 3px;
+  height: 3px;
+
+  border-radius: 50%;
+
+  background: #facc15;
+
+  box-shadow:
+      0 0 8px #facc15,
+      0 0 18px rgba(249, 115, 22, 0.7);
+
+  animation: legendaryParticle 4s ease-in-out infinite;
+}
+
+.profile-header__effect-particles span:nth-child(1) {
+  left: 65%;
+  top: 25%;
+  animation-delay: -1s;
+}
+
+.profile-header__effect-particles span:nth-child(2) {
+  left: 78%;
+  top: 52%;
+  animation-delay: -2.5s;
+}
+
+.profile-header__effect-particles span:nth-child(3) {
+  left: 58%;
+  top: 68%;
+  animation-delay: -0.5s;
+}
+
+.profile-header__effect-particles span:nth-child(4) {
+  left: 88%;
+  top: 32%;
+  animation-delay: -3s;
+}
+
+.profile-header__effect-particles span:nth-child(5) {
+  left: 45%;
+  top: 18%;
+  animation-delay: -1.8s;
+}
+
+.profile-header__effect-particles span:nth-child(6) {
+  left: 82%;
+  top: 78%;
+  animation-delay: -3.5s;
+}
+
+/* =========================================================
+   TIER WATERMARK
+   ========================================================= */
+
+.profile-header__tier-watermark {
+  position: absolute;
+
+  right: 2%;
+  bottom: -15%;
+
+  z-index: 6;
+
+  color:
+      color-mix(
+          in srgb,
+          var(--player-accent) 12%,
+          transparent
+      );
+
+  font-size: clamp(180px, 23vw, 330px);
+
+  font-weight: 1000;
+
+  line-height: 0.8;
+
+  letter-spacing: -0.08em;
+
+  user-select: none;
+  pointer-events: none;
+
+  -webkit-text-stroke: 1px
+  color-mix(
+      in srgb,
+      var(--player-accent) 16%,
+      transparent
+  );
+
+  text-shadow:
+      0 0 70px
+      color-mix(
+          in srgb,
+          var(--player-accent) 20%,
+          transparent
+      );
+
+  opacity: 0.7;
+}
+
+/* =========================================================
+   TOP
+   ========================================================= */
+
+.profile-header__topline {
+  position: relative;
+
+  z-index: 20;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  padding: 20px;
-  background: #0d0d14;
-  background-size: cover;
-  background-position: center;
-  border-radius: 12px;
-  overflow: hidden;
-  min-height: 110px;
-}
 
-.pp-header--sm {
-  padding: 16px;
-  gap: 12px;
-  min-height: 90px;
-}
-
-.pp-header__left {
-  display: flex;
-  align-items: center;
   gap: 16px;
-  min-width: 0;
-  flex: 1;
 }
 
-.pp-header--sm .pp-header__left { gap: 12px; }
-
-.pp-header__info {
-  flex: 1;
-  min-width: 0;
-}
-
-.pp-header__name {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0 0 4px;
-  font-size: 20px;
-  font-weight: 800;
-  color: #fff;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.pp-header--sm .pp-header__name { font-size: 15px; }
-
-.verified {
-  display: inline-flex;
-  flex-shrink: 0;
-  filter: drop-shadow(0 0 6px rgba(29, 161, 242, 0.6));
-}
-
-.pp-header__right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-/* === EDIT BUTTON === */
-
-.pp-header__edit {
+.profile-header__eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
-  color: #fff;
-  background: rgba(124, 58, 237, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 9px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  backdrop-filter: blur(8px);
-  transition: all 0.2s ease;
-}
 
-.pp-header__edit:hover {
-  background: var(--accent, #7c3aed);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
-}
+  gap: 8px;
 
-.pp-header__edit--icon {
-  padding: 6px;
-  width: 28px;
-  height: 28px;
-  justify-content: center;
-}
+  color: rgba(255, 255, 255, 0.46);
 
-/* === TIER === */
-
-.pp-header__tier {
-  width: 56px;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid;
-  border-radius: 12px;
-  font-size: 24px;
+  font-size: 10px;
   font-weight: 900;
-  background: rgba(10, 10, 15, 0.85);
-  backdrop-filter: blur(8px);
-  transition: box-shadow 0.2s ease;
+
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
 }
 
-.pp-header__tier--sm {
+.profile-header__eyebrow-dot {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: var(--player-accent);
+
+  box-shadow:
+      0 0 12px
+      color-mix(
+          in srgb,
+          var(--player-accent) 90%,
+          transparent
+      );
+
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.profile-header__edit {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 7px;
+
+  min-height: 34px;
+
+  padding: 0 12px;
+
+  color: rgba(255, 255, 255, 0.72);
+
+  background: rgba(8, 8, 18, 0.62);
+
+  border: 1px solid rgba(255, 255, 255, 0.09);
+
+  border-radius: 8px;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  backdrop-filter: blur(12px);
+
+  transition:
+      color 0.2s ease,
+      border-color 0.2s ease,
+      background 0.2s ease,
+      transform 0.2s ease;
+}
+
+.profile-header__edit:hover {
+  color: #fff;
+
+  border-color:
+      color-mix(
+          in srgb,
+          var(--player-accent) 55%,
+          rgba(255, 255, 255, 0.1)
+      );
+
+  background:
+      color-mix(
+          in srgb,
+          var(--player-accent) 12%,
+          rgba(8, 8, 18, 0.7)
+      );
+
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   CONTENT
+   ========================================================= */
+
+.profile-header__content {
+  position: relative;
+
+  z-index: 15;
+
+  display: flex;
+  align-items: center;
+
+  gap: 25px;
+
+  min-height: 260px;
+
+  padding-top: 28px;
+}
+
+/* =========================================================
+   AVATAR
+   ========================================================= */
+
+.profile-header__avatar-wrap {
+  position: relative;
+
+  flex: 0 0 auto;
+
+  width: 122px;
+  height: 145px;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/*
+ * This glow belongs to the avatar.
+ * It does NOT come from profile_effect.
+ */
+
+.profile-header__avatar-glow {
+  position: absolute;
+
+  inset: -18px;
+
+  z-index: 0;
+
+  border-radius: 50%;
+
+  background:
+      color-mix(
+          in srgb,
+          var(--avatar-frame-color) 28%,
+          transparent
+      );
+
+  filter: blur(25px);
+
+  opacity: 0.7;
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   AVATAR FRAME
+   ========================================================= */
+
+.profile-header__avatar-frame {
+  position: relative;
+
+  z-index: 2;
+
+  width: 118px;
+  height: 118px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 4px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: transparent;
+
+  transition:
+      transform 0.25s ease,
+      filter 0.25s ease;
+}
+
+.profile-header__avatar-frame--custom {
+  box-shadow:
+      0 0 0 5px rgba(5, 5, 13, 0.72);
+}
+
+.profile-header__avatar-frame--glow {
+  filter:
+      drop-shadow(
+          0 0 10px
+          color-mix(
+              in srgb,
+              var(--avatar-frame-color) 80%,
+              transparent
+          )
+      )
+      drop-shadow(
+          0 0 25px
+          color-mix(
+              in srgb,
+              var(--avatar-frame-color) 45%,
+              transparent
+          )
+      );
+}
+
+.profile-header__avatar-frame-inner {
+  width: 100%;
+  height: 100%;
+
+  padding: 3px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: #080811;
+}
+
+.profile-header__avatar {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  border-radius: 50%;
+
+  background:
+      linear-gradient(
+          145deg,
+          color-mix(
+              in srgb,
+              var(--player-accent) 25%,
+              #111225
+          ),
+          #080811
+      );
+
+  color: #fff;
+
+  font-size: 40px;
+  font-weight: 950;
+}
+
+.profile-header__avatar img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  object-position: center;
+}
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+.profile-header__status {
+  position: absolute;
+
+  left: 50%;
+  bottom: 0;
+
+  z-index: 10;
+
+  transform: translateX(-50%);
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 5px;
+
+  padding: 4px 8px;
+
+  color: rgba(255, 255, 255, 0.65);
+
+  background: rgba(7, 7, 15, 0.92);
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  border-radius: 6px;
+
+  font-size: 8px;
+  font-weight: 900;
+
+  letter-spacing: 1px;
+
+  white-space: nowrap;
+
+  backdrop-filter: blur(10px);
+}
+
+.profile-header__status span {
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: #22c55e;
+
+  box-shadow:
+      0 0 8px rgba(34, 197, 94, 0.8);
+}
+
+/* =========================================================
+   IDENTITY
+   ========================================================= */
+
+.profile-header__identity {
+  min-width: 0;
+}
+
+/* =========================================================
+   TIER
+   ========================================================= */
+
+.tier-display {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  width: fit-content;
+
+  margin-bottom: 12px;
+
+  padding: 7px 14px 7px 7px;
+
+  border: 1px solid
+  color-mix(
+      in srgb,
+      var(--player-accent) 42%,
+      rgba(255, 255, 255, 0.08)
+  );
+
+  border-radius: 10px;
+
+  background:
+      linear-gradient(
+          135deg,
+          color-mix(
+              in srgb,
+              var(--player-accent) 13%,
+              rgba(8, 8, 18, 0.82)
+          ),
+          rgba(8, 8, 18, 0.68)
+      );
+
+  box-shadow:
+      0 8px 30px
+      color-mix(
+          in srgb,
+          var(--player-accent) 12%,
+          transparent
+      ),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  backdrop-filter: blur(14px);
+}
+
+.tier-display__icon {
+  position: relative;
+
+  display: grid;
+  place-items: center;
+
+  width: 52px;
+  height: 52px;
+
+  flex-shrink: 0;
+
+  background:
+      conic-gradient(
+          from 45deg,
+          transparent,
+          var(--player-accent),
+          rgba(255, 255, 255, 0.75),
+          var(--player-accent),
+          transparent
+      );
+
+  clip-path: polygon(
+      50% 0%,
+      88% 20%,
+      100% 58%,
+      76% 94%,
+      24% 94%,
+      0% 58%,
+      12% 20%
+  );
+
+  filter:
+      drop-shadow(
+          0 0 12px
+          color-mix(
+              in srgb,
+              var(--player-accent) 55%,
+              transparent
+          )
+      );
+}
+
+.tier-display__icon-inner {
+  display: grid;
+  place-items: center;
+
   width: 44px;
   height: 44px;
-  font-size: 19px;
-  border-radius: 10px;
+
+  clip-path: inherit;
+
+  background:
+      linear-gradient(
+          145deg,
+          color-mix(
+              in srgb,
+              var(--player-accent) 32%,
+              #121322
+          ),
+          #07070f
+      );
+
+  color: #fff;
+
+  font-size: 15px;
+  font-weight: 1000;
+
+  letter-spacing: -0.5px;
+
+  text-shadow:
+      0 0 12px
+      color-mix(
+          in srgb,
+          var(--player-accent) 80%,
+          transparent
+      );
 }
 
-/* ============================================
-   COMPACT MODE
-   ============================================ */
-
-.pp-header--compact {
-  padding: 10px 14px;
-  gap: 10px;
-  min-height: 0;
-  border-radius: 10px;
+.tier-display__info {
+  min-width: 100px;
 }
 
-.pp-header--compact .pp-header__left {
-  gap: 10px;
+.tier-display__eyebrow {
+  margin-bottom: 2px;
+
+  color: rgba(255, 255, 255, 0.35);
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 1.6px;
 }
 
-.pp-header--compact .pp-header__info {
+.tier-display__name {
+  color: #fff;
+
+  font-size: 17px;
+  line-height: 1.05;
+
+  font-weight: 950;
+
+  letter-spacing: 0.5px;
+
+  text-shadow:
+      0 0 20px
+      color-mix(
+          in srgb,
+          var(--player-accent) 28%,
+          transparent
+      );
+}
+
+.tier-display__subtitle {
+  margin-top: 4px;
+
+  color:
+      color-mix(
+          in srgb,
+          var(--player-accent) 80%,
+          white
+      );
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 1.1px;
+}
+
+.tier-display__ornament {
+  display: flex;
+  align-items: center;
+
+  gap: 3px;
+
+  margin-left: 5px;
+}
+
+.tier-display__ornament span {
+  display: block;
+
+  width: 2px;
+  height: 12px;
+
+  background: var(--player-accent);
+
+  opacity: 0.25;
+}
+
+.tier-display__ornament span:nth-child(2) {
+  height: 19px;
+
+  opacity: 0.55;
+}
+
+.tier-display__ornament span:nth-child(3) {
+  height: 27px;
+
+  opacity: 0.9;
+}
+
+/* =========================================================
+   NAME
+   ========================================================= */
+
+.profile-header__name {
+  margin: 0;
+
+  color: #fff;
+
+  font-size: clamp(32px, 4vw, 50px);
+
+  line-height: 0.95;
+
+  font-weight: 1000;
+
+  letter-spacing: -2px;
+
+  text-shadow:
+      0 3px 25px rgba(0, 0, 0, 0.5),
+      0 0 40px
+      color-mix(
+          in srgb,
+          var(--player-accent) 15%,
+          transparent
+      );
+}
+
+.profile-header__username {
+  margin: 8px 0 0;
+
+  color: rgba(255, 255, 255, 0.38);
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.profile-header__bio {
+  max-width: 520px;
+
+  margin: 12px 0 0;
+
+  color: rgba(255, 255, 255, 0.55);
+
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+/* =========================================================
+   STATS
+   ========================================================= */
+
+.profile-header__stats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 7px;
+
+  margin-top: 16px;
+}
+
+.profile-header__stat {
+  display: flex;
+  align-items: baseline;
+
+  gap: 7px;
+
+  padding: 7px 10px;
+
+  background: rgba(255, 255, 255, 0.035);
+
+  border: 1px solid rgba(255, 255, 255, 0.065);
+
+  border-radius: 7px;
+
+  backdrop-filter: blur(8px);
+}
+
+.profile-header__stat-label {
+  color: rgba(255, 255, 255, 0.3);
+
+  font-size: 8px;
+  font-weight: 900;
+
+  letter-spacing: 1px;
+}
+
+.profile-header__stat strong {
+  color: rgba(255, 255, 255, 0.85);
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+/* =========================================================
+   TIER PROGRESS
+   ========================================================= */
+
+.tier-progress {
+  width: min(400px, 100%);
+
+  margin-top: 16px;
+}
+
+.tier-progress__head {
+  display: flex;
+  justify-content: space-between;
+
+  margin-bottom: 5px;
+
+  color: rgba(255, 255, 255, 0.28);
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 1px;
+}
+
+.tier-progress__head strong {
+  color:
+      color-mix(
+          in srgb,
+          var(--player-accent) 80%,
+          white
+      );
+}
+
+.tier-progress__track {
+  position: relative;
+
+  height: 4px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.tier-progress__value {
+  position: relative;
+
+  height: 100%;
+
+  border-radius: inherit;
+
+  background:
+      linear-gradient(
+          90deg,
+          color-mix(
+              in srgb,
+              var(--player-accent) 65%,
+              transparent
+          ),
+          var(--player-accent),
+          rgba(255, 255, 255, 0.85)
+      );
+
+  box-shadow:
+      0 0 12px
+      color-mix(
+          in srgb,
+          var(--player-accent) 65%,
+          transparent
+      );
+}
+
+.tier-progress__value::after {
+  content: '';
+
+  position: absolute;
+
+  right: 0;
+  top: -3px;
+
+  width: 10px;
+  height: 10px;
+
+  border-radius: 50%;
+
+  background: #fff;
+
+  box-shadow:
+      0 0 12px
+      var(--player-accent);
+}
+
+/* =========================================================
+   RIGHT RANK MARK
+   ========================================================= */
+
+.profile-header__rank-mark {
+  position: absolute;
+
+  right: 7%;
+  top: 50%;
+
+  z-index: 12;
+
   display: flex;
   flex-direction: column;
-  gap: 2px;
-}
-
-.pp-header--compact .pp-header__name {
-  margin: 0;
-  font-size: 14px;
-  gap: 5px;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-}
-
-.pp-header--compact .verified {
-  filter: drop-shadow(0 0 4px rgba(29, 161, 242, 0.5));
-}
-
-.pp-header__bio {
-  margin: 0;
-  font-size: 11.5px;
-  line-height: 1.4;
-  color: #d1d1db;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-  word-break: break-word;
-}
-
-/* Цитата — без обрезки */
-.pp-header__quote {
-  margin: 2px 0 0;
-  font-size: 11.5px;
-  line-height: 1.4;
-  font-style: italic;
-  color: #b8b8c7;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-  word-break: break-word;
-}
-
-.pp-header--compact .pp-header__right {
-  flex-direction: row;
   align-items: center;
-  gap: 6px;
+
+  gap: 8px;
+
+  transform:
+      translateY(-50%)
+      rotate(4deg);
+
+  pointer-events: none;
+
+  opacity: 0.85;
 }
 
-.pp-header--compact .pp-header__tier {
-  width: 36px;
-  height: 36px;
-  font-size: 16px;
-  border-radius: 8px;
-  border-width: 1.5px;
+.rank-mark__outer {
+  display: grid;
+  place-items: center;
+
+  width: 180px;
+  height: 180px;
+
+  background:
+      conic-gradient(
+          from 0deg,
+          transparent,
+          color-mix(
+              in srgb,
+              var(--player-accent) 80%,
+              transparent
+          ),
+          transparent 90deg,
+          rgba(255, 255, 255, 0.4) 180deg,
+          transparent 220deg,
+          var(--player-accent) 300deg,
+          transparent
+      );
+
+  clip-path: polygon(
+      50% 0%,
+      91% 18%,
+      100% 50%,
+      91% 82%,
+      50% 100%,
+      9% 82%,
+      0% 50%,
+      9% 18%
+  );
+
+  filter:
+      drop-shadow(
+          0 0 22px
+          color-mix(
+              in srgb,
+              var(--player-accent) 30%,
+              transparent
+          )
+      );
 }
 
-/* ============================================
-   PROFILE EFFECTS
-   ============================================ */
+.rank-mark__middle {
+  display: grid;
+  place-items: center;
 
-.pp-header.effect-glow {
-  box-shadow: inset 0 0 40px color-mix(in srgb, var(--accent-color) 20%, transparent);
+  width: 166px;
+  height: 166px;
+
+  background:
+      linear-gradient(
+          145deg,
+          rgba(255, 255, 255, 0.13),
+          color-mix(
+              in srgb,
+              var(--player-accent) 12%,
+              #07070f
+          )
+      );
+
+  clip-path: inherit;
 }
 
-.pp-header.effect-pulse {
-  animation: profilePulse 3s infinite;
+.rank-mark__inner {
+  display: grid;
+  place-items: center;
+
+  width: 135px;
+  height: 135px;
+
+  background:
+      radial-gradient(
+          circle,
+          color-mix(
+              in srgb,
+              var(--player-accent) 18%,
+              #080811
+          ),
+          #050509 72%
+      );
+
+  clip-path: inherit;
+
+  color: #fff;
+
+  font-size: 39px;
+  font-weight: 1000;
+
+  letter-spacing: -2px;
+
+  text-shadow:
+      0 0 20px
+      color-mix(
+          in srgb,
+          var(--player-accent) 90%,
+          transparent
+      ),
+      0 3px 15px rgba(0, 0, 0, 0.8);
+}
+
+.rank-mark__label {
+  padding: 5px 10px;
+
+  color:
+      color-mix(
+          in srgb,
+          var(--player-accent) 80%,
+          white
+      );
+
+  background: rgba(5, 5, 12, 0.7);
+
+  border: 1px solid
+  color-mix(
+      in srgb,
+      var(--player-accent) 35%,
+      transparent
+  );
+
+  border-radius: 5px;
+
+  font-size: 8px;
+  font-weight: 950;
+
+  letter-spacing: 1.4px;
+
+  backdrop-filter: blur(8px);
+}
+
+/* =========================================================
+   BOTTOM DECORATION
+   ========================================================= */
+
+.profile-header__peak {
+  position: absolute;
+
+  right: 2%;
+  bottom: -5px;
+
+  z-index: 8;
+
+  width: 400px;
+  height: 150px;
+
+  opacity: 0.3;
+
+  pointer-events: none;
+}
+
+.profile-header__peak::before {
+  content: '';
+
+  position: absolute;
+
+  left: 50%;
+  bottom: 0;
+
+  width: 0;
+  height: 0;
+
+  border-left: 150px solid transparent;
+  border-right: 150px solid transparent;
+  border-bottom: 145px solid rgba(255, 255, 255, 0.045);
+
+  transform: translateX(-50%);
+}
+
+.profile-header__peak span {
+  position: absolute;
+
+  width: 0;
+  height: 0;
+
+  border-left: 45px solid transparent;
+  border-right: 45px solid transparent;
+  border-bottom: 65px solid rgba(255, 255, 255, 0.06);
+}
+
+.profile-header__peak span:nth-child(1) {
+  left: 20px;
+  bottom: 0;
+}
+
+.profile-header__peak span:nth-child(2) {
+  right: 10px;
+  bottom: 0;
+
+  transform: scale(1.3);
+}
+
+.profile-header__peak span:nth-child(3) {
+  left: 50%;
+  bottom: 55px;
+
+  transform:
+      translateX(-50%)
+      scale(0.55);
+}
+
+/* =========================================================
+   ACCENT LINE
+   ========================================================= */
+
+.profile-header__accent-line {
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  z-index: 30;
+
+  height: 2px;
+
+  background:
+      linear-gradient(
+          90deg,
+          transparent,
+          color-mix(
+              in srgb,
+              var(--player-accent) 95%,
+              transparent
+          ),
+          rgba(255, 255, 255, 0.8),
+          color-mix(
+              in srgb,
+              var(--player-accent) 95%,
+              transparent
+          ),
+          transparent
+      );
+
+  box-shadow:
+      0 0 18px
+      color-mix(
+          in srgb,
+          var(--player-accent) 45%,
+          transparent
+      );
+}
+
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(0.85);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes profilePulse {
-  0%, 100% {
-    box-shadow: inset 0 0 40px color-mix(in srgb, var(--accent-color) 15%, transparent);
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.95);
   }
+
   50% {
-    box-shadow: inset 0 0 60px color-mix(in srgb, var(--accent-color) 35%, transparent);
+    opacity: 0.75;
+    transform: scale(1.05);
   }
 }
 
-.pp-header.effect-gradient::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--accent-color) 15%, transparent) 0%,
-      transparent 40%,
-      color-mix(in srgb, var(--accent-color) 15%, transparent) 100%
-  );
-  pointer-events: none;
-}
-
-.pp-header.effect-fire::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 100% 0%, rgba(239, 68, 68, 0.3), transparent 50%);
-  pointer-events: none;
-  animation: fireFlicker 2s infinite;
-}
-
-@keyframes fireFlicker {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
-}
-
-.pp-header.effect-ice::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 0% 100%, rgba(6, 182, 212, 0.3), transparent 50%);
-  pointer-events: none;
-}
-
-.pp-header.effect-legendary {
-  border: 1px solid rgba(250, 204, 21, 0.4);
-}
-
-.pp-header.effect-legendary::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-      135deg,
-      rgba(250, 204, 21, 0.15),
-      transparent 40%,
-      rgba(249, 115, 22, 0.15)
-  );
-  pointer-events: none;
-  animation: legendaryShift 4s infinite;
-  background-size: 200% 200%;
-}
-
-@keyframes legendaryShift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-/* ============================================
-   MOBILE
-   ============================================ */
-
-@media (max-width: 600px) {
-  .pp-header--compact {
-    padding: 8px 12px;
-    gap: 8px;
+@keyframes profileGradient {
+  0% {
+    transform:
+        rotate(-10deg)
+        translate(-3%, -2%)
+        scale(1.15);
   }
 
-  .pp-header--compact .pp-header__name {
-    font-size: 13px;
+  50% {
+    transform:
+        rotate(10deg)
+        translate(3%, 2%)
+        scale(1.25);
   }
 
-  .pp-header--compact .pp-header__quote {
-    font-size: 10.5px;
+  100% {
+    transform:
+        rotate(-10deg)
+        translate(-3%, -2%)
+        scale(1.15);
+  }
+}
+
+@keyframes profileFire {
+  0% {
+    transform:
+        scaleY(0.94)
+        translateY(10px);
   }
 
-  .pp-header--compact .pp-header__tier {
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
+  100% {
+    transform:
+        scaleY(1.08)
+        translateY(-8px);
+  }
+}
+
+@keyframes profileIce {
+  0%,
+  100% {
+    transform:
+        translate3d(-2%, 0, 0)
+        scale(1);
+  }
+
+  50% {
+    transform:
+        translate3d(2%, -2%, 0)
+        scale(1.05);
+  }
+}
+
+@keyframes legendaryRotate {
+  from {
+    transform: rotate(0deg) scale(1.1);
+  }
+
+  to {
+    transform: rotate(360deg) scale(1.1);
+  }
+}
+
+@keyframes legendaryPulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes legendaryParticle {
+  0% {
+    transform:
+        translate3d(0, 15px, 0)
+        scale(0.5);
+
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  70% {
+    opacity: 0.8;
+  }
+
+  100% {
+    transform:
+        translate3d(15px, -55px, 0)
+        scale(1);
+
+    opacity: 0;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-header *,
+  .profile-header *::before,
+  .profile-header *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .profile-header__rank-mark {
+    right: 2%;
+
+    opacity: 0.45;
+
+    transform:
+        translateY(-50%)
+        rotate(4deg)
+        scale(0.8);
+  }
+}
+
+@media (max-width: 700px) {
+  .profile-header {
+    min-height: 0;
+
+    margin: -16px -16px 20px;
+
+    padding: 20px 18px 24px;
+  }
+
+  .profile-header__content {
+    align-items: flex-start;
+
+    gap: 18px;
+
+    padding-top: 30px;
+  }
+
+  .profile-header__avatar-wrap {
+    width: 82px;
+    height: 105px;
+  }
+
+  .profile-header__avatar-frame {
+    width: 78px;
+    height: 78px;
+  }
+
+  .profile-header__avatar {
+    font-size: 27px;
+  }
+
+  .profile-header__avatar-glow {
+    inset: -12px;
+  }
+
+  .profile-header__name {
+    font-size: 32px;
+
+    letter-spacing: -1.2px;
+  }
+
+  .profile-header__rank-mark {
+    right: -25px;
+    top: 34%;
+
+    transform:
+        rotate(4deg)
+        scale(0.55);
+
+    transform-origin: center;
+  }
+
+  .profile-header__tier-watermark {
+    right: -2%;
+
+    font-size: 180px;
+  }
+
+  .tier-display {
+    padding-right: 10px;
+  }
+
+  .tier-display__ornament {
+    display: none;
+  }
+
+  .profile-header--effect-fire .profile-header__effect {
+    inset: 20% -25% -25%;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-header__topline {
+    align-items: flex-start;
+  }
+
+  .profile-header__edit {
+    padding: 0 9px;
+  }
+
+  .profile-header__edit svg {
+    display: none;
+  }
+
+  .profile-header__content {
+    display: block;
+  }
+
+  .profile-header__avatar-wrap {
+    margin-bottom: 26px;
+  }
+
+  .profile-header__rank-mark {
+    display: none;
+  }
+
+  .profile-header__tier-watermark {
+    right: -15%;
+
+    bottom: -5%;
+
+    font-size: 150px;
+
+    opacity: 0.4;
+  }
+
+  .profile-header__name {
+    font-size: 31px;
+  }
+
+  .tier-display {
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .tier-display__name {
+    font-size: 15px;
+  }
+
+  .profile-header__effect {
+    opacity: 0.5;
+  }
+
+  .profile-header--effect-legendary .profile-header__effect-particles {
+    display: none;
   }
 }
 </style>

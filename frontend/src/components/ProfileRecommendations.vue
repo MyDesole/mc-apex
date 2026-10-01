@@ -174,148 +174,444 @@ async function hide(rec) {
 </template>
 
 <style scoped>
+/* ============================================================
+   RECOMMENDATIONS — APEX / CINEMATIC
+   ============================================================ */
+
 .recommendations {
+  position: relative;
+
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 13px;
+
   padding: 16px;
-  background: linear-gradient(180deg, #171a21 0%, #10131a 100%);
-  border: 1px solid var(--border);
+
+  overflow: hidden;
+
+  background:
+      linear-gradient(
+          145deg,
+          rgba(139, 92, 246, .055),
+          rgba(9, 10, 24, .98)
+      );
+
+  border: 1px solid rgba(255, 255, 255, .065);
   border-radius: 16px;
+
+  box-shadow:
+      0 16px 40px rgba(0, 0, 0, .28),
+      inset 0 1px rgba(255, 255, 255, .035);
 }
 
+/* ambient purple light */
+.recommendations::before {
+  content: '';
+  position: absolute;
+  top: -90px;
+  right: -80px;
+
+  width: 190px;
+  height: 190px;
+
+  border-radius: 50%;
+
+  background:
+      radial-gradient(
+          circle,
+          rgba(139, 92, 246, .1),
+          transparent 70%
+      );
+
+  pointer-events: none;
+}
+
+/* bottom cinematic line */
+.recommendations::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 1px;
+
+  background:
+      linear-gradient(
+          90deg,
+          transparent,
+          rgba(139, 92, 246, .22),
+          transparent
+      );
+
+  pointer-events: none;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
 .recommendations__head {
+  position: relative;
+  z-index: 1;
+
   display: flex;
+  align-items: flex-end;
   justify-content: space-between;
-  align-items: baseline;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 10px;
+
+  padding-bottom: 11px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, .055);
 }
 
 .recommendations__title {
+  position: relative;
+
   margin: 0;
+  padding-left: 11px;
+
+  color: #e2e8f0;
+
   font-size: 12px;
-  font-weight: 800;
-  color: #c7d5e0;
+  font-weight: 900;
+
   text-transform: uppercase;
-  letter-spacing: 1.2px;
+  letter-spacing: 1.5px;
+}
+
+.recommendations__title::before {
+  content: '';
+
+  position: absolute;
+  left: 0;
+  top: 50%;
+
+  width: 4px;
+  height: 4px;
+
+  transform: translateY(-50%);
+
+  border-radius: 50%;
+
+  background: #8b5cf6;
+
+  box-shadow:
+      0 0 7px #8b5cf6,
+      0 0 14px rgba(139, 92, 246, .45);
 }
 
 .recommendations__count {
-  font-size: 11px;
-  color: #4a5568;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+
+  color: #64748b;
+
+  background: rgba(255, 255, 255, .025);
+
+  border: 1px solid rgba(255, 255, 255, .05);
+  border-radius: 5px;
+
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .4px;
 }
 
+/* ============================================================
+   ACTIONS
+   ============================================================ */
+
 .recommendations__actions {
+  position: relative;
+  z-index: 1;
+
   display: flex;
   gap: 6px;
 }
 
 .btn-write {
+  position: relative;
+
   flex: 1;
+
+  min-height: 34px;
   padding: 8px 12px;
+
   color: #fff;
-  background: #7c3aed;
-  border: 0;
+
+  background:
+      linear-gradient(
+          135deg,
+          #8b5cf6,
+          #6d28d9
+      );
+
+  border: 1px solid rgba(167, 139, 250, .28);
   border-radius: 8px;
-  font-size: 12px;
-  font-weight: 700;
+
+  font-size: 11px;
+  font-weight: 900;
+
+  letter-spacing: .15px;
+
   cursor: pointer;
-  transition: all 0.15s;
+
+  box-shadow:
+      0 5px 16px rgba(109, 40, 217, .2),
+      inset 0 1px rgba(255, 255, 255, .1);
+
+  transition:
+      transform .18s ease,
+      border-color .18s ease,
+      box-shadow .18s ease,
+      background .18s ease;
 }
 
-.btn-write:hover { background: #8b5cf6; }
+.btn-write:hover {
+  transform: translateY(-1px);
+
+  background:
+      linear-gradient(
+          135deg,
+          #9a6bff,
+          #7c3aed
+      );
+
+  border-color: rgba(167, 139, 250, .45);
+
+  box-shadow:
+      0 8px 22px rgba(109, 40, 217, .28),
+      0 0 16px rgba(139, 92, 246, .12),
+      inset 0 1px rgba(255, 255, 255, .12);
+}
+
+.btn-write:active {
+  transform: translateY(0);
+}
 
 .btn-write--edit {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-dim);
+  color: #a7b0c0;
+
+  background:
+      rgba(255, 255, 255, .025);
+
+  border: 1px solid rgba(255, 255, 255, .07);
+
+  box-shadow: inset 0 1px rgba(255, 255, 255, .025);
 }
 
-.btn-write--edit:hover { color: var(--text); border-color: var(--border-hover); background: rgba(255,255,255,0.03); }
+.btn-write--edit:hover {
+  color: #ddd6fe;
+
+  background: rgba(139, 92, 246, .07);
+
+  border-color: rgba(139, 92, 246, .3);
+
+  box-shadow:
+      0 0 16px rgba(139, 92, 246, .08);
+}
 
 .my-rec-actions {
   display: flex;
-  gap: 6px;
   flex: 1;
+  gap: 6px;
 }
+
+/* ============================================================
+   REMOVE
+   ============================================================ */
 
 .btn-remove {
-  padding: 8px 12px;
+  min-height: 34px;
+  padding: 8px 11px;
+
   color: #f87171;
-  background: transparent;
-  border: 1px solid rgba(239, 68, 68, 0.25);
+
+  background: rgba(239, 68, 68, .025);
+
+  border: 1px solid rgba(239, 68, 68, .2);
   border-radius: 8px;
-  font-size: 12px;
-  font-weight: 700;
+
+  font-size: 10px;
+  font-weight: 900;
+
   cursor: pointer;
+
+  transition:
+      background .18s ease,
+      border-color .18s ease,
+      box-shadow .18s ease;
 }
 
-.btn-remove:hover { background: rgba(239, 68, 68, 0.08); }
+.btn-remove:hover {
+  background: rgba(239, 68, 68, .08);
+  border-color: rgba(239, 68, 68, .35);
+
+  box-shadow:
+      0 0 14px rgba(239, 68, 68, .08);
+}
+
+/* ============================================================
+   FORM
+   ============================================================ */
 
 .rec-form {
+  position: relative;
+  z-index: 1;
+
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 9px;
+
   padding: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+
+  background:
+      linear-gradient(
+          145deg,
+          rgba(139, 92, 246, .055),
+          rgba(255, 255, 255, .018)
+      );
+
+  border: 1px solid rgba(139, 92, 246, .16);
+  border-radius: 11px;
+
+  box-shadow:
+      inset 0 1px rgba(255, 255, 255, .025);
 }
 
 .rec-form textarea {
   width: 100%;
-  padding: 10px;
-  color: var(--text);
-  background: #0d0d14;
-  border: 1px solid var(--border);
+  min-height: 74px;
+
+  box-sizing: border-box;
+
+  padding: 10px 11px;
+
+  color: #e2e8f0;
+
+  background:
+      linear-gradient(
+          145deg,
+          #0d0e1a,
+          #090a14
+      );
+
+  border: 1px solid rgba(255, 255, 255, .07);
   border-radius: 8px;
-  font: inherit;
-  font-size: 12.5px;
-  resize: vertical;
+
   outline: none;
+
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.45;
+
+  resize: vertical;
+
+  transition:
+      border-color .18s ease,
+      box-shadow .18s ease;
 }
 
-.rec-form textarea:focus { border-color: var(--accent); }
+.rec-form textarea::placeholder {
+  color: #475569;
+}
+
+.rec-form textarea:focus {
+  border-color: rgba(139, 92, 246, .45);
+
+  box-shadow:
+      0 0 0 3px rgba(139, 92, 246, .08),
+      0 0 18px rgba(139, 92, 246, .06);
+}
 
 .rec-form__meta {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .rec-form__counter {
-  font-size: 10px;
-  color: var(--text-muted);
-  font-weight: 600;
+  color: #475569;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: .5px;
+  text-transform: uppercase;
 }
 
 .rec-form__stars {
   display: flex;
-  gap: 2px;
+  align-items: center;
+  gap: 1px;
 }
+
+/* ============================================================
+   STARS
+   ============================================================ */
 
 .star {
+  width: 20px;
+  height: 22px;
+
+  padding: 0;
+
+  color: rgba(255, 255, 255, .12);
+
   background: transparent;
   border: 0;
-  color: rgba(255,255,255,0.15);
-  font-size: 16px;
+
+  font-size: 17px;
+  line-height: 1;
+
   cursor: pointer;
-  transition: color 0.15s, transform 0.15s;
-  padding: 0;
+
+  transition:
+      color .15s ease,
+      transform .15s ease,
+      filter .15s ease;
 }
 
-.star:hover { transform: scale(1.15); }
-.star--active { color: #facc15; }
+.star:hover {
+  color: rgba(250, 204, 21, .65);
+  transform: scale(1.12);
+}
+
+.star--active {
+  color: #facc15;
+
+  filter:
+      drop-shadow(0 0 5px rgba(250, 204, 21, .35));
+}
+
+/* ============================================================
+   FORM ERROR
+   ============================================================ */
 
 .rec-form__error {
-  padding: 6px 8px;
+  padding: 7px 9px;
+
   color: #fca5a5;
-  background: rgba(239, 68, 68, 0.08);
+
+  background:
+      rgba(239, 68, 68, .055);
+
+  border: 1px solid rgba(239, 68, 68, .12);
   border-radius: 6px;
-  font-size: 11px;
+
+  font-size: 10px;
+  font-weight: 700;
 }
+
+/* ============================================================
+   FORM ACTIONS
+   ============================================================ */
 
 .rec-form__actions {
   display: flex;
@@ -323,95 +619,251 @@ async function hide(rec) {
   gap: 6px;
 }
 
-.btn-cancel, .btn-save {
-  padding: 7px 14px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 700;
+.btn-cancel,
+.btn-save {
+  min-height: 30px;
+  padding: 7px 13px;
+
+  border-radius: 7px;
+
+  font-size: 10px;
+  font-weight: 900;
+
   cursor: pointer;
-  border: 0;
 }
 
 .btn-cancel {
-  color: var(--text-dim);
-  background: transparent;
-  border: 1px solid var(--border);
+  color: #64748b;
+
+  background: rgba(255, 255, 255, .02);
+
+  border: 1px solid rgba(255, 255, 255, .065);
+
+  transition:
+      color .15s ease,
+      border-color .15s ease,
+      background .15s ease;
+}
+
+.btn-cancel:hover {
+  color: #cbd5e1;
+
+  background: rgba(255, 255, 255, .04);
+  border-color: rgba(255, 255, 255, .1);
 }
 
 .btn-save {
   color: #fff;
-  background: #7c3aed;
+
+  background:
+      linear-gradient(
+          135deg,
+          #8b5cf6,
+          #6d28d9
+      );
+
+  border: 1px solid rgba(167, 139, 250, .25);
+
+  box-shadow:
+      0 4px 12px rgba(109, 40, 217, .18);
 }
 
-.btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-save:hover:not(:disabled) {
+  box-shadow:
+      0 6px 18px rgba(109, 40, 217, .28);
+}
+
+.btn-save:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   EMPTY
+   ============================================================ */
 
 .rec-empty {
-  padding: 20px;
+  position: relative;
+  z-index: 1;
+
+  padding: 20px 12px;
+
+  color: #475569;
+
+  background:
+      rgba(255, 255, 255, .015);
+
+  border: 1px dashed rgba(255, 255, 255, .055);
+  border-radius: 9px;
+
   text-align: center;
-  color: var(--text-muted);
-  font-size: 12px;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+  letter-spacing: .7px;
 }
+
+/* ============================================================
+   LIST
+   ============================================================ */
 
 .rec-list {
+  position: relative;
+  z-index: 1;
+
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  list-style: none;
-  padding: 0;
+  gap: 7px;
+
   margin: 0;
+  padding: 0;
+
+  list-style: none;
 }
 
+/* ============================================================
+   RECOMMENDATION
+   ============================================================ */
+
 .rec {
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+
+  padding: 11px 12px;
+
+  background:
+      linear-gradient(
+          145deg,
+          rgba(255, 255, 255, .028),
+          rgba(255, 255, 255, .012)
+      );
+
+  border: 1px solid rgba(255, 255, 255, .055);
   border-radius: 10px;
+
+  box-shadow:
+      inset 0 1px rgba(255, 255, 255, .018);
+
+  transition:
+      border-color .18s ease,
+      background .18s ease,
+      transform .18s ease;
+}
+
+.rec:hover {
+  transform: translateY(-1px);
+
+  background:
+      linear-gradient(
+          145deg,
+          rgba(139, 92, 246, .045),
+          rgba(255, 255, 255, .015)
+      );
+
+  border-color: rgba(139, 92, 246, .16);
 }
 
 .rec--mine {
-  border-color: rgba(139, 92, 246, 0.4);
-  background: rgba(124, 58, 237, 0.08);
+  background:
+      linear-gradient(
+          145deg,
+          rgba(139, 92, 246, .085),
+          rgba(109, 40, 217, .035)
+      );
+
+  border-color: rgba(139, 92, 246, .3);
+
+  box-shadow:
+      inset 2px 0 rgba(139, 92, 246, .55),
+      inset 0 1px rgba(255, 255, 255, .025);
 }
+
+/* ============================================================
+   REC HEADER
+   ============================================================ */
 
 .rec__head {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
+  justify-content: space-between;
   gap: 8px;
-  margin-bottom: 6px;
+
+  margin-bottom: 7px;
 }
 
 .rec__author {
   display: flex;
   align-items: center;
   gap: 8px;
-  text-decoration: none;
+
   flex: 1;
   min-width: 0;
+
+  color: inherit;
+
+  text-decoration: none;
 }
 
 .rec__avatar {
   position: relative;
-  width: 28px;
-  height: 28px;
+
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+
+  overflow: hidden;
+
+  color: #c4b5fd;
+
+  background:
+      radial-gradient(
+          circle at 50% 35%,
+          rgba(139, 92, 246, .2),
+          transparent 65%
+      ),
+      #0c0d19;
+
+  border: 1px solid rgba(139, 92, 246, .22);
   border-radius: 7px;
-  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-  color: #fff;
+
   font-size: 12px;
   font-weight: 900;
-  overflow: hidden;
+
+  box-shadow:
+      inset 0 1px rgba(255, 255, 255, .035);
+}
+
+.rec__avatar::after {
+  content: '';
+
+  position: absolute;
+  inset: 0;
+
+  background:
+      linear-gradient(
+          135deg,
+          rgba(255, 255, 255, .08),
+          transparent 45%
+      );
+
+  pointer-events: none;
 }
 
 .rec__avatar img {
   position: absolute;
   inset: 0;
+
   width: 100%;
   height: 100%;
+
   object-fit: cover;
+
+  display: block;
 }
 
 .rec__author-info {
@@ -419,9 +871,11 @@ async function hide(rec) {
 }
 
 .rec__author-name {
-  font-size: 12px;
-  font-weight: 700;
-  color: #e5e7eb;
+  color: #dbe3ef;
+
+  font-size: 11px;
+  font-weight: 850;
+
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -429,41 +883,153 @@ async function hide(rec) {
 
 .rec__stars {
   display: flex;
+  align-items: center;
   gap: 1px;
+
+  margin-top: 2px;
+
+  color: rgba(255, 255, 255, .12);
+
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.15);
   line-height: 1;
 }
 
-.star-filled { color: #facc15; }
+.star-filled {
+  color: #facc15;
 
-.rec__hide {
-  padding: 2px 6px;
-  color: var(--text-muted);
-  background: transparent;
-  border: 0;
-  font-size: 10px;
-  cursor: pointer;
-  border-radius: 4px;
+  filter:
+      drop-shadow(0 0 4px rgba(250, 204, 21, .3));
 }
 
-.rec__hide:hover { color: #f87171; background: rgba(239, 68, 68, 0.08); }
+/* ============================================================
+   HIDE
+   ============================================================ */
+
+.rec__hide {
+  padding: 3px 6px;
+
+  color: #475569;
+
+  background: transparent;
+
+  border: 1px solid transparent;
+  border-radius: 5px;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+      color .15s ease,
+      background .15s ease,
+      border-color .15s ease;
+}
+
+.rec__hide:hover {
+  color: #f87171;
+
+  background: rgba(239, 68, 68, .06);
+
+  border-color: rgba(239, 68, 68, .12);
+}
+
+/* ============================================================
+   BODY
+   ============================================================ */
 
 .rec__body {
   margin: 0;
-  color: #d1d1db;
-  font-size: 12.5px;
-  line-height: 1.5;
+
+  color: #aeb8c8;
+
+  font-size: 11.5px;
+  line-height: 1.55;
+
   white-space: pre-wrap;
   word-break: break-word;
 }
 
+/* ============================================================
+   DATE
+   ============================================================ */
+
 .rec__date {
-  margin-top: 6px;
-  font-size: 10px;
-  color: var(--text-muted);
-  font-weight: 600;
+  margin-top: 8px;
+
+  color: #475569;
+
+  font-size: 8px;
+  font-weight: 800;
+
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: .55px;
+}
+
+/* ============================================================
+   FOCUS
+   ============================================================ */
+
+.btn-write:focus-visible,
+.btn-remove:focus-visible,
+.btn-cancel:focus-visible,
+.btn-save:focus-visible,
+.star:focus-visible,
+.rec__hide:focus-visible {
+  outline: 2px solid #8b5cf6;
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 600px) {
+  .recommendations {
+    padding: 13px;
+    border-radius: 15px;
+  }
+
+  .recommendations__actions,
+  .my-rec-actions {
+    gap: 5px;
+  }
+
+  .btn-write {
+    min-height: 33px;
+    padding: 7px 9px;
+    font-size: 10px;
+  }
+
+  .btn-remove {
+    padding: 7px 9px;
+    font-size: 9px;
+  }
+
+  .rec {
+    padding: 10px;
+    border-radius: 9px;
+  }
+
+  .rec__body {
+    font-size: 11px;
+  }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-write,
+  .btn-remove,
+  .btn-cancel,
+  .btn-save,
+  .star,
+  .rec,
+  .rec-form textarea,
+  .rec__hide {
+    transition: none;
+  }
 }
 </style>

@@ -2,231 +2,320 @@
 import { computed } from 'vue'
 
 const props = defineProps({
-  achievements: { type: Array, default: () => [] },
+  achievements: {
+    type: Array,
+    default: () => [],
+  },
 })
 
 const emit = defineEmits(['open'])
 
-const rows = computed(() => {
-  const list = props.achievements
-  const out = []
-  for (let i = 0; i < list.length; i += 4) out.push(list.slice(i, i + 4))
-  return out
-})
+const achievements = computed(() => props.achievements ?? [])
 
-const rarityColors = {
-  common: '#7c3aed', rare: '#06b6d4', epic: '#f97316', legendary: '#facc15',
+function achievementColor(achievement) {
+  return achievement?.color || '#8b5cf6'
 }
 
-function color(a) {
-  return a?.color || rarityColors[a?.rarity] || '#7c3aed'
+function openAchievement(achievement) {
+  emit('open', achievement)
 }
 </script>
 
 <template>
-  <aside v-if="achievements.length" class="showcase">
-    <header class="showcase__head">
-      <h3 class="showcase__title">Достижения</h3>
-      <span class="showcase__count">{{ achievements.length }}</span>
-    </header>
+  <section class="showcase">
+    <div class="showcase__top">
+      <div>
+        <span class="showcase__kicker">ДОСТИЖЕНИЯ</span>
 
-    <div class="showcase__rows">
-      <div v-for="(row, ri) in rows" :key="ri" class="showcase__row">
-        <button
-            v-for="a in row"
-            :key="a.id"
-            type="button"
-            class="showcase__cell"
-            :style="{ '--color': color(a) }"
-            @click="emit('open', a)"
-        >
-          <div class="showcase__icon">{{ a.icon }}</div>
-          <div class="showcase__meta">
-            <span class="showcase__name">{{ a.name }}</span>
-          </div>
-        </button>
+        <div class="showcase__title-row">
+          <h3 class="showcase__title">Трофеи</h3>
 
-        <div
-            v-for="n in (4 - row.length)"
-            :key="'e-' + ri + '-' + n"
-            class="showcase__cell showcase__cell--empty"
-        >
-          <div class="showcase__icon showcase__icon--empty">?</div>
+          <span class="showcase__count">
+            {{ achievements.length }}
+          </span>
         </div>
       </div>
+
+      <div class="showcase__symbol">✦</div>
     </div>
-  </aside>
+
+    <div v-if="achievements.length" class="achievement-grid">
+      <button
+          v-for="achievement in achievements"
+          :key="achievement.id"
+          type="button"
+          class="achievement"
+          :style="{ '--achievement-color': achievementColor(achievement) }"
+          @click="openAchievement(achievement)"
+      >
+        <span class="achievement__icon">
+          {{ achievement.icon || '✦' }}
+        </span>
+
+        <span class="achievement__content">
+          <span class="achievement__name">
+            {{ achievement.name }}
+          </span>
+
+          <span
+              v-if="achievement.description"
+              class="achievement__description"
+          >
+            {{ achievement.description }}
+          </span>
+        </span>
+
+        <span class="achievement__arrow">›</span>
+      </button>
+    </div>
+
+    <div v-else class="showcase-empty">
+      <div class="showcase-empty__icon">✦</div>
+
+      <div>
+        <strong>Пока нет достижений</strong>
+        <span>Здесь появятся твои трофеи</span>
+      </div>
+    </div>
+  </section>
 </template>
 
 <style scoped>
 .showcase {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  background: linear-gradient(180deg, #171a21 0%, #10131a 100%);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  padding: 14px;
+  border: 1px solid rgba(139, 92, 246, 0.16);
+  border-radius: 14px;
+  background:
+      radial-gradient(
+          circle at 100% 0%,
+          rgba(124, 58, 237, 0.1),
+          transparent 38%
+      ),
+      linear-gradient(145deg, rgba(14, 13, 31, 0.96), rgba(7, 8, 18, 0.96));
+  box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.025),
+      0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
-.showcase__head {
+.showcase__top {
+  position: relative;
+  z-index: 1;
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: baseline;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 12px;
+}
+
+.showcase__kicker {
+  display: block;
+  margin-bottom: 2px;
+  color: #8b5cf6;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+}
+
+.showcase__title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .showcase__title {
   margin: 0;
-  font-size: 12px;
-  font-weight: 800;
-  color: #c7d5e0;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
+  color: #f5f3ff;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: -0.025em;
 }
 
 .showcase__count {
-  font-size: 11px;
-  color: #4a5568;
-  font-weight: 700;
-}
-
-.showcase__rows {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.showcase__row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-}
-
-/* === CELL === */
-
-.showcase__cell {
-  position: relative;
-  aspect-ratio: 1;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  font: inherit;
-  color: inherit;
-  border-radius: 6px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  overflow: hidden;
+  min-width: 20px;
+  height: 17px;
+  padding: 0 5px;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 5px;
+  background: rgba(139, 92, 246, 0.08);
+  color: #a78bfa;
+  font-size: 9px;
+  font-weight: 900;
 }
 
-.showcase__cell:hover {
-  transform: translateY(-2px);
-  border-color: var(--color);
-  box-shadow:
-      0 6px 18px color-mix(in srgb, var(--color) 35%, transparent),
-      inset 0 0 0 1px color-mix(in srgb, var(--color) 60%, transparent);
+.showcase__symbol {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid rgba(250, 204, 21, 0.18);
+  border-radius: 8px;
+  background: rgba(250, 204, 21, 0.06);
+  color: #facc15;
+  font-size: 14px;
 }
 
-.showcase__cell::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 50%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent);
-  pointer-events: none;
-}
-
-.showcase__cell::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at center, color-mix(in srgb, var(--color) 30%, transparent), transparent 70%);
-  opacity: 0;
-  transition: opacity 0.2s;
-  pointer-events: none;
-}
-
-.showcase__cell:hover::after {
-  opacity: 1;
-}
-
-/* === ICON === */
-
-.showcase__icon {
-  font-size: 28px;
-  line-height: 1;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
+.achievement-grid {
   position: relative;
   z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
 }
 
-/* === EMPTY CELL === */
-
-.showcase__cell--empty {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.showcase__cell--empty:hover {
-  transform: none;
-  border-color: rgba(255, 255, 255, 0.06);
-  box-shadow: none;
-}
-
-.showcase__cell--empty::after {
-  display: none;
-}
-
-.showcase__icon--empty {
-  font-size: 16px;
-  font-weight: 800;
-  color: rgba(255, 255, 255, 0.15);
-}
-
-/* === META (name on hover) === */
-
-.showcase__meta {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 6px 8px;
-  background: linear-gradient(0deg, rgba(0, 0, 0, 0.9), transparent);
-  font-size: 10px;
-  color: #c7d5e0;
-  transform: translateY(100%);
-  transition: transform 0.2s ease;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.showcase__cell:hover .showcase__meta {
-  transform: translateY(0);
-}
-
-.showcase__name {
-  display: block;
-  font-weight: 700;
+.achievement {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 52px;
+  padding: 7px 9px;
   overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.018);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+      transform 0.18s ease,
+      border-color 0.18s ease,
+      background 0.18s ease;
+}
+
+.achievement:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(
+      in srgb,
+      var(--achievement-color) 38%,
+      transparent
+  );
+  background: color-mix(
+      in srgb,
+      var(--achievement-color) 6%,
+      rgba(255, 255, 255, 0.018)
+  );
+}
+
+.achievement__icon {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid color-mix(
+      in srgb,
+      var(--achievement-color) 28%,
+      transparent
+  );
+  border-radius: 8px;
+  background: color-mix(
+      in srgb,
+      var(--achievement-color) 9%,
+      rgba(0, 0, 0, 0.35)
+  );
+  color: var(--achievement-color);
+  font-size: 15px;
+  line-height: 1;
+}
+
+.achievement__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 8px;
+}
+
+.achievement__name {
+  overflow: hidden;
+  color: #eeeafd;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* === АДАПТИВ === */
+.achievement__description {
+  overflow: hidden;
+  color: #707187;
+  font-size: 8px;
+  font-weight: 500;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.achievement__arrow {
+  position: relative;
+  z-index: 1;
+  margin-left: 6px;
+  color: #4e5062;
+  font-size: 16px;
+  line-height: 1;
+  transition:
+      color 0.18s ease,
+      transform 0.18s ease;
+}
+
+.achievement:hover .achievement__arrow {
+  color: var(--achievement-color);
+  transform: translateX(2px);
+}
+
+.showcase-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 2px 2px;
+  color: #77788b;
+}
+
+.showcase-empty__icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  border: 1px solid rgba(139, 92, 246, 0.14);
+  border-radius: 8px;
+  background: rgba(139, 92, 246, 0.05);
+  color: #6250a0;
+  font-size: 13px;
+}
+
+.showcase-empty div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.showcase-empty strong {
+  color: #aaa9ba;
+  font-size: 10px;
+}
+
+.showcase-empty span {
+  font-size: 8px;
+  color: #5f6072;
+}
 
 @media (max-width: 600px) {
   .showcase {
     padding: 12px;
   }
 
-  .showcase__icon {
-    font-size: 22px;
+  .achievement-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

@@ -109,8 +109,7 @@ class PlayerController extends Controller
         })
             ->filter(fn ($p) => $p['rating_score'] > 0)
             ->sortByDesc('rating_score')
-            ->values()
-            ->take(10);
+            ->values();
 
         return response()->json(['data' => $mapped]);
     }

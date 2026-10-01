@@ -46,114 +46,435 @@ const list = computed(() => props.friends)
 </template>
 
 <style scoped>
+/* ============================================================
+   FRIENDS
+   ============================================================ */
+
 .friends {
+  position: relative;
+
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 13px;
+
   padding: 16px;
-  background: linear-gradient(180deg, #171a21 0%, #10131a 100%);
-  border: 1px solid var(--border);
+
+  overflow: hidden;
+
+  background:
+      linear-gradient(
+          145deg,
+          rgba(139, 92, 246, .055),
+          rgba(9, 10, 24, .97)
+      );
+
+  border: 1px solid rgba(255, 255, 255, .065);
   border-radius: 16px;
+
+  box-shadow:
+      0 16px 40px rgba(0, 0, 0, .28),
+      inset 0 1px rgba(255, 255, 255, .035);
 }
 
+/* Ambient glow */
+
+.friends::before {
+  content: '';
+
+  position: absolute;
+
+  top: -70px;
+  right: -70px;
+
+  width: 170px;
+  height: 170px;
+
+  border-radius: 50%;
+
+  background:
+      radial-gradient(
+          circle,
+          rgba(139, 92, 246, .09),
+          transparent 70%
+      );
+
+  pointer-events: none;
+}
+
+.friends::after {
+  content: '';
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 1px;
+
+  background:
+      linear-gradient(
+          90deg,
+          transparent,
+          rgba(139, 92, 246, .2),
+          transparent
+      );
+
+  pointer-events: none;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
 .friends__head {
+  position: relative;
+  z-index: 1;
+
   display: flex;
+  align-items: flex-end;
   justify-content: space-between;
-  align-items: baseline;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+  gap: 10px;
+
+  padding-bottom: 11px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, .055);
 }
 
 .friends__title {
+  position: relative;
+
   margin: 0;
+  padding-left: 11px;
+
+  color: #e2e8f0;
+
   font-size: 12px;
-  font-weight: 800;
-  color: #c7d5e0;
+  font-weight: 900;
+
   text-transform: uppercase;
-  letter-spacing: 1.2px;
+  letter-spacing: 1.5px;
+}
+
+.friends__title::before {
+  content: '';
+
+  position: absolute;
+
+  left: 0;
+  top: 50%;
+
+  width: 4px;
+  height: 4px;
+
+  transform: translateY(-50%);
+
+  border-radius: 50%;
+
+  background: #8b5cf6;
+
+  box-shadow:
+      0 0 7px #8b5cf6,
+      0 0 14px rgba(139, 92, 246, .45);
 }
 
 .friends__count {
-  font-size: 11px;
-  color: #4a5568;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 20px;
+  height: 18px;
+
+  padding: 0 6px;
+
+  color: #64748b;
+
+  background: rgba(255, 255, 255, .025);
+
+  border: 1px solid rgba(255, 255, 255, .05);
+  border-radius: 5px;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  letter-spacing: .4px;
 }
+
+/* ============================================================
+   FRIEND GRID
+   ============================================================ */
 
 .friends__grid {
+  position: relative;
+  z-index: 1;
+
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
+
+  grid-template-columns:
+      repeat(4, minmax(0, 1fr));
+
+  gap: 7px;
 }
 
-/* === TILE === */
+/* ============================================================
+   FRIEND TILE
+   ============================================================ */
 
 .friend-tile {
   position: relative;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   aspect-ratio: 1;
-  border-radius: 6px;
-  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+
+  overflow: visible;
+
+  color: #f8fafc;
+
+  background:
+      linear-gradient(
+          145deg,
+          #191a2b,
+          #0b0c17
+      );
+
+  border: 1px solid rgba(255, 255, 255, .065);
+  border-radius: 9px;
+
   text-decoration: none;
-  color: #fff;
-  font-size: 16px;
+
+  font-size: 14px;
   font-weight: 900;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  box-shadow:
+      inset 0 1px rgba(255, 255, 255, .035);
+
+  transition:
+      transform .2s ease,
+      border-color .2s ease,
+      box-shadow .2s ease;
 }
 
-.friend-tile:hover {
-  transform: translateY(-2px) scale(1.06);
-  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.5);
-  z-index: 5;
+.friend-tile::before {
+  content: '';
+
+  position: absolute;
+  inset: 0;
+
+  border-radius: inherit;
+
+  background:
+      linear-gradient(
+          135deg,
+          rgba(139, 92, 246, .12),
+          transparent 55%
+      );
+
+  pointer-events: none;
 }
+
+/* Avatar */
 
 .friend-tile__img {
   position: absolute;
   inset: 0;
+
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  border-radius: 6px;
+
   display: block;
+
+  object-fit: cover;
+
+  border-radius: inherit;
+
+  opacity: .9;
+
+  filter: saturate(.9);
+
+  transition:
+      transform .2s ease,
+      opacity .2s ease,
+      filter .2s ease;
 }
+
+/* Dark cinematic overlay */
+
+.friend-tile::after {
+  content: '';
+
+  position: absolute;
+  inset: 0;
+
+  border-radius: inherit;
+
+  background:
+      linear-gradient(
+          180deg,
+          rgba(5, 5, 13, .04),
+          rgba(5, 5, 13, .38)
+      );
+
+  pointer-events: none;
+}
+
+/* Fallback initial */
 
 .friend-tile__letter {
   position: relative;
+  z-index: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
+
+  color: #c4b5fd;
+
+  background:
+      radial-gradient(
+          circle at 50% 35%,
+          rgba(139, 92, 246, .2),
+          transparent 60%
+      ),
+      linear-gradient(
+          145deg,
+          #17182a,
+          #080914
+      );
+
+  border-radius: inherit;
+
+  font-size: 15px;
+
+  text-shadow:
+      0 0 14px rgba(139, 92, 246, .45);
 }
+
+/* ============================================================
+   TIER INDICATOR
+   ============================================================ */
 
 .friend-tile__tier {
   position: absolute;
+
   right: -3px;
   bottom: -3px;
-  width: 12px;
-  height: 12px;
+
+  width: 11px;
+  height: 11px;
+
+  z-index: 4;
+
+  border: 2px solid #090a18;
   border-radius: 50%;
-  border: 2px solid #171a21;
-  z-index: 2;
+
+  box-shadow:
+      0 0 7px rgba(255, 255, 255, .15),
+      0 2px 7px rgba(0, 0, 0, .55);
+
+  transition:
+      transform .2s ease,
+      box-shadow .2s ease;
 }
 
-/* === АДАПТИВ === */
+/* ============================================================
+   HOVER
+   ============================================================ */
+
+.friend-tile:hover {
+  z-index: 5;
+
+  transform:
+      translateY(-2px)
+      scale(1.045);
+
+  border-color:
+      rgba(139, 92, 246, .35);
+
+  box-shadow:
+      0 8px 24px rgba(0, 0, 0, .4),
+      0 0 18px rgba(139, 92, 246, .12),
+      inset 0 1px rgba(255, 255, 255, .06);
+}
+
+.friend-tile:hover .friend-tile__img {
+  opacity: 1;
+
+  filter: saturate(1.05);
+
+  transform: scale(1.04);
+}
+
+.friend-tile:hover .friend-tile__tier {
+  transform: scale(1.12);
+
+  box-shadow:
+      0 0 9px rgba(255, 255, 255, .2),
+      0 2px 8px rgba(0, 0, 0, .6);
+}
+
+/* ============================================================
+   FOCUS
+   ============================================================ */
+
+.friend-tile:focus-visible {
+  outline: 2px solid #8b5cf6;
+  outline-offset: 3px;
+
+  box-shadow:
+      0 0 0 4px rgba(139, 92, 246, .12),
+      0 8px 24px rgba(0, 0, 0, .4);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
 
 @media (max-width: 600px) {
   .friends {
-    padding: 12px;
+    padding: 13px;
+
+    border-radius: 15px;
   }
 
   .friends__grid {
-    grid-template-columns: repeat(5, 1fr);
-    gap: 5px;
+    grid-template-columns:
+        repeat(5, minmax(0, 1fr));
+
+    gap: 6px;
   }
 
   .friend-tile {
-    font-size: 14px;
+    border-radius: 8px;
+
+    font-size: 13px;
   }
 
   .friend-tile__tier {
     width: 10px;
     height: 10px;
+
     right: -2px;
     bottom: -2px;
+  }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .friend-tile,
+  .friend-tile__img,
+  .friend-tile__tier {
+    transition: none;
   }
 }
 </style>

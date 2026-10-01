@@ -1,100 +1,128 @@
 <script setup>
 import { computed } from 'vue'
-import  {aspectColor, percentColor} from '@/composables/useTier'
 
 const props = defineProps({
-  aspects: { type: Object, default: () => ({}) },
+  aspects: {
+    type: Object,
+    default: () => ({}),
+  },
 })
 
-const ASPECT_LABELS = {
-  pvp: { block_placing: 'БП', rotka: 'Ротка', movement: 'Мувмент', aim: 'Аим', game_sense: 'Понимание боя' },
-  bedwars: { pvp: 'PvP', game_sense: 'Понимание игры', bed_play: 'Игра на кровати', teamplay: 'Командная игра', building: 'Строительство' },
+const modes = {
+  pvp: {
+    title: 'PvP',
+    icon: '⚔',
+    color: '#8b5cf6',
+  },
+  bedwars: {
+    title: 'BedWars',
+    icon: '◆',
+    color: '#facc15',
+  },
 }
-const ASPECT_KEYS = {
-  pvp: ['block_placing', 'rotka', 'movement', 'aim', 'game_sense'],
-  bedwars: ['pvp', 'game_sense', 'bed_play', 'teamplay', 'building'],
+
+const stats = [
+  { key: 'block_placing', label: 'Block Placing' },
+  { key: 'rotka', label: 'Rotka' },
+  { key: 'movement', label: 'Movement' },
+  { key: 'aim', label: 'Aim' },
+  { key: 'game_sense', label: 'Game Sense' },
+  { key: 'bed_play', label: 'Bed Play' },
+]
+
+const availableModes = computed(() =>
+    Object.entries(props.aspects)
+        .filter(([, value]) => value && typeof value === 'object')
+        .map(([key, value]) => ({
+          key,
+          data: value,
+          ...(modes[key] ?? {
+            title: key,
+            icon: '◆',
+            color: '#8b5cf6',
+          }),
+        })),
+)
+
+function percentage(value) {
+  return Math.min(100, Math.max(0, (Number(value) / 20) * 100))
 }
-const EMPTY_PVP = { block_placing: 0, rotka: 0, movement: 0, aim: 0, game_sense: 0 }
-const EMPTY_BEDWARS = { pvp: 0, game_sense: 0, bed_play: 0, teamplay: 0, building: 0 }
 
-const allAspects = computed(() => {
-  const ua = props.aspects ?? {}
-  const pvp = ua.pvp ?? EMPTY_PVP
-  const bw = ua.bedwars ?? EMPTY_BEDWARS
+function totalScore(data) {
+  const values = stats
+      .map(stat => Number(data?.[stat.key]))
+      .filter(value => Number.isFinite(value))
 
-  const pvpSum = pvp.block_placing + pvp.rotka + pvp.movement + pvp.aim + pvp.game_sense
-  const bwSum = bw.pvp + bw.game_sense + bw.bed_play + bw.teamplay + bw.building
+  if (!values.length) return 0
 
-  return [
-    { mode: 'pvp', ...pvp, percent: pvpSum, hasData: !!ua.pvp },
-    { mode: 'bedwars', ...bw, percent: bwSum, hasData: !!ua.bedwars },
-  ]
-})
+  return values.reduce((sum, value) => sum + value, 0)
+}
 
-function totalScore(a) {
-  if (a.mode === 'bedwars') return a.pvp + a.game_sense + a.bed_play + a.teamplay + a.building
-  return a.block_placing + a.rotka + a.movement + a.aim + a.game_sense
+function maxScore(data) {
+  const count = stats.filter(stat =>
+      Number.isFinite(Number(data?.[stat.key]))
+  ).length
+
+  return count * 20
 }
 </script>
 
 <template>
-  <section class="aspects">
-    <div class="aspects__head">
-      <h3 class="aspects__title">Аспекты игрока</h3>
-      <span class="aspects__sub">Оценка по 5 критериям · макс. 100</span>
+  <section v-if="availableModes.length" class="aspects">
+    <div class="section-head">
+      <div>
+        <span class="section-kicker">ХАРАКТЕРИСТИКИ</span>
+        <h3 class="section-title">Игровые аспекты</h3>
+      </div>
+
+      <span class="section-line"></span>
     </div>
 
-    <div class="aspects__list">
+    <div class="aspects-grid">
       <article
-          v-for="aspect in allAspects"
-          :key="aspect.mode"
+          v-for="mode in availableModes"
+          :key="mode.key"
           class="aspect-card"
-          :class="{
-          'aspect-card--empty': !aspect.hasData,
-          [`aspect-card--${aspect.mode}`]: true,
-        }"
+          :style="{ '--mode-color': mode.color }"
       >
-        <header class="aspect-card__head">
-          <div class="aspect-card__head-left">
-            <span class="aspect-card__mode">{{ aspect.mode === 'pvp' ? 'PvP' : 'BedWars' }}</span>
-            <span class="aspect-card__sub">{{ aspect.mode === 'pvp' ? 'p-ранг' : 'b-ранг' }}</span>
-            <span v-if="!aspect.hasData" class="badge-empty">не тестирован</span>
+        <div class="aspect-card__glow"></div>
+
+        <header class="aspect-header">
+          <div class="aspect-icon">
+            {{ mode.icon }}
           </div>
 
-          <div class="aspect-card__head-right">
-            <div class="total">
-              <span class="total__value">{{ totalScore(aspect) }}</span>
-              <span class="total__max">/100</span>
-            </div>
-            <div
-                class="percent-pill"
-                :style="{
-                color: percentColor(aspect.percent),
-                borderColor: percentColor(aspect.percent) + '55',
-                background: percentColor(aspect.percent) + '12',
-              }"
-            >
-              {{ aspect.percent }}%
-            </div>
+          <div class="aspect-info">
+            <span class="aspect-label">РЕЖИМ</span>
+            <h4>{{ mode.title }}</h4>
+          </div>
+
+          <div class="aspect-total">
+            <strong>{{ totalScore(mode.data) }}</strong>
+            <span>/{{ maxScore(mode.data) }}</span>
           </div>
         </header>
 
-        <div class="aspect-card__grid">
-          <div v-for="key in ASPECT_KEYS[aspect.mode]" :key="key" class="aspect">
-            <div class="aspect__top">
-              <span class="aspect__label">{{ ASPECT_LABELS[aspect.mode][key] }}</span>
-              <span class="aspect__value" :class="{ 'aspect__value--zero': !aspect[key] }">
-                {{ aspect[key] ?? 0 }}
-              </span>
+        <div class="stats">
+          <div
+              v-for="stat in stats"
+              :key="stat.key"
+              v-show="mode.data?.[stat.key] !== undefined && mode.data?.[stat.key] !== null"
+              class="stat"
+          >
+            <div class="stat-top">
+              <span>{{ stat.label }}</span>
+              <strong>
+                {{ mode.data[stat.key] }}
+                <small>/20</small>
+              </strong>
             </div>
-            <div class="aspect__bar">
+
+            <div class="stat-track">
               <div
-                  class="aspect__fill"
-                  :style="{
-                  width: ((aspect[key] ?? 0) / 20 * 100) + '%',
-                  background: aspectColor(aspect[key] ?? 0),
-                }"
-              />
+                  class="stat-fill"
+                  :style="{ width: `${percentage(mode.data[stat.key])}%` }"
+              ></div>
             </div>
           </div>
         </div>
@@ -105,205 +133,233 @@ function totalScore(a) {
 
 <style scoped>
 .aspects {
-  margin-top: 4px;
+  position: relative;
+  margin-top: 18px;
+  padding: 22px;
+  border: 1px solid rgba(139, 92, 246, 0.16);
+  border-radius: 18px;
+  background:
+      radial-gradient(
+          circle at 100% 0%,
+          rgba(124, 58, 237, 0.11),
+          transparent 35%
+      ),
+      rgba(7, 8, 20, 0.88);
+  box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.025),
+      0 12px 40px rgba(0, 0, 0, 0.28);
 }
 
-.aspects__head {
+.section-head {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
-  margin-bottom: 14px;
-  padding: 0 2px;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 18px;
 }
 
-.aspects__title {
-  margin: 0;
-  font-size: 14px;
+.section-kicker {
+  display: block;
+  margin-bottom: 3px;
+  color: #8b5cf6;
+  font-size: 10px;
   font-weight: 800;
-  color: var(--text);
+  letter-spacing: 0.18em;
 }
 
-.aspects__sub {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-weight: 600;
+.section-title {
+  margin: 0;
+  color: #f5f3ff;
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
 }
 
-.aspects__list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.section-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+      90deg,
+      rgba(139, 92, 246, 0.28),
+      transparent
+  );
 }
 
-/* === CARD === */
+.aspects-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
 
 .aspect-card {
   position: relative;
-  padding: 16px 18px;
-  background: #0d0d14;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  transition: border-color 0.2s ease;
+  overflow: hidden;
+  padding: 17px;
+  border: 1px solid color-mix(
+      in srgb,
+      var(--mode-color) 20%,
+      transparent
+  );
+  border-radius: 14px;
+  background:
+      linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--mode-color) 7%, transparent),
+          rgba(9, 10, 24, 0.92)
+      );
+  box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.025),
+      0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
-.aspect-card:hover {
-  border-color: var(--border-hover);
+.aspect-card__glow {
+  position: absolute;
+  top: -80px;
+  right: -80px;
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  background: var(--mode-color);
+  opacity: 0.07;
+  filter: blur(45px);
+  pointer-events: none;
 }
 
-.aspect-card--empty {
-  opacity: 0.75;
-}
-
-.aspect-card--pvp {
-  background: linear-gradient(180deg, rgba(124, 58, 237, 0.04), transparent 40%), #0d0d14;
-}
-
-.aspect-card--bedwars {
-  background: linear-gradient(180deg, rgba(6, 182, 212, 0.04), transparent 40%), #0d0d14;
-}
-
-/* === CARD HEAD === */
-
-.aspect-card__head {
+.aspect-header {
+  position: relative;
+  z-index: 1;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  gap: 12px;
+  gap: 11px;
+  margin-bottom: 20px;
 }
 
-.aspect-card__head-left {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
+.aspect-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid color-mix(
+      in srgb,
+      var(--mode-color) 30%,
+      transparent
+  );
+  border-radius: 11px;
+  background: color-mix(
+      in srgb,
+      var(--mode-color) 9%,
+      rgba(0, 0, 0, 0.3)
+  );
+  color: var(--mode-color);
+  font-size: 19px;
+  box-shadow: 0 0 20px color-mix(
+      in srgb,
+      var(--mode-color) 12%,
+      transparent
+  );
+}
+
+.aspect-info {
   min-width: 0;
-  flex-wrap: wrap;
+  flex: 1;
 }
 
-.aspect-card__mode {
-  font-size: 14px;
+.aspect-label {
+  display: block;
+  margin-bottom: 2px;
+  color: #66677d;
+  font-size: 8px;
   font-weight: 800;
-  color: var(--text);
+  letter-spacing: 0.16em;
 }
 
-.aspect-card__sub {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-weight: 600;
+.aspect-info h4 {
+  margin: 0;
+  color: #f3f1ff;
+  font-size: 15px;
+  font-weight: 900;
 }
 
-.badge-empty {
-  display: inline-block;
-  padding: 2px 8px;
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.aspect-card__head-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
-}
-
-/* === TOTAL === */
-
-.total {
+.aspect-total {
   display: flex;
   align-items: baseline;
   gap: 2px;
+}
+
+.aspect-total strong {
+  color: var(--mode-color);
+  font-size: 19px;
   font-weight: 900;
 }
 
-.total__value {
-  font-size: 16px;
-  color: var(--text);
-}
-
-.total__max {
+.aspect-total span {
+  color: #66677d;
   font-size: 11px;
-  color: var(--text-muted);
   font-weight: 700;
 }
 
-.percent-pill {
-  padding: 4px 10px;
-  border: 1px solid;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 900;
-}
-
-/* === GRID === */
-
-.aspect-card__grid {
+.stats {
+  position: relative;
+  z-index: 1;
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
-.aspect {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.aspect__top {
+.stat-top {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
+  margin-bottom: 6px;
 }
 
-.aspect__label {
-  color: var(--text-dim);
-  font-size: 12px;
+.stat-top span {
+  color: #aaa8bb;
+  font-size: 11px;
   font-weight: 600;
 }
 
-.aspect__value {
-  color: var(--text);
-  font-size: 12px;
+.stat-top strong {
+  color: #eeeafc;
+  font-size: 11px;
   font-weight: 800;
 }
 
-.aspect__value--zero {
-  color: var(--text-muted);
+.stat-top small {
+  color: #5f6075;
+  font-size: 9px;
 }
 
-.aspect__bar {
-  height: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 999px;
+.stat-track {
+  position: relative;
+  height: 5px;
   overflow: hidden;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.055);
 }
 
-.aspect__fill {
+.stat-fill {
   height: 100%;
-  border-radius: 999px;
-  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 2px;
+  border-radius: inherit;
+  background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--mode-color) 55%, transparent),
+      var(--mode-color)
+  );
+  box-shadow: 0 0 10px color-mix(
+      in srgb,
+      var(--mode-color) 40%,
+      transparent
+  );
+  transition: width 0.4s ease;
 }
 
-/* === АДАПТИВ === */
-
-@media (max-width: 600px) {
-  .aspect-card {
-    padding: 14px;
+@media (max-width: 700px) {
+  .aspects {
+    padding: 16px;
   }
 
-  .aspect-card__head {
-    flex-wrap: wrap;
-  }
-
-  .aspect-card__head-right {
-    width: 100%;
-    justify-content: space-between;
+  .aspects-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

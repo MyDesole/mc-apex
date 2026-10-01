@@ -5,14 +5,20 @@ const props = defineProps({
 const emit = defineEmits(['close'])
 
 const rarityColors = {
-  common: '#7c3aed', rare: '#06b6d4', epic: '#f97316', legendary: '#facc15',
+  common: '#8b5cf6',
+  rare: '#06b6d4',
+  epic: '#f97316',
+  legendary: '#facc15',
 }
 const rarityLabels = {
-  common: 'Обычное', rare: 'Редкое', epic: 'Эпическое', legendary: 'Легендарное',
+  common: 'Обычное',
+  rare: 'Редкое',
+  epic: 'Эпическое',
+  legendary: 'Легендарное',
 }
 
-function color(a) {
-  return a?.color || rarityColors[a?.rarity] || '#7c3aed'
+function accent(a) {
+  return a?.color || rarityColors[a?.rarity] || '#8b5cf6'
 }
 
 function formatEarnedAt(a) {
@@ -20,43 +26,83 @@ function formatEarnedAt(a) {
   if (!raw) return null
   try {
     return new Date(raw).toLocaleDateString('ru-RU', {
-      day: '2-digit', month: 'long', year: 'numeric',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
     })
-  } catch { return null }
+  } catch {
+    return null
+  }
 }
 </script>
 
 <template>
-  <div class="ach-modal-bg" @click.self="emit('close')">
-    <div class="ach-modal" :style="{ '--color': color(achievement) }">
-      <button class="ach-modal__close" type="button" aria-label="Закрыть" @click="emit('close')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+  <div class="modal-bg" @click.self="emit('close')">
+    <div class="modal" :style="{ '--color': accent(achievement) }">
+      <button
+          class="modal__close"
+          type="button"
+          aria-label="Закрыть"
+          @click="emit('close')"
+      >
+        <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        >
           <path d="M18 6 6 18M6 6l12 12" />
         </svg>
       </button>
 
-      <div class="ach-modal__glow" />
-      <div class="ach-modal__icon">{{ achievement.icon }}</div>
-      <h3 class="ach-modal__name">{{ achievement.name }}</h3>
+      <div class="modal__glow" />
 
-      <div class="ach-modal__meta">
-        <span v-if="achievement.rarity" class="ach-chip ach-chip--rarity">
+      <div class="modal__icon">{{ achievement.icon }}</div>
+
+      <h3 class="modal__name">{{ achievement.name }}</h3>
+
+      <div class="modal__chips">
+        <span v-if="achievement.rarity" class="chip chip--rarity">
           {{ rarityLabels[achievement.rarity] ?? achievement.rarity }}
         </span>
-        <span v-if="achievement.points" class="ach-chip ach-chip--points">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2l2.4 6.4 6.6.5-5 4.4 1.5 6.7L12 16.6 6.5 20l1.5-6.7-5-4.4 6.6-.5z" />
+        <span v-if="achievement.points" class="chip chip--points">
+          <svg
+              width="11"
+              height="11"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+          >
+            <path
+                d="M12 2l2.4 6.4 6.6.5-5 4.4 1.5 6.7L12 16.6 6.5 20l1.5-6.7-5-4.4 6.6-.5z"
+            />
           </svg>
           {{ achievement.points }} очков
         </span>
       </div>
 
-      <p v-if="achievement.description" class="ach-modal__desc">
+      <p v-if="achievement.description" class="modal__desc">
         {{ achievement.description }}
       </p>
 
-      <div v-if="formatEarnedAt(achievement)" class="ach-modal__date">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div v-if="formatEarnedAt(achievement)" class="modal__date">
+        <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        >
           <rect x="3" y="4" width="18" height="18" rx="2" />
           <path d="M16 2v4M8 2v4M3 10h18" />
         </svg>
@@ -67,7 +113,7 @@ function formatEarnedAt(a) {
 </template>
 
 <style scoped>
-.ach-modal-bg {
+.modal-bg {
   position: fixed;
   inset: 0;
   z-index: 2500;
@@ -75,7 +121,7 @@ function formatEarnedAt(a) {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(6, 6, 10, 0.72);
+  background: rgba(5, 5, 13, 0.72);
   backdrop-filter: blur(8px);
   animation: achFade 0.15s ease;
 }
@@ -85,7 +131,7 @@ function formatEarnedAt(a) {
   to { opacity: 1; }
 }
 
-.ach-modal {
+.modal {
   position: relative;
   width: 100%;
   max-width: 380px;
@@ -95,14 +141,15 @@ function formatEarnedAt(a) {
   align-items: center;
   gap: 12px;
   text-align: center;
-  background: linear-gradient(180deg, #171a21 0%, #10131a 100%);
-  border: 1px solid color-mix(in srgb, var(--color) 45%, var(--border));
+  overflow: hidden;
+  background: linear-gradient(145deg, rgba(139, 92, 246, 0.055), rgba(9, 10, 24, 0.97));
+  border: 1px solid color-mix(in srgb, var(--color) 45%, rgba(255, 255, 255, 0.065));
   border-radius: 18px;
   box-shadow:
       0 30px 80px -20px rgba(0, 0, 0, 0.7),
-      inset 0 0 0 1px color-mix(in srgb, var(--color) 20%, transparent);
+      inset 0 0 0 1px color-mix(in srgb, var(--color) 20%, transparent),
+      inset 0 1px rgba(255, 255, 255, 0.035);
   animation: achPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
 }
 
 @keyframes achPop {
@@ -110,20 +157,23 @@ function formatEarnedAt(a) {
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-.ach-modal__glow {
+.modal__glow {
   position: absolute;
   top: -80px;
   left: 50%;
   width: 320px;
   height: 320px;
   transform: translateX(-50%);
-  background: radial-gradient(circle, color-mix(in srgb, var(--color) 40%, transparent) 0%, transparent 65%);
+  background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color) 40%, transparent) 0%,
+      transparent 65%
+  );
   pointer-events: none;
   opacity: 0.65;
-  z-index: 0;
 }
 
-.ach-modal__close {
+.modal__close {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -133,7 +183,7 @@ function formatEarnedAt(a) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-dim);
+  color: #64748b;
   background: transparent;
   border: 0;
   border-radius: 8px;
@@ -141,12 +191,12 @@ function formatEarnedAt(a) {
   transition: all 0.15s;
 }
 
-.ach-modal__close:hover {
+.modal__close:hover {
   background: rgba(255, 255, 255, 0.06);
-  color: var(--text);
+  color: #e2e8f0;
 }
 
-.ach-modal__icon {
+.modal__icon {
   position: relative;
   z-index: 1;
   width: 104px;
@@ -158,28 +208,29 @@ function formatEarnedAt(a) {
   line-height: 1;
   border-radius: 24px;
   background:
-      radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--color) 30%, transparent) 0%, transparent 70%),
+      radial-gradient(
+          circle at 50% 30%,
+          color-mix(in srgb, var(--color) 30%, transparent) 0%,
+          transparent 70%
+      ),
       rgba(255, 255, 255, 0.03);
   border: 1px solid color-mix(in srgb, var(--color) 55%, transparent);
   box-shadow:
       0 12px 40px color-mix(in srgb, var(--color) 35%, transparent),
       inset 0 0 0 1px rgba(255, 255, 255, 0.04);
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
 }
 
-.ach-modal__name {
+.modal__name {
   position: relative;
   z-index: 1;
   margin: 6px 0 0;
   font-size: 20px;
-  font-weight: 900;
-  color: #f3f4f6;
+  font-weight: 950;
+  color: #f8fafc;
   letter-spacing: -0.3px;
-  text-align: center;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
-.ach-modal__meta {
+.modal__chips {
   position: relative;
   z-index: 1;
   display: flex;
@@ -190,74 +241,71 @@ function formatEarnedAt(a) {
   margin-top: 2px;
 }
 
-.ach-chip {
+.chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
   border-radius: 999px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.3px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
   text-transform: uppercase;
 }
 
-.ach-chip--rarity {
+.chip--rarity {
   color: var(--color);
   background: color-mix(in srgb, var(--color) 15%, transparent);
   border: 1px solid color-mix(in srgb, var(--color) 45%, transparent);
 }
 
-.ach-chip--points {
+.chip--points {
   color: #facc15;
   background: rgba(250, 204, 21, 0.1);
   border: 1px solid rgba(250, 204, 21, 0.35);
 }
 
-.ach-modal__desc {
+.modal__desc {
   position: relative;
   z-index: 1;
   margin: 6px 0 0;
-  color: #b8c2cf;
-  font-size: 13.5px;
-  line-height: 1.6;
-  text-align: center;
   max-width: 300px;
+  color: #94a3b8;
+  font-size: 13px;
+  line-height: 1.6;
 }
 
-.ach-modal__date {
+.modal__date {
   position: relative;
   z-index: 1;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   margin-top: 12px;
   padding-top: 14px;
   width: 100%;
-  justify-content: center;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
-  color: #6b7280;
-  font-size: 11.5px;
-  font-weight: 700;
+  color: #475569;
+  font-size: 10px;
+  font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.4px;
 }
 
-/* Адаптив для мобильных */
 @media (max-width: 600px) {
-  .ach-modal {
+  .modal {
     padding: 26px 18px 18px;
-    max-width: 100%;
   }
 
-  .ach-modal__icon {
+  .modal__icon {
     width: 88px;
     height: 88px;
     font-size: 46px;
     border-radius: 20px;
   }
 
-  .ach-modal__name {
+  .modal__name {
     font-size: 18px;
   }
 }
