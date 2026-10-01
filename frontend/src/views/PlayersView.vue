@@ -2836,17 +2836,12 @@ function scorePercent(player) {
 .rest-player__frame--rainbow {
   border: 1px solid transparent;
 
-  background:
-      linear-gradient(#090910, #090910) padding-box,
-      var(--frame-gradient) border-box;
+
 }
 
 .rest-player__frame--legendary {
   border: 1px solid transparent;
 
-  background:
-      linear-gradient(#090910, #090910) padding-box,
-      var(--frame-gradient) border-box;
 
   box-shadow:
       0 0 8px rgba(250,204,21,.6);
@@ -2855,9 +2850,7 @@ function scorePercent(player) {
 .rest-player__frame--season1 {
   border: 1px solid transparent;
 
-  background:
-      linear-gradient(#090910, #090910) padding-box,
-      var(--frame-gradient) border-box;
+
 }
 
 .rest-player__info {
