@@ -74,10 +74,7 @@ watch([category, pvpMode], load)
 const topThree = computed(() => players.value.slice(0, 3))
 const rest = computed(() => players.value.slice(3))
 
-// Desktop: 2 → 1 → 3
 const PODIUM_ORDER = [1, 0, 2]
-
-// Mobile: 1 → 2 → 3
 const MOBILE_ORDER = [0, 1, 2]
 
 const podiumSlots = computed(() =>
@@ -106,6 +103,10 @@ function roleLabel(player) {
   }
 
   return ROLE_LABELS[player.role] || player.role
+}
+
+function avatarLetter(player) {
+  return player?.username?.trim()?.charAt(0)?.toUpperCase() || '?'
 }
 
 function avatarFrame(player) {
@@ -182,6 +183,25 @@ function profileEffectStyle(player) {
   }
 
   return {}
+}
+
+function scorePercent(player) {
+  if (!players.value.length) {
+    return 0
+  }
+
+  const max = Math.max(
+      ...players.value.map(p => Number(p?.rating_score ?? 0)),
+      1
+  )
+
+  return Math.min(
+      100,
+      Math.max(
+          5,
+          (Number(player?.rating_score ?? 0) / max) * 100
+      )
+  )
 }
 </script>
 
@@ -291,7 +311,6 @@ function profileEffectStyle(player) {
           @click="pvpMode = m.value"
       >
         <span class="sub-tab__dot" />
-
         <span class="sub-tab__label">
           {{ m.label }}
         </span>
@@ -367,7 +386,6 @@ function profileEffectStyle(player) {
             aria-hidden="true"
         >
           <defs>
-
             <linearGradient
                 id="skyGradient"
                 x1="0"
@@ -375,45 +393,10 @@ function profileEffectStyle(player) {
                 x2="0"
                 y2="1"
             >
-              <stop
-                  offset="0%"
-                  stop-color="#05050d"
-              />
-
-              <stop
-                  offset="42%"
-                  stop-color="#090a18"
-              />
-
-              <stop
-                  offset="72%"
-                  stop-color="#111225"
-              />
-
-              <stop
-                  offset="100%"
-                  stop-color="#080811"
-              />
-            </linearGradient>
-
-            <linearGradient
-                id="horizonGradient"
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="1"
-            >
-              <stop
-                  offset="0%"
-                  stop-color="#312e81"
-                  stop-opacity=".22"
-              />
-
-              <stop
-                  offset="100%"
-                  stop-color="#111827"
-                  stop-opacity="0"
-              />
+              <stop offset="0%" stop-color="#05050d" />
+              <stop offset="42%" stop-color="#090a18" />
+              <stop offset="72%" stop-color="#111225" />
+              <stop offset="100%" stop-color="#080811" />
             </linearGradient>
 
             <linearGradient
@@ -423,15 +406,8 @@ function profileEffectStyle(player) {
                 x2="0"
                 y2="1"
             >
-              <stop
-                  offset="0%"
-                  stop-color="#20213c"
-              />
-
-              <stop
-                  offset="100%"
-                  stop-color="#0b0b15"
-              />
+              <stop offset="0%" stop-color="#20213c" />
+              <stop offset="100%" stop-color="#0b0b15" />
             </linearGradient>
 
             <linearGradient
@@ -441,20 +417,9 @@ function profileEffectStyle(player) {
                 x2="0"
                 y2="1"
             >
-              <stop
-                  offset="0%"
-                  stop-color="#303153"
-              />
-
-              <stop
-                  offset="42%"
-                  stop-color="#1b1c34"
-              />
-
-              <stop
-                  offset="100%"
-                  stop-color="#0b0b17"
-              />
+              <stop offset="0%" stop-color="#303153" />
+              <stop offset="42%" stop-color="#1b1c34" />
+              <stop offset="100%" stop-color="#0b0b17" />
             </linearGradient>
 
             <linearGradient
@@ -464,25 +429,10 @@ function profileEffectStyle(player) {
                 x2="1"
                 y2="1"
             >
-              <stop
-                  offset="0%"
-                  stop-color="#3c3e67"
-              />
-
-              <stop
-                  offset="38%"
-                  stop-color="#282a4b"
-              />
-
-              <stop
-                  offset="70%"
-                  stop-color="#17182e"
-              />
-
-              <stop
-                  offset="100%"
-                  stop-color="#0a0a14"
-              />
+              <stop offset="0%" stop-color="#3c3e67" />
+              <stop offset="38%" stop-color="#282a4b" />
+              <stop offset="70%" stop-color="#17182e" />
+              <stop offset="100%" stop-color="#0a0a14" />
             </linearGradient>
 
             <linearGradient
@@ -492,23 +442,9 @@ function profileEffectStyle(player) {
                 x2="1"
                 y2="1"
             >
-              <stop
-                  offset="0%"
-                  stop-color="#55577f"
-                  stop-opacity=".75"
-              />
-
-              <stop
-                  offset="65%"
-                  stop-color="#262743"
-                  stop-opacity=".45"
-              />
-
-              <stop
-                  offset="100%"
-                  stop-color="#0b0b15"
-                  stop-opacity=".1"
-              />
+              <stop offset="0%" stop-color="#55577f" stop-opacity=".75" />
+              <stop offset="65%" stop-color="#262743" stop-opacity=".45" />
+              <stop offset="100%" stop-color="#0b0b15" stop-opacity=".1" />
             </linearGradient>
 
             <linearGradient
@@ -518,17 +454,8 @@ function profileEffectStyle(player) {
                 x2="0"
                 y2="1"
             >
-              <stop
-                  offset="0%"
-                  stop-color="#10111f"
-                  stop-opacity=".9"
-              />
-
-              <stop
-                  offset="100%"
-                  stop-color="#05050c"
-                  stop-opacity=".35"
-              />
+              <stop offset="0%" stop-color="#10111f" stop-opacity=".9" />
+              <stop offset="100%" stop-color="#05050c" stop-opacity=".35" />
             </linearGradient>
 
             <linearGradient
@@ -538,23 +465,9 @@ function profileEffectStyle(player) {
                 x2="0"
                 y2="1"
             >
-              <stop
-                  offset="0%"
-                  stop-color="#ffffff"
-                  stop-opacity=".94"
-              />
-
-              <stop
-                  offset="40%"
-                  stop-color="#dbeafe"
-                  stop-opacity=".7"
-              />
-
-              <stop
-                  offset="100%"
-                  stop-color="#94a3b8"
-                  stop-opacity=".05"
-              />
+              <stop offset="0%" stop-color="#ffffff" stop-opacity=".94" />
+              <stop offset="40%" stop-color="#dbeafe" stop-opacity=".7" />
+              <stop offset="100%" stop-color="#94a3b8" stop-opacity=".05" />
             </linearGradient>
 
             <radialGradient
@@ -563,29 +476,10 @@ function profileEffectStyle(player) {
                 cy="30%"
                 r="55%"
             >
-              <stop
-                  offset="0%"
-                  stop-color="#facc15"
-                  stop-opacity=".3"
-              />
-
-              <stop
-                  offset="30%"
-                  stop-color="#facc15"
-                  stop-opacity=".13"
-              />
-
-              <stop
-                  offset="70%"
-                  stop-color="#facc15"
-                  stop-opacity=".025"
-              />
-
-              <stop
-                  offset="100%"
-                  stop-color="#facc15"
-                  stop-opacity="0"
-              />
+              <stop offset="0%" stop-color="#facc15" stop-opacity=".3" />
+              <stop offset="30%" stop-color="#facc15" stop-opacity=".13" />
+              <stop offset="70%" stop-color="#facc15" stop-opacity=".025" />
+              <stop offset="100%" stop-color="#facc15" stop-opacity="0" />
             </radialGradient>
 
             <radialGradient
@@ -594,17 +488,8 @@ function profileEffectStyle(player) {
                 cy="50%"
                 r="50%"
             >
-              <stop
-                  offset="0%"
-                  stop-color="#8b5cf6"
-                  stop-opacity=".2"
-              />
-
-              <stop
-                  offset="100%"
-                  stop-color="#8b5cf6"
-                  stop-opacity="0"
-              />
+              <stop offset="0%" stop-color="#8b5cf6" stop-opacity=".2" />
+              <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0" />
             </radialGradient>
 
             <linearGradient
@@ -614,23 +499,9 @@ function profileEffectStyle(player) {
                 x2="0"
                 y2="1"
             >
-              <stop
-                  offset="0%"
-                  stop-color="#c4b5fd"
-                  stop-opacity="0"
-              />
-
-              <stop
-                  offset="50%"
-                  stop-color="#c4b5fd"
-                  stop-opacity=".08"
-              />
-
-              <stop
-                  offset="100%"
-                  stop-color="#c4b5fd"
-                  stop-opacity="0"
-              />
+              <stop offset="0%" stop-color="#c4b5fd" stop-opacity="0" />
+              <stop offset="50%" stop-color="#c4b5fd" stop-opacity=".08" />
+              <stop offset="100%" stop-color="#c4b5fd" stop-opacity="0" />
             </linearGradient>
 
             <filter
@@ -654,14 +525,12 @@ function profileEffectStyle(player) {
             </filter>
           </defs>
 
-          <!-- SKY -->
           <rect
               width="1400"
               height="620"
               fill="url(#skyGradient)"
           />
 
-          <!-- HORIZON -->
           <ellipse
               cx="700"
               cy="280"
@@ -678,7 +547,6 @@ function profileEffectStyle(player) {
               fill="url(#purpleGlow)"
           />
 
-          <!-- MOON -->
           <circle
               cx="700"
               cy="120"
@@ -696,7 +564,6 @@ function profileEffectStyle(player) {
               opacity=".035"
           />
 
-          <!-- STARS -->
           <g fill="#fff">
             <circle cx="94" cy="76" r="1.1" opacity=".6" />
             <circle cx="158" cy="144" r=".8" opacity=".45" />
@@ -706,7 +573,6 @@ function profileEffectStyle(player) {
             <circle cx="478" cy="105" r=".7" opacity=".4" />
             <circle cx="550" cy="42" r="1.3" opacity=".7" />
             <circle cx="626" cy="82" r=".7" opacity=".4" />
-
             <circle cx="774" cy="72" r=".9" opacity=".5" />
             <circle cx="852" cy="42" r="1.3" opacity=".7" />
             <circle cx="932" cy="118" r=".8" opacity=".45" />
@@ -717,7 +583,6 @@ function profileEffectStyle(player) {
             <circle cx="1340" cy="58" r="1.1" opacity=".55" />
           </g>
 
-          <!-- CROSS STARS -->
           <g stroke="#fff" stroke-linecap="round">
             <path
                 d="M176 88v8M172 92h8"
@@ -738,7 +603,6 @@ function profileEffectStyle(player) {
             />
           </g>
 
-          <!-- DISTANT RIDGES -->
           <path
               d="M0 470
                L110 392
@@ -758,7 +622,6 @@ function profileEffectStyle(player) {
               opacity=".95"
           />
 
-          <!-- LEFT BACK PEAK -->
           <path
               d="M0 620
                L180 382
@@ -767,7 +630,6 @@ function profileEffectStyle(player) {
               fill="url(#mountainBack)"
           />
 
-          <!-- RIGHT BACK PEAK -->
           <path
               d="M970 620
                L1130 382
@@ -776,7 +638,6 @@ function profileEffectStyle(player) {
               fill="url(#mountainBack)"
           />
 
-          <!-- LEFT MID PEAK -->
           <path
               d="M80 620
                L350 282
@@ -784,7 +645,6 @@ function profileEffectStyle(player) {
               fill="url(#mountainMid)"
           />
 
-          <!-- LEFT SNOW -->
           <path
               d="M350 282
                L300 350
@@ -797,7 +657,6 @@ function profileEffectStyle(player) {
               opacity=".7"
           />
 
-          <!-- RIGHT MID PEAK -->
           <path
               d="M810 620
                L1060 300
@@ -805,7 +664,6 @@ function profileEffectStyle(player) {
               fill="url(#mountainMid)"
           />
 
-          <!-- RIGHT SNOW -->
           <path
               d="M1060 300
                L1008 365
@@ -818,7 +676,6 @@ function profileEffectStyle(player) {
               opacity=".65"
           />
 
-          <!-- MAIN APEX -->
           <path
               d="M285 620
                L700 74
@@ -826,7 +683,6 @@ function profileEffectStyle(player) {
               fill="url(#mountainMain)"
           />
 
-          <!-- LEFT FACE -->
           <path
               d="M700 74
                L285 620
@@ -835,7 +691,6 @@ function profileEffectStyle(player) {
               opacity=".75"
           />
 
-          <!-- RIGHT FACE -->
           <path
               d="M700 74
                L1115 620
@@ -844,7 +699,6 @@ function profileEffectStyle(player) {
               opacity=".95"
           />
 
-          <!-- SNOW CAP -->
           <path
               d="M700 74
                L628 170
@@ -858,7 +712,6 @@ function profileEffectStyle(player) {
               fill="url(#snow)"
           />
 
-          <!-- SNOW RIBBON -->
           <path
               d="M700 74
                L653 160
@@ -870,7 +723,6 @@ function profileEffectStyle(player) {
               opacity=".22"
           />
 
-          <!-- FACETS -->
           <path
               d="M700 74 L700 620"
               stroke="#fff"
@@ -892,7 +744,6 @@ function profileEffectStyle(player) {
               opacity=".12"
           />
 
-          <!-- RIDGE -->
           <path
               d="M285 620 L700 74 L1115 620"
               fill="none"
@@ -901,7 +752,6 @@ function profileEffectStyle(player) {
               opacity=".12"
           />
 
-          <!-- CLIFFS -->
           <path
               d="M520 430 L565 360 L600 420"
               fill="none"
@@ -918,7 +768,6 @@ function profileEffectStyle(player) {
               opacity=".045"
           />
 
-          <!-- FOREGROUND -->
           <path
               d="M0 550
                C160 500 260 515 390 550
@@ -931,7 +780,6 @@ function profileEffectStyle(player) {
               opacity=".55"
           />
 
-          <!-- MIST -->
           <rect
               x="0"
               y="475"
@@ -941,7 +789,6 @@ function profileEffectStyle(player) {
               filter="url(#smallBlur)"
           />
 
-          <!-- PARTICLES -->
           <g fill="#fff">
             <circle cx="150" cy="470" r="1" opacity=".2" />
             <circle cx="265" cy="530" r=".8" opacity=".18" />
@@ -952,8 +799,6 @@ function profileEffectStyle(player) {
           </g>
         </svg>
 
-        <!-- APEX -->
-
         <div class="apex-marker">
           <div class="apex-marker__line" />
           <div class="apex-marker__glow" />
@@ -961,7 +806,7 @@ function profileEffectStyle(player) {
         </div>
 
         <!-- =====================================================
-             PODIUM
+             DESKTOP PODIUM
              ===================================================== -->
 
         <div class="podium">
@@ -971,8 +816,6 @@ function profileEffectStyle(player) {
               class="podium__slot"
               :class="`podium__slot--rank${rankOf(slot)}`"
           >
-            <!-- RANK -->
-
             <div
                 class="podium__badge"
                 :style="{ '--accent': accent(topThree[slot]) }"
@@ -1087,8 +930,6 @@ function profileEffectStyle(player) {
               </span>
             </div>
 
-            <!-- SCORE -->
-
             <div
                 class="podium__score"
                 :style="{ '--accent': accent(topThree[slot]) }"
@@ -1113,8 +954,6 @@ function profileEffectStyle(player) {
               <small>RATING</small>
             </div>
 
-            <!-- PLAYER -->
-
             <RouterLink
                 :to="`/players/${topThree[slot].id}`"
                 class="podium__card"
@@ -1131,11 +970,24 @@ function profileEffectStyle(player) {
                   :style="profileEffectStyle(topThree[slot])"
               >
                 <div class="rank-player__avatar-wrap">
-                  <img
-                      :src="topThree[slot].avatar_url"
-                      :alt="topThree[slot].username"
+
+                  <div
+                      v-if="topThree[slot].avatar_url"
                       class="rank-player__avatar"
-                  />
+                  >
+                    <img
+                        :src="topThree[slot].avatar_url"
+                        :alt="topThree[slot].username"
+                    />
+                  </div>
+
+                  <div
+                      v-else
+                      class="rank-player__avatar rank-player__avatar--fallback"
+                      :style="{ '--accent': accent(topThree[slot]) }"
+                  >
+                    {{ avatarLetter(topThree[slot]) }}
+                  </div>
 
                   <span
                       v-if="topThree[slot].avatar_frame && topThree[slot].avatar_frame !== 'default'"
@@ -1194,104 +1046,9 @@ function profileEffectStyle(player) {
             :style="{ '--accent': accent(topThree[slot]) }"
         >
           <div class="mobile-podium__rank-wrap">
-            <svg
-                v-if="slot === 0"
-                class="mobile-podium__medal"
-                width="30"
-                height="30"
-                viewBox="0 0 24 24"
-                fill="none"
-            >
-              <path
-                  d="M8 2l4 8 4-8"
-                  stroke="#facc15"
-                  stroke-width="2"
-              />
-
-              <circle
-                  cx="12"
-                  cy="15"
-                  r="6"
-                  fill="#facc15"
-                  stroke="#a16207"
-                  stroke-width="1.4"
-              />
-
-              <path
-                  d="M12 12.5l1 2 2.2.3-1.6 1.5.4 2.2-2-1.1-2 1.1.4-2.2-1.6-1.5 2.2-.3z"
-                  fill="#7c2d12"
-              />
-            </svg>
-
-            <svg
-                v-else-if="slot === 1"
-                class="mobile-podium__medal"
-                width="30"
-                height="30"
-                viewBox="0 0 24 24"
-                fill="none"
-            >
-              <path
-                  d="M8 2l4 8 4-8"
-                  stroke="#cbd5e1"
-                  stroke-width="2"
-              />
-
-              <circle
-                  cx="12"
-                  cy="15"
-                  r="6"
-                  fill="#cbd5e1"
-                  stroke="#64748b"
-                  stroke-width="1.4"
-              />
-
-              <text
-                  x="12"
-                  y="18.6"
-                  text-anchor="middle"
-                  font-size="7"
-                  font-weight="900"
-                  fill="#334155"
-              >
-                2
-              </text>
-            </svg>
-
-            <svg
-                v-else
-                class="mobile-podium__medal"
-                width="30"
-                height="30"
-                viewBox="0 0 24 24"
-                fill="none"
-            >
-              <path
-                  d="M8 2l4 8 4-8"
-                  stroke="#d97706"
-                  stroke-width="2"
-              />
-
-              <circle
-                  cx="12"
-                  cy="15"
-                  r="6"
-                  fill="#f59e0b"
-                  stroke="#92400e"
-                  stroke-width="1.4"
-              />
-
-              <text
-                  x="12"
-                  y="18.6"
-                  text-anchor="middle"
-                  font-size="7"
-                  font-weight="900"
-                  fill="#78350f"
-              >
-                3
-              </text>
-            </svg>
+            <span class="mobile-podium__rank">
+              #{{ rankOf(slot) }}
+            </span>
           </div>
 
           <RouterLink
@@ -1310,11 +1067,24 @@ function profileEffectStyle(player) {
                 }"
             >
               <div class="rank-player__avatar-wrap">
-                <img
-                    :src="topThree[slot].avatar_url"
-                    :alt="topThree[slot].username"
+
+                <div
+                    v-if="topThree[slot].avatar_url"
                     class="rank-player__avatar"
-                />
+                >
+                  <img
+                      :src="topThree[slot].avatar_url"
+                      :alt="topThree[slot].username"
+                  />
+                </div>
+
+                <div
+                    v-else
+                    class="rank-player__avatar rank-player__avatar--fallback"
+                    :style="{ '--accent': accent(topThree[slot]) }"
+                >
+                  {{ avatarLetter(topThree[slot]) }}
+                </div>
 
                 <span
                     v-if="topThree[slot].avatar_frame && topThree[slot].avatar_frame !== 'default'"
@@ -1378,19 +1148,26 @@ function profileEffectStyle(player) {
           class="rest"
       >
         <header class="rest__head">
-          <div>
+          <div class="rest__heading">
             <span class="rest__eyebrow">
               THE CLIMB CONTINUES
             </span>
 
-            <h2 class="rest__title">
-              Остальные восходители
-            </h2>
+            <div class="rest__heading-row">
+              <h2 class="rest__title">
+                Остальные восходители
+              </h2>
+
+              <span class="rest__count">
+                {{ rest.length }}
+              </span>
+            </div>
           </div>
 
-          <span class="rest__count">
-            {{ rest.length }}
-          </span>
+          <div class="rest__legend">
+            <span class="rest__legend-dot" />
+            RANKED PLAYERS
+          </div>
         </header>
 
         <div class="rest__grid">
@@ -1401,24 +1178,17 @@ function profileEffectStyle(player) {
               class="rest__row"
               :style="{ '--accent': accent(p) }"
           >
-            <span class="rest__rank">
-              #{{ i + 4 }}
-            </span>
+            <!-- RANK -->
 
-            <span class="rest__score">
-              <svg
-                  width="10"
-                  height="10"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-              >
-                <path d="M12 2l2.4 6.4 6.6.5-5 4.4 1.5 6.7L12 16.6 6.5 20l1.5-6.7-5-4.4 6.6-.5z" />
-              </svg>
+            <div class="rest__rank">
+              <span class="rest__rank-number">
+                #{{ i + 4 }}
+              </span>
 
-              {{ scoreOf(p) }}
-            </span>
+              <span class="rest__rank-line" />
+            </div>
+
+            <!-- PLAYER -->
 
             <div
                 class="rest-player"
@@ -1429,11 +1199,24 @@ function profileEffectStyle(player) {
                 :style="profileEffectStyle(p)"
             >
               <div class="rest-player__avatar-wrap">
-                <img
-                    :src="p.avatar_url"
-                    :alt="p.username"
+
+                <div
+                    v-if="p.avatar_url"
                     class="rest-player__avatar"
-                />
+                >
+                  <img
+                      :src="p.avatar_url"
+                      :alt="p.username"
+                  />
+                </div>
+
+                <div
+                    v-else
+                    class="rest-player__avatar rest-player__avatar--fallback"
+                    :style="{ '--accent': accent(p) }"
+                >
+                  {{ avatarLetter(p) }}
+                </div>
 
                 <span
                     v-if="p.avatar_frame && p.avatar_frame !== 'default'"
@@ -1460,12 +1243,73 @@ function profileEffectStyle(player) {
                     {{ p.tier || '—' }}
                   </span>
 
-                  <span v-if="roleLabel(p)">
+                  <span
+                      v-if="roleLabel(p)"
+                      class="rest-player__role"
+                  >
                     {{ roleLabel(p) }}
                   </span>
                 </div>
               </div>
             </div>
+
+            <!-- PROGRESS -->
+
+            <div class="rest__progress">
+              <div class="rest__progress-top">
+                <span>RATING</span>
+
+                <span class="rest__progress-value">
+                  {{ scoreOf(p) }}
+                </span>
+              </div>
+
+              <div class="rest__progress-track">
+                <span
+                    class="rest__progress-fill"
+                    :style="{ width: `${scorePercent(p)}%` }"
+                />
+              </div>
+            </div>
+
+            <!-- SCORE -->
+
+            <div class="rest__score">
+              <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+              >
+                <path d="M12 2l2.4 6.4 6.6.5-5 4.4 1.5 6.7L12 16.6 6.5 20l1.5-6.7-5-4.4 6.6-.5z" />
+              </svg>
+
+              <span>
+                {{ scoreOf(p) }}
+              </span>
+            </div>
+
+            <!-- ARROW -->
+
+            <span class="rest__arrow">
+              <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+              >
+                <path d="M5 12h14" />
+                <path d="m13 6 6 6-6 6" />
+              </svg>
+            </span>
           </RouterLink>
         </div>
       </section>
@@ -2283,7 +2127,7 @@ function profileEffectStyle(player) {
   width: 100%;
   height: 100%;
 
-  object-fit: cover;
+  overflow: hidden;
 
   background: #090910;
 
@@ -2295,6 +2139,38 @@ function profileEffectStyle(player) {
   box-shadow:
       0 0 20px
       color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.rank-player__avatar img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.rank-player__avatar--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: color-mix(in srgb, var(--accent) 88%, #fff);
+
+  background:
+      radial-gradient(
+          circle at 30% 25%,
+          color-mix(in srgb, var(--accent) 32%, transparent),
+          transparent 62%
+      ),
+      color-mix(in srgb, var(--accent) 10%, #090910);
+
+  font-size: 21px;
+  font-weight: 950;
+
+  text-shadow:
+      0 0 14px
+      color-mix(in srgb, var(--accent) 60%, transparent);
 }
 
 .rank-player__frame {
@@ -2346,12 +2222,10 @@ function profileEffectStyle(player) {
 .rank-player__frame--rainbow {
   border: 2px solid transparent;
 
-
 }
 
 .rank-player__frame--legendary {
   border: 2px solid transparent;
-
 
 
   box-shadow:
@@ -2361,7 +2235,6 @@ function profileEffectStyle(player) {
 
 .rank-player__frame--season1 {
   border: 2px solid transparent;
-
 
 
   box-shadow:
@@ -2533,8 +2406,11 @@ function profileEffectStyle(player) {
   justify-content: center;
 }
 
-.mobile-podium__medal {
-  display: block;
+.mobile-podium__rank {
+  color: var(--accent);
+
+  font-size: 12px;
+  font-weight: 950;
 }
 
 .mobile-podium__card {
@@ -2582,7 +2458,9 @@ function profileEffectStyle(player) {
    ============================================================ */
 
 .rest {
-  margin-top: 12px;
+  position: relative;
+
+  margin-top: 16px;
 }
 
 .rest__head {
@@ -2590,22 +2468,34 @@ function profileEffectStyle(player) {
   align-items: flex-end;
   justify-content: space-between;
 
-  padding: 0 4px 13px;
+  gap: 20px;
+
+  padding: 0 4px 14px;
   margin-bottom: 12px;
 
   border-bottom: 1px solid var(--border);
 }
 
+.rest__heading {
+  min-width: 0;
+}
+
 .rest__eyebrow {
   display: block;
 
-  margin-bottom: 3px;
+  margin-bottom: 4px;
 
   color: #64748b;
 
   font-size: 8px;
   font-weight: 900;
   letter-spacing: 1.8px;
+}
+
+.rest__heading-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
 }
 
 .rest__title {
@@ -2641,44 +2531,173 @@ function profileEffectStyle(player) {
   font-weight: 800;
 }
 
+.rest__legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  color: #475569;
+
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+}
+
+.rest__legend-dot {
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: #22c55e;
+
+  box-shadow:
+      0 0 8px rgba(34, 197, 94, .65);
+}
+
 .rest__grid {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
 }
 
 .rest__row {
+  position: relative;
+
   display: grid;
 
-  grid-template-columns: 48px 64px minmax(0, 1fr);
+  grid-template-columns: 62px minmax(220px, 1.1fr) minmax(180px, .8fr) 90px 24px;
 
   align-items: center;
 
-  gap: 12px;
+  gap: 16px;
 
-  padding: 6px 10px 6px 4px;
+  min-height: 66px;
 
-  border-radius: 12px;
+  padding: 8px 12px 8px 8px;
+
+  overflow: hidden;
 
   color: inherit;
   text-decoration: none;
 
-  cursor: pointer;
-
-  transition:
-      background .18s ease,
-      transform .18s ease;
-}
-
-.rest__row:hover {
   background:
       linear-gradient(
           90deg,
-          color-mix(in srgb, var(--accent) 7%, transparent),
-          transparent 70%
+          color-mix(in srgb, var(--accent) 4%, transparent),
+          rgba(10, 10, 17, .28) 45%,
+          transparent
       );
 
-  transform: translateX(2px);
+  border: 1px solid rgba(255, 255, 255, .045);
+  border-radius: 13px;
+
+  box-shadow:
+      inset 0 1px rgba(255, 255, 255, .025),
+      0 5px 18px rgba(0, 0, 0, .08);
+
+  cursor: pointer;
+
+  transition:
+      transform .2s ease,
+      border-color .2s ease,
+      background .2s ease,
+      box-shadow .2s ease;
+}
+
+.rest__row::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  bottom: 0;
+  left: 0;
+
+  width: 2px;
+
+  background: var(--accent);
+
+  opacity: .3;
+
+  transition:
+      opacity .2s ease,
+      box-shadow .2s ease;
+}
+
+.rest__row:hover {
+  transform: translateX(3px);
+
+  border-color:
+      color-mix(in srgb, var(--accent) 22%, rgba(255,255,255,.05));
+
+  background:
+      linear-gradient(
+          90deg,
+          color-mix(in srgb, var(--accent) 9%, transparent),
+          rgba(10, 10, 17, .42) 48%,
+          transparent
+      );
+
+  box-shadow:
+      0 10px 28px rgba(0, 0, 0, .15),
+      0 0 25px
+      color-mix(in srgb, var(--accent) 7%, transparent);
+}
+
+.rest__row:hover::before {
+  opacity: 1;
+
+  box-shadow:
+      0 0 14px
+      color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+/* ============================================================
+   REST RANK
+   ============================================================ */
+
+.rest__rank {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 44px;
+}
+
+.rest__rank-number {
+  position: relative;
+  z-index: 1;
+
+  color: color-mix(in srgb, var(--accent) 70%, var(--text-muted));
+
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: .3px;
+}
+
+.rest__rank-line {
+  position: absolute;
+
+  left: 50%;
+  top: 0;
+  bottom: 0;
+
+  width: 1px;
+
+  background:
+      linear-gradient(
+          to bottom,
+          transparent,
+          color-mix(in srgb, var(--accent) 22%, transparent),
+          transparent
+      );
+
+  transform: translateX(-50%);
+
+  opacity: .7;
 }
 
 /* ============================================================
@@ -2690,7 +2709,7 @@ function profileEffectStyle(player) {
 
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
 
   min-width: 0;
 
@@ -2701,7 +2720,8 @@ function profileEffectStyle(player) {
   content: "";
 
   position: absolute;
-  inset: -10px;
+
+  inset: -15px -30px;
 
   background:
       radial-gradient(
@@ -2718,8 +2738,8 @@ function profileEffectStyle(player) {
 
   flex: 0 0 auto;
 
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
 }
 
 .rest-player__avatar {
@@ -2728,19 +2748,58 @@ function profileEffectStyle(player) {
   width: 100%;
   height: 100%;
 
-  object-fit: cover;
+  overflow: hidden;
+
+  background: #090910;
 
   border: 1px solid
   color-mix(in srgb, var(--accent) 30%, var(--border));
 
-  border-radius: 9px;
+  border-radius: 10px;
+
+  box-shadow:
+      0 0 12px
+      color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.rest-player__avatar img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.rest-player__avatar--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: color-mix(in srgb, var(--accent) 88%, #fff);
+
+  background:
+      radial-gradient(
+          circle at 30% 25%,
+          color-mix(in srgb, var(--accent) 30%, transparent),
+          transparent 65%
+      ),
+      color-mix(in srgb, var(--accent) 9%, #090910);
+
+  font-size: 14px;
+  font-weight: 950;
+
+  text-shadow:
+      0 0 10px
+      color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
 .rest-player__frame {
   position: absolute;
+
   inset: -2px;
 
-  border-radius: 10px;
+  border-radius: 11px;
 
   pointer-events: none;
 }
@@ -2813,7 +2872,7 @@ function profileEffectStyle(player) {
 
   color: var(--text);
 
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 850;
 
   white-space: nowrap;
@@ -2829,9 +2888,9 @@ function profileEffectStyle(player) {
 .rest-player__meta {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
 
-  margin-top: 2px;
+  margin-top: 3px;
 
   color: var(--text-muted);
 
@@ -2841,10 +2900,151 @@ function profileEffectStyle(player) {
 
 .rest-player__tier {
   color: var(--accent);
+
+  font-weight: 900;
+}
+
+.rest-player__role {
+  padding-left: 7px;
+
+  border-left: 1px solid var(--border);
 }
 
 /* ============================================================
-   900
+   REST PROGRESS
+   ============================================================ */
+
+.rest__progress {
+  min-width: 0;
+}
+
+.rest__progress-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 6px;
+
+  color: #475569;
+
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+}
+
+.rest__progress-value {
+  color: color-mix(in srgb, var(--accent) 65%, var(--text-muted));
+
+  font-size: 9px;
+  letter-spacing: 0;
+}
+
+.rest__progress-track {
+  position: relative;
+
+  width: 100%;
+  height: 4px;
+
+  overflow: hidden;
+
+  background: rgba(255, 255, 255, .045);
+
+  border-radius: 999px;
+}
+
+.rest__progress-fill {
+  display: block;
+
+  height: 100%;
+
+  min-width: 4px;
+
+  background:
+      linear-gradient(
+          90deg,
+          color-mix(in srgb, var(--accent) 55%, transparent),
+          var(--accent)
+      );
+
+  border-radius: inherit;
+
+  box-shadow:
+      0 0 10px
+      color-mix(in srgb, var(--accent) 35%, transparent);
+
+  transition: width .5s ease;
+}
+
+/* ============================================================
+   REST SCORE
+   ============================================================ */
+
+.rest__score {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+
+  min-width: 72px;
+
+  padding: 7px 9px;
+
+  color:
+      color-mix(in srgb, var(--accent) 82%, #fff);
+
+  background:
+      color-mix(
+          in srgb,
+          var(--accent) 8%,
+          rgba(8, 8, 14, .7)
+      );
+
+  border: 1px solid
+  color-mix(in srgb, var(--accent) 24%, transparent);
+
+  border-radius: 8px;
+
+  font-size: 11px;
+  font-weight: 950;
+
+  box-shadow:
+      inset 0 1px rgba(255,255,255,.025);
+}
+
+.rest__score svg {
+  color: var(--accent);
+
+  filter:
+      drop-shadow(
+          0 0 5px
+          color-mix(in srgb, var(--accent) 60%, transparent)
+      );
+}
+
+/* ============================================================
+   REST ARROW
+   ============================================================ */
+
+.rest__arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #334155;
+
+  transition:
+      color .2s ease,
+      transform .2s ease;
+}
+
+.rest__row:hover .rest__arrow {
+  color: var(--accent);
+
+  transform: translateX(3px);
+}
+
+/* ============================================================
+   RESPONSIVE 900
    ============================================================ */
 
 @media (max-width: 900px) {
@@ -2893,10 +3093,42 @@ function profileEffectStyle(player) {
     width: 48px;
     height: 48px;
   }
+
+  .rest__row {
+    grid-template-columns: 52px minmax(180px, 1fr) minmax(140px, .7fr) 76px 20px;
+
+    gap: 11px;
+  }
 }
 
 /* ============================================================
-   640
+   RESPONSIVE 760
+   ============================================================ */
+
+@media (max-width: 760px) {
+  .rest__row {
+    grid-template-columns:
+        48px
+        minmax(180px, 1fr)
+        76px
+        20px;
+  }
+
+  .rest__progress {
+    display: none;
+  }
+
+  .rest__score {
+    min-width: 68px;
+  }
+
+  .rest__legend {
+    display: none;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE 640
    ============================================================ */
 
 @media (max-width: 640px) {
@@ -2966,9 +3198,6 @@ function profileEffectStyle(player) {
     white-space: nowrap;
   }
 
-  /* Desktop mountain remains unchanged,
-     but mobile uses compact podium. */
-
   .mountain {
     display: none;
   }
@@ -3026,27 +3255,54 @@ function profileEffectStyle(player) {
   }
 
   .rest__row {
-    grid-template-columns: 36px 48px minmax(0, 1fr);
+    grid-template-columns:
+        34px
+        minmax(0, 1fr)
+        auto
+        16px;
 
     gap: 8px;
 
-    padding: 4px 6px 4px 2px;
+    min-height: 60px;
+
+    padding: 7px 8px 7px 5px;
   }
 
   .rest__rank {
-    height: 28px;
-    min-width: 28px;
+    min-height: 38px;
+  }
 
-    font-size: 11px;
-
-    border-radius: 8px;
+  .rest__rank-number {
+    font-size: 10px;
   }
 
   .rest__score {
-    height: 28px;
-    min-width: 40px;
+    min-width: 58px;
 
-    font-size: 11px;
+    padding: 6px 7px;
+
+    font-size: 10px;
+  }
+
+  .rest__arrow {
+    display: flex;
+  }
+
+  .rest-player__avatar-wrap {
+    width: 34px;
+    height: 34px;
+  }
+
+  .rest-player__avatar {
+    border-radius: 9px;
+  }
+
+  .rest-player__name {
+    font-size: 11.5px;
+  }
+
+  .rest-player__meta {
+    font-size: 8px;
   }
 
   .rest__eyebrow {
@@ -3055,7 +3311,7 @@ function profileEffectStyle(player) {
 }
 
 /* ============================================================
-   420
+   RESPONSIVE 420
    ============================================================ */
 
 @media (max-width: 420px) {
@@ -3088,12 +3344,61 @@ function profileEffectStyle(player) {
     height: 38px;
   }
 
+  .rank-player__avatar--fallback {
+    font-size: 16px;
+  }
+
   .rank-player__name {
     font-size: 12px;
   }
 
   .rank-player__role {
     display: none;
+  }
+
+  .rest__row {
+    grid-template-columns:
+        30px
+        minmax(0, 1fr)
+        auto
+        14px;
+
+    gap: 6px;
+
+    padding-right: 5px;
+  }
+
+  .rest__rank-number {
+    font-size: 9px;
+  }
+
+  .rest-player {
+    gap: 8px;
+  }
+
+  .rest-player__avatar-wrap {
+    width: 32px;
+    height: 32px;
+  }
+
+  .rest-player__name {
+    font-size: 11px;
+  }
+
+  .rest-player__clan {
+    margin-right: 2px;
+  }
+
+  .rest-player__meta {
+    gap: 5px;
+  }
+
+  .rest__score {
+    min-width: 52px;
+
+    padding: 5px 6px;
+
+    font-size: 9px;
   }
 }
 </style>
