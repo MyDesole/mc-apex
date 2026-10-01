@@ -128,8 +128,14 @@ onMounted(load)
         </div>
 
         <div v-if="myRole === 'leader' && m.role !== 'leader'" class="actions">
+          <button
+              class="btn-action btn-action--transfer"
+              @click="transfer(m)"
+              title="Сделать лидером — после этого вы сможете покинуть клан"
+          >
+            👑 Лидер
+          </button>
           <button class="btn-action" @click="openRoleModal(m)" title="Изменить роль">⚙️</button>
-          <button class="btn-action" @click="transfer(m)" title="Передать лидерство">👑</button>
           <button class="btn-action danger" @click="kick(m)" title="Кикнуть">🗑</button>
         </div>
       </div>
@@ -260,6 +266,17 @@ onMounted(load)
 }
 
 .actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+/* Передача лидерства — с подписью: по одной короне смысл не читался,
+   а лидер без этого не может выйти из клана */
+.btn-action--transfer {
+  width: auto;
+  padding: 0 10px;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
 
 .btn-action {
   width: 32px;

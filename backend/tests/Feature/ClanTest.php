@@ -781,15 +781,25 @@ class ClanTest extends TestCase
         $this->assertNull($member->fresh()->clan_joined_at);
     }
 
-    public function test_leader_cannot_leave_clan(): void
+    /**
+     * Лидер с другими участниками выйти не может: сначала передача
+     * лидерства. Лидер-одиночка распускает клан — см. ClanDissolveTest.
+     */
+    public function test_leader_with_members_cannot_leave_clan(): void
     {
         $leader = $this->user();
         $clan = $this->clan($leader, ['power' => 100]);
 
+        $this->member($clan, $this->user(), 'member');
+
         $this->actingAs($leader)
             ->postJson("/api/clans/{$clan->id}/leave")
             ->assertStatus(422)
-            ->assertJsonPath('message', 'Лидер не может покинуть клан. Передайте лидерство.');
+            ->assertJsonPath(
+                'message',
+                'Лидер не может покинуть клан. Передайте лидерство участнику '
+                . '— кнопка с короной в списке участников.'
+            );
 
         $this->assertDatabaseHas('clan_members', ['clan_id' => $clan->id, 'user_id' => $leader->id, 'role' => 'leader']);
         $this->assertSame(100, $clan->fresh()->power);

@@ -24,13 +24,29 @@ const leaveError = ref('')
 const clan = computed(() => data.value?.clan)
 const permissions = computed(() => data.value?.my_permissions ?? {})
 
-// Лидер не может выйти, не передав лидерство (сервер это тоже запрещает)
-const canLeave = computed(() => data.value?.my_role && data.value.my_role !== 'leader')
+const isLeader = computed(() => data.value?.my_role === 'leader')
+
+// Сколько всего участников: подсказывает, можно ли распустить клан
+const membersCount = computed(() => data.value?.stats?.members ?? 0)
+
+// Лидер распускает клан, только если он в нём один
+const willDissolve = computed(() => isLeader.value && membersCount.value <= 1)
+
+// Лидер с участниками выйти не может — сначала передача лидерства
+const blockedAsLeader = computed(() => isLeader.value && membersCount.value > 1)
+
+// Кнопку показываем всем, кроме заблокированного лидера: ему вместо
+// кнопки выводим подсказку, куда идти за передачей лидерства
+const canLeave = computed(() => !blockedAsLeader.value && !!data.value?.my_role)
 
 async function leaveClan() {
   if (leaving.value) return
 
-  if (!confirm('Покинуть клан? Вернуться можно будет только по новой заявке.')) return
+  const question = willDissolve.value
+      ? 'Вы единственный участник клана. Клан будет РАСПУЩЕН вместе с форумом и ресурсами. Продолжить?'
+      : 'Покинуть клан? Вернуться можно будет только по новой заявке.'
+
+  if (!confirm(question)) return
 
   leaving.value = true
   leaveError.value = ''
@@ -43,12 +59,15 @@ async function leaveClan() {
 
     router.push('/clans')
   } catch (e) {
-    leaveError.value = e.status === 422
-        ? 'Лидер не может покинуть клан. Сначала передайте лидерство.'
-        : (e.message || 'Не удалось покинуть клан.')
+    // Показываем сообщение сервера: оно объясняет и про передачу лидерства
+    leaveError.value = e.message || 'Не удалось покинуть клан.'
   } finally {
     leaving.value = false
   }
+}
+
+function goToMembers() {
+  tab.value = 'members'
 }
 
 const tabs = computed(() => {
@@ -125,6 +144,14 @@ onMounted(load)
         </p>
 
         <p v-if="leaveError" class="leave-error">{{ leaveError }}</p>
+
+        <p v-if="blockedAsLeader" class="leave-hint">
+          Вы лидер, поэтому покинуть клан нельзя. Передайте лидерство
+          <button class="leave-hint__link" type="button" @click="goToMembers">
+            в списке участников
+          </button>
+          — кнопка с короной, после этого вы сможете выйти.
+        </p>
       </div>
 
       <div class="clan-stats">
@@ -157,7 +184,7 @@ onMounted(load)
             <polyline points="16 17 21 12 16 7" />
             <line x1="21" y1="12" x2="9" y2="12" />
           </svg>
-          {{ leaving ? 'Выходим…' : 'Покинуть клан' }}
+          {{ leaving ? 'Выходим…' : (willDissolve ? 'Распустить клан' : 'Покинуть клан') }}
         </button>
       </div>
     </header>
@@ -621,6 +648,29 @@ onMounted(load)
   margin: 6px 0 0;
   color: #fca5a5;
   font-size: 12px;
+}
+
+/* Подсказка лидеру: почему нельзя выйти и что с этим делать */
+.leave-hint {
+  margin: 8px 0 0;
+  padding: 8px 11px;
+  color: var(--text-dim);
+  background: rgba(250, 204, 21, 0.07);
+  border: 1px solid rgba(250, 204, 21, 0.22);
+  border-radius: 9px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.leave-hint__link {
+  padding: 0;
+  color: #facc15;
+  background: transparent;
+  border: 0;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 /* На узких экранах кнопка уходит отдельной строкой */

@@ -317,6 +317,14 @@ class ClanService
 
     /* ----------------------------- Участники ----------------------------- */
 
+    /**
+     * Выйти из клана.
+     *
+     * Лидер с участниками выйти не может — сначала нужно передать
+     * лидерство (кнопка с короной в списке участников). Но лидер,
+     * оставшийся один, распускает клан: передавать лидерство некому,
+     * иначе он оказался бы заперт в клане навсегда.
+     */
     public function leave(Clan $clan, User $user): void
     {
         $membership = ClanMember::where('clan_id', $clan->id)
@@ -324,13 +332,52 @@ class ClanService
             ->firstOrFail();
 
         if ($membership->role === 'leader') {
-            $this->abortUnprocessable('Лидер не может покинуть клан. Передайте лидерство.');
+            $others = ClanMember::where('clan_id', $clan->id)
+                ->where('user_id', '!=', $user->id)
+                ->count();
+
+            if ($others > 0) {
+                $this->abortUnprocessable(
+                    'Лидер не может покинуть клан. Передайте лидерство участнику '
+                    . '— кнопка с короной в списке участников.'
+                );
+            }
+
+            $this->dissolve($clan);
+
+            return;
         }
 
-        $membership->delete();
-        $user->update(['clan_joined_at' => null]);
+        DB::transaction(function () use ($clan, $user, $membership) {
+            $membership->delete();
+            $user->update(['clan_joined_at' => null]);
 
-        $clan->recalculatePower();
+            $clan->recalculatePower();
+        });
+    }
+
+    /**
+     * Распустить клан: удаляем его вместе со связанным содержимым.
+     *
+     * Большинство таблиц ссылаются на clans через cascadeOnDelete,
+     * поэтому достаточно удалить клан. Но два места каскадом не покрыты:
+     * favorite_clan_id у пользователей (nullOnDelete) и clan_joined_at
+     * у вышедших участников — их чистим явно.
+     */
+    public function dissolve(Clan $clan): void
+    {
+        DB::transaction(function () use ($clan) {
+            $memberIds = ClanMember::where('clan_id', $clan->id)->pluck('user_id');
+
+            if ($memberIds->isNotEmpty()) {
+                User::whereIn('id', $memberIds)->update(['clan_joined_at' => null]);
+            }
+
+            // Витрина профиля не должна ссылаться на удалённый клан
+            User::where('favorite_clan_id', $clan->id)->update(['favorite_clan_id' => null]);
+
+            $clan->delete();
+        });
     }
 
     /**
