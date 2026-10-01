@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { myClanApi } from '@/services/myClan.js'
+import { clansApi } from '@/services/clans.js'
 
 import ClanNewsTab from '@/components/my-clan/ClanNewsTab.vue'
 import ClanForumTab from '@/components/my-clan/ClanForumTab.vue'
@@ -17,9 +18,38 @@ const auth = useAuthStore()
 const loading = ref(true)
 const data = ref(null)
 const tab = ref('forum')
+const leaving = ref(false)
+const leaveError = ref('')
 
 const clan = computed(() => data.value?.clan)
 const permissions = computed(() => data.value?.my_permissions ?? {})
+
+// Лидер не может выйти, не передав лидерство (сервер это тоже запрещает)
+const canLeave = computed(() => data.value?.my_role && data.value.my_role !== 'leader')
+
+async function leaveClan() {
+  if (leaving.value) return
+
+  if (!confirm('Покинуть клан? Вернуться можно будет только по новой заявке.')) return
+
+  leaving.value = true
+  leaveError.value = ''
+
+  try {
+    await clansApi.leave(clan.value.id)
+
+    // Обновляем профиль: в шапке сайта есть тег клана
+    await auth.fetchMe()
+
+    router.push('/clans')
+  } catch (e) {
+    leaveError.value = e.status === 422
+        ? 'Лидер не может покинуть клан. Сначала передайте лидерство.'
+        : (e.message || 'Не удалось покинуть клан.')
+  } finally {
+    leaving.value = false
+  }
+}
 
 const tabs = computed(() => {
   const base = [
@@ -93,6 +123,8 @@ onMounted(load)
                   : '👤 Участник' }}
                     </span>
         </p>
+
+        <p v-if="leaveError" class="leave-error">{{ leaveError }}</p>
       </div>
 
       <div class="clan-stats">
@@ -112,6 +144,21 @@ onMounted(load)
           <span class="stat__value loss">{{ clan.losses }}</span>
           <span class="stat__label">поражений</span>
         </div>
+
+        <button
+            v-if="canLeave"
+            class="btn-leave-clan"
+            type="button"
+            :disabled="leaving"
+            @click="leaveClan"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+          {{ leaving ? 'Выходим…' : 'Покинуть клан' }}
+        </button>
       </div>
     </header>
 
@@ -539,4 +586,49 @@ onMounted(load)
     right: 14px;
   }
 }
+
+/* Кнопка выхода из клана в шапке */
+.btn-leave-clan {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  align-self: center;
+  flex-shrink: 0;
+  padding: 9px 15px;
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.btn-leave-clan:hover:not(:disabled) {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.btn-leave-clan:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.leave-error {
+  margin: 6px 0 0;
+  color: #fca5a5;
+  font-size: 12px;
+}
+
+/* На узких экранах кнопка уходит отдельной строкой */
+@media (max-width: 720px) {
+  .btn-leave-clan {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 </style>

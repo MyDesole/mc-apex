@@ -35,8 +35,11 @@ class ClanService
     /**
      * Список кланов по силе с числом участников.
      */
-    public function list(?string $search): LengthAwarePaginator
+    public function list(?string $search, ?User $me = null): LengthAwarePaginator
     {
+        // id своего клана: фронтенд по нему ведёт клик во вкладку «Мой клан»
+        $myClanId = $me?->clanMember?->clan_id;
+
         $clans = Clan::query()
             ->with('leader:id,username,avatar')
             ->when($search, function ($query) use ($search) {
@@ -50,8 +53,9 @@ class ClanService
 
         $counts = $this->memberCounts($clans->pluck('id'));
 
-        $clans->getCollection()->transform(function (Clan $clan) use ($counts) {
+        $clans->getCollection()->transform(function (Clan $clan) use ($counts, $myClanId) {
             $clan->members_count = (int) ($counts[$clan->id] ?? 0);
+            $clan->my_clan_id = $clan->id === $myClanId ? $myClanId : null;
 
             return $clan;
         });

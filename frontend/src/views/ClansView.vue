@@ -1,12 +1,31 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { clansApi } from '@/services/clans.js'
-import { clanLink } from '@/utils/links.js'
+import { clanLink, isOwnClan } from '@/utils/links.js'
+import { useAuthStore } from '@/stores/auth'
+
+const auth = useAuthStore()
 
 const clans = ref([])
 const loading = ref(true)
 const search = ref('')
+
+// id своего клана: по нему клик ведёт во вкладку «Мой клан».
+// Сервер помечает свой клан полем my_clan_id, но подстрахуемся данными сессии.
+const myClanId = computed(() => {
+  const fromList = clans.value.find((c) => c.my_clan_id)?.my_clan_id
+
+  return fromList ?? auth.user?.clan_member?.clan_id ?? auth.user?.clan_member?.clan?.id ?? null
+})
+
+function cardLink(clan) {
+  return clanLink(clan, { myClanId: myClanId.value })
+}
+
+function ownClan(clan) {
+  return isOwnClan(clan, myClanId.value)
+}
 
 let timer = null
 
@@ -158,9 +177,9 @@ onMounted(load)
       <RouterLink
           v-for="clan in clans"
           :key="clan.id"
-          :to="clanLink(clan)"
+          :to="cardLink(clan)"
           class="clan-card"
-          :class="{ highlighted: clan.is_highlighted }"
+          :class="{ highlighted: clan.is_highlighted, 'clan-card--mine': ownClan(clan) }"
       >
 
         <!-- Акцентная полоска -->
@@ -188,7 +207,15 @@ onMounted(load)
           </template>
 
           <span
-              v-if="clan.is_highlighted"
+              v-if="ownClan(clan)"
+              class="mine-mark"
+              title="Это ваш клан"
+          >
+            Мой
+          </span>
+
+          <span
+              v-else-if="clan.is_highlighted"
               class="featured-mark"
               title="Рекомендуемый клан"
           >
@@ -1152,4 +1179,35 @@ h1 {
     font-size: 15px;
   }
 }
+
+/* Свой клан в общем списке: метка и акцентная рамка */
+.clan-card--mine {
+  border-color: rgba(34, 197, 94, 0.45);
+  background: linear-gradient(
+      90deg,
+      rgba(34, 197, 94, 0.08) 0%,
+      var(--bg-card, transparent) 42%
+  );
+}
+
+.mine-mark {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  min-width: 34px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 7px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  border-radius: 10px;
+  color: #04170a;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
+}
+
 </style>

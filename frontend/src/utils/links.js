@@ -24,9 +24,25 @@ export function userLink(user) {
     return id ? `/players/${id}` : '/players'
 }
 
-/** Клан. */
-export function clanLink(clan) {
+/** Является ли клан кланом текущего игрока. */
+export function isOwnClan(clan, myClanId) {
+    if (!clan || myClanId === null || myClanId === undefined) return false
+
+    const clanId = clan.id ?? clan.clan_id
+
+    return clanId !== null && clanId !== undefined && Number(clanId) === Number(myClanId)
+}
+
+/**
+ * Клан.
+ *
+ * Свой клан ведёт во вкладку «Мой клан»: там доступны форум, ресурсы,
+ * участники и выход — то, чего нет на публичной странице клана.
+ */
+export function clanLink(clan, { myClanId = null } = {}) {
     if (!clan) return '/clans'
+
+    if (isOwnClan(clan, myClanId)) return '/my-clan'
 
     const name = clan.name
 
@@ -42,4 +58,4 @@ export function clanLink(clan) {
     return id ? `/clans/${id}` : '/clans'
 }
 
-export default { userLink, clanLink }
+export default { userLink, clanLink, isOwnClan }

@@ -32,7 +32,7 @@ class ClanController extends Controller
     public function index(Request $request): JsonResponse
     {
         return response()->json(
-            $this->clans->list($request->query('search'))
+            $this->clans->list($request->query('search'), $request->user())
         );
     }
 
