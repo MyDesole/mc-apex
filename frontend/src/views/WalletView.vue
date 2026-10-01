@@ -618,7 +618,7 @@ onMounted(load)
               class="referral__input"
               type="text"
               readonly
-              :value="referral.link"
+              :value="'https://mc-apex.ru/register?ref=' + referral.code "
               @focus="$event.target.select()"
           >
 
