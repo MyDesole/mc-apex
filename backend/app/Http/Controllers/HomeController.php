@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Clan;
 use App\Models\User;
+use App\Http\Resources\ClanCardResource;
+use App\Http\Resources\UserCardResource;
 use Illuminate\Http\JsonResponse;
 
 class HomeController extends Controller
@@ -66,42 +68,28 @@ class HomeController extends Controller
         $footer = \App\Models\SiteSetting::group('footer');
         $stats = \App\Models\SiteSetting::group('stats');
 
-        // топ игроков
-        $players = \App\Models\User::query()
-            ->excludeStaff()   // персонал в топ не попадает, медийка участвует
-            ->with('clanMember.clan:id,tag,banner_color')
-            ->orderByDesc('tier_score')
-            ->limit(10)
-            ->get()
-            ->map(fn ($u) => [
-                'id' => $u->id,
-                'username' => $u->username,
-                'avatar_url' => $u->avatar_url,
-                'tier' => $u->tier,
-                'tier_score' => $u->tier_score,
-                'clan_tag' => $u->clan_tag,
-                'clan_color' => $u->clan_color,
-            ]);
+        // Топ игроков. Отдаём через ресурс: ручной map терял поля
+        // (рамку, эффект профиля, статус), которые читает фронтенд.
+        $players = \App\Http\Resources\UserCardResource::collection(
+            \App\Models\User::query()
+                ->excludeStaff()   // персонал в топ не попадает, медийка участвует
+                ->with('clanMember.clan:id,tag,banner_color')
+                ->orderByDesc('tier_score')
+                ->limit(10)
+                ->get()
+        )->resolve();
 
-        // топ кланов
-        $clans = \App\Models\Clan::query()
-            ->where('is_banned', false)
-            ->with('leader:id,username,avatar')
-            ->orderByDesc('power')
-            ->limit(10)
-            ->get()
-            ->map(fn ($c) => [
-                'id' => $c->id,
-                'name' => $c->name,
-                'tag' => $c->tag,
-                'avatar_url' => $c->avatar_url,
-                'banner_color' => $c->banner_color,
-                'power' => $c->power,
-                'wins' => $c->wins,
-                'losses' => $c->losses,
-                'members_count' => $c->members()->count(),
-                'leader' => $c->leader,
-            ]);
+        // Топ кланов. Через ресурс — он считает подсветку с учётом срока
+        // и отдаёт цвет с эффектом; members_count берётся одним запросом.
+        $clans = \App\Http\Resources\ClanCardResource::collection(
+            \App\Models\Clan::query()
+                ->where('is_banned', false)
+                ->with('leader:id,username,avatar')
+                ->withCount('members')
+                ->orderByDesc('power')
+                ->limit(10)
+                ->get()
+        )->resolve();
 
         // новости
         $news = \App\Models\News::where('is_published', true)
