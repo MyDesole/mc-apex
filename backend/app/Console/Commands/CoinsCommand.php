@@ -176,11 +176,16 @@ class CoinsCommand extends Command
         $bar->finish();
         $this->newLine(2);
 
-        $this->info("Изменено: {$done}, ошибок: {$failed}.");
+        // Частичный успех не считаем ошибкой команды: часть игроков
+        // обработана, а сколько не удалось — видно в отчёте. Иначе
+        // скрипты и CI падали бы из-за одного несостоятельного игрока.
+        if ($failed > 0) {
+            $this->warn("Начислено: {$done}, пропущено с ошибкой: {$failed}.");
+        } else {
+            $this->info("Начислено: {$done}.");
+        }
 
-        return $failed > 0
-            ? self::FAILURE
-            : self::SUCCESS;
+        return self::SUCCESS;
     }
 
     /**

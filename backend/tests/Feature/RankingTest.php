@@ -108,9 +108,32 @@ class RankingTest extends TestCase
         $this->assertSame($bwKing->id, $bw->json('data.0.id'));
         $this->assertSame(100, $bw->json('data.0.rating_score'));
 
-        // В общем режиме считается среднее
+        // В общем режиме баллы обоих режимов складываются.
+        // Раньше считалось среднее, но при делении на 2 слабые игроки
+        // обнулялись и выпадали из рейтинга.
         $overall = $this->getJson('/api/ranking?mode=overall')->assertOk();
-        $this->assertSame(50, $overall->json('data.0.rating_score'));
+        $this->assertSame(100, $overall->json('data.0.rating_score'));
+    }
+
+    /**
+     * Игрок со слабыми аспектами обязан оставаться в рейтинге.
+     *
+     * Регрессия: формула общего рейтинга делила сумму на 2, поэтому
+     * игрок с минимальным баллом обнулялся и пропадал из выдачи.
+     */
+    public function test_weak_players_stay_in_overall_ranking(): void
+    {
+        $weak = $this->player(['block_placing' => 1, 'rotka' => 0, 'movement' => 0, 'aim' => 0, 'game_sense' => 0]);
+        $strong = $this->player(['block_placing' => 20, 'rotka' => 20, 'movement' => 20, 'aim' => 20, 'game_sense' => 20]);
+
+        $overall = $this->getJson('/api/ranking?mode=overall')->assertOk();
+        $ids = collect($overall->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($weak->id), 'Слабый игрок должен быть в рейтинге');
+        $this->assertTrue($ids->contains($strong->id));
+
+        $this->assertSame($strong->id, $overall->json('data.0.id'));
+        $this->assertSame(100, $overall->json('data.0.rating_score'));
     }
 
     public function test_staff_is_excluded_from_ranking(): void

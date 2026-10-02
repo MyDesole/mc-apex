@@ -14,7 +14,9 @@ const emit = defineEmits(['close', 'updated'])
 
 const auth = useAuthStore()
 
-const test = ref(props.tierTest)
+// Читаем проп напрямую: ref(props.tierTest) запоминал первый открытый
+// тест, и при переключении на другой режим список аспектов не менялся
+const test = computed(() => props.tierTest)
 const error = ref('')
 const processing = ref(false)
 
@@ -40,10 +42,14 @@ const ASPECT_LABELS = {
   },
 }
 
-const labels = computed(() => ASPECT_LABELS[test.value.mode] ?? ASPECT_LABELS.pvp)
+// Список полей строго по режиму заявки. Неизвестный режим считаем PvP.
+const labels = computed(() => ASPECT_LABELS[test.value?.mode] ?? ASPECT_LABELS.pvp)
 
-// Пустая форма
-async function emptyForm() {
+// Заголовок блока оценок: помогает тестеру не перепутать режимы
+const modeTitle = computed(() => (test.value?.mode === 'bedwars' ? 'BedWars' : 'PvP'))
+
+// Пустая форма: все поля обоих режимов, используем нужные по labels
+function emptyForm() {
   return {
     block_placing: 0,
     rotka: 0,
@@ -58,22 +64,32 @@ async function emptyForm() {
   }
 }
 
-const form = ref(emptyForm())
+/**
+ * Собирает форму оценок под текущую заявку.
+ *
+ * Аспекты у режимов разные: в PvP это aim и game_sense, в BedWars —
+ * pvp, bed_play, teamplay и building. Поэтому форму пересобираем при
+ * каждом переключении заявки, иначе в модалке остаются поля
+ * предыдущего режима.
+ */
+function formForCurrentTest() {
+  const base = emptyForm()
 
-// Если уже проведён — заполняем из aspects
-if (isCompleted.value && test.value.aspects) {
-  const a = test.value.aspects
-  form.value = {
-    ...emptyForm(),
-    ...a,
-    notes: test.value.notes ?? '',
+  if (isCompleted.value && test.value.aspects) {
+    return { ...base, ...test.value.aspects, notes: test.value.notes ?? '' }
   }
+
+  return base
 }
 
-// При смене режима — сбрасываем форму
-watch(() => test.value.mode, () => {
-  form.value = emptyForm()
-})
+const form = ref(formForCurrentTest())
+
+// Переключают заявку или меняют режим — форма пересобирается
+watch(
+    () => [test.value?.id, test.value?.mode],
+    () => { form.value = formForCurrentTest() },
+    { immediate: true }
+)
 
 // Сумма баллов по активным полям (макс. 100)
 const sum = computed(() => {
@@ -257,6 +273,15 @@ async function avatarLetter(username) {
 
         <!-- IN_PROGRESS + MINE -->
         <template v-else-if="isInProgress && isMine">
+          <div class="mode-note" :class="`mode-note--${test.mode}`">
+            <span class="mode-note__title">Режим: {{ modeTitle }}</span>
+            <span class="mode-note__hint">
+              {{ test.mode === 'bedwars'
+                  ? 'Оцениваются PvP, понимание игры, игра на кровати, командная игра и строительство'
+                  : 'Оцениваются БП, ротка, мувмент, аим и понимание боя' }}
+            </span>
+          </div>
+
           <div class="form">
             <div
                 v-for="(label, key) in labels"
@@ -659,6 +684,35 @@ async function avatarLetter(username) {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* Плашка режима: PvP и BedWars оцениваются по разным аспектам */
+.mode-note {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 14px;
+  padding: 10px 13px;
+  background: rgba(124, 58, 237, 0.07);
+  border: 1px solid rgba(124, 58, 237, 0.22);
+  border-radius: 10px;
+}
+
+.mode-note--bedwars {
+  background: rgba(6, 182, 212, 0.07);
+  border-color: rgba(6, 182, 212, 0.24);
+}
+
+.mode-note__title {
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
+.mode-note__hint {
+  color: var(--text-dim);
+  font-size: 11.5px;
+  line-height: 1.45;
 }
 
 .aspect-row {

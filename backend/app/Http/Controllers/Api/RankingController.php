@@ -15,7 +15,8 @@ class RankingController extends Controller
 
         $mode = $data['mode'] ?? 'overall';
         $limit = min((int) ($data['limit'] ?? 30), 100);
-        $cursor = $data['cursor'] ?? null;
+        // Курсор принимаем в любом из поддерживаемых видов
+        $cursor = $request->cursor();
 
         $pvp = $this->aspectSum(
             'player_aspects_pvp',
@@ -27,10 +28,13 @@ class RankingController extends Controller
             ['pvp', 'game_sense', 'bed_play', 'teamplay', 'building']
         );
 
+        // Общий рейтинг — сумма аспектов обоих режимов.
+        // Раньше делилось на 2, и игрок с 1 баллом давал 0.5 -> ROUND 1,
+        // а с 0.5 — 0, из-за чего он выпадал из рейтинга по условию score > 0.
         $score = match ($mode) {
             'pvp' => "ROUND($pvp)",
             'bedwars' => "ROUND($bedwars)",
-            default => "ROUND(($pvp + $bedwars) / 2)",
+            default => "ROUND($pvp + $bedwars)",
         };
 
         $query = User::query()
