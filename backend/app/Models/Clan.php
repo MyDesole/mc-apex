@@ -12,7 +12,7 @@ class Clan extends Model
     protected $fillable = [
         'name', 'tag', 'description', 'avatar', 'cover_path',
         'banner_color', 'leader_id', 'power', 'wins', 'losses',
-        'is_open', 'is_highlighted', 'highlight_until', 'socials', 'max_members',
+        'is_open', 'entry_fee', 'is_highlighted', 'highlight_until', 'socials', 'max_members',
         'is_banned', 'ban_reason',
 
     ];
@@ -22,6 +22,7 @@ class Clan extends Model
         'is_open' => 'boolean',
         'is_highlighted' => 'boolean',
         'highlight_until' => 'datetime',
+        'entry_fee' => 'integer',
         'is_banned' => 'boolean',
         'socials' => 'array',
     ];

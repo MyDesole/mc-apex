@@ -18,6 +18,9 @@ class UpdateClanRequest extends BaseFormRequest
             'description' => ['nullable', 'string', 'max:1000'],
             'banner_color' => ['nullable', 'string', 'max:16'],
             'is_open' => ['boolean'],
+            // Плата за вступление: 0 — вступление свободное
+            'entry_fee' => ['nullable', 'integer', 'min:0', 'max:100000'],
+
             // is_highlighted намеренно не принимается: подсветка платная,
             // выдаётся покупкой в магазине, а не настройкой клана
 

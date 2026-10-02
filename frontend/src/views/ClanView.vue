@@ -55,6 +55,19 @@ async function load() {
 }
 
 async function apply() {
+  const fee = clan.value?.entry_fee ?? 0
+
+  // Если вступление платное — предупреждаем до отправки заявки
+  if (fee > 0) {
+    const ok = await confirmDialog(
+        `Вступление в этот клан стоит ${fee} ApexCoin. `
+        + 'Деньги спишутся при принятии заявки. Отправить заявку?',
+        { title: 'Платное вступление' }
+    )
+
+    if (!ok) return
+  }
+
   const message = await promptDialog('Сообщение лидеру (опционально):')
   if (message === null) return
   await clansApi.apply(route.params.id, message)

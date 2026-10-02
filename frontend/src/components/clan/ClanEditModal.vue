@@ -18,6 +18,7 @@ const form = ref({
   description: props.clan.description || '',
   banner_color: props.clan.banner_color || '#7c3aed',
   is_open: props.clan.is_open,
+  entry_fee: props.clan.entry_fee ?? 0,
   // is_highlighted не отправляется: подсветка выдаётся покупкой в магазине
   socials: {
     discord: props.clan.socials?.discord || '',
@@ -303,6 +304,31 @@ const colorPresets = [
               <small>Любой игрок сможет отправить заявку в клан</small>
             </span>
           </label>
+
+          <!-- Плата за вступление: деньги уходят лидеру при принятии -->
+          <div class="fee-field">
+            <label class="fee-field__label" for="entry-fee">
+              Плата за вступление
+            </label>
+
+            <div class="fee-field__row">
+              <input
+                  id="entry-fee"
+                  v-model.number="form.entry_fee"
+                  class="fee-field__input"
+                  type="number"
+                  min="0"
+                  max="100000"
+                  step="50"
+              >
+              <span class="fee-field__unit">ApexCoin</span>
+            </div>
+
+            <small class="fee-field__hint">
+              0 — вступление бесплатное. Деньги списываются у игрока
+              в момент принятия заявки и уходят вам.
+            </small>
+          </div>
 
           <!--
             Подсветка клана — платная услуга из магазина, а не настройка.
@@ -750,6 +776,59 @@ const colorPresets = [
 /* Платная опция: не переключается, ведёт в магазин */
 .option-card--locked {
   cursor: default;
+}
+
+/* Плата за вступление */
+.fee-field {
+  margin-bottom: 14px;
+  padding: 13px 15px;
+  background: rgba(255,255,255,.025);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.fee-field__label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.fee-field__row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.fee-field__input {
+  width: 130px;
+  padding: 8px 11px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+
+.fee-field__input:focus {
+  border-color: var(--accent);
+}
+
+.fee-field__unit {
+  color: #facc15;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.fee-field__hint {
+  display: block;
+  margin-top: 7px;
+  color: var(--text-dim);
+  font-size: 11.5px;
+  line-height: 1.45;
 }
 
 .option-link {
