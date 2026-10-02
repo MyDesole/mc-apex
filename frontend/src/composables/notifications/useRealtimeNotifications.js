@@ -1,5 +1,6 @@
 import { onUnmounted, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/core/auth.js'
+import { echoGeneration } from '@/echo.js'
 
 /*
  * Состояние на уровне модуля: все компоненты, которые вызывают
@@ -80,11 +81,16 @@ export function useRealtimeNotifications() {
 
     // Следим за сменой юзера — переподписываемся
     watch(
-        () => auth.user?.id,
-        (id) => {
+        // Второе значение — поколение соединения: при пересоздании
+        // подписка теряется, поэтому подписываемся заново
+        () => [auth.user?.id, echoGeneration.value],
+        ([id]) => {
             unsubscribe()
 
             if (id) {
+                // Соединение пересоздано: старая подписка потеряна
+                channel = null
+
                 subscribe()
             } else {
                 unreadCount.value = 0

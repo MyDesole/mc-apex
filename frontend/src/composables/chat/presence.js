@@ -1,6 +1,7 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import { chatApi } from '@/services/chat/chat.js'
 import { useAuthStore } from '@/stores/core/auth.js'
+import { echoGeneration, onEchoReset } from '@/echo.js'
 
 /**
  * Кто сейчас на сайте.
@@ -134,6 +135,19 @@ function stopFallback() {
   clearInterval(timer)
   timer = null
 }
+
+/*
+ * Пересоздание соединения: канал присутствия теряется, поэтому
+ * подписываемся заново и обновляем список онлайна.
+ */
+onEchoReset(() => {
+  // Если страница уже ушла с чата, подписываться заново не нужно
+  if (subscribers <= 0) return
+
+  channel = null
+  subscribeChannel()
+  fetchAll()
+})
 
 export function usePresence() {
   onMounted(async () => {

@@ -1,5 +1,6 @@
 import { onUnmounted, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/core/auth.js'
+import { echoGeneration } from '@/echo.js'
 
 // Общий ref — один на всё приложение
 const latestMessage = ref(null)
@@ -34,11 +35,16 @@ export function useRealtimeMessages() {
         }
     }
 
-    // Подписываемся один раз
+    // Подписываемся при входе и заново — после пересоздания соединения
     watch(
-        () => auth.user?.id,
-        (id) => {
-            if (id) subscribe()
+        () => [auth.user?.id, echoGeneration.value],
+        ([id]) => {
+            if (!id) return
+
+            // Соединение пересоздано: старая подписка потеряна
+            channel = null
+
+            subscribe()
         },
         { immediate: true }
     )
