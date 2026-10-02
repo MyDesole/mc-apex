@@ -76,7 +76,6 @@ Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $requ
     return redirect(config('app.frontend_url') . '/profile?verified=1');
 })->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
 
-
 /*
 |--------------------------------------------------------------------------
 | МАГАЗИН (публично) — apex:shop-public
@@ -92,7 +91,6 @@ Route::get('/shop/inventory', [ShopController::class, 'inventory'])
 Route::get('/shop/{shopItem}', [ShopController::class, 'show'])->whereNumber('shopItem');
 Route::get('/players/{user}/recommendations', [ProfileRecommendationController::class, 'index'])
     ->whereNumber('user');
-
 
 // Home (главная)
 Route::get('/home', [HomeController::class, 'index']);
@@ -114,9 +112,7 @@ Route::get('/clans/top', [ClanController::class, 'top']);
 // apex:public-clan-show
 Route::get('/clans/{clan}', [ClanController::class, 'show']);
 
-
-// Игроки (просмотр)
-Route::get('/players', [PlayerController::class, 'index']);
+// Список игроков отдаёт рейтинг: /api/ranking (RankingController)
 
 // Рейтинг с курсорной пагинацией — apex:ranking
 Route::get('/ranking', [\App\Domains\Players\Controllers\Api\RankingController::class, 'index']);
@@ -130,7 +126,6 @@ Route::get('/users/{user}', [PlayerController::class, 'show']);
 | АВТОРИЗОВАННЫЕ РОУТЫ
 |--------------------------------------------------------------------------
 */
-
 
 /*
 |--------------------------------------------------------------------------
@@ -241,7 +236,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/upload', [ForumController::class, 'upload'])
             ->middleware('throttle:30,1');
     });
-    Route::get('/players/rating', [PlayerController::class, 'rating']);
     Route::post('/players/{user}/recommendations', [ProfileRecommendationController::class, 'store'])
         ->whereNumber('user');
 
@@ -450,7 +444,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/clans/{clan}/avatar/remove', [AdminClanController::class, 'removeAvatar'])->whereNumber('clan');
         Route::post('/clans/{clan}/cover/remove', [AdminClanController::class, 'removeCover'])->whereNumber('clan');
 
-
         // --- ФОРУМ: МОДЕРАЦИЯ — apex:forum-admin ---
         Route::get('/forum/stats', [AdminForumController::class, 'stats']);
         Route::get('/forum/categories', [AdminForumController::class, 'categories']);
@@ -576,6 +569,5 @@ Route::middleware(['auth:sanctum', 'clan.member'])->prefix('my-clan')->group(fun
     Route::post('/roles/{user}', [\App\Domains\Clan\Controllers\Api\ClanRoleController::class, 'update']);
     Route::delete('/members/{user}', [\App\Domains\Clan\Controllers\Api\ClanRoleController::class, 'kick']);
     Route::post('/transfer/{user}', [\App\Domains\Clan\Controllers\Api\ClanRoleController::class, 'transferLeadership']);
-
 
 });
