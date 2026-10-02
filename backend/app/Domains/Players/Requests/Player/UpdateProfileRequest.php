@@ -34,11 +34,9 @@ class UpdateProfileRequest extends BaseFormRequest
 
             'discord_tag' => ['nullable', 'string', 'max:64'],
 
-            'featured_achievements' => ['nullable', 'array', 'max:6'],
-            'featured_achievements.*' => ['integer', 'exists:achievements,id'],
 
             'favorite_modes' => ['nullable', 'array'],
-            'favorite_modes.*' => ['string', 'in:bedwars,skywars,duels,pvp,survival,other'],
+            'favorite_modes.*' => ['string', 'nullable', 'in:bedwars,skywars,duels,pvp,survival,other'],
 
             'card_background' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ];
