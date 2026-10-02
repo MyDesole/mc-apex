@@ -197,17 +197,6 @@ const avatar = computed(() => props.entry?.avatar_url ?? null)
 </template>
 
 <style>
-/* ================================================================
-   PODIUM SHARED
-================================================================ */
-
-.podium {
-  display: grid;
-  grid-template-columns: 1fr 1.12fr 1fr;
-  align-items: end;
-  gap: 10px;
-}
-
 .podium-card {
   position: relative;
   min-width: 0;
@@ -508,61 +497,6 @@ const avatar = computed(() => props.entry?.avatar_url ?? null)
   color: #c68143;
 }
 
-/* ================================================================
-   CLAN PODIUM
-================================================================ */
-
-.podium--clans {
-  align-items: stretch;
-}
-
-.clan-podium {
-  position: relative;
-  min-height: 330px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 24px 15px 0;
-  overflow: hidden;
-  border: 1px solid color-mix(
-      in srgb,
-      var(--clan-color) 20%,
-      transparent
-  );
-  border-radius: 18px 18px 13px 13px;
-  background:
-      radial-gradient(
-          circle at 50% 0%,
-          color-mix(
-              in srgb,
-              var(--clan-color) 12%,
-              transparent
-          ),
-          transparent 48%
-      ),
-      rgba(14, 14, 20, 0.82);
-  transition:
-      transform 0.3s ease,
-      border-color 0.3s ease,
-      box-shadow 0.3s ease;
-}
-
-.clan-podium:hover {
-  transform: translateY(-6px);
-  border-color: color-mix(
-      in srgb,
-      var(--clan-color) 42%,
-      transparent
-  );
-  box-shadow:
-      0 25px 60px rgba(0, 0, 0, 0.3),
-      0 0 50px color-mix(
-          in srgb,
-          var(--clan-color) 7%,
-          transparent
-      );
-}
-
 .clan-podium__glow {
   position: absolute;
   width: 200px;
@@ -726,22 +660,6 @@ const avatar = computed(() => props.entry?.avatar_url ?? null)
   text-align: center;
 }
 
-.clan-podium--first {
-  min-height: 375px;
-  border-color: color-mix(
-      in srgb,
-      var(--clan-color) 38%,
-      transparent
-  );
-  box-shadow:
-      0 25px 70px rgba(0, 0, 0, 0.28),
-      0 0 60px color-mix(
-          in srgb,
-          var(--clan-color) 7%,
-          transparent
-      );
-}
-
 .clan-podium--first .clan-podium__avatar {
   width: 96px;
   height: 96px;
@@ -798,11 +716,6 @@ const avatar = computed(() => props.entry?.avatar_url ?? null)
     grid-column: span 2;
   }
 
-  .podium {
-    grid-template-columns: 1fr 1.08fr 1fr;
-    gap: 7px;
-  }
-
   .podium-card--first {
     min-height: 350px;
   }
@@ -813,14 +726,6 @@ const avatar = computed(() => props.entry?.avatar_url ?? null)
 
   .podium-card--third {
     min-height: 275px;
-  }
-
-  .clan-podium {
-    min-height: 300px;
-  }
-
-  .clan-podium--first {
-    min-height: 340px;
   }
 
   .rank-row {
@@ -964,11 +869,6 @@ const avatar = computed(() => props.entry?.avatar_url ?? null)
     height: 175px;
   }
 
-  .podium {
-    grid-template-columns: 1fr;
-    gap: 7px;
-  }
-
   .podium-card--first,
   .podium-card--second,
   .podium-card--third {
@@ -1067,20 +967,6 @@ const avatar = computed(() => props.entry?.avatar_url ?? null)
     font-size: 17px;
   }
 
-  .clan-podium {
-    min-height: 0;
-    display: grid;
-    grid-template-columns: 38px 60px 1fr auto;
-    align-items: center;
-    gap: 10px;
-    padding: 13px;
-  }
-
-  .clan-podium--first {
-    min-height: 0;
-    padding-top: 30px;
-  }
-
   .clan-podium__rank {
     grid-column: 1;
     grid-row: 1 / 4;
@@ -1170,5 +1056,4 @@ const avatar = computed(() => props.entry?.avatar_url ?? null)
     flex-direction: column;
   }
 }
-
 </style>

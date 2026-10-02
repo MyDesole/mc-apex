@@ -1044,21 +1044,21 @@
     aspect-ratio: 1400 / 650;
   }
 
-  .podium__slot--rank1 {
+  .rating-podium__slot--rank1 {
     top: 20%;
     left: 50%;
 
     width: clamp(180px, 28%, 260px);
   }
 
-  .podium__slot--rank2 {
+  .rating-podium__slot--rank2 {
     top: 61%;
     left: 25%;
 
     width: clamp(150px, 22%, 220px);
   }
 
-  .podium__slot--rank3 {
+  .rating-podium__slot--rank3 {
     top: 81%;
     left: 75%;
 

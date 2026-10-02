@@ -65,12 +65,12 @@ function rankOf(slotIdx) {
              DESKTOP PODIUM
              ===================================================== -->
 
-        <div class="podium">
+        <div class="rating-podium">
           <div
               v-for="slot in podiumSlots"
               :key="slot"
-              class="podium__slot"
-              :class="`podium__slot--rank${rankOf(slot)}`"
+              class="rating-podium__slot"
+              :class="`rating-podium__slot--rank${rankOf(slot)}`"
           >
             <div
                 class="podium__badge"
@@ -401,7 +401,7 @@ function rankOf(slotIdx) {
    PODIUM
    ============================================================ */
 
-.podium {
+.rating-podium {
   position: absolute;
   z-index: 10;
   inset: 0;
@@ -409,7 +409,7 @@ function rankOf(slotIdx) {
   pointer-events: none;
 }
 
-.podium__slot {
+.rating-podium__slot {
   position: absolute;
 
   display: flex;
@@ -425,7 +425,7 @@ function rankOf(slotIdx) {
   pointer-events: auto;
 }
 
-.podium__slot--rank1 {
+.rating-podium__slot--rank1 {
   top: 20%;
   left: 50%;
 
@@ -434,7 +434,7 @@ function rankOf(slotIdx) {
   width: clamp(220px, 30%, 350px);
 }
 
-.podium__slot--rank2 {
+.rating-podium__slot--rank2 {
   top: 61%;
   left: 26%;
 
@@ -443,7 +443,7 @@ function rankOf(slotIdx) {
   width: clamp(180px, 24%, 290px);
 }
 
-.podium__slot--rank3 {
+.rating-podium__slot--rank3 {
   top: 80%;
   left: 74%;
 
@@ -1058,21 +1058,21 @@ function rankOf(slotIdx) {
     aspect-ratio: 1400 / 650;
   }
 
-  .podium__slot--rank1 {
+  .rating-podium__slot--rank1 {
     top: 20%;
     left: 50%;
 
     width: clamp(180px, 28%, 260px);
   }
 
-  .podium__slot--rank2 {
+  .rating-podium__slot--rank2 {
     top: 61%;
     left: 25%;
 
     width: clamp(150px, 22%, 220px);
   }
 
-  .podium__slot--rank3 {
+  .rating-podium__slot--rank3 {
     top: 81%;
     left: 75%;
 
