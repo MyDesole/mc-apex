@@ -27,14 +27,14 @@ const isMine = computed(() =>
     props.myRecommendation?.author_id === auth.user?.id
 )
 
-async function openForm() {
+function openForm() {
   body.value = props.myRecommendation?.body ?? ''
   rating.value = props.myRecommendation?.rating ?? null
   error.value = ''
   showForm.value = true
 }
 
-async function closeForm() {
+function closeForm() {
   showForm.value = false
   error.value = ''
 }

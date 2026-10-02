@@ -19,7 +19,7 @@ const processing = ref(false)
 // какие комментарии раскрыты
 const openComments = ref({})
 
-async function toggleComments(id) {
+function toggleComments(id) {
   openComments.value[id] = !openComments.value[id]
 }
 

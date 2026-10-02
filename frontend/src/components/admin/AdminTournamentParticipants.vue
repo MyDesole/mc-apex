@@ -112,7 +112,7 @@ function displayName(p) {
   return '—'
 }
 
-async function displayAvatar(p) {
+function displayAvatar(p) {
   if (p.user) return p.user.username.charAt(0).toUpperCase()
   if (p.clan) return p.clan.tag.charAt(0)
   return '?'

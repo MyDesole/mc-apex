@@ -59,12 +59,12 @@ function openEdit(t) {
   showForm.value = true
 }
 
-async function openParticipants(t) {
+function openParticipants(t) {
   participantsTournament.value = t
   showParticipants.value = true
 }
 
-async function openBracket(t) {
+function openBracket(t) {
   bracketTournament.value = t
   showBracket.value = true
 }
@@ -76,7 +76,7 @@ async function destroy(t) {
   await load()
 }
 
-async function onUpdated() {
+function onUpdated() {
   showForm.value = false
   showParticipants.value = false
   load()

@@ -188,7 +188,7 @@ async function copyContact(value) {
   await alertDialog('Скопировано: ' + value)
 }
 
-async function avatarLetter(username) {
+function avatarLetter(username) {
   return (username || 'И').charAt(0).toUpperCase()
 }
 </script>

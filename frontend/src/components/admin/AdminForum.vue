@@ -71,11 +71,11 @@ async function load() {
   }
 }
 
-async function createCategory() {
+function createCategory() {
   editing.value = blankCategory()
 }
 
-async function editCategory(category) {
+function editCategory(category) {
   editing.value = { ...category }
 }
 
@@ -163,7 +163,7 @@ async function restoreTopic(topic) {
   await loadStats()
 }
 
-async function formatDate(value) {
+function formatDate(value) {
   if (!value) return '—'
   return new Date(value).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' })
 }

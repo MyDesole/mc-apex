@@ -52,7 +52,7 @@ const typeLabels = {
   announcement: 'Анонс',
 }
 
-async function formatDate(date) {
+function formatDate(date) {
   return new Date(date).toLocaleString('ru-RU', {
     day: '2-digit',
     month: '2-digit',

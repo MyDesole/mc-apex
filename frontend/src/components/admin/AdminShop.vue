@@ -101,7 +101,7 @@ function startCreate() {
   editing.value = blankItem()
 }
 
-async function startEdit(item) {
+function startEdit(item) {
   editing.value = {
     ...item,
     metadata: item.metadata ?? {},
@@ -231,7 +231,7 @@ async function grantCoins() {
   }
 }
 
-async function sourceLabel(source) {
+function sourceLabel(source) {
   return {
     tier_test: 'Тир-тест',
     achievement: 'Ачивка',

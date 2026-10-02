@@ -31,14 +31,14 @@ const avatarPreview = ref(props.user.avatar_url)
 const coverFile = ref(null)
 const coverPreview = ref(props.user.cover_url)
 
-async function onAvatarChange(e) {
+function onAvatarChange(e) {
   const file = e.target.files[0]
   if (!file) return
   avatarFile.value = file
   avatarPreview.value = URL.createObjectURL(file)
 }
 
-async function onCoverChange(e) {
+function onCoverChange(e) {
   const file = e.target.files[0]
   if (!file) return
   coverFile.value = file

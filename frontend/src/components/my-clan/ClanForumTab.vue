@@ -85,7 +85,7 @@ async function removeTopic(topic) {
   await load()
 }
 
-async function formatDate(d) {
+function formatDate(d) {
   const date = new Date(d)
   const diff = Math.floor((new Date() - date) / 1000)
   if (diff < 60) return 'только что'

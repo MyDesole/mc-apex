@@ -40,7 +40,7 @@ async function remove(comment) {
   await load()
 }
 
-async function formatDate(date) {
+function formatDate(date) {
   return new Date(date).toLocaleString('ru-RU')
 }
 

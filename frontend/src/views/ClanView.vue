@@ -90,7 +90,7 @@ const socialLabels = {
   vk: 'VK',
   website: 'Сайт',
 }
-async function onApplicationsChanged() {
+function onApplicationsChanged() {
   applicationsCount.value = 0
   load()
 }

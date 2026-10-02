@@ -231,7 +231,7 @@ function startEdit(message) {
   editingBody.value = message.body || ''
 }
 
-async function cancelEdit() {
+function cancelEdit() {
   editingId.value = null
   editingBody.value = ''
 }
@@ -652,7 +652,7 @@ function onClickOutsideSearch(e) {
   closeSearch()
 }
 
-async function onResizeOrScroll() {
+function onResizeOrScroll() {
   if (searchOpen.value) {
     computeDropdownPosition()
   }

@@ -54,7 +54,7 @@ function openVerify(user) {
   showModal.value = true
 }
 
-async function openUnverify(user) {
+function openUnverify(user) {
   modalUser.value = user
   modalAction.value = 'unverify'
   modalReason.value = ''
@@ -83,7 +83,7 @@ async function submitModal() {
   }
 }
 
-async function closeModal() {
+function closeModal() {
   showModal.value = false
   modalUser.value = null
   modalReason.value = ''

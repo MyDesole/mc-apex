@@ -35,7 +35,7 @@ const coverFile = ref(null)
 const coverPreview = ref(props.clan.cover_url)
 
 /** Дата окончания подсветки в читаемом виде. */
-async function formatUntil(value) {
+function formatUntil(value) {
   if (!value) return ''
 
   return new Date(value).toLocaleDateString('ru-RU', {
@@ -52,7 +52,7 @@ function onAvatarChange(e) {
   avatarPreview.value = URL.createObjectURL(file)
 }
 
-async function onCoverChange(e) {
+function onCoverChange(e) {
   const file = e.target.files[0]
   if (!file) return
   coverFile.value = file
@@ -334,7 +334,10 @@ const colorPresets = [
             Подсветка клана — платная услуга из магазина, а не настройка.
             Раньше её включали этой галочкой бесплатно и навсегда.
           -->
-          <div class="option-card highlight option-card--locked">
+          <RouterLink
+              class="option-card highlight option-card--link"
+              to="/shop?type=clan_highlight"
+          >
             <span class="fake-check">★</span>
 
             <span class="option-content">
@@ -347,8 +350,8 @@ const colorPresets = [
               </small>
             </span>
 
-            <RouterLink class="option-link" to="/shop">В магазин</RouterLink>
-          </div>
+            <span class="option-link">В магазин</span>
+          </RouterLink>
         </section>
 
       </div>
@@ -773,9 +776,15 @@ const colorPresets = [
   background: rgba(250,204,21,.025);
 }
 
-/* Платная опция: не переключается, ведёт в магазин */
-.option-card--locked {
-  cursor: default;
+/* Платная опция ведёт в магазин: карточка целиком кликабельна */
+.option-card--link {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.option-card--link:hover {
+  border-color: rgba(250,204,21,.36);
+  background: rgba(250,204,21,.06);
 }
 
 /* Плата за вступление */

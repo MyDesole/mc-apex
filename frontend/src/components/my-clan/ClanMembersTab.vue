@@ -44,7 +44,7 @@ async function load() {
   }
 }
 
-async function openRoleModal(member) {
+function openRoleModal(member) {
   selectedMember.value = member
   roleForm.value = {
     role: member.role === 'leader' ? 'officer' : member.role,

@@ -165,7 +165,7 @@ async function toggleLike(reply) {
   }
 }
 
-async function startEditReply(reply) {
+function startEditReply(reply) {
   editingReply.value = reply
   editReplyBody.value = reply.body
 
@@ -232,7 +232,7 @@ async function toggleTopicLike() {
   }
 }
 
-async function startEditTopic() {
+function startEditTopic() {
   editingTopic.value = true
   editTitle.value = topic.value.title
   editBody.value = topic.value.body

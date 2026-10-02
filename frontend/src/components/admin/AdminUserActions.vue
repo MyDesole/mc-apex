@@ -40,7 +40,7 @@ function open(key) {
   modals.value[key] = true
 }
 
-async function onUpdated() {
+function onUpdated() {
   closeAll()
   emit('updated')
 }

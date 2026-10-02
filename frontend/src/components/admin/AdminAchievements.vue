@@ -39,12 +39,12 @@ watch(search, () => {
 
 watch([rarityFilter, filter], load)
 
-async function openCreate() {
+function openCreate() {
   editing.value = null
   showForm.value = true
 }
 
-async function openEdit(a) {
+function openEdit(a) {
   editing.value = a
   showForm.value = true
 }
@@ -72,7 +72,7 @@ async function toggleActive(a) {
   }
 }
 
-async function onUpdated() {
+function onUpdated() {
   showForm.value = false
   load()
 }

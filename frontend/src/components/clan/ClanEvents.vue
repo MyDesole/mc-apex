@@ -25,7 +25,7 @@ async function load() {
 }
 const openComments = ref({})
 
-async function toggleComments(id) {
+function toggleComments(id) {
   openComments.value[id] = !openComments.value[id]
 }
 async function submit() {

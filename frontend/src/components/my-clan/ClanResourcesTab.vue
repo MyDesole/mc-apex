@@ -62,7 +62,7 @@ function setCategory(value) {
   load()
 }
 
-async function onFile(e) {
+function onFile(e) {
   form.value.file = e.target.files[0]
 }
 
@@ -123,7 +123,7 @@ function lightboxNext() {
   lightbox.value = resources.value[nextIdx]
 }
 
-async function onKey(e) {
+function onKey(e) {
   if (!lightbox.value) return
   if (e.key === 'Escape') closeLightbox()
   if (e.key === 'ArrowLeft') lightboxPrev()

@@ -91,7 +91,7 @@ function formatDate(date) {
   return d.toLocaleDateString('ru-RU')
 }
 
-async function avatarLetter(username) {
+function avatarLetter(username) {
   return (username || 'И').charAt(0).toUpperCase()
 }
 

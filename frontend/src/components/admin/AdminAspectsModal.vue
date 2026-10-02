@@ -25,7 +25,7 @@ const labels = {
   ppl: 'Аим',
 }
 
-async function loadAspect() {
+function loadAspect() {
   const existing = (props.user.aspects || []).find(a => a.mode === mode.value)
 
   if (existing) {

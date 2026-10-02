@@ -68,7 +68,7 @@ function replaceBlobUrl(oldUrl, newFile) {
   return URL.createObjectURL(newFile)
 }
 
-async function onAvatarChange(e) {
+function onAvatarChange(e) {
   const f = e.target.files?.[0]
   if (!f) return
   avatarFile.value = f
@@ -76,7 +76,7 @@ async function onAvatarChange(e) {
   e.target.value = ''
 }
 
-async function onCoverChange(e) {
+function onCoverChange(e) {
   const f = e.target.files?.[0]
   if (!f) return
   coverFile.value = f
@@ -84,7 +84,7 @@ async function onCoverChange(e) {
   e.target.value = ''
 }
 
-async function onCardBgChange(e) {
+function onCardBgChange(e) {
   const f = e.target.files?.[0]
   if (!f) return
   cardBgFile.value = f

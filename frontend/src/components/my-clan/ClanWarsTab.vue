@@ -77,7 +77,7 @@ async function loadAvailableClans() {
 }
 
 // === ДЕЙСТВИЯ ===
-async function openChallenge() {
+function openChallenge() {
   showChallenge.value = true
   challengeForm.value = { opponent_id: null, scheduled_at: '', notes: '' }
   loadAvailableClans()
@@ -129,7 +129,7 @@ async function decline(war) {
   }
 }
 
-async function openResult(war) {
+function openResult(war) {
   resultWar.value = war
   resultForm.value = {
     challenger_score: war.challenger_score ?? 0,
@@ -158,11 +158,11 @@ function isParticipant(war) {
   return (war.participants || []).some(p => p.user_id === auth.user?.id)
 }
 
-async function myParticipants(war) {
+function myParticipants(war) {
   return (war.participants || []).filter(p => p.clan_id === props.clan.id)
 }
 
-async function enemyParticipants(war) {
+function enemyParticipants(war) {
   return (war.participants || []).filter(p => p.clan_id !== props.clan.id)
 }
 
@@ -191,7 +191,7 @@ async function leaveWar(war) {
 }
 
 // === ХЕЛПЕРЫ ===
-async function formatDate(d) {
+function formatDate(d) {
   if (!d) return '—'
   return new Date(d).toLocaleString('ru-RU', {
     day: '2-digit',
