@@ -4,6 +4,7 @@ import { onMounted, ref, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { friendsApi } from '@/services/friends/friends.js'
 import GiftCoinsButton from '@/components/shop/GiftCoinsButton.vue'
+import TabTransition from '@/components/core/TabTransition.vue'
 import UserName from "@/components/players/UserName.vue";
 import { userLink } from '@/utils/links.js'
 

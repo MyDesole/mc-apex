@@ -5,6 +5,7 @@ import { RouterLink } from 'vue-router'
 import { clansApi } from '@/services/clan/clans.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import { userLink } from '@/utils/links.js'
+import { avatarLetter } from '@/utils/playerStyling.js'
 
 const props = defineProps({
   clanId: { type: [Number, String], required: true },
@@ -89,10 +90,6 @@ function formatDate(date) {
   if (diff < 604800) return `${Math.floor(diff / 86400)} дн назад`
 
   return d.toLocaleDateString('ru-RU')
-}
-
-function avatarLetter(username) {
-  return (username || 'И').charAt(0).toUpperCase()
 }
 
 onMounted(load)

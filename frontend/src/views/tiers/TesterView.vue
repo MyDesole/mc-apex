@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/core/auth.js'
 import { testerApi } from '@/services/tiers/tester.js'
 import TesterTierTestModal from '@/components/tiers/tester/TesterTierTestModal.vue'
 import AppIcon from '@/components/core/AppIcon.vue'
+import TabTransition from '@/components/core/TabTransition.vue'
 
 const auth = useAuthStore()
 

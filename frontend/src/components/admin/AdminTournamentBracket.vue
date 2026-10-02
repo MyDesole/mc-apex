@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import { avatarLetter } from '@/utils/playerStyling.js'
 
 const props = defineProps({
   matches: { type: Array, default: () => [] },
@@ -53,10 +54,18 @@ function displayName(participant) {
   return '—'
 }
 
-function avatarLetter(participant) {
+/**
+ * Первая буква участника: у игрока — из ника, у клана — из тега.
+ *
+ * Имя игрока разбирает общий avatarLetter, чтобы поведение совпадало
+ * с остальными карточками.
+ */
+function participantLetter(participant) {
   if (!participant) return '?'
-  if (participant.user) return participant.user.username.charAt(0).toUpperCase()
-  if (participant.clan) return participant.clan.tag.charAt(0)
+
+  if (participant.user) return avatarLetter(participant.user.username)
+  if (participant.clan) return avatarLetter(participant.clan.tag)
+
   return '?'
 }
 
@@ -134,7 +143,7 @@ function slotScore(match, slot) {
                     class="slot__avatar-img"
                 />
                 <template v-else>
-                  {{ avatarLetter(m.participant1) }}
+                  {{ participantLetter(m.participant1) }}
                 </template>
               </div>
 
@@ -170,7 +179,7 @@ function slotScore(match, slot) {
                     class="slot__avatar-img"
                 />
                 <template v-else>
-                  {{ avatarLetter(m.participant2) }}
+                  {{ participantLetter(m.participant2) }}
                 </template>
               </div>
 

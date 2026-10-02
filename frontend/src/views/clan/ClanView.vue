@@ -8,6 +8,7 @@ import ClanMembers from '@/components/clan/dialogs/ClanMembers.vue'
 import ClanEvents from '@/components/clan/dialogs/ClanEvents.vue'
 import ClanWars from '@/components/clan/dialogs/ClanWars.vue'
 import ClanApplications from '@/components/clan/dialogs/ClanApplications.vue'
+import TabTransition from '@/components/core/TabTransition.vue'
 import ClanEditModal from "@/components/clan/dialogs/ClanEditModal.vue";
 
 const route = useRoute()

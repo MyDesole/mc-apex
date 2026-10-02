@@ -5,6 +5,7 @@ import { RouterLink } from 'vue-router'
 import { testerApi } from '@/services/tiers/tester.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import { userLink } from '@/utils/links.js'
+import { avatarLetter } from '@/utils/playerStyling.js'
 
 const props = defineProps({
   tierTest: { type: Object, required: true },
@@ -186,10 +187,6 @@ async function cancel() {
 async function copyContact(value) {
   navigator.clipboard.writeText(value)
   await alertDialog('Скопировано: ' + value)
-}
-
-function avatarLetter(username) {
-  return (username || 'И').charAt(0).toUpperCase()
 }
 </script>
 

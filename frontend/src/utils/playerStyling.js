@@ -1,3 +1,5 @@
+import { TIER_COLORS } from '@/composables/players/useTier.js'
+
 /**
  * Общие хелперы оформления игрока.
  *
@@ -15,16 +17,12 @@ export const ROLE_LABELS = {
   media: 'Медийка',
 }
 
-/** Цвета тиров для акцентов. */
-export const TIER_ACCENTS = {
-  'S+': '#fbbf24',
-  S: '#facc15',
-  A: '#f97316',
-  B: '#8b5cf6',
-  C: '#06b6d4',
-  D: '#22c55e',
-  E: '#6b7280',
-}
+/*
+ * Палитра тиров живёт в composables/players/useTier.js: там она была
+ * раньше и оттуда её берут профиль и история тестов. Держим один
+ * источник, а не копию.
+ */
+export { TIER_COLORS as TIER_ACCENTS } from '@/composables/players/useTier.js'
 
 /** Базовые цвета рамок аватара. */
 export const AVATAR_FRAMES = {
@@ -41,7 +39,7 @@ export const AVATAR_FRAMES = {
 
 /** Акцент по тиру игрока. */
 export function accent(player) {
-  return TIER_ACCENTS[player?.tier] || '#7c3aed'
+  return TIER_COLORS[player?.tier] || '#7c3aed'
 }
 
 /** Рейтинговый балл. */
@@ -59,8 +57,15 @@ export function roleLabel(player) {
 }
 
 /** Первая буква ника для заглушки аватара. */
-export function avatarLetter(player) {
-  return player?.username?.trim()?.charAt(0)?.toUpperCase() || '?'
+export function avatarLetter(username) {
+  /*
+   * Принимает ник строкой: так её вызывают карточки комментариев,
+   * тир-тестов и участников турнира. Если случайно передали объект,
+   * берём username из него — раньше на этом молча возвращался «?».
+   */
+  const name = typeof username === 'string' ? username : username?.username
+
+  return name?.trim()?.charAt(0)?.toUpperCase() || '?'
 }
 
 /**
