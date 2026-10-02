@@ -6,6 +6,20 @@ use App\Http\Requests\BaseFormRequest;
 
 class UpdateProfileRequest extends BaseFormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'featured_achievements' => array_values(array_filter(
+                (array) $this->input('featured_achievements', []),
+                fn ($v) => !is_null($v) && $v !== ''
+            )),
+            'favorite_modes' => array_values(array_filter(
+                (array) $this->input('favorite_modes', []),
+                fn ($v) => !is_null($v) && $v !== ''
+            )),
+        ]);
+    }
+
     public function rules(): array
     {
         return [
@@ -16,13 +30,15 @@ class UpdateProfileRequest extends BaseFormRequest
             'quote' => ['nullable', 'string', 'max:160'],
             'bio' => ['nullable', 'string', 'max:500'],
             'favorite_clan_id' => ['nullable', 'exists:clans,id'],
-            'featured_achievements' => ['nullable', 'array', 'max:6'],
-            'featured_achievements.*' => ['integer', 'exists:achievements,id', 'sometimes', 'nullable'],
             'profile_visibility' => ['nullable', 'in:public,friends,private'],
 
             'discord_tag' => ['nullable', 'string', 'max:64'],
+
+            'featured_achievements' => ['nullable', 'array', 'max:6'],
+            'featured_achievements.*' => ['integer', 'exists:achievements,id'],
+
             'favorite_modes' => ['nullable', 'array'],
-            'favorite_modes.*' => ['string', 'in:bedwars,skywars,duels,pvp,survival,other', 'sometimes', 'nullable'],
+            'favorite_modes.*' => ['string', 'in:bedwars,skywars,duels,pvp,survival,other'],
 
             'card_background' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ];

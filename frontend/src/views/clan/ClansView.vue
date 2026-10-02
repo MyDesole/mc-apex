@@ -15,14 +15,12 @@
         </p>
       </div>
 
-      <button
-          class="refresh-btn"
-          :disabled="loading"
-          @click="loadClans"
+      <RouterLink
+          to="/clans/create"
+          class="create-clan-btn"
       >
-        <span :class="{ spinning: loading }">↻</span>
-        Обновить
-      </button>
+        + Создать клан
+      </RouterLink>
     </div>
 
     <!-- ============================================================

@@ -72,6 +72,45 @@
    REFRESH
    ============================================================ */
 
+/*
+ * Создание клана: главное действие страницы, поэтому кнопка акцентная.
+ * Размеры совпадают с кнопкой обновления, чтобы шапка выглядела ровно.
+ */
+.create-clan-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 38px;
+  padding: 0 16px;
+
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+
+  background: var(--accent);
+  color: #fff;
+
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+
+  box-shadow: 0 4px 15px rgba(124, 58, 237, .25);
+
+  transition:
+      filter .18s ease,
+      transform .18s ease;
+}
+
+.create-clan-btn:hover {
+  filter: brightness(1.08);
+}
+
+.create-clan-btn:active {
+  transform: translateY(1px);
+}
+
+/* Кнопка обновления остаётся на узких экранах рядом с созданием */
 .refresh-btn {
   display: inline-flex;
   align-items: center;
