@@ -12,7 +12,8 @@ class Clan extends Model
     protected $fillable = [
         'name', 'tag', 'description', 'avatar', 'cover_path',
         'banner_color', 'leader_id', 'power', 'wins', 'losses',
-        'is_open', 'entry_fee', 'is_highlighted', 'highlight_until', 'socials', 'max_members',
+        'is_open', 'entry_fee', 'is_highlighted', 'highlight_until',
+        'highlight_color', 'highlight_effect', 'socials', 'max_members',
         'is_banned', 'ban_reason',
 
     ];
@@ -26,6 +27,21 @@ class Clan extends Model
         'is_banned' => 'boolean',
         'socials' => 'array',
     ];
+
+    /**
+     * Подсветка активна: включена и срок не истёк.
+     *
+     * Флаг is_highlighted может остаться true после истечения срока,
+     * пока не отработает чистка, поэтому проверяем и дату.
+     */
+    public function isHighlightActive(): bool
+    {
+        if (! $this->is_highlighted) {
+            return false;
+        }
+
+        return $this->highlight_until === null || $this->highlight_until->isFuture();
+    }
 
     public function leader(): BelongsTo
     {

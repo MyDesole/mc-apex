@@ -28,8 +28,9 @@ const dailyBonusAmount = ref(0)
 
 const TABS = [
   { value: 'all', label: 'Всё' },
-  // Подсветка клана: отдельная вкладка, иначе предмет теряется в общем списке
+  // Подсветка клана: отдельные вкладки для срока и оформления
   { value: 'clan_highlight', label: 'Подсветка клана' },
+  { value: 'clan_highlight_style', label: 'Оформление подсветки' },
   { value: 'tier_priority', label: 'Приоритет теста' },
   { value: 'avatar_frame', label: 'Рамки' },
   { value: 'profile_effect', label: 'Эффекты' },

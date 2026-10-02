@@ -12,7 +12,7 @@ class StoreShopItemRequest extends BaseFormRequest
         $item = $this->route('shopItem') ?? $this->route('item');
         $sometimes = $item ? 'sometimes' : 'required';
 
-        $types = 'avatar_frame,profile_effect,accent_color,card_background,badge,tier_priority,coin_bundle,clan_highlight';
+        $types = 'avatar_frame,profile_effect,accent_color,card_background,badge,tier_priority,coin_bundle,clan_highlight,clan_highlight_style';
 
         return [
             'name' => [$sometimes, 'string', 'max:128'],

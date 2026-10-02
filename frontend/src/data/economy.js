@@ -25,6 +25,7 @@ export const TYPE_LABELS = {
     tier_priority: 'Приоритет тир-теста',
     coin_bundle: 'Набор монет',
     clan_highlight: 'Подсветка клана',
+    clan_highlight_style: 'Оформление подсветки',
 }
 
 export const SOURCE_LABELS = {

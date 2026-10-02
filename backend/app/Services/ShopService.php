@@ -8,6 +8,7 @@ use App\Models\ShopItem;
 use App\Models\TierTest;
 use App\Models\User;
 use App\Models\UserInventory;
+use App\Support\ClanHighlight;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -175,11 +176,14 @@ class ShopService
 
         $tierTest = null;
 
-        // Подсветка клана: предмет покупает лидер, и подсветка ставится
+        // Подсветка клана: предмет покупает лидер, и оформление ставится
         // его клану. Проверяем это до списания монет.
         $clan = null;
 
-        if ($item->type === ShopItem::TYPE_CLAN_HIGHLIGHT) {
+        // Оформление (цвет или эффект) требует активной подсветки
+        $isStyle = $item->type === ShopItem::TYPE_CLAN_HIGHLIGHT_STYLE;
+
+        if ($item->type === ShopItem::TYPE_CLAN_HIGHLIGHT || $isStyle) {
             $clan = $user->clanMember?->clan;
 
             if (! $clan) {
@@ -188,6 +192,10 @@ class ShopService
 
             if (! $clan->isLeader($user->id)) {
                 throw new RuntimeException('Подсветку клана может купить только лидер.');
+            }
+
+            if ($isStyle && ! $clan->isHighlightActive()) {
+                throw new RuntimeException('Сначала купите подсветку клана, потом её оформление.');
             }
         }
 
@@ -205,7 +213,7 @@ class ShopService
             }
         }
 
-        DB::transaction(function () use ($user, $item, $quantity, $price, $options, &$tierTest, &$clan) {
+        DB::transaction(function () use ($user, $item, $quantity, $price, $options, &$tierTest, &$clan, $isStyle) {
             CoinService::debit(
                 $user,
                 $price,
@@ -256,7 +264,9 @@ class ShopService
                 self::applyPriorityCharge($user, $item, $tierTest);
             }
 
-            if ($clan) {
+            if ($clan && $isStyle) {
+                self::applyHighlightStyle($clan, $item);
+            } elseif ($clan) {
                 self::extendClanHighlight($clan, $item, $quantity);
             }
         });
@@ -277,6 +287,40 @@ class ShopService
                 'highlight_until' => $clan->highlight_until?->toIso8601String(),
             ] : null,
         ];
+    }
+
+    /**
+     * Применяет купленное оформление подсветки: цвет или эффект.
+     *
+     * Что именно покупают, определяется metadata.kind, а значение
+     * лежит в effect_value предмета.
+     */
+    private static function applyHighlightStyle(Clan $clan, ShopItem $item): void
+    {
+        $kind = $item->metadata['kind'] ?? null;
+        $value = $item->effect_value;
+
+        if ($kind === 'color') {
+            if (! ClanHighlight::isValidColor($value)) {
+                throw new RuntimeException('Неизвестный цвет подсветки.');
+            }
+
+            $clan->update(['highlight_color' => $value]);
+
+            return;
+        }
+
+        if ($kind === 'effect') {
+            if (! ClanHighlight::isValidEffect($value)) {
+                throw new RuntimeException('Неизвестный эффект подсветки.');
+            }
+
+            $clan->update(['highlight_effect' => $value]);
+
+            return;
+        }
+
+        throw new RuntimeException('У этого предмета не задано, что он меняет.');
     }
 
     /**

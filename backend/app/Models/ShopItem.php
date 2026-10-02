@@ -16,6 +16,7 @@ class ShopItem extends Model
     public const TYPE_TIER_PRIORITY = 'tier_priority';
     public const TYPE_COIN_BUNDLE = 'coin_bundle';
     public const TYPE_CLAN_HIGHLIGHT = 'clan_highlight';
+    public const TYPE_CLAN_HIGHLIGHT_STYLE = 'clan_highlight_style';
 
     /**
      * Типы, которые при надевании пишутся в поле профиля пользователя.

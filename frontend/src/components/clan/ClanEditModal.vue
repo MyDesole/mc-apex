@@ -1,4 +1,5 @@
 <script setup>
+import { highlightColor, highlightEffect, DEFAULT_HIGHLIGHT_EFFECT } from '@/data/clanHighlight.js'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { computed, ref, watch } from 'vue'
 import { clansApi } from '@/services/clans.js'
@@ -35,6 +36,23 @@ const coverFile = ref(null)
 const coverPreview = ref(props.clan.cover_url)
 
 /** Дата окончания подсветки в читаемом виде. */
+/** Подпись текущего оформления подсветки: «Фиолетовая · Пульсация». */
+const styleLabel = computed(() => {
+  if (!props.clan?.is_highlighted) return ''
+
+  const color = props.clan.highlight_color
+    ? highlightColor(props.clan.highlight_color).name
+    : null
+
+  const effectKey = props.clan.highlight_effect ?? DEFAULT_HIGHLIGHT_EFFECT
+
+  const effect = effectKey === DEFAULT_HIGHLIGHT_EFFECT
+    ? null
+    : highlightEffect(effectKey).name
+
+  return [color, effect].filter(Boolean).join(' · ')
+})
+
 function formatUntil(value) {
   if (!value) return ''
 
@@ -344,9 +362,13 @@ const colorPresets = [
               <strong>Выделение клана</strong>
               <small v-if="clan.is_highlighted && clan.highlight_until">
                 Активно до {{ formatUntil(clan.highlight_until) }}
+                <template v-if="styleLabel"> · {{ styleLabel }}</template>
               </small>
               <small v-else>
                 Покупается в магазине: 30 дней. Купить может только лидер.
+              </small>
+              <small class="option-content__hint">
+                Цвет и эффект подсветки докупаются отдельно.
               </small>
             </span>
 
@@ -838,6 +860,11 @@ const colorPresets = [
   color: var(--text-dim);
   font-size: 11.5px;
   line-height: 1.45;
+}
+
+.option-content__hint {
+  margin-top: 3px;
+  opacity: .75;
 }
 
 .option-link {

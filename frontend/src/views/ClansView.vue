@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { clansApi } from '@/services/clans.js'
 import { clanLink, isOwnClan } from '@/utils/links.js'
+import { highlightStyle } from '@/data/clanHighlight.js'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
@@ -25,6 +26,11 @@ function cardLink(clan) {
 
 function ownClan(clan) {
   return isOwnClan(clan, myClanId.value)
+}
+
+/** Цвет и эффект подсветки — из купленного оформления. */
+function highlightOf(clan) {
+  return highlightStyle(clan)
 }
 
 let timer = null
@@ -179,7 +185,11 @@ onMounted(load)
           :key="clan.id"
           :to="cardLink(clan)"
           class="clan-card"
-          :class="{ highlighted: clan.is_highlighted, 'clan-card--mine': ownClan(clan) }"
+          :class="[
+            { highlighted: clan.is_highlighted, 'clan-card--mine': ownClan(clan) },
+            highlightOf(clan).class,
+          ]"
+          :style="{ ...highlightOf(clan).style, '--clan-color': clan.banner_color }"
       >
 
         <!-- Акцентная полоска -->
@@ -699,13 +709,15 @@ h1 {
    ОСОБЫЙ КЛАН
 ========================================================= */
 
+/* Подсветка: цвет берётся из купленного оформления (--hl-color),
+   поэтому вместо жёлтого по умолчанию подставляется выбранный */
 .clan-card.highlighted {
-  border-color: rgba(250, 204, 21, 0.17);
+  border-color: color-mix(in srgb, var(--hl-color, #facc15) 30%, transparent);
 
   background:
       linear-gradient(
           100deg,
-          rgba(250, 204, 21, 0.055),
+          color-mix(in srgb, var(--hl-color, #facc15) 9%, transparent),
           rgba(23, 22, 29, 0.96) 42%
       );
 
@@ -1188,6 +1200,87 @@ h1 {
       rgba(34, 197, 94, 0.08) 0%,
       var(--bg-card, transparent) 42%
   );
+}
+
+/* ===== Эффекты подсветки клана ===== */
+
+/* Мягкое свечение вокруг карточки */
+.clan-card.hl-effect-glow {
+  box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--hl-color) 22%, transparent),
+      0 0 26px -6px var(--hl-glow, var(--hl-color));
+}
+
+/* Плавная пульсация */
+.clan-card.hl-effect-pulse {
+  animation: hl-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes hl-pulse {
+  0%, 100% {
+    box-shadow: 0 0 10px -6px var(--hl-glow, var(--hl-color));
+  }
+
+  50% {
+    box-shadow: 0 0 30px -4px var(--hl-glow, var(--hl-color));
+  }
+}
+
+/* Переливающийся градиент по полосе слева */
+.clan-card.hl-effect-animated .card-accent {
+  background: linear-gradient(
+      180deg,
+      var(--hl-color),
+      color-mix(in srgb, var(--hl-color) 40%, #ffffff),
+      var(--hl-color)
+  ) !important;
+
+  background-size: 100% 220% !important;
+  animation: hl-flow 3s linear infinite;
+}
+
+@keyframes hl-flow {
+  0% { background-position: 0 0; }
+
+  100% { background-position: 0 220%; }
+}
+
+/* Легендарный: свечение плюс бегущий блик */
+.clan-card.hl-effect-legendary {
+  box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--hl-color) 40%, transparent),
+      0 0 34px -6px var(--hl-glow, var(--hl-color));
+}
+
+.clan-card.hl-effect-legendary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+      115deg,
+      transparent 38%,
+      color-mix(in srgb, var(--hl-color) 26%, transparent) 50%,
+      transparent 62%
+  );
+  background-size: 260% 100%;
+  animation: hl-shine 3.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes hl-shine {
+  0% { background-position: 160% 0; }
+
+  100% { background-position: -60% 0; }
+}
+
+/* Уважаем системную настройку «меньше движения» */
+@media (prefers-reduced-motion: reduce) {
+  .clan-card.hl-effect-pulse,
+  .clan-card.hl-effect-animated .card-accent,
+  .clan-card.hl-effect-legendary::after {
+    animation: none;
+  }
 }
 
 .mine-mark {
