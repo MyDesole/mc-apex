@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\ShopService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -49,6 +50,8 @@ class MyClanController extends Controller
                 'forum_topics' => $clan->forumTopics()->count(),
                 'resources' => $clan->resources()->count(),
             ],
+            // Купленное оформление подсветки: лидер выбирает из него
+            'highlight_styles' => ShopService::clanHighlightStyles($request->user()),
         ]);
     }
 }

@@ -1,11 +1,17 @@
 <script setup>
 import { highlightColor, highlightEffect, DEFAULT_HIGHLIGHT_EFFECT } from '@/data/clanHighlight.js'
+import ClanHighlightStylePicker from '@/components/clan/ClanHighlightStylePicker.vue'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { computed, ref } from 'vue'
 import { clansApi } from '@/services/clans.js'
 
 const props = defineProps({
   clan: { type: Object, required: true },
+  // Купленное оформление подсветки: цвета и эффекты из магазина
+  highlightStyles: {
+    type: Object,
+    default: () => ({ colors: [], effects: [] }),
+  },
 })
 
 const emit = defineEmits(['close', 'updated'])
@@ -892,6 +898,17 @@ const colorPresets = [
                   </svg>
                 </div>
               </RouterLink>
+
+              <!--
+                Применение купленного оформления.
+                Раньше его можно было надеть только через инвентарь.
+              -->
+              <ClanHighlightStylePicker
+                  v-if="clan.is_highlighted"
+                  :clan="clan"
+                  :styles="props.highlightStyles"
+                  @updated="$emit('updated')"
+              />
             </section>
 
           </div>

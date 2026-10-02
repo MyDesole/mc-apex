@@ -88,6 +88,7 @@ class ShopService
                 self::presentItem($row->item),
                 [
                     'inventory_id' => $row->id,
+                    'shop_item_id' => $row->shop_item_id,
                     'quantity' => $row->quantity,
                     'equipped' => $row->isEquipped(),
                     'equipped_at' => $row->equipped_at?->toIso8601String(),
@@ -496,12 +497,80 @@ class ShopService
         DB::transaction(function () use ($user, $item, $row) {
             if ($item->type === ShopItem::TYPE_BADGE) {
                 self::equipBadge($user, $row);
+            } elseif ($item->type === ShopItem::TYPE_CLAN_HIGHLIGHT_STYLE) {
+                self::equipClanHighlightStyle($user, $item, $row);
             } else {
                 self::equipSingleSlot($user, $item, $row);
             }
         });
 
         return self::inventory($user->fresh())->all();
+    }
+
+    /**
+     * Применить купленное оформление подсветки к клану лидера.
+     *
+     * Один цвет и один эффект одновременно: надевая новый цвет,
+     * снимаем предыдущий, эффект при этом не трогаем.
+     */
+    private static function equipClanHighlightStyle(User $user, ShopItem $item, UserInventory $row): void
+    {
+        $kind = $item->metadata['kind'] ?? null;
+        $field = self::clanHighlightField($kind);
+
+        if (! $field) {
+            throw new RuntimeException('У этого предмета не задано, что он меняет.');
+        }
+
+        $clan = self::clanForHighlight($user);
+
+        // Снимаем предыдущее оформление того же вида
+        UserInventory::where('user_id', $user->id)
+            ->where('equipped_at', '!=', null)
+            ->whereHas('item', function ($q) use ($item, $kind) {
+                $q->where('type', ShopItem::TYPE_CLAN_HIGHLIGHT_STYLE)
+                    ->where('metadata->kind', $kind);
+            })
+            ->update(['equipped_at' => null]);
+
+        $clan->update([$field => $item->effect_value]);
+
+        $row->equipped_at = now();
+        $row->save();
+    }
+
+    /**
+     * Поле клана, в которое пишется оформление, по виду предмета.
+     */
+    private static function clanHighlightField(?string $kind): ?string
+    {
+        return match ($kind) {
+            'color' => 'highlight_color',
+            'effect' => 'highlight_effect',
+            default => null,
+        };
+    }
+
+    /**
+     * Клан текущего игрока с проверкой права на оформление.
+     */
+    private static function clanForHighlight(User $user): Clan
+    {
+        $clan = $user->clanMember?->clan;
+
+        if (! $clan) {
+            throw new RuntimeException('Подсветка доступна только участникам клана.');
+        }
+
+        if (! $clan->isLeader($user->id)) {
+            throw new RuntimeException('Оформление подсветки может менять только лидер.');
+        }
+
+        if (! $clan->isHighlightActive()) {
+            throw new RuntimeException('Сначала купите подсветку клана, потом её оформление.');
+        }
+
+        return $clan;
     }
 
     private static function equipSingleSlot(User $user, ShopItem $item, UserInventory $row): void
@@ -560,7 +629,19 @@ class ShopService
             $row->equipped_at = null;
             $row->save();
 
-            if ($item->type === ShopItem::TYPE_BADGE) {
+            if ($item->type === ShopItem::TYPE_CLAN_HIGHLIGHT_STYLE) {
+                // Возвращаем оформление по умолчанию, а не пустое значение
+                $field = self::clanHighlightField($item->metadata['kind'] ?? null);
+                $clan = self::clanForHighlight($user);
+
+                if ($field) {
+                    $clan->update([
+                        $field => $field === 'highlight_color'
+                            ? ClanHighlight::DEFAULT_COLOR
+                            : ClanHighlight::DEFAULT_EFFECT,
+                    ]);
+                }
+            } elseif ($item->type === ShopItem::TYPE_BADGE) {
                 self::syncBadgeField($user);
             } else {
                 $field = self::profileFieldFor($item->type);
@@ -575,6 +656,49 @@ class ShopService
         });
 
         return self::inventory($user->fresh())->all();
+    }
+
+    /**
+     * Купленное оформление подсветки клана, раздельно по видам.
+     *
+     * Нужно, чтобы лидер мог применить уже купленное, не заходя
+     * в инвентарь: возвращаем цвета и эффекты с пометкой «надето».
+     *
+     * @return array{colors: array<int, array>, effects: array<int, array>}
+     */
+    public static function clanHighlightStyles(User $user): array
+    {
+        $rows = UserInventory::with('item')
+            ->where('user_id', $user->id)
+            ->whereHas('item', fn ($q) => $q->where('type', ShopItem::TYPE_CLAN_HIGHLIGHT_STYLE))
+            ->get();
+
+        $colors = [];
+        $effects = [];
+
+        foreach ($rows as $row) {
+            $item = $row->item;
+
+            if (! $item) {
+                continue;
+            }
+
+            $entry = [
+                'id' => $item->id,
+                'name' => $item->name,
+                'value' => $item->effect_value,
+                'kind' => $item->metadata['kind'] ?? null,
+                'equipped' => $row->isEquipped(),
+            ];
+
+            if ($entry['kind'] === 'color') {
+                $colors[] = $entry;
+            } elseif ($entry['kind'] === 'effect') {
+                $effects[] = $entry;
+            }
+        }
+
+        return ['colors' => $colors, 'effects' => $effects];
     }
 
     /**

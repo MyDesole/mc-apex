@@ -26,6 +26,8 @@ class ShopItem extends Model
         self::TYPE_PROFILE_EFFECT,
         self::TYPE_ACCENT_COLOR,
         self::TYPE_BADGE,
+        // Оформление подсветки клана применяется к клану лидера
+        self::TYPE_CLAN_HIGHLIGHT_STYLE,
     ];
 
     protected $fillable = [

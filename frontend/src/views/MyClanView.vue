@@ -399,6 +399,7 @@ onMounted(load)
       <ClanEditModal
           v-if="showSettings"
           :clan="clan"
+          :highlight-styles="data.highlight_styles"
           @close="showSettings = false"
           @saved="load"
       />

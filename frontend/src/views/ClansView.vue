@@ -259,6 +259,8 @@ const error = ref('')
  */
 
 const EFFECT_LABELS = {
+  // Базовая подсветка без свечения
+  frame: 'Рамка',
   glow: 'Glow',
   pulse: 'Pulse',
   gradient: 'Gradient',
@@ -374,10 +376,10 @@ const effectiveClanEffect = (clan) => {
     return 'none'
   }
 
-  // Эффект куплен в магазине; без покупки работает базовое свечение
+  // Эффект куплен в магазине; без покупки работает базовая рамка
   const effect = clan?.highlight_effect
 
-  return EFFECT_LABELS[effect] ? effect : 'glow'
+  return EFFECT_LABELS[effect] ? effect : 'frame'
 }
 
 const effectiveClanColor = (clan) => {
@@ -1156,6 +1158,42 @@ const rowStyle = (clan) => {
 /* ============================================================
    EFFECTS
    ============================================================ */
+
+/*
+ * Базовая подсветка: клан просто подсвечен своим цветом,
+ * без свечения и анимаций. Свечение — отдельный покупаемый эффект.
+ */
+.effect-frame {
+  border-color:
+      color-mix(
+          in srgb,
+          var(--clan-color) 26%,
+          rgba(255,255,255,.06)
+      );
+
+  box-shadow:
+      inset 0 0 24px
+      color-mix(
+          in srgb,
+          var(--clan-color) 6%,
+          transparent
+      );
+}
+
+.effect-frame .clan-effect-bg {
+  opacity: 1;
+
+  background:
+      linear-gradient(
+          100deg,
+          color-mix(
+              in srgb,
+              var(--clan-color) 9%,
+              transparent
+          ),
+          transparent 45%
+      );
+}
 
 .effect-glow {
   border-color:

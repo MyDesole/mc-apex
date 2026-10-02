@@ -40,7 +40,12 @@ class ClanHighlight
     /** Цвет по умолчанию, если игрок не выбирал. */
     public const DEFAULT_COLOR = 'gold';
 
-    /** Эффект по умолчанию. */
+    /**
+     * Эффект по умолчанию: статичная подсветка цветом без свечения.
+     *
+     * Свечение — отдельный продаваемый эффект, поэтому по умолчанию
+     * клан просто подсвечен своим цветом.
+     */
     public const DEFAULT_EFFECT = 'frame';
 
     public static function isValidColor(?string $color): bool

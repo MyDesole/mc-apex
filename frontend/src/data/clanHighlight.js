@@ -1,3 +1,5 @@
+import { reactive } from 'vue'
+
 /**
  * Оформление подсветки клана: цвета и эффекты.
  *
@@ -19,6 +21,7 @@ export const HIGHLIGHT_COLORS = {
  * Эффекты: те же, что отрисованы в ClansView.
  */
 export const HIGHLIGHT_EFFECTS = {
+    frame: { name: 'Рамка', animated: false },
     glow: { name: 'Свечение', animated: false },
     pulse: { name: 'Пульсация', animated: true },
     gradient: { name: 'Градиент', animated: true },
@@ -29,7 +32,7 @@ export const HIGHLIGHT_EFFECTS = {
 }
 
 /** Базовый эффект, если игрок ничего не покупал. */
-export const DEFAULT_HIGHLIGHT_EFFECT = 'glow'
+export const DEFAULT_HIGHLIGHT_EFFECT = 'frame'
 
 export const DEFAULT_HIGHLIGHT_COLOR = 'gold'
 
@@ -38,7 +41,7 @@ export function highlightColor(key) {
     return HIGHLIGHT_COLORS[key] ?? HIGHLIGHT_COLORS[DEFAULT_HIGHLIGHT_COLOR]
 }
 
-/** Эффект: неизвестный ключ считаем базовым свечением. */
+/** Эффект: неизвестный ключ считаем базовой рамкой. */
 export function highlightEffect(key) {
     return HIGHLIGHT_EFFECTS[key] ?? HIGHLIGHT_EFFECTS[DEFAULT_HIGHLIGHT_EFFECT]
 }
@@ -70,4 +73,37 @@ export function highlightStyle(clan) {
     }
 }
 
-export default { HIGHLIGHT_COLORS, HIGHLIGHT_EFFECTS, highlightStyle, highlightColor, highlightEffect }
+/**
+ * Предпросмотр оформления на мини-карточке в выборе.
+ *
+ * Отдаёт CSS-переменные и класс эффекта, чтобы лидер видел,
+ * как будет выглядеть подсветка, до применения.
+ */
+export function stylePreview(colorKey, effectKey) {
+    const color = highlightColor(colorKey)
+    const effect = highlightEffect(effectKey)
+
+    return {
+        '--hl-color': color.color,
+        '--hl-glow': color.glow,
+        effectClass: `effect-${Object.keys(HIGHLIGHT_EFFECTS).find((k) => HIGHLIGHT_EFFECTS[k] === effect) ?? DEFAULT_HIGHLIGHT_EFFECT}`,
+    }
+}
+
+/** Реактивное состояние выбора оформления. */
+export function createStylePicker(initial = { color: null, effect: null }) {
+    return reactive({
+        color: initial.color ?? DEFAULT_HIGHLIGHT_COLOR,
+        effect: initial.effect ?? DEFAULT_HIGHLIGHT_EFFECT,
+    })
+}
+
+export default {
+    HIGHLIGHT_COLORS,
+    HIGHLIGHT_EFFECTS,
+    highlightStyle,
+    highlightColor,
+    highlightEffect,
+    stylePreview,
+    createStylePicker,
+}
