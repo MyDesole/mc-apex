@@ -36,7 +36,12 @@ function options() {
     wsPort: port,
     wssPort: port,
     forceTLS: secure,
-    enabledTransports: secure ? ['wss'] : ['ws'],
+    /*
+     * Транспорты не перечисляем: ограничение списка ломало проверку
+     * поддержки, и соединение не создавалось вовсе — состояние сразу
+     * становилось failed, без единого запроса к серверу. Библиотека
+     * сама выберет подходящий транспорт.
+     */
     authEndpoint: '/broadcasting/auth',
     // Библиотека пытается сама, но из состояния failed не выходит
     activityTimeout: 30000,
