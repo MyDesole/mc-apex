@@ -18,7 +18,7 @@ const form = ref({
   description: props.clan.description || '',
   banner_color: props.clan.banner_color || '#7c3aed',
   is_open: props.clan.is_open,
-  is_highlighted: props.clan.is_highlighted,
+  // is_highlighted не отправляется: подсветка выдаётся покупкой в магазине
   socials: {
     discord: props.clan.socials?.discord || '',
     telegram: props.clan.socials?.telegram || '',
@@ -33,7 +33,18 @@ const avatarPreview = ref(props.clan.avatar_url)
 const coverFile = ref(null)
 const coverPreview = ref(props.clan.cover_url)
 
-async function onAvatarChange(e) {
+async /** Дата окончания подсветки в читаемом виде. */
+function formatUntil(value) {
+  if (!value) return ''
+
+  return new Date(value).toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+function onAvatarChange(e) {
   const file = e.target.files[0]
   if (!file) return
   avatarFile.value = file
@@ -293,16 +304,25 @@ const colorPresets = [
             </span>
           </label>
 
-          <label class="option-card highlight">
-            <input v-model="form.is_highlighted" type="checkbox">
-
+          <!--
+            Подсветка клана — платная услуга из магазина, а не настройка.
+            Раньше её включали этой галочкой бесплатно и навсегда.
+          -->
+          <div class="option-card highlight option-card--locked">
             <span class="fake-check">★</span>
 
             <span class="option-content">
-              <strong>Выделять клан</strong>
-              <small>Клан будет заметнее в общем списке</small>
+              <strong>Выделение клана</strong>
+              <small v-if="clan.is_highlighted && clan.highlight_until">
+                Активно до {{ formatUntil(clan.highlight_until) }}
+              </small>
+              <small v-else>
+                Покупается в магазине: 30 дней. Купить может только лидер.
+              </small>
             </span>
-          </label>
+
+            <RouterLink class="option-link" to="/shop">В магазин</RouterLink>
+          </div>
         </section>
 
       </div>
@@ -725,6 +745,28 @@ const colorPresets = [
 .option-card.highlight {
   border-color: rgba(250,204,21,.16);
   background: rgba(250,204,21,.025);
+}
+
+/* Платная опция: не переключается, ведёт в магазин */
+.option-card--locked {
+  cursor: default;
+}
+
+.option-link {
+  margin-left: auto;
+  padding: 6px 11px;
+  color: #facc15;
+  background: rgba(250,204,21,.1);
+  border: 1px solid rgba(250,204,21,.28);
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.option-link:hover {
+  background: rgba(250,204,21,.18);
 }
 
 .option-card input {

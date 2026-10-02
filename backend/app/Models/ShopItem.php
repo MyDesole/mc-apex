@@ -15,6 +15,7 @@ class ShopItem extends Model
     public const TYPE_BADGE = 'badge';
     public const TYPE_TIER_PRIORITY = 'tier_priority';
     public const TYPE_COIN_BUNDLE = 'coin_bundle';
+    public const TYPE_CLAN_HIGHLIGHT = 'clan_highlight';
 
     /**
      * Типы, которые при надевании пишутся в поле профиля пользователя.

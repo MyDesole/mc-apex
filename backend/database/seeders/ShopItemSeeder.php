@@ -78,6 +78,22 @@ class ShopItemSeeder extends Seeder
                 'metadata' => ['icon' => 'rocket', 'color' => '#f97316', 'boost_weight' => 100, 'charges' => 5],
             ],
 
+            // === Подсветка клана (покупает лидер, действует на весь клан) ===
+            [
+                'slug' => 'clan-highlight-30',
+                'name' => 'Подсветка клана на 30 дней',
+                'description' => 'Ваш клан выделяется в списке кланов и в топе. Купить может только лидер. Повторная покупка продлевает срок.',
+                'type' => ShopItem::TYPE_CLAN_HIGHLIGHT,
+                'effect_value' => 'highlight',
+                'rarity' => 'epic',
+                'price' => 2500,
+                'is_consumable' => false,
+                // Продлевать можно: повторная покупка добавляет дни
+                'is_repeatable' => true,
+                'sort_order' => 300,
+                'metadata' => ['icon' => 'star', 'color' => '#facc15', 'days' => 30],
+            ],
+
             // === Наборы монет (для админа: выдача за ивенты/промокоды) ===
             [
                 'slug' => 'coin-pack-small',

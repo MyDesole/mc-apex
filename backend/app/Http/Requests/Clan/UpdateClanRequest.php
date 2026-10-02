@@ -18,7 +18,8 @@ class UpdateClanRequest extends BaseFormRequest
             'description' => ['nullable', 'string', 'max:1000'],
             'banner_color' => ['nullable', 'string', 'max:16'],
             'is_open' => ['boolean'],
-            'is_highlighted' => ['boolean'],
+            // is_highlighted намеренно не принимается: подсветка платная,
+            // выдаётся покупкой в магазине, а не настройкой клана
 
             'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
             'cover' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],

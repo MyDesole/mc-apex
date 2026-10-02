@@ -67,6 +67,8 @@ class ShopController extends Controller
             'balance' => $result['balance'],
             'item' => $result['item'],
             'tier_test' => $result['tier_test'],
+            // Подсветка клана: до какого момента действует
+            'clan_highlight' => $result['clan_highlight'] ?? null,
             'inventory' => ShopService::inventory($request->user()->fresh()),
         ], 201);
     }

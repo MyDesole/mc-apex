@@ -270,7 +270,6 @@ class ClanTest extends TestCase
             'description' => 'Новое описание',
             'banner_color' => '#00ff00',
             'is_open' => false,
-            'is_highlighted' => true,
             'socials' => ['discord' => 'https://discord.gg/apex'],
         ])->assertOk();
 
@@ -284,10 +283,11 @@ class ClanTest extends TestCase
         $this->assertSame('Новое описание', $fresh->description);
         $this->assertSame('#00ff00', $fresh->banner_color);
         $this->assertFalse($fresh->is_open);
-        $this->assertTrue($fresh->is_highlighted);
         $this->assertSame(['discord' => 'https://discord.gg/apex'], $fresh->socials);
 
-        $this->assertDatabaseHas('clans', ['id' => $clan->id, 'name' => 'Renamed Clan', 'is_highlighted' => 1]);
+        // Подсветка через настройки клана больше не включается:
+        // это платная услуга из магазина (см. ClanHighlightPurchaseTest)
+        $this->assertFalse($fresh->is_highlighted);
     }
 
     public function test_leader_can_upload_avatar_and_cover(): void

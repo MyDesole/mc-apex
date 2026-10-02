@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Clan;
 use App\Models\CoinTransaction;
 use App\Models\ShopItem;
 use App\Models\TierTest;
@@ -174,6 +175,22 @@ class ShopService
 
         $tierTest = null;
 
+        // Подсветка клана: предмет покупает лидер, и подсветка ставится
+        // его клану. Проверяем это до списания монет.
+        $clan = null;
+
+        if ($item->type === ShopItem::TYPE_CLAN_HIGHLIGHT) {
+            $clan = $user->clanMember?->clan;
+
+            if (! $clan) {
+                throw new RuntimeException('Подсветка доступна только участникам клана.');
+            }
+
+            if (! $clan->isLeader($user->id)) {
+                throw new RuntimeException('Подсветку клана может купить только лидер.');
+            }
+        }
+
         // Приоритет: заявку можно указать сразу, но это не обязательно —
         // заряд кладётся в инвентарь и применяется позже (страница «Инвентарь»).
         if ($item->type === ShopItem::TYPE_TIER_PRIORITY && ! empty($options['tier_test_id'])) {
@@ -188,7 +205,7 @@ class ShopService
             }
         }
 
-        DB::transaction(function () use ($user, $item, $quantity, $price, $options, &$tierTest) {
+        DB::transaction(function () use ($user, $item, $quantity, $price, $options, &$tierTest, &$clan) {
             CoinService::debit(
                 $user,
                 $price,
@@ -238,6 +255,10 @@ class ShopService
             if ($tierTest) {
                 self::applyPriorityCharge($user, $item, $tierTest);
             }
+
+            if ($clan) {
+                self::extendClanHighlight($clan, $item, $quantity);
+            }
         });
 
         $user->refresh();
@@ -250,7 +271,49 @@ class ShopService
                 'is_priority' => true,
                 'priority_purchased_at' => $tierTest->priority_purchased_at?->toIso8601String(),
             ] : null,
+            'clan_highlight' => $clan ? [
+                'clan_id' => $clan->id,
+                'is_highlighted' => (bool) $clan->is_highlighted,
+                'highlight_until' => $clan->highlight_until?->toIso8601String(),
+            ] : null,
         ];
+    }
+
+    /**
+     * Включает подсветку клана и продлевает её при повторной покупке.
+     *
+     * Срок берётся из metadata предмета (days, по умолчанию 30).
+     * Если подсветка ещё активна — добавляем дни к текущему сроку,
+     * иначе считаем от сегодняшнего дня.
+     */
+    private static function extendClanHighlight(Clan $clan, ShopItem $item, int $quantity = 1): void
+    {
+        $days = max(1, (int) ($item->metadata['days'] ?? 30)) * max(1, $quantity);
+
+        $from = $clan->highlight_until && $clan->highlight_until->isFuture()
+            ? $clan->highlight_until
+            : now();
+
+        $clan->update([
+            'is_highlighted' => true,
+            'highlight_until' => $from->copy()->addDays($days),
+        ]);
+    }
+
+    /**
+     * Снимает подсветку у кланов, у которых срок истёк.
+     *
+     * @return int сколько кланов обновлено
+     */
+    public static function expireClanHighlights(): int
+    {
+        return Clan::where('is_highlighted', true)
+            ->whereNotNull('highlight_until')
+            ->where('highlight_until', '<=', now())
+            ->update([
+                'is_highlighted' => false,
+                'highlight_until' => null,
+            ]);
     }
 
     /**
