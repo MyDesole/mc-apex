@@ -53,6 +53,7 @@ const presencePeers = computed(() => {
 
 const {
   isOnline: isPlayerOnline,
+  presenceReady,
   refresh: refreshPresence,
   refreshPeers: refreshPeersPresence,
 } = usePresence(() => presencePeers.value)
@@ -104,8 +105,14 @@ const directPartner = computed(() => {
 const directPartnerOnline = computed(() => {
   if (!directPartner.value) return false
 
-  return isPlayerOnline(directPartner.value.id)
-      || Boolean(directPartner.value.is_online)
+  if (isPlayerOnline(directPartner.value.id)) return true
+
+  /*
+   * Запасной признак только до первой загрузки присутствия: сервер
+   * считает онлайн по времени последней активности, и после выхода
+   * игрока он ещё пару минут остаётся истинным.
+   */
+  return presenceReady.value ? false : Boolean(directPartner.value.is_online)
 })
 
 /** Онлайн ли кто-то из участников диалога в списке. */
@@ -114,7 +121,8 @@ function conversationOnline(conversation) {
 
   return (conversation.users || [])
       .filter((u) => u.id !== auth.user?.id)
-      .some((u) => isPlayerOnline(u.id) || Boolean(u.is_online))
+      .some((u) => isPlayerOnline(u.id)
+          || (!presenceReady.value && Boolean(u.is_online)))
 }
 
 function goToPlayer(user) {

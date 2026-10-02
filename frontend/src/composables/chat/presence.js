@@ -30,6 +30,16 @@ const FALLBACK_INTERVAL_MS = 60_000
 /** Общий набор на всё приложение: страница одна, состояние одно. */
 const onlineIds = ref(new Set())
 
+/**
+ * Загружено ли присутствие хотя бы раз.
+ *
+ * Пока нет, страница может опираться на признак из данных диалога. После
+ * загрузки источник один — данные присутствия: сервер считает онлайн по
+ * времени последней активности, и после выхода игрока он остаётся
+ * истинным ещё пару минут.
+ */
+const presenceReady = ref(false)
+
 let channel = null
 let peersTimer = null
 let fullTimer = null
@@ -74,6 +84,7 @@ async function fetchAll() {
     const data = await chatApi.presence()
 
     onlineIds.value = toSet(data.online)
+    presenceReady.value = true
   } catch {
     /* Сеть недоступна — оставляем прежнее состояние, не гасим точки */
   }
@@ -271,6 +282,13 @@ export function usePresence(peers = null) {
       stopPeersPolling()
 
       watchedIds.value = []
+      onlineIds.value = new Set()
+
+      /*
+       * Признак готовности снимаем: состояние общее на модуль, и без
+       * сброса следующая страница сочтёт присутствие уже загруженным.
+       */
+      presenceReady.value = false
 
       if (markedOnlineUserId) {
         callService('presenceOffline')
@@ -282,6 +300,7 @@ export function usePresence(peers = null) {
 
   return {
     onlineIds,
+    presenceReady,
     isOnline: (userId) => onlineIds.value.has(Number(userId)),
     refresh: fetchAll,
     refreshPeers: fetchWatched,
