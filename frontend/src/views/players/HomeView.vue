@@ -3,6 +3,8 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { homeApi } from '@/services/players/home.js'
 import UserName from '@/components/players/UserName.vue'
+import PodiumCard from '@/components/players/PodiumCard.vue'
+import { tierColors } from '@/data/players/profileCustomization.js'
 import { userLink, clanLink } from '@/utils/links.js'
 
 const loading = ref(true)
@@ -14,15 +16,6 @@ const statsData = ref({})
 const players = ref([])
 const clans = ref([])
 const news = ref([])
-
-const tierColors = {
-  S: '#facc15',
-  A: '#fb923c',
-  B: '#a78bfa',
-  C: '#22d3ee',
-  D: '#4ade80',
-  E: '#94a3b8',
-}
 
 const socialLabels = {
   social_discord: 'Discord',
@@ -608,173 +601,13 @@ onMounted(async () => {
           <template v-else>
             <!-- PLAYER PODIUM -->
             <div class="podium podium--players">
-              <!-- SECOND -->
-              <RouterLink
-                  v-if="topPlayers[1]"
-                  :to="userLink(topPlayers[1])"
-                  class="podium-card podium-card--second"
-              >
-                <div class="podium-card__ambient" />
-
-                <div class="podium-rank">
-                  <span>02</span>
-                </div>
-
-                <div class="podium-avatar">
-                  <img
-                      v-if="topPlayers[1].avatar_url"
-                      :src="topPlayers[1].avatar_url"
-                      :alt="topPlayers[1].username"
-                  />
-
-                  <span v-else>
-                    {{ playerInitial(topPlayers[1]) }}
-                  </span>
-                </div>
-
-                <div class="podium-name">
-                  <UserName :user="topPlayers[1]" />
-                </div>
-
-                <div
-                    class="podium-tier"
-                    :style="{
-                    color: playerTierColor(topPlayers[1]),
-                  }"
-                >
-                  {{ topPlayers[1].tier }}
-                </div>
-
-                <div class="podium-score">
-                  <strong>{{ playerScore(topPlayers[1]) }}</strong>
-                  <span>%</span>
-                </div>
-
-                <div class="podium-base">
-                  <span>2ND PLACE</span>
-                </div>
-              </RouterLink>
-
-              <!-- FIRST -->
-              <RouterLink
-                  v-if="topPlayers[0]"
-                  :to="userLink(topPlayers[0])"
-                  class="podium-card podium-card--first"
-              >
-                <div class="podium-card__stars">
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                </div>
-
-                <div class="podium-crown">
-                  <svg
-                      width="30"
-                      height="30"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                  >
-                    <path
-                        d="M3 7l4 5 5-7 5 7 4-5v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"
-                    />
-                    <circle cx="3" cy="7" r="1" />
-                    <circle cx="21" cy="7" r="1" />
-                    <circle cx="12" cy="5" r="1" />
-                  </svg>
-                </div>
-
-                <div class="podium-card__ambient" />
-
-                <div class="podium-rank">
-                  <span>01</span>
-                </div>
-
-                <div class="podium-avatar">
-                  <div class="podium-avatar__halo" />
-
-                  <img
-                      v-if="topPlayers[0].avatar_url"
-                      :src="topPlayers[0].avatar_url"
-                      :alt="topPlayers[0].username"
-                  />
-
-                  <span v-else>
-                    {{ playerInitial(topPlayers[0]) }}
-                  </span>
-                </div>
-
-                <div class="podium-name">
-                  <UserName :user="topPlayers[0]" />
-                </div>
-
-                <div
-                    class="podium-tier"
-                    :style="{
-                    color: playerTierColor(topPlayers[0]),
-                  }"
-                >
-                  {{ topPlayers[0].tier }}
-                </div>
-
-                <div class="podium-score">
-                  <strong>{{ playerScore(topPlayers[0]) }}</strong>
-                  <span>%</span>
-                </div>
-
-                <div class="podium-base">
-                  <span>APEX CHAMPION</span>
-                </div>
-              </RouterLink>
-
-              <!-- THIRD -->
-              <RouterLink
-                  v-if="topPlayers[2]"
-                  :to="userLink(topPlayers[2])"
-                  class="podium-card podium-card--third"
-              >
-                <div class="podium-card__ambient" />
-
-                <div class="podium-rank">
-                  <span>03</span>
-                </div>
-
-                <div class="podium-avatar">
-                  <img
-                      v-if="topPlayers[2].avatar_url"
-                      :src="topPlayers[2].avatar_url"
-                      :alt="topPlayers[2].username"
-                  />
-
-                  <span v-else>
-                    {{ playerInitial(topPlayers[2]) }}
-                  </span>
-                </div>
-
-                <div class="podium-name">
-                  <UserName :user="topPlayers[2]" />
-                </div>
-
-                <div
-                    class="podium-tier"
-                    :style="{
-                    color: playerTierColor(topPlayers[2]),
-                  }"
-                >
-                  {{ topPlayers[2].tier }}
-                </div>
-
-                <div class="podium-score">
-                  <strong>{{ playerScore(topPlayers[2]) }}</strong>
-                  <span>%</span>
-                </div>
-
-                <div class="podium-base">
-                  <span>3RD PLACE</span>
-                </div>
-              </RouterLink>
+              <PodiumCard
+                  v-for="(player, index) in topPlayers"
+                  :key="player.id"
+                  :entry="player"
+                  :position="index + 1"
+                  :base-label="['APEX CHAMPION', '2ND PLACE', '3RD PLACE'][index]"
+              />
             </div>
 
             <!-- REST PLAYERS -->
@@ -921,172 +754,13 @@ onMounted(async () => {
           <template v-else>
             <!-- CLAN PODIUM -->
             <div class="podium podium--clans">
-              <!-- SECOND -->
-              <RouterLink
-                  v-if="topClans[1]"
-                  :to="clanLink(topClans[1])"
-                  class="clan-podium clan-podium--second"
-                  :style="{
-                  '--clan-color': clanColor(topClans[1]),
-                }"
-              >
-                <div class="clan-podium__glow" />
-
-                <div class="clan-podium__rank">
-                  02
-                </div>
-
-                <div class="clan-podium__avatar">
-                  <img
-                      v-if="topClans[1].avatar_url"
-                      :src="topClans[1].avatar_url"
-                      :alt="topClans[1].name"
-                  />
-
-                  <span v-else>
-                    {{ clanInitial(topClans[1]) }}
-                  </span>
-                </div>
-
-                <div class="clan-podium__tag">
-                  [{{ topClans[1].tag }}]
-                </div>
-
-                <h3>{{ topClans[1].name }}</h3>
-
-                <div class="clan-podium__stats">
-                  <div>
-                    <strong>{{ topClans[1].power }}</strong>
-                    <span>СИЛА</span>
-                  </div>
-
-                  <div>
-                    <strong>{{ topClans[1].wins }}</strong>
-                    <span>ПОБЕДЫ</span>
-                  </div>
-                </div>
-
-                <div class="clan-podium__base">
-                  2ND PLACE
-                </div>
-              </RouterLink>
-
-              <!-- FIRST -->
-              <RouterLink
-                  v-if="topClans[0]"
-                  :to="clanLink(topClans[0])"
-                  class="clan-podium clan-podium--first"
-                  :style="{
-                  '--clan-color': clanColor(topClans[0]),
-                }"
-              >
-                <div class="clan-podium__crown">
-                  <svg
-                      width="29"
-                      height="29"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                  >
-                    <path
-                        d="M3 7l4 5 5-7 5 7 4-5v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"
-                    />
-                  </svg>
-                </div>
-
-                <div class="clan-podium__glow" />
-
-                <div class="clan-podium__rank">
-                  01
-                </div>
-
-                <div class="clan-podium__avatar">
-                  <div class="clan-podium__avatar-ring" />
-
-                  <img
-                      v-if="topClans[0].avatar_url"
-                      :src="topClans[0].avatar_url"
-                      :alt="topClans[0].name"
-                  />
-
-                  <span v-else>
-                    {{ clanInitial(topClans[0]) }}
-                  </span>
-                </div>
-
-                <div class="clan-podium__tag">
-                  [{{ topClans[0].tag }}]
-                </div>
-
-                <h3>{{ topClans[0].name }}</h3>
-
-                <div class="clan-podium__stats">
-                  <div>
-                    <strong>{{ topClans[0].power }}</strong>
-                    <span>POWER</span>
-                  </div>
-
-                  <div>
-                    <strong>{{ topClans[0].wins }}</strong>
-                    <span>WINS</span>
-                  </div>
-                </div>
-
-                <div class="clan-podium__base">
-                  APEX CLAN
-                </div>
-              </RouterLink>
-
-              <!-- THIRD -->
-              <RouterLink
-                  v-if="topClans[2]"
-                  :to="clanLink(topClans[2])"
-                  class="clan-podium clan-podium--third"
-                  :style="{
-                  '--clan-color': clanColor(topClans[2]),
-                }"
-              >
-                <div class="clan-podium__glow" />
-
-                <div class="clan-podium__rank">
-                  03
-                </div>
-
-                <div class="clan-podium__avatar">
-                  <img
-                      v-if="topClans[2].avatar_url"
-                      :src="topClans[2].avatar_url"
-                      :alt="topClans[2].name"
-                  />
-
-                  <span v-else>
-                    {{ clanInitial(topClans[2]) }}
-                  </span>
-                </div>
-
-                <div class="clan-podium__tag">
-                  [{{ topClans[2].tag }}]
-                </div>
-
-                <h3>{{ topClans[2].name }}</h3>
-
-                <div class="clan-podium__stats">
-                  <div>
-                    <strong>{{ topClans[2].power }}</strong>
-                    <span>POWER</span>
-                  </div>
-
-                  <div>
-                    <strong>{{ topClans[2].wins }}</strong>
-                    <span>WINS</span>
-                  </div>
-                </div>
-
-                <div class="clan-podium__base">
-                  3RD PLACE
-                </div>
-              </RouterLink>
+              <PodiumCard
+                  v-for="(clan, index) in topClans"
+                  :key="clan.id"
+                  :entry="clan"
+                  :position="index + 1"
+                  :base-label="['APEX CLAN', '2ND PLACE', '3RD PLACE'][index]"
+              />
             </div>
 
             <!-- REST CLANS -->

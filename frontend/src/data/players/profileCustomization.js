@@ -43,3 +43,15 @@ export const RARITY_COLORS = {
     epic: '#f97316',
     legendary: '#facc15',
 }
+
+/**
+ * Цвета тиров: используются в карточках рейтинга и на пьедестале.
+ */
+export const tierColors = {
+  S: '#facc15',
+  A: '#fb923c',
+  B: '#a78bfa',
+  C: '#22d3ee',
+  D: '#4ade80',
+  E: '#94a3b8',
+}
