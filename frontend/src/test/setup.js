@@ -52,6 +52,15 @@ if (!global.ResizeObserver) {
 
 /* --- Прочее, чего нет в jsdom --- */
 if (!window.scrollTo) window.scrollTo = () => {}
+
+/*
+ * Прокрутка контейнера. jsdom её не реализует, а списки сообщений
+ * вызывают scrollTo при появлении новых записей — без заглушки тесты
+ * завершались с необработанной ошибкой.
+ */
+if (!window.HTMLElement.prototype.scrollTo) {
+  window.HTMLElement.prototype.scrollTo = () => {}
+}
 if (!window.HTMLElement.prototype.scrollIntoView) {
   window.HTMLElement.prototype.scrollIntoView = () => {}
 }
@@ -62,6 +71,32 @@ if (!navigator.clipboard) {
 
 if (!URL.createObjectURL) URL.createObjectURL = () => 'blob:test'
 if (!URL.revokeObjectURL) URL.revokeObjectURL = () => {}
+
+/*
+ * Сеть.
+ *
+ * Компоненты при монтировании сразу запрашивают данные. В Node
+ * относительный адрес вида /api/clans не разбирается (ERR_INVALID_URL),
+ * и такие запросы копились как необработанные ошибки — прогон падал с
+ * «Errors: 20», хотя отдельные тесты были зелёными.
+ *
+ * Отвечаем пустым объектом: тестам важна разметка, а не данные.
+ * Проверки, которым нужен ответ, подменяют fetch сами.
+ */
+globalThis.fetch = vi.fn(() =>
+  Promise.resolve({
+    ok: true,
+    status: 200,
+    statusText: 'OK',
+    headers: new Map(),
+    json: () => Promise.resolve({}),
+    text: () => Promise.resolve(''),
+    blob: () => Promise.resolve(new Blob()),
+    clone() {
+      return this
+    },
+  })
+)
 
 afterEach(() => {
   localStorage.clear()

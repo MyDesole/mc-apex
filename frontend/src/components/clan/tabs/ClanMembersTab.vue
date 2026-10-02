@@ -2,6 +2,7 @@
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import { clansApi } from '@/services/clan/clans.js'
 import { myClanApi } from '@/services/clan/myClan.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import { userLink } from '@/utils/links.js'
@@ -35,10 +36,19 @@ const PERMISSIONS = [
 
 async function load() {
   loading.value = true
+
   try {
-    // тут можно использовать clansApi.show или собственный endpoint
-    const data = await fetch(`/api/clans/${props.clan.id}`).then(r => r.json())
-    members.value = data.clan.members || []
+    /*
+     * Через сервис, а не сырым fetch: сервис сам добавляет заголовки и
+     * куки сессии и разбирает ответ. Прошлый вариант ходил без
+     * credentials, поэтому запрос уходил неавторизованным.
+     */
+    const data = await clansApi.show(props.clan.id)
+
+    members.value = Array.isArray(data?.clan?.members) ? data.clan.members : []
+  } catch (e) {
+    console.error('Не удалось загрузить участников клана:', e)
+    members.value = []
   } finally {
     loading.value = false
   }

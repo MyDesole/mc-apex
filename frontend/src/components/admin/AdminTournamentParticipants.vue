@@ -18,11 +18,19 @@ async function load() {
   loading.value = true
   try {
     const data = await adminApi.tournamentParticipants(props.tournament.id)
-    participants.value = data.participants
+
+    /*
+     * Список приводим к массиву: ответ может прийти без участников
+     * (пустой турнир, ошибка сервера), и тогда прежний код падал на
+     * обращении к forEach.
+     */
+    const list = Array.isArray(data?.participants) ? data.participants : []
+
+    participants.value = list
 
     // инициализируем seeds
     seedsDraft.value = {}
-    data.participants.forEach(p => {
+    list.forEach(p => {
       seedsDraft.value[p.id] = p.seed ?? ''
     })
   } finally {
