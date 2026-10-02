@@ -34,8 +34,8 @@ const avatarPreview = ref(props.clan.avatar_url)
 const coverFile = ref(null)
 const coverPreview = ref(props.clan.cover_url)
 
-async /** Дата окончания подсветки в читаемом виде. */
-function formatUntil(value) {
+/** Дата окончания подсветки в читаемом виде. */
+async function formatUntil(value) {
   if (!value) return ''
 
   return new Date(value).toLocaleDateString('ru-RU', {
