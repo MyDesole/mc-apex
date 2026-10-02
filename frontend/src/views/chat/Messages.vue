@@ -54,10 +54,16 @@ const directPartner = computed(() => {
   return (activeConversation.value.users || []).find(u => u.id !== auth.user?.id) || null
 })
 
-function goToPlayer(userId) {
-  if (!userId) return
-  // userLink без ника ведёт на /players/{id}; ник передаём, когда известен
-  router.push(userLink({ id: userId, username: username ?? null }))
+function goToPlayer(user) {
+  if (!user?.id) return
+
+  /*
+   * Идём по id: маршрут /players/:id существует, и PlayerView грузит
+   * данные именно по нему. Ника здесь нет намеренно — раньше тут была
+   * ссылка на несуществующую переменную username, из-за чего клик
+   * падал с ошибкой и профиль не открывался.
+   */
+  router.push(userLink({ id: user.id }))
 }
 
 // Курсорная пагинация истории
@@ -787,7 +793,7 @@ onUnmounted(() => {
               v-if="directPartner"
               class="chat__head-avatar"
               :title="`Открыть профиль ${directPartner.username}`"
-              @click="goToPlayer(directPartner.id)"
+              @click="goToPlayer(directPartner)"
           >
             <div class="chat__head-avatar-box">
               <img v-if="directPartner.avatar_url" :src="directPartner.avatar_url" :alt="directPartner.username" />
@@ -808,7 +814,7 @@ onUnmounted(() => {
               <div
                   class="chat__head-name chat__head-name--link"
                   :title="`Открыть профиль ${directPartner.username}`"
-                  @click="goToPlayer(directPartner.id)"
+                  @click="goToPlayer(directPartner)"
               >
                 <UserName :user="directPartner" />
               </div>
@@ -858,7 +864,7 @@ onUnmounted(() => {
               <div
                   class="msg__avatar"
                   :title="m.user ? `Открыть профиль ${m.user.username}` : ''"
-                  @click="m.user && goToPlayer(m.user.id)"
+                  @click="m.user && goToPlayer(m.user)"
               >
                 <img v-if="m.user?.avatar_url" :src="m.user.avatar_url" :alt="m.user.username" />
                 <template v-else>{{ (m.user?.username || 'И').charAt(0).toUpperCase() }}</template>

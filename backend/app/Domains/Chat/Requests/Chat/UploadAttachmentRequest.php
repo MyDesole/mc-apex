@@ -28,10 +28,10 @@ class UploadAttachmentRequest extends BaseFormRequest
         $isBatch = $this->hasBatch();
 
         return [
-            'file' => [$isBatch ? 'nullable' : 'required_without:files', 'file', "max:" . self::MAX_KILOBYTES, 'mimes:' . self::ALLOWED_MIMES],
+            'file' => [$isBatch ? 'nullable' : 'required_without:files', 'file', 'max:' . self::MAX_KILOBYTES, 'mimes:' . self::ALLOWED_MIMES],
 
             'files' => ['nullable', 'array', 'min:1', 'max:' . self::MAX_BATCH],
-            'files.*' => ['file', "max:" . self::MAX_KILOBYTES, 'mimes:' . self::ALLOWED_MIMES],
+            'files.*' => ['file', 'max:' . self::MAX_KILOBYTES, 'mimes:' . self::ALLOWED_MIMES],
         ];
     }
 
@@ -48,10 +48,19 @@ class UploadAttachmentRequest extends BaseFormRequest
 
     /**
      * Пришёл ли пакетный запрос.
+     *
+     * Проверяем именно файлы, а не поле ввода. В реальном запросе браузер
+     * шлёт multipart: PHP кладёт такую часть в $_FILES, а не в $_POST,
+     * поэтому input('files') возвращает null и пакет не распознавался —
+     * вложения молча не сохранялись. Хелпер $this->post() в тестах
+     * складывал массив в input, из-за чего проверка проходила и ошибка
+     * не была видна.
      */
     public function hasBatch(): bool
     {
-        return $this->has('files') && is_array($this->input('files'));
+        $files = $this->file('files');
+
+        return is_array($files) && count($files) > 0;
     }
 
     /**
@@ -61,8 +70,10 @@ class UploadAttachmentRequest extends BaseFormRequest
      */
     public function filesToStore(): array
     {
-        if ($this->hasBatch()) {
-            return array_values(array_filter($this->file('files') ?? []));
+        $files = $this->file('files');
+
+        if (is_array($files) && count($files) > 0) {
+            return array_values(array_filter($files));
         }
 
         $single = $this->file('file');
