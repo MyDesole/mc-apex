@@ -3,6 +3,7 @@ import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { forumApi } from '@/services/forum.js'
+import { userLink } from '@/utils/links.js'
 import { useAuthStore } from '@/stores/auth'
 import AppIcon from '@/components/AppIcon.vue'
 import ForumAttachmentsInput from '@/components/forum/ForumAttachmentsInput.vue'
@@ -369,7 +370,7 @@ onMounted(load)
               <RouterLink
                   v-if="topic.author"
                   class="author-avatar"
-                  :to="{ name: 'player', params: { id: topic.author.id } }"
+                  :to="userLink(topic.author)"
               >
                 <img
                     v-if="topic.author.avatar_url"

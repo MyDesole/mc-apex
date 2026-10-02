@@ -56,7 +56,8 @@ const directPartner = computed(() => {
 
 function goToPlayer(userId) {
   if (!userId) return
-  router.push(userLink({ id: userId }))
+  // userLink без ника ведёт на /players/{id}; ник передаём, когда известен
+  router.push(userLink({ id: userId, username: username ?? null }))
 }
 
 // Курсорная пагинация истории

@@ -40,13 +40,14 @@ async function loadRecommendations() {
   }
 
   try {
-    const data = await api.get(
-        userLink(auth.user)
-    )
+    // userLink() даёт путь фронтенда (/user/ник), а нужен эндпоинт API:
+    // /api/user/... не существует, запрос падал с 404
+    const data = await api.get(`/players/${auth.user.id}`)
 
     recommendations.value =
         data.recommendations ?? []
-  } catch {
+  } catch (e) {
+    console.error('Не удалось загрузить отзывы:', e)
     recommendations.value = []
   }
 }

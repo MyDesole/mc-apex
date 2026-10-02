@@ -156,6 +156,15 @@ function topicAuthor(topic) {
     return author.trim()
   }
 
+  // Автор приходит объектом карточки игрока
+  if (author && typeof author === 'object' && author.username) {
+    return author.username
+  }
+
+  if (typeof topic?.author_username === 'string' && topic.author_username.trim()) {
+    return topic.author_username.trim()
+  }
+
   if (typeof username === 'string' && username.trim()) {
     return username.trim()
   }

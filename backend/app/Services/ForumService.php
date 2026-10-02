@@ -116,7 +116,15 @@ class ForumService
 
         $query->orderByDesc('is_pinned');
 
-        return $query->paginate($filters['per_page'] ?? self::PER_PAGE);
+        $topics = $query->paginate($filters['per_page'] ?? self::PER_PAGE);
+
+        // Отдаём через ресурс: карточка темы читает плоские поля автора
+        // и категории, которых у модели нет
+        $topics->setCollection(
+            ForumTopicResource::collection($topics->getCollection())->collection
+        );
+
+        return $topics;
     }
 
     /**

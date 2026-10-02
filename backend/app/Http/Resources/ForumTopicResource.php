@@ -37,6 +37,11 @@ class ForumTopicResource extends JsonResource
                 'icon' => $topic->category->icon,
             ] : null,
             'author' => $topic->author ? new ForumAuthorResource($topic->author) : null,
+            // Плоские поля для карточки в списке тем: шаблон читает их
+            // напрямую, а не через вложенный объект автора
+            'author_username' => $topic->author?->username,
+            'author_avatar' => $topic->author?->avatar_url,
+            'category_name' => $topic->category?->name,
             'is_pinned' => (bool) $topic->is_pinned,
             'is_locked' => (bool) $topic->is_locked,
             'views' => (int) $topic->views,
