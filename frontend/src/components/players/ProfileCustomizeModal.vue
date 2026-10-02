@@ -475,11 +475,6 @@ onBeforeUnmount(() => {
                     :disabled="paidAccents.has(c) && !ownedAccents.has(c)"
                     @click="form.accent_color = c"
                 />
-                <input
-                    v-model="form.accent_color"
-                    type="color"
-                    class="color-custom"
-                />
               </div>
             </section>
 
