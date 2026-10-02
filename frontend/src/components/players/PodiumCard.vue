@@ -51,6 +51,14 @@ const accent = computed(() => {
   return tierColors[props.entry?.tier] || '#a78bfa'
 })
 
+/**
+ * Балл игрока.
+ *
+ * На главной приходит tier_score, в рейтинге — rating_score,
+ * поэтому берём то, что есть.
+ */
+const score = computed(() => props.entry?.tier_score ?? props.entry?.rating_score ?? 0)
+
 /** Первая буква ника, когда нет аватарки. */
 const initial = computed(() =>
     (props.entry?.username ?? props.entry?.name ?? '?').charAt(0).toUpperCase()
@@ -178,7 +186,7 @@ const avatar = computed(() => props.entry?.avatar_url ?? null)
     </div>
 
     <div class="podium-score">
-      <strong>{{ entry.tier_score ?? 0 }}</strong>
+      <strong>{{ score }}</strong>
       <span>%</span>
     </div>
 
