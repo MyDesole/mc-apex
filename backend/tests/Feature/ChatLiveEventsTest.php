@@ -42,9 +42,8 @@ class ChatLiveEventsTest extends TestCase
 
         $this->postJson("/api/chat/conversations/{$conversation->id}/read")->assertOk();
 
-        Event::assertDispatched(MessagesRead::class, function (MessagesRead $event) use ($author, $reader) {
-            return $event->reader->id === $reader->id
-                && in_array($author->id, $event->authorIds, true);
+        Event::assertDispatched(MessagesRead::class, function (MessagesRead $event) use ($reader) {
+            return $event->reader->id === $reader->id;
         });
     }
 
@@ -113,6 +112,28 @@ class ChatLiveEventsTest extends TestCase
         Sanctum::actingAs($outsider);
 
         $this->postJson("/api/chat/conversations/{$conversation->id}/typing")->assertForbidden();
+    }
+
+    public function test_read_event_goes_to_every_other_participant(): void
+    {
+        $a = User::factory()->create();
+        $b = User::factory()->create();
+        $c = User::factory()->create();
+
+        $conversation = $this->direct($a, $b);
+
+        // Третий участник: проверяем, что событие уходит всем, кроме читающего
+        \App\Domains\Chat\Models\ConversationParticipant::create([
+            'conversation_id' => $conversation->id,
+            'user_id' => $c->id,
+        ]);
+
+        $event = new MessagesRead($conversation, $a);
+        $channels = array_map(fn ($ch) => $ch->name, $event->broadcastOn());
+
+        $this->assertContains('private-App.Models.User.' . $b->id, $channels);
+        $this->assertContains('private-App.Models.User.' . $c->id, $channels);
+        $this->assertNotContains('private-App.Models.User.' . $a->id, $channels);
     }
 
     public function test_message_event_carries_readers_field(): void

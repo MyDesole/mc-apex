@@ -3,7 +3,6 @@
 namespace App\Domains\Chat\Events;
 
 use App\Domains\Chat\Models\Conversation;
-use App\Domains\Chat\Models\Message;
 use App\Domains\Users\Models\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -15,47 +14,47 @@ use Illuminate\Queue\SerializesModels;
  * Собеседник прочитал сообщения диалога.
  *
  * Нужно, чтобы галочка прочтения появлялась сразу, а не после
- * обновления страницы. Событие уходит авторам прочитанных сообщений.
+ * обновления страницы.
+ *
+ * Событие уходит всем остальным участникам диалога, а не только авторам
+ * уже прочитанных сообщений: иначе в диалоге без сообщений от собеседника
+ * событие не приходило вовсе. Страница сама решает, какие сообщения
+ * отметить, — она сравнивает автора и время прочтения.
  */
 class MessagesRead implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    /**
-     * @param  array<int, int>  $authorIds  кому сообщаем о прочтении
-     */
     public function __construct(
         public Conversation $conversation,
         public User $reader,
-        public array $authorIds = [],
     ) {
     }
 
-    /** Собирает событие по диалогу: кто прочитал и чьи сообщения. */
+    /** Собирает событие по диалогу. */
     public static function forConversation(Conversation $conversation, User $reader): self
     {
-        $authorIds = Message::query()
-            ->where('conversation_id', $conversation->id)
-            ->where('user_id', '!=', $reader->id)
-            ->distinct()
-            ->pluck('user_id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
-
-        return new self($conversation, $reader, $authorIds);
+        return new self($conversation, $reader);
     }
 
     /**
-     * Авторам прочитанных сообщений: каждому в его личный канал.
+     * Остальным участникам диалога: каждому в его личный канал.
      *
      * @return array<int, PrivateChannel>
      */
     public function broadcastOn(): array
     {
-        return array_map(
-            fn (int $userId) => new PrivateChannel('App.Models.User.' . $userId),
-            $this->authorIds,
-        );
+        $channels = [];
+
+        $this->conversation
+            ->participants()
+            ->where('user_id', '!=', $this->reader->id)
+            ->pluck('user_id')
+            ->each(function ($userId) use (&$channels) {
+                $channels[] = new PrivateChannel('App.Models.User.' . $userId);
+            });
+
+        return $channels;
     }
 
     public function broadcastAs(): string
