@@ -8,47 +8,67 @@ const props = defineProps({
   },
 })
 
+/**
+ * Аспекты по режимам.
+ *
+ * Наборы разные: в PvP это аим и понимание боя, в BedWars — PvP, игра
+ * на кровати, командная игра и строительство. Раньше здесь был один
+ * общий список из шести полей, в котором не было бедварсных pvp,
+ * teamplay и building: они не показывались и не попадали в сумму.
+ */
 const modes = {
   pvp: {
     title: 'PvP',
     icon: '⚔',
     color: '#8b5cf6',
+    stats: [
+      { key: 'block_placing', label: 'Block Placement' },
+      { key: 'rotka', label: 'Rod' },
+      { key: 'movement', label: 'Movement' },
+      { key: 'aim', label: 'Aim' },
+      { key: 'game_sense', label: 'Game Sense' },
+    ],
   },
   bedwars: {
     title: 'BedWars',
     icon: '◆',
     color: '#facc15',
+    stats: [
+      { key: 'pvp', label: 'PvP' },
+      { key: 'game_sense', label: 'Game Sense' },
+      { key: 'bed_play', label: 'Bed Play' },
+      { key: 'teamplay', label: 'Teamplay' },
+      { key: 'building', label: 'Building' },
+    ],
   },
 }
-
-const stats = [
-  { key: 'block_placing', label: 'Block Placement' },
-  { key: 'rotka', label: 'Rod' },
-  { key: 'movement', label: 'Movement' },
-  { key: 'aim', label: 'Aim' },
-  { key: 'game_sense', label: 'Game Sense' },
-  { key: 'bed_play', label: 'Bed Play' },
-]
 
 const availableModes = computed(() =>
     Object.entries(props.aspects)
         .filter(([, value]) => value && typeof value === 'object')
-        .map(([key, value]) => ({
-          key,
-          data: value,
-          ...(modes[key] ?? {
-            title: key,
-            icon: '◆',
-            color: '#8b5cf6',
-          }),
-        })),
+        .map(([key, value]) => {
+          const mode = modes[key]
+
+          return {
+            key,
+            data: value,
+            title: mode?.title ?? key,
+            icon: mode?.icon ?? '◆',
+            color: mode?.color ?? '#8b5cf6',
+            // Неизвестный режим показываем по полям, которые реально пришли
+            stats: mode?.stats ?? Object.keys(value).map((field) => ({
+              key: field,
+              label: field,
+            })),
+          }
+        }),
 )
 
 function percentage(value) {
   return Math.min(100, Math.max(0, (Number(value) / 20) * 100))
 }
 
-function totalScore(data) {
+function totalScore(data, stats) {
   const values = stats
       .map(stat => Number(data?.[stat.key]))
       .filter(value => Number.isFinite(value))
@@ -58,7 +78,7 @@ function totalScore(data) {
   return values.reduce((sum, value) => sum + value, 0)
 }
 
-function maxScore(data) {
+function maxScore(data, stats) {
   const count = stats.filter(stat =>
       Number.isFinite(Number(data?.[stat.key]))
   ).length
@@ -95,14 +115,14 @@ function maxScore(data) {
           </div>
 
           <div class="aspect-total">
-            <strong>{{ totalScore(mode.data) }}</strong>
-            <span>/{{ maxScore(mode.data) }}</span>
+            <strong>{{ totalScore(mode.data, mode.stats) }}</strong>
+            <span>/{{ maxScore(mode.data, mode.stats) }}</span>
           </div>
         </header>
 
         <div class="stats">
           <div
-              v-for="stat in stats"
+              v-for="stat in mode.stats"
               :key="stat.key"
               v-show="mode.data?.[stat.key] !== undefined && mode.data?.[stat.key] !== null"
               class="stat"
