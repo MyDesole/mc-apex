@@ -99,14 +99,27 @@ const tabs = computed(() => {
 
 async function load() {
   loading.value = true
-  try {
-    data.value = await myClanApi.dashboard()
 
-    if (!data.value.clan) {
-      router.push('/clans')
-    }
+  try {
+    await refresh()
   } finally {
     loading.value = false
+  }
+}
+
+/**
+ * Обновляет данные без спиннера.
+ *
+ * Нужно после действий внутри открытой модалки: если показать loading,
+ * дашборд на мгновение исчезает вместе с модалкой, и форма мигает.
+ */
+async function refresh() {
+  const fresh = await myClanApi.dashboard()
+
+  data.value = fresh
+
+  if (!fresh.clan) {
+    router.push('/clans')
   }
 }
 
@@ -397,11 +410,11 @@ onMounted(load)
 
       <!-- Settings -->
       <ClanEditModal
-          v-if="showSettings"
+          v-if="showSettings && clan"
           :clan="clan"
           :highlight-styles="data.highlight_styles"
           @close="showSettings = false"
-          @saved="load"
+          @updated="refresh"
       />
 
       <!-- Navigation -->
