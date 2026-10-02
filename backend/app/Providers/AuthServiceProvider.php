@@ -2,22 +2,22 @@
 
 namespace App\Providers;
 
-use App\Models\Clan;
-use App\Models\ClanForumTopic;
-use App\Models\ClanResource;
-use App\Models\Conversation;
-use App\Models\ForumReply;
-use App\Models\ForumTopic;
-use App\Models\Message;
-use App\Models\MessageAttachment;
-use App\Policies\ClanPolicy;
-use App\Policies\ClanForumTopicPolicy;
-use App\Policies\ClanResourcePolicy;
-use App\Policies\ConversationPolicy;
-use App\Policies\ForumReplyPolicy;
-use App\Policies\ForumTopicPolicy;
-use App\Policies\MessageAttachmentPolicy;
-use App\Policies\MessagePolicy;
+use App\Domains\Clan\Models\Clan;
+use App\Domains\Clan\Models\ClanForumTopic;
+use App\Domains\Clan\Models\ClanResource;
+use App\Domains\Chat\Models\Conversation;
+use App\Domains\Forum\Models\ForumReply;
+use App\Domains\Forum\Models\ForumTopic;
+use App\Domains\Chat\Models\Message;
+use App\Domains\Chat\Models\MessageAttachment;
+use App\Domains\Clan\Policies\ClanPolicy;
+use App\Domains\Clan\Policies\ClanForumTopicPolicy;
+use App\Domains\Clan\Policies\ClanResourcePolicy;
+use App\Domains\Chat\Policies\ConversationPolicy;
+use App\Domains\Forum\Policies\ForumReplyPolicy;
+use App\Domains\Forum\Policies\ForumTopicPolicy;
+use App\Domains\Chat\Policies\MessageAttachmentPolicy;
+use App\Domains\Chat\Policies\MessagePolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 /**

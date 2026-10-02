@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\Clan;
-use App\Models\ClanMember;
-use App\Models\ClanResource;
-use App\Models\User;
+use App\Domains\Clan\Models\Clan;
+use App\Domains\Clan\Models\ClanMember;
+use App\Domains\Clan\Models\ClanResource;
+use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;

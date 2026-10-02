@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Events\MessageSent;
-use App\Events\NotificationCreated;
-use App\Models\Conversation;
-use App\Models\ConversationParticipant;
-use App\Models\Message;
-use App\Models\User;
+use App\Domains\Chat\Events\MessageSent;
+use App\Domains\Notifications\Events\NotificationCreated;
+use App\Domains\Chat\Models\Conversation;
+use App\Domains\Chat\Models\ConversationParticipant;
+use App\Domains\Chat\Models\Message;
+use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\TestCase;

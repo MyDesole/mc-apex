@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Models\Clan;
-use App\Models\ForumCategory;
-use App\Models\ForumReply;
-use App\Models\ForumTopic;
-use App\Models\ShopItem;
-use App\Models\User;
-use App\Models\UserInventory;
+use App\Domains\Clan\Models\Clan;
+use App\Domains\Forum\Models\ForumCategory;
+use App\Domains\Forum\Models\ForumReply;
+use App\Domains\Forum\Models\ForumTopic;
+use App\Domains\Shop\Models\ShopItem;
+use App\Domains\Users\Models\User;
+use App\Domains\Shop\Models\UserInventory;
 use Database\Seeders\AchievementSeeder;
 use Database\Seeders\ForumCategorySeeder;
 use Database\Seeders\ShopItemSeeder;
@@ -72,7 +72,7 @@ class ApiFieldsForTemplatesTest extends TestCase
             'max_members' => 30,
         ]);
 
-        \App\Models\ClanMember::create([
+        \App\Domains\Clan\Models\ClanMember::create([
             'clan_id' => $clan->id,
             'user_id' => $me->id,
             'role' => 'leader',
@@ -102,7 +102,7 @@ class ApiFieldsForTemplatesTest extends TestCase
             'acquired_at' => now(),
         ]);
 
-        \App\Models\Friendship::create([
+        \App\Domains\Friends\Models\Friendship::create([
             'user_id' => $me->id,
             'friend_id' => $other->id,
             'status' => 'accepted',
@@ -303,7 +303,7 @@ class ApiFieldsForTemplatesTest extends TestCase
         $f = $this->fixture();
 
         // Дадим игроку аспекты, чтобы он попал в рейтинг
-        \App\Models\PlayerAspectPvp::create([
+        \App\Domains\Players\Models\PlayerAspectPvp::create([
             'user_id' => $f['other']->id,
             'block_placing' => 10, 'rotka' => 0, 'movement' => 0, 'aim' => 0, 'game_sense' => 0,
         ]);

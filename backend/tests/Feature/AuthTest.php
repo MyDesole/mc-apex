@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Mail\EmailVerificationCode;
-use App\Models\EmailVerification;
-use App\Models\User;
+use App\Domains\Auth\Mail\EmailVerificationCode;
+use App\Domains\Auth\Models\EmailVerification;
+use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;

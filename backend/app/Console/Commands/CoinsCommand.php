@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Models\CoinTransaction;
-use App\Models\User;
-use App\Services\CoinService;
+use App\Domains\Wallet\Models\CoinTransaction;
+use App\Domains\Users\Models\User;
+use App\Domains\Wallet\Services\CoinService;
 use Illuminate\Console\Command;
 
 class CoinsCommand extends Command

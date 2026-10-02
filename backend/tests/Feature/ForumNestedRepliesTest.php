@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\ForumCategory;
-use App\Models\ForumReply;
-use App\Models\ForumTopic;
-use App\Models\User;
+use App\Domains\Forum\Models\ForumCategory;
+use App\Domains\Forum\Models\ForumReply;
+use App\Domains\Forum\Models\ForumTopic;
+use App\Domains\Users\Models\User;
 use Database\Seeders\ForumCategorySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

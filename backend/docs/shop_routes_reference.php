@@ -14,10 +14,10 @@
 */
 
 // ======================== 1. ИМПОРТЫ ========================
-use App\Http\Controllers\Api\ShopController;
-use App\Http\Controllers\Api\WalletController;
-use App\Http\Controllers\Api\GiftController;
-use App\Http\Controllers\Api\Admin\ShopController as AdminShopController;
+use App\Domains\Shop\Controllers\Api\ShopController;
+use App\Domains\Wallet\Controllers\Api\WalletController;
+use App\Domains\Wallet\Controllers\Api\GiftController;
+use App\Domains\Shop\Controllers\Api\Admin\ShopController as AdminShopController;
 
 // ======================== 2. ПУБЛИЧНЫЕ ========================
 // Витрина магазина доступна всем; для гостя флаг owned всегда false.

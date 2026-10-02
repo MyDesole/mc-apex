@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\ShopItem;
+use App\Domains\Shop\Models\ShopItem;
 use Illuminate\Database\Seeder;
 
 /**

@@ -2,14 +2,15 @@
 
 namespace Tests\Feature;
 
-use App\Models\ClanApplication;
-use App\Models\ClanWar;
-use App\Models\User;
+use App\Domains\Clan\Models\ClanApplication;
+use App\Domains\Clan\Models\ClanWar;
+use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\Feature\Concerns\ClanFixtures;
 use Tests\TestCase;
+use App\Domains\Clan\Services\ClanService;
 
 /**
  * ClanController: список/топ/просмотр/создание/правка клана,
@@ -453,7 +454,7 @@ class ClanTest extends TestCase
 
         $this->assertDatabaseHas('notifications', [
             'notifiable_id' => $leader->id,
-            'notifiable_type' => User::class,
+            'notifiable_type' => 'user',
         ]);
 
         $this->assertDatabaseMissing('clan_members', [

@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\CoinTransaction;
-use App\Models\User;
-use App\Services\RewardService;
-use App\Services\ShopSettingService;
+use App\Domains\Wallet\Models\CoinTransaction;
+use App\Domains\Users\Models\User;
+use App\Domains\Wallet\Services\RewardService;
+use App\Domains\Shop\Services\ShopSettingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Testing\TestResponse;
@@ -84,7 +84,8 @@ class ReferralTest extends TestCase
             'amount' => $reward,
             'balance_after' => $reward,
             'idempotency_key' => 'referral:' . $invited->id,
-            'reference_type' => User::class,
+            // Начисление пригласившему ссылается на игрока
+            'reference_type' => 'user',
             'reference_id' => $invited->id,
         ]);
 

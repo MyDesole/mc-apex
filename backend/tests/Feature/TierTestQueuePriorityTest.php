@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\TierTest;
-use App\Models\User;
+use App\Domains\Tiers\Models\TierTest;
+use App\Domains\Users\Models\User;
 use Database\Seeders\AchievementSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

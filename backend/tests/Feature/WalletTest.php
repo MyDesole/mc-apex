@@ -2,13 +2,14 @@
 
 namespace Tests\Feature;
 
-use App\Models\CoinTransaction;
-use App\Models\ShopItem;
-use App\Models\User;
-use App\Services\CoinService;
-use App\Services\ShopSettingService;
+use App\Domains\Wallet\Models\CoinTransaction;
+use App\Domains\Shop\Models\ShopItem;
+use App\Domains\Users\Models\User;
+use App\Domains\Wallet\Services\CoinService;
+use App\Domains\Shop\Services\ShopSettingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use App\Domains\Wallet\Controllers\Api\WalletController;
 
 /**
  * Кошелёк ApexCoin: сводка, леджер, ежедневный бонус.
@@ -189,7 +190,7 @@ class WalletTest extends TestCase
         $user = $this->user(['apex_coins' => 0]);
 
         CoinService::credit($user, 100, CoinTransaction::SOURCE_ADMIN, 'seed', 'wallet-test-key', [
-            'reference_type' => ShopItem::class,
+            'reference_type' => 'shop_item',
             'reference_id' => 7,
             'meta' => ['a' => 1],
         ]);
@@ -201,7 +202,8 @@ class WalletTest extends TestCase
         $this->assertSame(100, $row['balance_after']);
         $this->assertSame('admin', $row['source']);
         $this->assertSame('seed', $row['description']);
-        $this->assertSame(ShopItem::class, $row['reference_type']);
+        // Полиморфный тип хранится псевдонимом из morphMap
+        $this->assertSame('shop_item', $row['reference_type']);
         $this->assertSame(7, $row['reference_id']);
         $this->assertSame('wallet-test-key', $row['idempotency_key']);
         $this->assertSame(['a' => 1], $row['meta']);

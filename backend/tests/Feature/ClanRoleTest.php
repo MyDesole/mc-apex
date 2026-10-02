@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\ClanApplication;
-use App\Models\ClanEvent;
-use App\Models\ClanForumTopic;
-use App\Models\ClanMember;
-use App\Models\ClanResource;
-use App\Models\ClanWar;
+use App\Domains\Clan\Models\ClanApplication;
+use App\Domains\Clan\Models\ClanEvent;
+use App\Domains\Clan\Models\ClanForumTopic;
+use App\Domains\Clan\Models\ClanMember;
+use App\Domains\Clan\Models\ClanResource;
+use App\Domains\Clan\Models\ClanWar;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Feature\Concerns\ClanFixtures;
 use Tests\TestCase;

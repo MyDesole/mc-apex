@@ -1,0 +1,57 @@
+<?php
+
+namespace App\Domains\Clan\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Domains\Shop\Services\ShopService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class MyClanController extends Controller
+{
+    /**
+     * Дашборд моего клана — всё сразу.
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $membership = $request->user()->clanMember;
+
+        if (!$membership) {
+            return response()->json(['clan' => null]);
+        }
+
+        $clan = $membership->clan()->withCount('members')->first();
+
+        return response()->json([
+            'clan' => $clan,
+            'my_role' => $membership->role,
+            'my_permissions' => [
+                'news' => $membership->can('news'),
+                'forum' => $membership->can('forum'),
+                'applications' => $membership->can('applications'),
+                'wars' => $membership->can('wars'),
+                'resources' => $membership->can('resources'),
+                'roles' => $membership->role === 'leader',
+                'kick' => $membership->role === 'leader',
+                'edit_clan' => $membership->role === 'leader',
+            ],
+            'stats' => [
+                'members' => $clan->members()->count(),
+                'applications' => $clan->applications()->count(),
+                // Группировка обязательна: без неё AND/OR давал
+                // «challenger = X OR (opponent = X AND status IN ...)»
+                // и активными считались все войны, где клан — challenger.
+                'wars_active' => \App\Domains\Clan\Models\ClanWar::whereIn('status', ['pending', 'accepted'])
+                    ->where(function ($q) use ($clan) {
+                        $q->where('challenger_clan_id', $clan->id)
+                            ->orWhere('opponent_clan_id', $clan->id);
+                    })
+                    ->count(),
+                'forum_topics' => $clan->forumTopics()->count(),
+                'resources' => $clan->resources()->count(),
+            ],
+            // Купленное оформление подсветки: лидер выбирает из него
+            'highlight_styles' => ShopService::clanHighlightStyles($request->user()),
+        ]);
+    }
+}

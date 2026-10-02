@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\Achievement;
-use App\Models\ShopItem;
-use App\Models\TierTest;
-use App\Models\User;
-use App\Services\CoinService;
-use App\Services\RewardService;
+use App\Domains\Achievements\Models\Achievement;
+use App\Domains\Shop\Models\ShopItem;
+use App\Domains\Tiers\Models\TierTest;
+use App\Domains\Users\Models\User;
+use App\Domains\Wallet\Services\CoinService;
+use App\Domains\Wallet\Services\RewardService;
 use Database\Seeders\ShopItemSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -160,7 +160,7 @@ class ApexShopTest extends TestCase
         $sender = $this->user();
         $friend = $this->user(['apex_coins' => 0]);
 
-        \App\Models\Friendship::create([
+        \App\Domains\Friends\Models\Friendship::create([
             'user_id' => $sender->id,
             'friend_id' => $friend->id,
             'status' => 'accepted',
@@ -219,7 +219,7 @@ class ApexShopTest extends TestCase
             ->assertCreated()
             ->assertJsonPath('tier_test', null);
 
-        $this->assertSame(1, \App\Services\ShopService::priorityCharges($player));
+        $this->assertSame(1, \App\Domains\Shop\Services\ShopService::priorityCharges($player));
 
         // Только теперь появляется заявка
         $test = TierTest::create([
@@ -254,7 +254,7 @@ class ApexShopTest extends TestCase
 
         $this->actingAs($player)->postJson("/api/shop/{$pack->id}/purchase")->assertCreated();
 
-        $this->assertSame(5, \App\Services\ShopService::priorityCharges($player));
+        $this->assertSame(5, \App\Domains\Shop\Services\ShopService::priorityCharges($player));
     }
 
     public function test_priority_is_not_applied_to_foreign_request(): void
@@ -275,7 +275,7 @@ class ApexShopTest extends TestCase
             ->assertStatus(422);
 
         $this->assertFalse($foreign->fresh()->is_priority);
-        $this->assertSame(1, \App\Services\ShopService::priorityCharges($player));
+        $this->assertSame(1, \App\Domains\Shop\Services\ShopService::priorityCharges($player));
     }
 
     public function test_daily_bonus_is_claimed_once_per_day(): void
@@ -382,8 +382,8 @@ class ApexShopTest extends TestCase
         // Что делает RewardService при такой связке
         $balanceBefore = (int) $invited->apex_coins;
 
-        $reward = \App\Services\RewardService::forReferral($referrer, $invited);
-        $welcome = \App\Services\RewardService::welcomeBonus($invited);
+        $reward = \App\Domains\Wallet\Services\RewardService::forReferral($referrer, $invited);
+        $welcome = \App\Domains\Wallet\Services\RewardService::welcomeBonus($invited);
 
         $this->assertGreaterThan(0, $reward);
         $this->assertGreaterThan(0, $welcome);
@@ -403,10 +403,10 @@ class ApexShopTest extends TestCase
         $referrer = $this->user(['apex_coins' => 0, 'referral_code' => 'INVITE02']);
         $invited = $this->user(['referred_by' => $referrer->id]);
 
-        \App\Services\RewardService::forReferral($referrer, $invited);
+        \App\Domains\Wallet\Services\RewardService::forReferral($referrer, $invited);
         $after = $referrer->fresh()->apex_coins;
 
-        \App\Services\RewardService::forReferral($referrer, $invited);
+        \App\Domains\Wallet\Services\RewardService::forReferral($referrer, $invited);
 
         $this->assertSame($after, $referrer->fresh()->apex_coins);
     }

@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\Clan;
-use App\Models\ClanMember;
-use App\Models\ShopItem;
-use App\Models\User;
-use App\Models\UserInventory;
-use App\Support\ClanHighlight;
+use App\Domains\Clan\Models\Clan;
+use App\Domains\Clan\Models\ClanMember;
+use App\Domains\Shop\Models\ShopItem;
+use App\Domains\Users\Models\User;
+use App\Domains\Shop\Models\UserInventory;
+use App\Domains\Clan\Support\ClanHighlight;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

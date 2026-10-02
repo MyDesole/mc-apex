@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\News;
-use App\Models\User;
+use App\Domains\News\Models\News;
+use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;

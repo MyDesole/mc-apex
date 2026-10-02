@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\ClanMember;
+use App\Domains\Clan\Models\ClanMember;
 use Closure;
 use Illuminate\Http\Request;
 

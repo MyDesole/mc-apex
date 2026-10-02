@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\PlayerAspectPvp;
-use App\Models\User;
+use App\Domains\Players\Models\PlayerAspectPvp;
+use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -100,14 +100,14 @@ class MediaRoleTest extends TestCase
     {
         $media = User::factory()->create(['role' => 'media']);
 
-        $category = \App\Models\ForumCategory::create([
+        $category = \App\Domains\Forum\Models\ForumCategory::create([
             'name' => 'Общее тест',
             'slug' => 'general-test',
             'post_policy' => 'all',
             'is_active' => true,
         ]);
 
-        $topic = \App\Models\ForumTopic::create([
+        $topic = \App\Domains\Forum\Models\ForumTopic::create([
             'category_id' => $category->id,
             'author_id' => $media->id,
             'title' => 'Тема от медийки',

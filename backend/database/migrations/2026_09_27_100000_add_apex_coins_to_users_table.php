@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             // Баланс ApexCoin. Хранится денормализованно ради быстрых выборок;
-            // истина — сумма ledger-а coin_transactions (см. App\Services\CoinService).
+            // истина — сумма ledger-а coin_transactions (см. App\Domains\Wallet\Services\CoinService).
             $table->unsignedBigInteger('apex_coins')->default(0);
             $table->unsignedBigInteger('apex_coins_spent')->default(0);
         });

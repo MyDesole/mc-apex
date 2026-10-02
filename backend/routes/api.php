@@ -1,55 +1,55 @@
 <?php
 
-use App\Http\Controllers\Api\ProfileRecommendationController;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\PlayerController;
-use App\Http\Controllers\TierTestController;
+use App\Domains\Players\Controllers\Api\ProfileRecommendationController;
+use App\Domains\Players\Controllers\HomeController;
+use App\Domains\Players\Controllers\PlayerController;
+use App\Domains\Tiers\Controllers\TierTestController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Route;
 
 // === Публичные контроллеры ===
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\AchievementController;
-use App\Http\Controllers\Api\TournamentController;
-use App\Http\Controllers\Api\NewsController;
-use App\Http\Controllers\Api\ClanEventCommentController;
-use App\Http\Controllers\ClanController;
-use App\Http\Controllers\ClanEventController;
-use App\Http\Controllers\ClanWarController;
-use App\Http\Controllers\FriendController;
-use App\Http\Controllers\NotificationController;
+use App\Domains\Auth\Controllers\Api\AuthController;
+use App\Domains\Achievements\Controllers\Api\AchievementController;
+use App\Domains\Tournaments\Controllers\Api\TournamentController;
+use App\Domains\News\Controllers\Api\NewsController;
+use App\Domains\Clan\Controllers\Api\ClanEventCommentController;
+use App\Domains\Clan\Controllers\ClanController;
+use App\Domains\Clan\Controllers\ClanEventController;
+use App\Domains\Clan\Controllers\ClanWarController;
+use App\Domains\Friends\Controllers\FriendController;
+use App\Domains\Notifications\Controllers\NotificationController;
 
 // === Tester ===
-use App\Http\Controllers\Api\Tester\TierTestController as TesterTierTestController;
+use App\Domains\Tiers\Controllers\Api\Tester\TierTestController as TesterTierTestController;
 
 // === Admin ===
-use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
-use App\Http\Controllers\Api\Admin\RoleController as AdminRoleController;
-use App\Http\Controllers\Api\Admin\AchievementController as AdminAchievementController;
-use App\Http\Controllers\Api\Admin\AspectController as AdminAspectController;
-use App\Http\Controllers\Api\Admin\ClanController as AdminClanController;
-use App\Http\Controllers\Api\Admin\ClanStatsController as AdminClanStatsController;
-use App\Http\Controllers\Api\Admin\CommentController as AdminCommentController;
-use App\Http\Controllers\Api\Admin\TournamentController as AdminTournamentController;
-use App\Http\Controllers\Api\Admin\SiteSettingsController;
+use App\Domains\Users\Controllers\Api\Admin\UserController as AdminUserController;
+use App\Domains\Users\Controllers\Api\Admin\RoleController as AdminRoleController;
+use App\Domains\Achievements\Controllers\Api\Admin\AchievementController as AdminAchievementController;
+use App\Domains\Tiers\Controllers\Api\Admin\AspectController as AdminAspectController;
+use App\Domains\Clan\Controllers\Api\Admin\ClanController as AdminClanController;
+use App\Domains\Clan\Controllers\Api\Admin\ClanStatsController as AdminClanStatsController;
+use App\Domains\Clan\Controllers\Api\Admin\CommentController as AdminCommentController;
+use App\Domains\Tournaments\Controllers\Api\Admin\TournamentController as AdminTournamentController;
+use App\Domains\Core\Controllers\Api\Admin\SiteSettingsController;
 
 // === Магазин и ApexCoin ===
-use App\Http\Controllers\Api\ShopController;
-use App\Http\Controllers\Api\WalletController;
-use App\Http\Controllers\Api\GiftController;
-use App\Http\Controllers\Api\Admin\ShopController as AdminShopController;
+use App\Domains\Shop\Controllers\Api\ShopController;
+use App\Domains\Wallet\Controllers\Api\WalletController;
+use App\Domains\Wallet\Controllers\Api\GiftController;
+use App\Domains\Shop\Controllers\Api\Admin\ShopController as AdminShopController;
 
 // === Форум ===
-use App\Http\Controllers\Api\ForumController;
-use App\Http\Controllers\Api\Admin\ForumController as AdminForumController;
-use App\Http\Controllers\Api\Admin\NewsController as AdminNewsController;
+use App\Domains\Forum\Controllers\Api\ForumController;
+use App\Domains\Forum\Controllers\Api\Admin\ForumController as AdminForumController;
+use App\Domains\News\Controllers\Api\Admin\NewsController as AdminNewsController;
 
 /*
 |--------------------------------------------------------------------------
 | ПУБЛИЧНЫЕ РОУТЫ (без авторизации)
 |--------------------------------------------------------------------------
 */
-use App\Http\Controllers\Api\PasswordResetController;
+use App\Domains\Auth\Controllers\Api\PasswordResetController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/forgot-password', [PasswordResetController::class, 'forgot'])
@@ -96,7 +96,7 @@ Route::get('/players/{user}/recommendations', [ProfileRecommendationController::
 
 // Home (главная)
 Route::get('/home', [HomeController::class, 'index']);
-Route::get('/top', [\App\Http\Controllers\TopController::class, 'index']);
+Route::get('/top', [\App\Domains\Players\Controllers\TopController::class, 'index']);
 
 // Новости
 Route::get('/news', [NewsController::class, 'index']);
@@ -119,7 +119,7 @@ Route::get('/clans/{clan}', [ClanController::class, 'show']);
 Route::get('/players', [PlayerController::class, 'index']);
 
 // Рейтинг с курсорной пагинацией — apex:ranking
-Route::get('/ranking', [\App\Http\Controllers\Api\RankingController::class, 'index']);
+Route::get('/ranking', [\App\Domains\Players\Controllers\Api\RankingController::class, 'index']);
 
 // Профиль открывается и по id, и по нику: /api/users/Ник
 Route::get('/players/{user}', [PlayerController::class, 'show']);
@@ -182,32 +182,32 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::prefix('chat')->group(function () {
-        Route::get('/conversations', [\App\Http\Controllers\Api\ChatController::class, 'index']);
-        Route::get('/conversations/{conversation}', [\App\Http\Controllers\Api\ChatController::class, 'show'])
+        Route::get('/conversations', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'index']);
+        Route::get('/conversations/{conversation}', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'show'])
             ->whereNumber('conversation');
-        Route::get('/search', [\App\Http\Controllers\Api\ChatController::class, 'search']);
-        Route::post('/start-direct', [\App\Http\Controllers\Api\ChatController::class, 'startDirect']);
-        Route::post('/start-clan', [\App\Http\Controllers\Api\ChatController::class, 'startClan']);
-        Route::post('/messages/{message}/read', [\App\Http\Controllers\Api\ChatController::class, 'markRead'])
+        Route::get('/search', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'search']);
+        Route::post('/start-direct', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'startDirect']);
+        Route::post('/start-clan', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'startClan']);
+        Route::post('/messages/{message}/read', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'markRead'])
             ->whereNumber('message');
 
-        Route::post('/messages/{message}/forward', [\App\Http\Controllers\Api\ChatController::class, 'forward'])
+        Route::post('/messages/{message}/forward', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'forward'])
             ->whereNumber('message');
-        Route::post('/conversations/{conversation}/messages', [\App\Http\Controllers\Api\ChatController::class, 'send'])
+        Route::post('/conversations/{conversation}/messages', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'send'])
             ->whereNumber('conversation');
 
-        Route::get('/unread-count', [\App\Http\Controllers\Api\ChatController::class, 'unreadCount']);
+        Route::get('/unread-count', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'unreadCount']);
 
         // --- ВЛОЖЕНИЯ В ЧАТЕ — apex:chat-attachments ---
-        Route::post('/attachments', [\App\Http\Controllers\Api\ChatController::class, 'uploadAttachment'])
+        Route::post('/attachments', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'uploadAttachment'])
             ->middleware('throttle:40,1');
-        Route::get('/attachments/{attachment}/download', [\App\Http\Controllers\Api\ChatController::class, 'downloadAttachment'])
+        Route::get('/attachments/{attachment}/download', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'downloadAttachment'])
             ->whereNumber('attachment');
-        Route::post('/conversations/{conversation}/read', [\App\Http\Controllers\Api\ChatController::class, 'markConversationRead'])
+        Route::post('/conversations/{conversation}/read', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'markConversationRead'])
             ->whereNumber('conversation');
-        Route::put('/messages/{message}', [\App\Http\Controllers\Api\ChatController::class, 'update'])
+        Route::put('/messages/{message}', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'update'])
             ->whereNumber('message');
-        Route::delete('/messages/{message}', [\App\Http\Controllers\Api\ChatController::class, 'destroy'])
+        Route::delete('/messages/{message}', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'destroy'])
             ->whereNumber('message');
     });
 
@@ -536,37 +536,37 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware(['auth:sanctum', 'clan.member'])->prefix('my-clan')->group(function () {
     // Дашборд
-    Route::get('/', [\App\Http\Controllers\Api\MyClanController::class, 'index']);
+    Route::get('/', [\App\Domains\Clan\Controllers\Api\MyClanController::class, 'index']);
 
     // Форум
-    Route::get('/forum', [\App\Http\Controllers\Api\ClanForumController::class, 'index']);
-    Route::post('/forum', [\App\Http\Controllers\Api\ClanForumController::class, 'store'])
+    Route::get('/forum', [\App\Domains\Clan\Controllers\Api\ClanForumController::class, 'index']);
+    Route::post('/forum', [\App\Domains\Clan\Controllers\Api\ClanForumController::class, 'store'])
         ->middleware('clan.member:forum');
-    Route::get('/forum/{topic}', [\App\Http\Controllers\Api\ClanForumController::class, 'show']);
-    Route::post('/forum/{topic}/reply', [\App\Http\Controllers\Api\ClanForumController::class, 'reply']);
-    Route::post('/forum/{topic}/pin', [\App\Http\Controllers\Api\ClanForumController::class, 'pin'])
+    Route::get('/forum/{topic}', [\App\Domains\Clan\Controllers\Api\ClanForumController::class, 'show']);
+    Route::post('/forum/{topic}/reply', [\App\Domains\Clan\Controllers\Api\ClanForumController::class, 'reply']);
+    Route::post('/forum/{topic}/pin', [\App\Domains\Clan\Controllers\Api\ClanForumController::class, 'pin'])
         ->middleware('clan.member:forum');
-    Route::post('/forum/{topic}/lock', [\App\Http\Controllers\Api\ClanForumController::class, 'lock'])
+    Route::post('/forum/{topic}/lock', [\App\Domains\Clan\Controllers\Api\ClanForumController::class, 'lock'])
         ->middleware('clan.member:forum');
-    Route::delete('/forum/{topic}', [\App\Http\Controllers\Api\ClanForumController::class, 'destroy']);
+    Route::delete('/forum/{topic}', [\App\Domains\Clan\Controllers\Api\ClanForumController::class, 'destroy']);
 
     // Ресурсы клана.
     // Всем действиям нужен контекст клана, иначе контроллер не знал,
     // к какому клану относится ресурс, и отдавал 404 вместо 403.
     // Ресурсы клана (группа уже под clan.member — контекст клана доступен)
-    Route::get('/resources', [\App\Http\Controllers\Api\ClanResourceController::class, 'index']);
-    Route::post('/resources', [\App\Http\Controllers\Api\ClanResourceController::class, 'store'])
+    Route::get('/resources', [\App\Domains\Clan\Controllers\Api\ClanResourceController::class, 'index']);
+    Route::post('/resources', [\App\Domains\Clan\Controllers\Api\ClanResourceController::class, 'store'])
         ->middleware('clan.member:resources');
-    Route::post('/resources/{resource}/download', [\App\Http\Controllers\Api\ClanResourceController::class, 'download']);
-    Route::delete('/resources/{resource}', [\App\Http\Controllers\Api\ClanResourceController::class, 'destroy']);
+    Route::post('/resources/{resource}/download', [\App\Domains\Clan\Controllers\Api\ClanResourceController::class, 'download']);
+    Route::delete('/resources/{resource}', [\App\Domains\Clan\Controllers\Api\ClanResourceController::class, 'destroy']);
     Route::post('/clans/{clan}/wars', [ClanWarController::class, 'store']);
     Route::post('/wars/{war}/accept', [ClanWarController::class, 'accept']);
     Route::post('/wars/{war}/decline', [ClanWarController::class, 'decline']);
     Route::post('/wars/{war}/complete', [ClanWarController::class, 'complete']);
     // Роли
-    Route::post('/roles/{user}', [\App\Http\Controllers\Api\ClanRoleController::class, 'update']);
-    Route::delete('/members/{user}', [\App\Http\Controllers\Api\ClanRoleController::class, 'kick']);
-    Route::post('/transfer/{user}', [\App\Http\Controllers\Api\ClanRoleController::class, 'transferLeadership']);
+    Route::post('/roles/{user}', [\App\Domains\Clan\Controllers\Api\ClanRoleController::class, 'update']);
+    Route::delete('/members/{user}', [\App\Domains\Clan\Controllers\Api\ClanRoleController::class, 'kick']);
+    Route::post('/transfer/{user}', [\App\Domains\Clan\Controllers\Api\ClanRoleController::class, 'transferLeadership']);
 
 
 });

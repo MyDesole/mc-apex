@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
-use App\Services\AchievementService;
+use App\Domains\Users\Models\User;
+use App\Domains\Achievements\Services\AchievementService;
 use Illuminate\Console\Command;
 
 /**

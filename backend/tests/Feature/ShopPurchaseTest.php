@@ -2,16 +2,17 @@
 
 namespace Tests\Feature;
 
-use App\Models\CoinTransaction;
-use App\Models\ShopItem;
-use App\Models\TierTest;
-use App\Models\User;
-use App\Models\UserInventory;
-use App\Services\RewardService;
-use App\Services\ShopService;
+use App\Domains\Wallet\Models\CoinTransaction;
+use App\Domains\Shop\Models\ShopItem;
+use App\Domains\Tiers\Models\TierTest;
+use App\Domains\Users\Models\User;
+use App\Domains\Shop\Models\UserInventory;
+use App\Domains\Wallet\Services\RewardService;
+use App\Domains\Shop\Services\ShopService;
 use Database\Seeders\ShopItemSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use App\Domains\Shop\Services\ShopSettingService;
 
 /**
  * Покупки, инвентарь, надевание и приоритет тир-теста.
@@ -81,7 +82,8 @@ class ShopPurchaseTest extends TestCase
         $this->assertSame(4100, $tx->balance_after);
         $this->assertSame('purchase', $tx->source);
         $this->assertSame("Покупка: {$item->name}", $tx->description);
-        $this->assertSame(ShopItem::class, $tx->reference_type);
+        // Полиморфный тип хранится псевдонимом из morphMap
+        $this->assertSame('shop_item', $tx->reference_type);
         $this->assertSame($item->id, $tx->reference_id);
         $this->assertSame(['slug' => 'frame-gold', 'quantity' => 1], $tx->meta);
         $this->assertNull($tx->idempotency_key);

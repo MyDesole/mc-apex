@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\ShopItem;
-use App\Models\TierTest;
-use App\Models\User;
-use App\Services\RewardService;
-use App\Services\ShopService;
+use App\Domains\Shop\Models\ShopItem;
+use App\Domains\Tiers\Models\TierTest;
+use App\Domains\Users\Models\User;
+use App\Domains\Wallet\Services\RewardService;
+use App\Domains\Shop\Services\ShopService;
 use Database\Seeders\ShopItemSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -119,13 +119,13 @@ class TierTestPlayerTest extends TestCase
 
         foreach ([$tester, $admin] as $notifiable) {
             $this->assertDatabaseHas('notifications', [
-                'notifiable_type' => User::class,
+                'notifiable_type' => 'user',
                 'notifiable_id' => $notifiable->id,
             ]);
         }
 
         $this->assertDatabaseMissing('notifications', [
-            'notifiable_type' => User::class,
+            'notifiable_type' => 'user',
             'notifiable_id' => $other->id,
         ]);
     }

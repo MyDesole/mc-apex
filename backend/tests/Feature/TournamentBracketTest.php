@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\Tournament;
-use App\Models\TournamentMatch;
-use App\Models\TournamentParticipant;
-use App\Models\User;
+use App\Domains\Tournaments\Models\Tournament;
+use App\Domains\Tournaments\Models\TournamentMatch;
+use App\Domains\Tournaments\Models\TournamentParticipant;
+use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

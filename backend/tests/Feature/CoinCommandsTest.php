@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\CoinTransaction;
-use App\Models\User;
+use App\Domains\Wallet\Models\CoinTransaction;
+use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\Console\Output\BufferedOutput;

@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\SiteSetting;
+use App\Domains\Core\Models\SiteSetting;
 use Illuminate\Database\Seeder;
 
 class SiteSettingsSeeder extends Seeder

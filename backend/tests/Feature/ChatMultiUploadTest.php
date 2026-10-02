@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\Conversation;
-use App\Models\ConversationParticipant;
-use App\Models\User;
+use App\Domains\Chat\Models\Conversation;
+use App\Domains\Chat\Models\ConversationParticipant;
+use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;

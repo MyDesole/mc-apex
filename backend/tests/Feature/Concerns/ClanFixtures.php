@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Concerns;
 
-use App\Models\Clan;
-use App\Models\ClanMember;
-use App\Models\User;
+use App\Domains\Clan\Models\Clan;
+use App\Domains\Clan\Models\ClanMember;
+use App\Domains\Users\Models\User;
 use Illuminate\Support\Str;
 
 /**

@@ -2,16 +2,17 @@
 
 namespace Tests\Feature;
 
-use App\Models\PlayerAspectBedwars;
-use App\Models\PlayerAspectPvp;
-use App\Models\TierTest;
-use App\Models\User;
-use App\Services\AchievementService;
-use App\Services\RewardService;
+use App\Domains\Players\Models\PlayerAspectBedwars;
+use App\Domains\Players\Models\PlayerAspectPvp;
+use App\Domains\Tiers\Models\TierTest;
+use App\Domains\Users\Models\User;
+use App\Domains\Achievements\Services\AchievementService;
+use App\Domains\Wallet\Services\RewardService;
 use Database\Seeders\AchievementSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
+use App\Domains\Shop\Services\ShopSettingService;
 
 class TierTestTesterTest extends TestCase
 {
@@ -615,7 +616,7 @@ class TierTestTesterTest extends TestCase
         $this->assertNotContains('tier_s', $codes, 'S/S+ за тир-тесты не выдаются');
 
         // Награды за ачивки попали в леджер ровно по разу
-        $tierAAchievement = \App\Models\Achievement::byCode('tier_a');
+        $tierAAchievement = \App\Domains\Achievements\Models\Achievement::byCode('tier_a');
 
         $this->assertDatabaseHas('coin_transactions', [
             'user_id' => $player->id,

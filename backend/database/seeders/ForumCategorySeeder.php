@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\ForumCategory;
+use App\Domains\Forum\Models\ForumCategory;
 use Illuminate\Database\Seeder;
 
 /**

@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Models\CoinTransaction;
-use App\Models\ShopItem;
-use App\Models\ShopSetting;
-use App\Models\User;
-use App\Services\CoinService;
-use App\Services\RewardService;
-use App\Services\ShopSettingService;
+use App\Domains\Wallet\Models\CoinTransaction;
+use App\Domains\Shop\Models\ShopItem;
+use App\Domains\Shop\Models\ShopSetting;
+use App\Domains\Users\Models\User;
+use App\Domains\Wallet\Services\CoinService;
+use App\Domains\Wallet\Services\RewardService;
+use App\Domains\Shop\Services\ShopSettingService;
 use Database\Seeders\ShopItemSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -248,8 +248,8 @@ class AdminShopTest extends TestCase
             'sources' => ['tier_test' => true, 'achievement' => true, 'daily_bonus' => true, 'admin' => true, 'referral' => false],
         ])->assertOk();
 
-        $this->assertFalse(\App\Services\ShopSettingService::sourceEnabled('referral'));
-        $this->assertTrue(\App\Services\ShopSettingService::sourceEnabled('tier_test'));
+        $this->assertFalse(\App\Domains\Shop\Services\ShopSettingService::sourceEnabled('referral'));
+        $this->assertTrue(\App\Domains\Shop\Services\ShopSettingService::sourceEnabled('tier_test'));
 
         $referrer = $this->player(['apex_coins' => 0]);
         $invited = $this->player(['referred_by' => $referrer->id]);
@@ -321,7 +321,7 @@ class AdminShopTest extends TestCase
         $admin = $this->admin();
         $player = $this->player(['apex_coins' => 0]);
 
-        $test = \App\Models\TierTest::create([
+        $test = \App\Domains\Tiers\Models\TierTest::create([
             'user_id' => $player->id,
             'mode' => 'pvp',
             'contact_type' => 'discord',

@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\Achievement;
-use App\Models\Clan;
-use App\Models\ClanMember;
-use App\Models\CoinTransaction;
-use App\Models\User;
-use App\Services\AchievementService;
+use App\Domains\Achievements\Models\Achievement;
+use App\Domains\Clan\Models\Clan;
+use App\Domains\Clan\Models\ClanMember;
+use App\Domains\Wallet\Models\CoinTransaction;
+use App\Domains\Users\Models\User;
+use App\Domains\Achievements\Services\AchievementService;
 use Database\Seeders\AchievementSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -40,7 +40,7 @@ class AchievementRecalculateTest extends TestCase
     private function expectedCoins(User $user): int
     {
         return $user->achievements()->get()
-            ->sum(fn ($a) => \App\Services\RewardService::coinsForAchievement($a));
+            ->sum(fn ($a) => \App\Domains\Wallet\Services\RewardService::coinsForAchievement($a));
     }
 
     private function runCommand(array $params = []): array
@@ -82,7 +82,7 @@ class AchievementRecalculateTest extends TestCase
         // Ачивка, за которую не платили, теперь оплачена
         $this->assertDatabaseHas('coin_transactions', [
             'user_id' => $user->id,
-            'idempotency_key' => \App\Services\AchievementService::rewardKey($user, $achievement),
+            'idempotency_key' => \App\Domains\Achievements\Services\AchievementService::rewardKey($user, $achievement),
         ]);
 
         $this->assertStringContainsString('Начислено', $output);
@@ -234,7 +234,7 @@ class AchievementRecalculateTest extends TestCase
         $user->achievements()->attach(Achievement::byCode('tier_a')->id, ['earned_at' => now()]);
 
         // Отключаем источник наград за ачивки
-        \App\Models\ShopSetting::updateOrCreate(
+        \App\Domains\Shop\Models\ShopSetting::updateOrCreate(
             ['key' => 'sources'],
             ['value' => ['achievement' => false]]
         );

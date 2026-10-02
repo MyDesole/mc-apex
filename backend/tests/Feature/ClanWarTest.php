@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\Clan;
-use App\Models\ClanWar;
-use App\Models\User;
+use App\Domains\Clan\Models\Clan;
+use App\Domains\Clan\Models\ClanWar;
+use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Feature\Concerns\ClanFixtures;
 use Tests\TestCase;

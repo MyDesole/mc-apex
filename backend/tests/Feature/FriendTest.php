@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\Friendship;
-use App\Models\User;
+use App\Domains\Friends\Models\Friendship;
+use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

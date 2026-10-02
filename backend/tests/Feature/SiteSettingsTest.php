@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\SiteSetting;
-use App\Models\User;
+use App\Domains\Core\Models\SiteSetting;
+use App\Domains\Users\Models\User;
 use Database\Seeders\SiteSettingsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

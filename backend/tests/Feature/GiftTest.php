@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\CoinTransaction;
-use App\Models\Friendship;
-use App\Models\User;
-use App\Services\CoinService;
-use App\Services\ShopSettingService;
+use App\Domains\Wallet\Models\CoinTransaction;
+use App\Domains\Friends\Models\Friendship;
+use App\Domains\Users\Models\User;
+use App\Domains\Wallet\Services\CoinService;
+use App\Domains\Shop\Services\ShopSettingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

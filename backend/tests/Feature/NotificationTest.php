@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Http\Controllers\NotificationController;
-use App\Models\User;
+use App\Domains\Notifications\Controllers\NotificationController;
+use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
@@ -24,7 +24,7 @@ class NotificationTest extends TestCase
             DatabaseNotification::create([
                 'id' => (string) Str::uuid(),
                 'type' => 'App\Notifications\TestNotification',
-                'notifiable_type' => User::class,
+                'notifiable_type' => 'user',
                 'notifiable_id' => $user->id,
                 'data' => ['title' => $title ?? "Уведомление {$i}"],
                 'read_at' => null,

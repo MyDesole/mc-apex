@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\Clan;
-use App\Models\ClanEvent;
-use App\Models\ClanEventComment;
-use App\Models\ClanMember;
-use App\Models\User;
+use App\Domains\Clan\Models\Clan;
+use App\Domains\Clan\Models\ClanEvent;
+use App\Domains\Clan\Models\ClanEventComment;
+use App\Domains\Clan\Models\ClanMember;
+use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

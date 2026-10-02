@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\Achievement;
-use App\Models\TierTest;
-use App\Models\User;
-use App\Services\AchievementService;
-use App\Services\RewardService;
-use App\Services\ShopSettingService;
+use App\Domains\Achievements\Models\Achievement;
+use App\Domains\Tiers\Models\TierTest;
+use App\Domains\Users\Models\User;
+use App\Domains\Achievements\Services\AchievementService;
+use App\Domains\Wallet\Services\RewardService;
+use App\Domains\Shop\Services\ShopSettingService;
 use Database\Seeders\AchievementSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -217,7 +217,8 @@ class AchievementTest extends TestCase
             'amount' => $expected,
             'balance_after' => 100 + $expected,
             'idempotency_key' => 'achievement:'.$player->id.':'.$achievement->id,
-            'reference_type' => Achievement::class,
+            // Ачивка ссылается на себя, а не на предмет магазина
+            'reference_type' => 'achievement',
             'reference_id' => $achievement->id,
         ]);
     }

@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Mail\PasswordResetCode;
-use App\Models\User;
+use App\Domains\Auth\Mail\PasswordResetCode;
+use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;

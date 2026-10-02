@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\Tournament;
-use App\Models\TournamentParticipant;
-use App\Models\User;
+use App\Domains\Tournaments\Models\Tournament;
+use App\Domains\Tournaments\Models\TournamentParticipant;
+use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -313,12 +313,12 @@ class PublicTournamentTest extends TestCase
         $tournament = $this->tournament(['type' => 'clan']);
 
         $leader = User::factory()->create(['tier' => 'E']);
-        $clan = \App\Models\Clan::create([
+        $clan = \App\Domains\Clan\Models\Clan::create([
             'name' => 'Клан для турнира',
             'tag' => 'KTT',
             'leader_id' => $leader->id,
         ]);
-        \App\Models\ClanMember::create([
+        \App\Domains\Clan\Models\ClanMember::create([
             'clan_id' => $clan->id,
             'user_id' => $leader->id,
             'role' => 'leader',
@@ -333,7 +333,7 @@ class PublicTournamentTest extends TestCase
 
         // Второй участник того же клана получает отказ по дубликату
         $member = User::factory()->create(['tier' => 'E']);
-        \App\Models\ClanMember::create([
+        \App\Domains\Clan\Models\ClanMember::create([
             'clan_id' => $clan->id,
             'user_id' => $member->id,
             'role' => 'member',

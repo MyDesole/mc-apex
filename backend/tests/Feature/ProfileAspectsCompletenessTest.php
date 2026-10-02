@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\PlayerAspectBedwars;
-use App\Models\PlayerAspectPvp;
-use App\Models\User;
+use App\Domains\Players\Models\PlayerAspectBedwars;
+use App\Domains\Players\Models\PlayerAspectPvp;
+use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
