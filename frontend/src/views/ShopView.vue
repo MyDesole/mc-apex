@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { shopApi } from '@/services/shop.js'
 import { walletApi } from '@/services/wallet.js'
 import { useAuthStore } from '@/stores/auth'
@@ -13,6 +14,7 @@ import {
 } from '@/data/economy.js'
 
 const auth = useAuthStore()
+const route = useRoute()
 
 const loading = ref(true)
 const error = ref('')
@@ -24,16 +26,26 @@ const tierRewards = ref({})
 const dailyBonusAvailable = ref(false)
 const dailyBonusAmount = ref(0)
 
-const activeType = ref('all')
-
 const TABS = [
   { value: 'all', label: 'Всё' },
+  // Подсветка клана: отдельная вкладка, иначе предмет теряется в общем списке
+  { value: 'clan_highlight', label: 'Подсветка клана' },
   { value: 'tier_priority', label: 'Приоритет теста' },
   { value: 'avatar_frame', label: 'Рамки' },
   { value: 'profile_effect', label: 'Эффекты' },
   { value: 'badge', label: 'Бейджи' },
   { value: 'accent_color', label: 'Акценты' },
 ]
+
+/**
+ * Вкладка при открытии: из адреса (?type=clan_highlight), иначе «Всё».
+ * Ссылки из других разделов ведут сразу на нужную категорию.
+ */
+const requestedType = String(route.query.type ?? '')
+
+const activeType = ref(
+    TABS.some((tab) => tab.value === requestedType) ? requestedType : 'all'
+)
 
 const filtered = computed(() => {
   if (activeType.value === 'all') return items.value

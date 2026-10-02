@@ -24,6 +24,7 @@ export const TYPE_LABELS = {
     badge: 'Бейдж',
     tier_priority: 'Приоритет тир-теста',
     coin_bundle: 'Набор монет',
+    clan_highlight: 'Подсветка клана',
 }
 
 export const SOURCE_LABELS = {
@@ -33,6 +34,7 @@ export const SOURCE_LABELS = {
     gift_in: 'Подарки от друзей',
     gift_out: 'Подарки друзьям',
     purchase: 'Покупки в магазине',
+    clan_fee: 'Плата за вступление в клан',
     admin: 'Начисления от админа',
     other: 'Прочее',
 }
