@@ -1,0 +1,163 @@
+/*
+ * Плавные переходы между вкладками, табами и шагами.
+ *
+ * Подключается глобально из main.js, поэтому классы доступны любому
+ * компоненту без импорта. Используется вместе с <Transition>:
+ *
+ *   <Transition name="tab-fade" mode="out-in">
+ *     <div :key="tab"> ... </div>
+ *   </Transition>
+ *
+ * mode="out-in" обязателен: без него уходящий и приходящий блоки
+ * накладываются друг на друга, и переход выглядит как рывок.
+ */
+
+/* ============================================================
+   Вкладки: лёгкий подъём с проявлением
+   ============================================================ */
+
+.tab-fade-enter-active {
+  transition:
+      opacity .22s ease,
+      transform .22s cubic-bezier(.22, .61, .36, 1);
+}
+
+.tab-fade-leave-active {
+  transition:
+      opacity .14s ease,
+      transform .14s ease;
+}
+
+.tab-fade-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.tab-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+/* ============================================================
+   Боковые переключатели: сдвиг по горизонтали
+   ============================================================ */
+
+.slide-x-enter-active {
+  transition:
+      opacity .22s ease,
+      transform .24s cubic-bezier(.22, .61, .36, 1);
+}
+
+.slide-x-leave-active {
+  transition:
+      opacity .14s ease,
+      transform .14s ease;
+}
+
+.slide-x-enter-from {
+  opacity: 0;
+  transform: translateX(14px);
+}
+
+.slide-x-leave-to {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+/* Обратное направление: для переключателей «назад» */
+.slide-x-back-enter-from {
+  opacity: 0;
+  transform: translateX(-14px);
+}
+
+.slide-x-back-leave-to {
+  opacity: 0;
+  transform: translateX(10px);
+}
+
+/* ============================================================
+   Смена режима: мягкое увеличение
+   ============================================================ */
+
+.fade-scale-enter-active {
+  transition:
+      opacity .2s ease,
+      transform .22s cubic-bezier(.22, .61, .36, 1);
+}
+
+.fade-scale-leave-active {
+  transition:
+      opacity .12s ease,
+      transform .12s ease;
+}
+
+.fade-scale-enter-from {
+  opacity: 0;
+  transform: scale(.985);
+}
+
+.fade-scale-leave-to {
+  opacity: 0;
+  transform: scale(1.008);
+}
+
+/* ============================================================
+   Переход между страницами
+   ============================================================ */
+
+.page-enter-active {
+  transition:
+      opacity .24s ease,
+      transform .24s cubic-bezier(.22, .61, .36, 1);
+}
+
+.page-leave-active {
+  transition:
+      opacity .12s ease;
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-leave-to {
+  opacity: 0;
+}
+
+/*
+ * Уважение к настройке «меньше движения».
+ *
+ * Переходы отключаются, но содержимое остаётся видимым: без этого
+ * блоки могли бы застрять в промежуточном состоянии.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .tab-fade-enter-active,
+  .tab-fade-leave-active,
+  .slide-x-enter-active,
+  .slide-x-leave-active,
+  .fade-scale-enter-active,
+  .fade-scale-leave-active,
+  .page-enter-active,
+  .page-leave-active {
+    transition-duration: .01ms;
+  }
+
+  .tab-fade-enter-from,
+  .slide-x-enter-from,
+  .slide-x-back-enter-from,
+  .fade-scale-enter-from,
+  .page-enter-from {
+    opacity: 1;
+    transform: none;
+  }
+
+  .tab-fade-leave-to,
+  .slide-x-leave-to,
+  .slide-x-back-leave-to,
+  .fade-scale-leave-to,
+  .page-leave-to {
+    opacity: 1;
+    transform: none;
+  }
+}

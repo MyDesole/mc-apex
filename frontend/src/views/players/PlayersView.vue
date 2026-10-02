@@ -5,6 +5,7 @@ import { api } from '@/services/core/api.js'
 import { playersApi } from '@/services/players/players.js'
 import { userLink } from '@/utils/links.js'
 import RatingPodium from '@/components/players/RatingPodium.vue'
+import TabTransition from '@/components/core/TabTransition.vue'
 import {
   accent,
   avatarFrame,
@@ -327,6 +328,11 @@ function scorePercent(player) {
            DESKTOP MOUNTAIN
            ======================================================= -->
 
+      <!--
+        Ключ по категории и режиму: при переключении содержимое
+        пересоздаётся, и переход играет заново.
+      -->
+      <TabTransition :active="`${category}-${pvpMode}`" name="fade-scale">
       <RatingPodium :players="visiblePlayers" />
 
       <!-- =======================================================
@@ -529,6 +535,7 @@ function scorePercent(player) {
           Это весь рейтинг — {{ players.length }} игроков
         </div>
       </section>
+      </TabTransition>
 
       <!-- EMPTY -->
 

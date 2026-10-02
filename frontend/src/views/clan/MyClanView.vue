@@ -13,6 +13,7 @@ import ClanApplicationsTab from '@/components/clan/tabs/ClanApplicationsTab.vue'
 import ClanWarsTab from '@/components/clan/tabs/ClanWarsTab.vue'
 import ClanResourcesTab from '@/components/clan/tabs/ClanResourcesTab.vue'
 import ClanEditModal from '@/components/clan/dialogs/ClanEditModal.vue'
+import TabTransition from '@/components/core/TabTransition.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -562,35 +563,37 @@ onMounted(load)
         </div>
 
         <div class="content-body">
-          <ClanForumTab v-if="tab === 'forum'" :permissions="permissions" :clan="clan" />
+          <TabTransition :active="tab">
+            <ClanForumTab v-if="tab === 'forum'" :permissions="permissions" :clan="clan" />
 
-          <ClanResourcesTab
-              v-else-if="tab === 'resources'"
-              :permissions="permissions"
-              :clan="clan"
-          />
+            <ClanResourcesTab
+                v-else-if="tab === 'resources'"
+                :permissions="permissions"
+                :clan="clan"
+            />
 
-          <ClanMembersTab
-              v-else-if="tab === 'members'"
-              :clan="clan"
-          />
+            <ClanMembersTab
+                v-else-if="tab === 'members'"
+                :clan="clan"
+            />
 
-          <ClanNewsTab
-              v-else-if="tab === 'news'"
-              :permissions="permissions"
-              :clan="clan"
-          />
+            <ClanNewsTab
+                v-else-if="tab === 'news'"
+                :permissions="permissions"
+                :clan="clan"
+            />
 
-          <ClanApplicationsTab
-              v-else-if="tab === 'applications'"
-              :clan="clan"
-          />
+            <ClanApplicationsTab
+                v-else-if="tab === 'applications'"
+                :clan="clan"
+            />
 
-          <ClanWarsTab
-              v-else-if="tab === 'wars'"
-              :permissions="permissions"
-              :clan="clan"
-          />
+            <ClanWarsTab
+                v-else-if="tab === 'wars'"
+                :permissions="permissions"
+                :clan="clan"
+            />
+          </TabTransition>
         </div>
       </main>
     </template>

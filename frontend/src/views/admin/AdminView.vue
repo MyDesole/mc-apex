@@ -14,6 +14,7 @@ import AdminNews from '@/components/admin/AdminNews.vue'
 import AdminShop from '@/components/admin/AdminShop.vue'
 import AdminForum from '@/components/admin/AdminForum.vue'
 import AdminVerification from '@/components/admin/AdminVerification.vue'
+import TabTransition from '@/components/core/TabTransition.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -192,7 +193,8 @@ onMounted(() => {
     </nav>
 
     <div class="admin-content">
-      <AdminUsers v-if="tab === 'users' && isAdmin" />
+      <TabTransition :active="tab">
+        <AdminUsers v-if="tab === 'users' && isAdmin" />
       <AdminClans v-else-if="tab === 'clans'" />
       <AdminTournaments v-else-if="tab === 'tournaments'" />
       <AdminComments v-else-if="tab === 'comments'" />
@@ -202,8 +204,8 @@ onMounted(() => {
       <AdminNews v-else-if="tab === 'news' && isAdmin" />
       <AdminShop v-else-if="tab === 'shop'" />
       <AdminForum v-else-if="tab === 'forum'" />
-      <AdminVerification v-else-if="tab === 'verification' && isAdmin" />
-
+        <AdminVerification v-else-if="tab === 'verification' && isAdmin" />
+      </TabTransition>
     </div>
   </div>
 </template>

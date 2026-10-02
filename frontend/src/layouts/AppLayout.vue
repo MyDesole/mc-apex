@@ -662,7 +662,16 @@ watch(mobileMenuOpen, (open) => {
     ========================== -->
 
     <main class="page">
-      <RouterView />
+      <!--
+        Смена страницы с проявлением и лёгким подъёмом.
+        mode="out-in" обязателен: без него уходящая и приходящая
+        страницы накладываются друг на друга.
+      -->
+      <RouterView v-slot="{ Component, route }">
+        <Transition name="page" mode="out-in">
+          <component :is="Component" :key="route.path" />
+        </Transition>
+      </RouterView>
     </main>
 
   </div>

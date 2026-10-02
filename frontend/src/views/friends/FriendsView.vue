@@ -68,7 +68,12 @@ const currentList = computed(() => {
       {{ tab === 'friends' ? 'Пока нет друзей' : 'Пусто' }}
     </div>
 
-    <div v-else class="friends-list">
+    <TabTransition
+        v-else
+        :active="tab"
+        tag="div"
+        class="friends-list"
+    >
       <div v-for="user in currentList" :key="user.id" class="friend-row">
         <RouterLink :to="userLink(user)" class="friend-main">
           <div class="avatar" :class="`tier-bg-${user.tier}`">
@@ -110,7 +115,7 @@ const currentList = computed(() => {
           </button>
         </div>
       </div>
-    </div>
+    </TabTransition>
   </div>
 </template>
 

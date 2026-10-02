@@ -240,40 +240,48 @@ onMounted(load)
     </nav>
 
     <!-- CONTENT -->
-    <ClanMembers
-        v-if="tab === 'members'"
-        :clan="clan"
-        :is-leader="isLeader"
-        :can-manage="canManage"
-        @refresh="load"
-    />
+    <TabTransition :active="tab">
+      <ClanMembers
+          v-if="tab === 'members'"
+          :clan="clan"
+          :is-leader="isLeader"
+          :can-manage="canManage"
+          @refresh="load"
+      />
+
+      <ClanEvents
+          v-else-if="tab === 'events'"
+          :clan="clan"
+          :can-manage="canManage"
+      />
+
+      <ClanWars
+          v-else-if="tab === 'wars'"
+          :clan="clan"
+          :incoming="data.incoming_wars"
+          :outgoing="data.outgoing_wars"
+          :is-member="isMember"
+          :is-leader="isLeader"
+          @refresh="load"
+      />
+
+      <ClanApplications
+          v-else-if="tab === 'applications'"
+          :clan="clan"
+          :can-manage="canManage"
+          @refresh="onApplicationsChanged"
+      />
+    </TabTransition>
+
+    <!--
+      Окно редактирования вне цепочки вкладок: раньше оно стояло между
+      v-if и v-else-if и обрывало связь между ними.
+    -->
     <ClanEditModal
         v-if="showEdit"
         :clan="clan"
         @close="showEdit = false"
         @updated="load"
-    />
-    <ClanEvents
-        v-else-if="tab === 'events'"
-        :clan="clan"
-        :can-manage="canManage"
-    />
-
-    <ClanWars
-        v-else-if="tab === 'wars'"
-        :clan="clan"
-        :incoming="data.incoming_wars"
-        :outgoing="data.outgoing_wars"
-        :is-member="isMember"
-        :is-leader="isLeader"
-        @refresh="load"
-    />
-
-    <ClanApplications
-        v-else-if="tab === 'applications'"
-        :clan="clan"
-        :can-manage="canManage"
-        @refresh="onApplicationsChanged"
     />
   </div>
 </template>

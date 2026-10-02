@@ -400,7 +400,8 @@ onMounted(() => {
 
     <!-- ================= LIST ================= -->
 
-    <section v-else class="tests">
+    <TabTransition v-else :active="tab" tag="section">
+      <section class="tests">
 
       <div class="tests__head">
         <span>
@@ -612,7 +613,9 @@ onMounted(() => {
         </article>
 
       </div>
-    </section>
+      </section>
+    </TabTransition>
+
 
     <!-- ================= MODAL ================= -->
 
