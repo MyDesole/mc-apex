@@ -17,7 +17,7 @@ const emit = defineEmits(['close', 'updated'])
 
 const user = computed(() => auth.user)
 
-const tab = ref('style') // style | info | achievements
+const tab = ref('style') // style | info
 
 // Владение косметикой из магазина (чтобы нельзя было надеть некупленное)
 const ownedFrames = ref(new Set())
@@ -25,6 +25,12 @@ const ownedEffects = ref(new Set())
 const ownedAccents = ref(new Set())
 const paidAccents = ref(new Set())
 const shopLoading = ref(false)
+
+// Чистим массивы от null / '' / undefined — иначе валидация на бэке падает
+function cleanArray(arr) {
+  if (!Array.isArray(arr)) return []
+  return arr.filter((v) => v !== null && v !== undefined && v !== '')
+}
 
 const form = ref({
   avatar_frame: user.value?.avatar_frame ?? 'default',
@@ -34,12 +40,8 @@ const form = ref({
   quote: user.value?.quote ?? '',
   bio: user.value?.bio ?? '',
   discord_tag: user.value?.discord_tag ?? '',
-  favorite_modes: Array.isArray(user.value?.favorite_modes)
-      ? [...user.value.favorite_modes]
-      : [],
-  featured_achievements: Array.isArray(user.value?.featured_achievements)
-      ? [...user.value.featured_achievements]
-      : [],
+  favorite_modes: cleanArray(user.value?.favorite_modes),
+  featured_achievements: cleanArray(user.value?.featured_achievements),
 })
 
 const loading = ref(false)
@@ -195,13 +197,13 @@ async function loadOwned() {
     const items = data.items ?? []
 
     ownedFrames.value = new Set(
-      items.filter((i) => i.type === 'avatar_frame').map((i) => i.effect_value).filter(Boolean)
+        items.filter((i) => i.type === 'avatar_frame').map((i) => i.effect_value).filter(Boolean)
     )
     ownedEffects.value = new Set(
-      items.filter((i) => i.type === 'profile_effect').map((i) => i.effect_value).filter(Boolean)
+        items.filter((i) => i.type === 'profile_effect').map((i) => i.effect_value).filter(Boolean)
     )
     ownedAccents.value = new Set(
-      items.filter((i) => i.type === 'accent_color').map((i) => i.effect_value).filter(Boolean)
+        items.filter((i) => i.type === 'accent_color').map((i) => i.effect_value).filter(Boolean)
     )
   } catch (e) {
     console.error('Не удалось загрузить инвентарь косметики', e)
@@ -213,10 +215,10 @@ async function loadOwned() {
   try {
     const catalog = await shopApi.catalog()
     paidAccents.value = new Set(
-      (catalog.items ?? [])
-        .filter((i) => i.type === 'accent_color')
-        .map((i) => i.effect_value)
-        .filter(Boolean)
+        (catalog.items ?? [])
+            .filter((i) => i.type === 'accent_color')
+            .map((i) => i.effect_value)
+            .filter(Boolean)
     )
   } catch (e) {
     console.error('Не удалось загрузить каталог', e)
@@ -238,7 +240,13 @@ async function submit() {
       await playersApi.updateMe(mePayload)
     }
 
-    const payload = { ...form.value }
+    // Чистим массивы от null / '' / undefined перед отправкой
+    const payload = {
+      ...form.value,
+      favorite_modes: cleanArray(form.value.favorite_modes),
+      featured_achievements: cleanArray(form.value.featured_achievements),
+    }
+
     if (cardBgFile.value) {
       payload.card_background = cardBgFile.value
     }
@@ -325,8 +333,6 @@ onBeforeUnmount(() => {
               <span class="sidebar-btn__label">Инфо</span>
               <span class="sidebar-btn__desc">Био, статус, соцсети</span>
             </button>
-
-
           </nav>
         </aside>
 
@@ -578,45 +584,6 @@ onBeforeUnmount(() => {
                     @click="toggleMode(m.value)"
                 >
                   {{ m.label }}
-                </button>
-              </div>
-            </div>
-          </template>
-
-          <!-- === ACHIEVEMENTS === -->
-          <template v-else-if="tab === 'achievements'">
-            <div class="section">
-              <div class="section__head">
-                <h3 class="section__title">Витрина ачивок</h3>
-                <span class="section__count">
-                  {{ form.featured_achievements.length }} / 6
-                </span>
-              </div>
-
-              <div v-if="achievementsLoading" class="empty">
-                Загрузка...
-              </div>
-
-              <div v-else-if="!myAchievements.length" class="empty">
-                У тебя пока нет ачивок. Пройди тир-тест или вступи в клан.
-              </div>
-
-              <div v-else class="achievements-grid">
-                <button
-                    v-for="a in myAchievements"
-                    :key="a.id"
-                    type="button"
-                    class="ach-btn"
-                    :class="{ active: isFeatured(a.id) }"
-                    :style="{ '--color': a.color }"
-                    :title="a.description"
-                    @click="toggleFeatured(a)"
-                >
-                  <span class="ach-btn__icon">{{ a.icon }}</span>
-                  <span class="ach-btn__name">{{ a.name }}</span>
-                  <span class="ach-btn__check">
-                    {{ isFeatured(a.id) ? '✓' : '+' }}
-                  </span>
                 </button>
               </div>
             </div>
