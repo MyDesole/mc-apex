@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch, computed } from 'vue'
 import { chatApi } from '@/services/chat/chat.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import { echoGeneration, onEchoReset } from '@/echo.js'
@@ -6,27 +6,37 @@ import { echoGeneration, onEchoReset } from '@/echo.js'
 /**
  * Кто сейчас на сайте.
  *
- * Источников два, и они дополняют друг друга:
+ * Источников несколько, и они дополняют друг друга:
  *
- *   1. Presence-канал Reverb — мгновенно. Пока вкладка открыта, Reverb
- *      сообщает о входе и выходе, и зелёная точка появляется сразу.
+ *   1. Присутствие собеседников открытого диалога опрашивается часто.
+ *      Это главный источник: presence-канал знает только тех, кто сам
+ *      открыл страницу чата, а собеседник может быть где угодно на сайте.
  *
- *   2. Периодический опрос сервера — запасной вариант. Работает, если
- *      Reverb недоступен или соединение оборвалось: сервер считает
- *      онлайн по времени последней активности.
+ *   2. Presence-канал Reverb — мгновенные события входа и выхода. Он даёт
+ *      зелёную точку сразу, как только собеседник заходит в чат.
  *
- * Опрос идёт редко (раз в минуту) и только пока открыт чат.
+ *   3. Полный список с сервера — редко, как общая картина.
+ *
+ * Сервер считает онлайн по времени последней активности, поэтому статус
+ * остаётся верным даже для тех, кто не открывал чат.
  */
 
-/** Как часто спрашивать сервер, если Reverb молчит. */
+/** Как часто обновлять присутствие собеседников открытого диалога. */
+const PEERS_INTERVAL_MS = 15_000
+
+/** Как часто обновлять полный список. */
 const FALLBACK_INTERVAL_MS = 60_000
 
 /** Общий набор на всё приложение: страница одна, состояние одно. */
 const onlineIds = ref(new Set())
 
 let channel = null
-let timer = null
+let peersTimer = null
+let fullTimer = null
 let subscribers = 0
+
+/** Кого сейчас показываем: собеседники открытого диалога. */
+const watchedIds = ref([])
 
 /** Кто отметил вход: нужен, чтобы снять отметку при выходе. */
 let markedOnlineUserId = null
@@ -66,6 +76,39 @@ async function fetchAll() {
     onlineIds.value = toSet(data.online)
   } catch {
     /* Сеть недоступна — оставляем прежнее состояние, не гасим точки */
+  }
+}
+
+/**
+ * Спрашивает сервер о конкретных игроках.
+ *
+ * Запрос узкий: сервер проверяет только переданные идентификаторы.
+ */
+async function fetchWatched() {
+  const ids = watchedIds.value
+
+  if (!ids.length) return
+
+  try {
+    const data = await chatApi.presence(ids)
+    const fresh = toSet(data.online)
+
+    /*
+     * Обновляем только тех, кого спрашивали: остальных не трогаем,
+     * чтобы точки в списке диалогов не гасли из-за узкого запроса.
+     */
+    const next = new Set(onlineIds.value)
+
+    ids.forEach((id) => {
+      const key = Number(id)
+
+      if (fresh.has(key)) next.add(key)
+      else next.delete(key)
+    })
+
+    onlineIds.value = next
+  } catch {
+    /* Сеть недоступна — оставляем прежнее состояние */
   }
 }
 
@@ -115,11 +158,26 @@ function unsubscribeChannel() {
   channel = null
 }
 
-/** Запускает опрос как запасной источник. */
-function startFallback() {
-  if (timer) return
+/** Запускает опрос собеседников. */
+function startPeersPolling() {
+  if (peersTimer) return
 
-  timer = setInterval(() => {
+  peersTimer = setInterval(fetchWatched, PEERS_INTERVAL_MS)
+}
+
+/** Останавливает опрос собеседников. */
+function stopPeersPolling() {
+  if (!peersTimer) return
+
+  clearInterval(peersTimer)
+  peersTimer = null
+}
+
+/** Запускает общий опрос. */
+function startFallback() {
+  if (fullTimer) return
+
+  fullTimer = setInterval(() => {
     /*
      * Если Reverb отдаёт данные, опрос всё равно полезен: он ловит тех,
      * кто закрыл вкладку, не дождавшись события выхода.
@@ -128,12 +186,12 @@ function startFallback() {
   }, FALLBACK_INTERVAL_MS)
 }
 
-/** Останавливает опрос. */
+/** Останавливает общий опрос. */
 function stopFallback() {
-  if (!timer) return
+  if (!fullTimer) return
 
-  clearInterval(timer)
-  timer = null
+  clearInterval(fullTimer)
+  fullTimer = null
 }
 
 /*
@@ -149,7 +207,18 @@ onEchoReset(() => {
   fetchAll()
 })
 
-export function usePresence() {
+/**
+ * Присутствие.
+ *
+ * @param {Function|import('vue').Ref<Array<number>>} [peers]
+ *        за кем следить: список идентификаторов собеседников
+ */
+export function usePresence(peers = null) {
+  /** Приводит вход к computed-ссылке. */
+  const peerIds = peers
+      ? (typeof peers === 'function' ? computed(peers) : peers)
+      : null
+
   onMounted(async () => {
     /*
      * Хранилище берём внутри onMounted: к этому моменту Pinia уже
@@ -169,6 +238,26 @@ export function usePresence() {
       /* Сервер отмечает вход: это запасной источник статуса */
       callService('presenceOnline')
     }
+
+    /* Следим за собеседниками текущего диалога */
+    if (peerIds) {
+      watch(
+          peerIds,
+          (ids) => {
+            watchedIds.value = (ids ?? []).map(Number).filter(Boolean)
+
+            if (watchedIds.value.length) {
+              startPeersPolling()
+
+              // Спрашиваем сразу: статус мог устареть с прошлого круга
+              fetchWatched()
+            } else {
+              stopPeersPolling()
+            }
+          },
+          { immediate: true },
+      )
+    }
   })
 
   onUnmounted(() => {
@@ -179,6 +268,9 @@ export function usePresence() {
 
       unsubscribeChannel()
       stopFallback()
+      stopPeersPolling()
+
+      watchedIds.value = []
 
       if (markedOnlineUserId) {
         callService('presenceOffline')
@@ -192,5 +284,6 @@ export function usePresence() {
     onlineIds,
     isOnline: (userId) => onlineIds.value.has(Number(userId)),
     refresh: fetchAll,
+    refreshPeers: fetchWatched,
   }
 }

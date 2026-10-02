@@ -29,11 +29,9 @@ class PresenceController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $requested = $request->query('user_ids');
+        $ids = $this->requestedIds($request);
 
-        if (is_string($requested) && $requested !== '') {
-            $ids = array_filter(array_map('intval', explode(',', $requested)));
-
+        if ($ids !== []) {
             return response()->json([
                 'online' => $this->presence->onlineAmong($ids),
             ]);
@@ -42,6 +40,30 @@ class PresenceController extends Controller
         return response()->json([
             'online' => $this->presence->onlineUserIds(),
         ]);
+    }
+
+    /**
+     * Разбирает user_ids.
+     *
+     * Принимает оба вида: и список (user_ids[]=1&user_ids[]=2), который
+     * отправляет страница, и строку через запятую.
+     *
+     * @return array<int, int>
+     */
+    private function requestedIds(Request $request): array
+    {
+        $requested = $request->query('user_ids');
+
+        if ($requested === null || $requested === '' || $requested === []) {
+            return [];
+        }
+
+        $values = is_array($requested) ? $requested : explode(',', (string) $requested);
+
+        return array_values(array_filter(
+            array_map('intval', $values),
+            static fn (int $id): bool => $id > 0,
+        ));
     }
 
     /** Отметить, что игрок зашёл на сайт. */

@@ -16,7 +16,7 @@ const route = useRoute()
 const router = useRouter()
 
 const { latestMessage } = useRealtimeMessages()
-const { isOnline: isPlayerOnline, refresh: refreshPresence } = usePresence()
+/* Присутствие подключается ниже: нужен activeConversation */
 
 
 const tierColors = {
@@ -36,6 +36,26 @@ const tierColors = {
 const conversations = ref([])
 const activeConversation = ref(null)
 const messages = ref([])
+
+/*
+ * Присутствие. Передаём собеседников открытого диалога: по ним статус
+ * обновляется сам, без перезагрузки страницы.
+ */
+const presencePeers = computed(() => {
+  const conversation = activeConversation.value
+
+  if (!conversation) return []
+
+  return (conversation.users || [])
+      .map((u) => Number(u.id))
+      .filter((id) => id && id !== Number(auth.user?.id ?? 0))
+})
+
+const {
+  isOnline: isPlayerOnline,
+  refresh: refreshPresence,
+  refreshPeers: refreshPeersPresence,
+} = usePresence(() => presencePeers.value)
 
 /*
  * Запасной опрос: если соединение с Reverb отвалилось и не поднялось,
@@ -993,6 +1013,9 @@ watch(
 )
 
 watch(latestMessage, async message => {
+  // Собеседник только что написал — значит он в сети
+  refreshPeersPresence()
+
   if (!message) return
 
   if (
