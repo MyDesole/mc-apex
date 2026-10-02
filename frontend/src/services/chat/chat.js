@@ -83,7 +83,11 @@ export const chatApi = {
     uploadMany(files) {
         const data = new FormData()
 
-        files.forEach((file) => data.append('files[]', file))
+        /*
+         * Индексы обязательны: при files[] без номера PHP собирает
+         * вложенные массивы и валидация files.* не видит в них файлы.
+         */
+        files.forEach((file, index) => data.append(`files[${index}]`, file))
 
         return api.post('/chat/attachments', data)
     },

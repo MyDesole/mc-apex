@@ -667,9 +667,14 @@ watch(mobileMenuOpen, (open) => {
         mode="out-in" обязателен: без него уходящая и приходящая
         страницы накладываются друг на друга.
       -->
+      <!--
+        Ключ — имя маршрута, а не полный путь: смена параметров внутри
+        одной страницы (например, диалога в сообщениях) не должна
+        перезапускать переход всей страницы.
+      -->
       <RouterView v-slot="{ Component, route }">
         <Transition name="page" mode="out-in">
-          <component :is="Component" :key="route.path" />
+          <component :is="Component" :key="route.name" />
         </Transition>
       </RouterView>
     </main>

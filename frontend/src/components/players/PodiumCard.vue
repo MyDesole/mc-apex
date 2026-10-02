@@ -471,6 +471,23 @@ const avatar = computed(() => props.entry?.avatar_url ?? null)
   color: #aab4c3;
 }
 
+/*
+ * Порядок мест: в разметке карточки идут 01, 02, 03, но на широком
+ * экране второе место стоит слева, а первое — по центру.
+ * На узком экране порядок возвращается к 01, 02, 03.
+ */
+.podium-card--first {
+  order: 2;
+}
+
+.podium-card--second {
+  order: 1;
+}
+
+.podium-card--third {
+  order: 3;
+}
+
 .podium-card--third {
   min-height: 290px;
   border-color: rgba(217, 119, 6, 0.17);
@@ -879,6 +896,12 @@ const avatar = computed(() => props.entry?.avatar_url ?? null)
   .podium-card--first {
     order: -1;
     padding-top: 34px;
+  }
+
+  /* На узком экране места идут по порядку: сброс порядка широкого экрана */
+  .podium-card--second,
+  .podium-card--third {
+    order: 0;
   }
 
   .podium-card--first .podium-avatar {
