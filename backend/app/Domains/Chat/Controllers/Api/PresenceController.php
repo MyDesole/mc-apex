@@ -74,10 +74,15 @@ class PresenceController extends Controller
         return response()->json(['online' => $this->presence->onlineUserIds()]);
     }
 
-    /** Отметить, что игрок закрыл сайт. */
+    /**
+     * Отметить, что игрок закрыл сайт.
+     *
+     * Явный выход: активность на странице больше не должна считать его
+     * онлайн, иначе он возвращается в список при обновлении страницы.
+     */
     public function offline(Request $request): JsonResponse
     {
-        $this->presence->markOffline((int) $request->user()->id);
+        $this->presence->markLeft((int) $request->user()->id);
 
         return response()->json(['ok' => true]);
     }

@@ -209,6 +209,8 @@ Route::middleware('auth:sanctum')->group(function () {
             ->whereNumber('attachment');
         Route::post('/conversations/{conversation}/read', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'markConversationRead'])
             ->whereNumber('conversation');
+        Route::post('/conversations/{conversation}/typing', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'typing'])
+            ->whereNumber('conversation');
         Route::put('/messages/{message}', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'update'])
             ->whereNumber('message');
         Route::delete('/messages/{message}', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'destroy'])

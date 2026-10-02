@@ -15,9 +15,11 @@ use Illuminate\Support\Facades\Cache;
  *
  *   2. Время последней активности (users.last_seen_at) — запасной
  *      вариант. Работает, если Reverb недоступен или вкладку только что
- *      закрыли: запись живёт ещё пару минут.
+ *      закрыли: запись живёт ещё минуту.
  *
- * Итог — объединение обоих списков.
+ * Явный выход перебивает второй источник. Без этого игрок, нажавший
+ * «Выйти», оставался онлайн ещё минуту: выход снимал отметку присутствия,
+ * но активность на странице держала его в списке.
  */
 class PresenceService
 {
@@ -34,6 +36,9 @@ class PresenceService
     private const PRESENCE_TTL_SECONDS = 90;
 
     private const CACHE_KEY = 'presence:members';
+
+    /** Кто вышел явно: активность не должна возвращать его в список. */
+    private const OFFLINE_KEY = 'presence:left';
 
     /**
      * Идентификаторы игроков, которые сейчас онлайн.
@@ -88,6 +93,9 @@ class PresenceService
         $members[$userId] = now()->timestamp;
 
         Cache::put(self::CACHE_KEY, $members, now()->addMinutes(10));
+
+        // Вернулся — значит вышедшим больше не считается
+        $this->forgetLeft($userId);
     }
 
     /**
@@ -104,6 +112,23 @@ class PresenceService
         unset($members[$userId]);
 
         Cache::put(self::CACHE_KEY, $members, now()->addMinutes(10));
+    }
+
+    /**
+     * Отметить явный выход: нажата кнопка «Выйти» или закрыт сайт.
+     *
+     * Кроме снятия отметки присутствия запоминаем выход отдельно, иначе
+     * недавняя активность вернёт игрока в список онлайна.
+     */
+    public function markLeft(int $userId): void
+    {
+        $this->markOffline($userId);
+
+        $left = $this->leftMembers();
+
+        $left[$userId] = now()->timestamp;
+
+        Cache::put(self::OFFLINE_KEY, $left, now()->addMinutes(10));
     }
 
     /* ------------------------- Источники ------------------------- */
@@ -131,15 +156,60 @@ class PresenceService
     /**
      * Кто недавно проявлял активность.
      *
+     * Явно вышедших пропускаем: активность на странице не должна
+     * возвращать их в список онлайна.
+     *
      * @return array<int, int>
      */
     private function fromActivity(): array
     {
+        $limit = now()->subSeconds(self::ONLINE_WINDOW_SECONDS);
+
+        $left = $this->recentlyLeft();
+
         return User::query()
-            ->where('last_seen_at', '>=', now()->subSeconds(self::ONLINE_WINDOW_SECONDS))
+            ->where('last_seen_at', '>=', $limit)
+            ->when($left, fn ($q) => $q->whereNotIn('id', $left))
             ->pluck('id')
             ->map(fn ($id) => (int) $id)
             ->all();
+    }
+
+    /**
+     * Кто вышел явно и ещё не вернулся.
+     *
+     * Записи старше окна активности не нужны: после него последняя
+     * активность и так перестаёт означать онлайн.
+     *
+     * @return array<int, int>
+     */
+    private function recentlyLeft(): array
+    {
+        $limit = now()->subSeconds(self::ONLINE_WINDOW_SECONDS)->timestamp;
+
+        $ids = [];
+
+        foreach ($this->leftMembers() as $id => $leftAt) {
+            if ((int) $leftAt >= $limit) {
+                $ids[] = (int) $id;
+            }
+        }
+
+        return $ids;
+    }
+
+    /** Убирает отметку явного выхода. */
+    private function forgetLeft(int $userId): void
+    {
+        $left = $this->leftMembers();
+
+        if (! isset($left[$userId])) {
+            return;
+        }
+
+        unset($left[$userId]);
+
+        Cache::put(self::OFFLINE_KEY, $left, now()->addMinutes(10));
     }
 
     /** Сырые записи присутствия. */
@@ -148,5 +218,13 @@ class PresenceService
         $members = Cache::get(self::CACHE_KEY, []);
 
         return is_array($members) ? $members : [];
+    }
+
+    /** Сырые записи о явном выходе. */
+    private function leftMembers(): array
+    {
+        $left = Cache::get(self::OFFLINE_KEY, []);
+
+        return is_array($left) ? $left : [];
     }
 }

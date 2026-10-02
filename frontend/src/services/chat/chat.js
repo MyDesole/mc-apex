@@ -93,6 +93,15 @@ export const chatApi = {
     },
 
     // Пометить диалог прочитанным
+    /**
+     * Сообщить собеседникам, что идёт набор текста.
+     *
+     * Страница зовёт это с промежутком, а не на каждую букву.
+     */
+    typing(id) {
+        return api.post(`/chat/conversations/${id}/typing`)
+    },
+
     markConversationRead(id) {
         return api.post(`/chat/conversations/${id}/read`)
     },

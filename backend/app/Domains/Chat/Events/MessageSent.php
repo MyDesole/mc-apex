@@ -3,6 +3,7 @@
 namespace App\Domains\Chat\Events;
 
 use App\Domains\Chat\Models\Message;
+use App\Domains\Chat\Resources\MessageResource;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -41,42 +42,34 @@ class MessageSent implements ShouldBroadcastNow
         return 'message.sent';
     }
 
+    /**
+     * Состав полей тот же, что у ответа API.
+     *
+     * Раньше массив собирался вручную и расходился с ресурсом: не было
+     * списка reads и вложений, поэтому галочка прочтения на сообщении,
+     * пришедшем по сокету, не вставала.
+     */
     public function broadcastWith(): array
     {
-        $m = $this->message->load([
-            'user:id,username,avatar,tier,is_verified',
-            'replyTo.user:id,username,avatar',
-            'forwardedFrom',
-        ]);
+        $m = $this->message->load(self::RELATIONS);
 
-        return [
-            'message' => [
-                'id' => $m->id,
-                'conversation_id' => $m->conversation_id,
-                'body' => $m->body,
-                'created_at' => $m->created_at->toIso8601String(),
-                'user' => [
-                    'id' => $m->user->id,
-                    'username' => $m->user->username,
-                    'avatar_url' => $m->user->avatar_url,
-                    'tier' => $m->user->tier,
-                    'is_verified' => $m->user->is_verified,
-                ],
-                'reply_to' => $m->replyTo ? [
-                    'id' => $m->replyTo->id,
-                    'body' => $m->replyTo->body,
-                    'user' => [
-                        'id' => $m->replyTo->user->id,
-                        'username' => $m->replyTo->user->username,
-                        'avatar_url' => $m->replyTo->user->avatar_url,
-                    ],
-                ] : null,
-                'forwarded_from' => $m->forwardedFrom ? [
-                    'id' => $m->forwardedFrom->id,
-                    'username' => $m->forwardedFrom->username,
-                    'avatar_url' => $m->forwardedFrom->avatar_url,
-                ] : null,
-            ],
-        ];
+        $payload = (new MessageResource($m))->resolve();
+
+        /*
+         * Читателей у только что отправленного сообщения нет, но поле
+         * должно быть: страница ждёт список, а не отсутствие ключа.
+         */
+        $payload['reads'] = $payload['reads'] ?? [];
+
+        return ['message' => $payload];
     }
+
+    /** Связи, нужные для полного состава полей. */
+    private const RELATIONS = [
+        'user:id,username,avatar,tier,is_verified',
+        'replyTo.user:id,username,avatar',
+        'forwardedFrom',
+        'attachments',
+        'reads',
+    ];
 }

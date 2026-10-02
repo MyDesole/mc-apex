@@ -3,6 +3,8 @@
 namespace App\Domains\Chat\Controllers\Api;
 
 use App\Domains\Chat\Events\MessageSent;
+use App\Domains\Chat\Events\MessagesRead;
+use App\Domains\Chat\Events\UserTyping;
 use App\Http\Controllers\Controller;
 use App\Domains\Chat\Requests\Chat\ConversationHistoryRequest;
 use App\Domains\Chat\Requests\Chat\ForwardMessageRequest;
@@ -188,6 +190,21 @@ class ChatController extends Controller
             ->download($path, $attachment->original_name);
     }
 
+    /**
+     * Собеседник печатает.
+     *
+     * Страница зовёт это с промежутком, а не на каждую букву. Ответ
+     * пустой: получатели узнают о печати через канал.
+     */
+    public function typing(Request $request, Conversation $conversation): JsonResponse
+    {
+        $this->authorize('view', $conversation);
+
+        broadcast(new UserTyping($conversation, $request->user()));
+
+        return response()->json(['ok' => true]);
+    }
+
     /* ----------------------------- Прочтения ----------------------------- */
 
     public function markRead(Request $request, Message $message): JsonResponse
@@ -195,6 +212,12 @@ class ChatController extends Controller
         $this->authorize('view', $message);
 
         $this->chat->markMessageRead($message, $request->user());
+
+        /*
+         * Автору сообщения — чтобы галочка встала сразу. Собираем через
+         * диалог: он знает всех участников.
+         */
+        broadcast(MessagesRead::forConversation($message->conversation, $request->user()));
 
         // Формат плоский (unread_count в корне) — так его читает фронтенд
         return response()->json([
@@ -208,6 +231,12 @@ class ChatController extends Controller
         $this->authorize('markRead', $conversation);
 
         $this->chat->markRead($conversation, $request->user());
+
+        /*
+         * Сообщаем автору: иначе галочка прочтения появлялась только
+         * после обновления страницы.
+         */
+        broadcast(MessagesRead::forConversation($conversation, $request->user()));
 
         return response()->json([
             'ok' => true,

@@ -15,7 +15,7 @@ const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
 
-const { latestMessage } = useRealtimeMessages()
+const { latestMessage, latestRead, typingUsers } = useRealtimeMessages()
 /* Присутствие подключается ниже: нужен activeConversation */
 
 
@@ -67,6 +67,34 @@ useMessagePolling(
     computed(() => activeConversation.value?.id ?? null),
     messages,
 )
+
+/*
+ * Кто печатает в открытом диалоге. Событие приходит с промежутком,
+ * поэтому надпись гасится сама по времени — см. useRealtimeMessages.
+ */
+const typingPeer = computed(() => {
+  const id = activeConversation.value?.id
+
+  if (!id) return null
+
+  const entry = typingUsers.value[id]
+
+  return entry && entry.id !== auth.user?.id ? entry : null
+})
+
+/*
+ * Кто и когда прочитал диалог: { [conversationId]: { [userId]: время } }.
+ *
+ * Нужно потому, что событие о новом сообщении не содержит списка reads:
+ * сравнение по времени показывает, что собеседник прочитал его позже.
+ */
+const lastReadAt = ref({})
+
+/** Когда последний раз сообщали о своей печати. */
+let lastTypingSentAt = 0
+
+/** Как часто сообщать о печати. */
+const TYPING_SEND_INTERVAL_MS = 2500
 
 const loadingList = ref(true)
 const loadingChat = ref(false)
@@ -125,6 +153,28 @@ function conversationOnline(conversation) {
           || (!presenceReady.value && Boolean(u.is_online)))
 }
 
+/**
+ * Сообщает серверу, что игрок печатает.
+ *
+ * Не чаще, чем раз в TYPING_SEND_INTERVAL_MS: иначе каждое нажатие
+ * клавиши отправляло бы событие.
+ */
+function notifyTyping() {
+  const id = activeConversation.value?.id
+
+  if (!id) return
+
+  const now = Date.now()
+
+  if (now - lastTypingSentAt < TYPING_SEND_INTERVAL_MS) return
+
+  lastTypingSentAt = now
+
+  chatApi.typing(id).catch(() => {
+    /* Печать — вещь дополнительная, сбой не должен мешать */
+  })
+}
+
 function goToPlayer(user) {
   if (!user?.id) return
   router.push(userLink({ id: user.id }))
@@ -178,6 +228,11 @@ async function loadConversations() {
 async function openConversation(id) {
   loadingChat.value = true
   error.value = ''
+
+  // Прочтения другого диалога не должны влиять на этот
+  const { [id]: _keep, ...restReads } = lastReadAt.value
+
+  lastReadAt.value = restReads
 
   try {
     const data = await chatApi.show(id, { limit: 40 })
@@ -510,6 +565,11 @@ function closeChat() {
  * при удалении строк и поле не сжимается обратно. Растёт до предела,
  * заданного в CSS (max-height), дальше включается прокрутка.
  */
+function onBodyInput() {
+  autoGrow()
+  notifyTyping()
+}
+
 function autoGrow() {
   const el = inputEl.value
 
@@ -673,20 +733,47 @@ async function confirmForwardClan(clanId) {
 // ПРОЧИТАНО
 // ============================================
 
+/**
+ * Прочитал ли сообщение кто-то, кроме автора.
+ *
+ * Кроме списка reads учитываем время: событие о новом сообщении список
+ * не содержит, поэтому сверяем его отправку с временем прочтения диалога.
+ */
 function isMessageRead(message) {
-  return (message.reads || []).some(
-      read => read.user_id !== auth.user?.id,
-  )
+  const readers = (message.reads || [])
+      .filter(read => read.user_id !== auth.user?.id)
+
+  if (readers.length) return true
+
+  return readerIds(message).length > 0
+}
+
+/** Кто прочитал сообщение: из списка reads и по времени. */
+function readerIds(message) {
+  const byTime = lastReadAt.value[message.conversation_id] || {}
+
+  return Object.entries(byTime)
+      .filter(([userId, readAt]) => {
+        if (Number(userId) === Number(auth.user?.id)) return false
+
+        return readAt && message.created_at
+            ? new Date(readAt) >= new Date(message.created_at)
+            : false
+      })
+      .map(([userId]) => Number(userId))
 }
 
 function isMessageFullyRead(message) {
   if (!otherParticipantsCount.value) return false
 
-  const readers = (message.reads || []).filter(
-      read => read.user_id !== auth.user?.id,
-  ).length
+  const readers = new Set([
+    ...(message.reads || [])
+        .map(read => Number(read.user_id))
+        .filter(id => id !== Number(auth.user?.id)),
+    ...readerIds(message),
+  ])
 
-  return readers >= otherParticipantsCount.value
+  return readers.size >= otherParticipantsCount.value
 }
 
 // ============================================
@@ -1019,6 +1106,45 @@ watch(
       }
     },
 )
+
+/*
+ * Собеседник прочитал: помечаем свои сообщения прочитанными сразу.
+ * Раньше галочка появлялась только после обновления страницы.
+ */
+watch(latestRead, (payload) => {
+  if (!payload || payload.conversation_id !== activeConversation.value?.id) return
+
+  const readerId = payload.reader?.id
+
+  if (!readerId) return
+
+  /*
+   * Статус галочки считается по списку reads, поэтому добавляем
+   * читателя туда. Свои сообщения, которые он ещё не прочитал,
+   * получают отметку и галочка встаёт сразу.
+   */
+  // Время прочтения: по нему отметим и сообщения, пришедшие по сокету
+  lastReadAt.value = {
+    ...lastReadAt.value,
+    [payload.conversation_id]: {
+      ...(lastReadAt.value[payload.conversation_id] || {}),
+      [readerId]: payload.read_at,
+    },
+  }
+
+  messages.value = messages.value.map((message) => {
+    if (message.user?.id !== auth.user?.id) return message
+
+    const reads = message.reads || []
+
+    if (reads.some(read => read.user_id === readerId)) return message
+
+    return {
+      ...message,
+      reads: [...reads, { user_id: readerId }],
+    }
+  })
+})
 
 watch(latestMessage, async message => {
   // Собеседник только что написал — значит он в сети
@@ -1519,8 +1645,17 @@ onUnmounted(() => {
                 <UserName :user="directPartner" />
               </div>
 
-              <div class="chat__head-sub">
-                Личный диалог
+              <div
+                  class="chat__head-sub"
+                  :class="{ 'chat__head-sub--typing': typingPeer }"
+              >
+                <template v-if="typingPeer">
+                  печатает…
+                </template>
+
+                <template v-else>
+                  Личный диалог
+                </template>
               </div>
             </template>
           </div>
@@ -2131,7 +2266,7 @@ onUnmounted(() => {
                 placeholder="Написать сообщение..."
                 maxlength="2000"
                 rows="1"
-                @input="autoGrow"
+                @input="onBodyInput"
                 @keydown.enter.exact.prevent="
                 sendMessage
               "

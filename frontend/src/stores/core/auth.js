@@ -140,6 +140,16 @@ export const useAuthStore = defineStore('auth', () => {
         loading.value = true
 
         try {
+            /*
+             * Отмечаем выход до удаления сессии: иначе игрок остаётся
+             * онлайн ещё минуту, пока не истечёт время активности.
+             */
+            try {
+                await api.post('/chat/presence/offline')
+            } catch {
+                /* Присутствие не критично: выход должен пройти в любом случае */
+            }
+
             await api.post('/auth/logout')
             user.value = null
             rank.value = { position: null, total: 0 }

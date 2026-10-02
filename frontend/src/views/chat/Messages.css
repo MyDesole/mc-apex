@@ -835,6 +835,12 @@ color: #bda8ff;
 color: #a78bfa;
 }
 
+/* Надпись «печатает…»: сдержанный акцент, чтобы не отвлекать */
+.chat__head-sub--typing {
+  color: var(--color-accent, #5eead4);
+  font-style: italic;
+}
+
 .chat__head-sub {
 margin-top: 2px;
 
