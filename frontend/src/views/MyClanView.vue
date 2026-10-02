@@ -158,7 +158,7 @@ onMounted(load)
 
               <img
                   v-if="clan.avatar"
-                  :src="clan.avatar"
+                  :src="clan.avatar_url"
                   :alt="clan.name"
                   class="crest-image"
               />
