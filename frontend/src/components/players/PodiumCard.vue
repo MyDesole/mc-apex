@@ -488,6 +488,18 @@ const avatar = computed(() => props.entry?.avatar_url ?? null)
   order: 3;
 }
 
+.clan-podium--first {
+  order: 2;
+}
+
+.clan-podium--second {
+  order: 1;
+}
+
+.clan-podium--third {
+  order: 3;
+}
+
 .podium-card--third {
   min-height: 290px;
   border-color: rgba(217, 119, 6, 0.17);
@@ -900,7 +912,9 @@ const avatar = computed(() => props.entry?.avatar_url ?? null)
 
   /* На узком экране места идут по порядку: сброс порядка широкого экрана */
   .podium-card--second,
-  .podium-card--third {
+  .podium-card--third,
+  .clan-podium--second,
+  .clan-podium--third {
     order: 0;
   }
 
