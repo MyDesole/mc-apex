@@ -8,8 +8,9 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 export default defineConfig({
   plugins: [
     vue(),
-    vueDevTools(),
-  ],
+    // Плагин devtools нужен только в dev: в тестах он лишний
+    !process.env.VITEST && vueDevTools(),
+  ].filter(Boolean),
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
@@ -28,6 +29,19 @@ export default defineConfig({
       '/broadcasting': {
         target: 'http://localhost:8000',
         changeOrigin: true,
+      },
+    },
+  },
+  test: {
+    // jsdom даёт document, window и прочее окружение браузера
+    environment: 'jsdom',
+    include: ['src/**/*.test.js'],
+    setupFiles: ['./src/test/setup.js'],
+    globals: true,
+    // Компоненты импортируют .vue, CSS и картинки — их обрабатывает vite
+    server: {
+      deps: {
+        inline: ['vue-router', 'pinia'],
       },
     },
   },
