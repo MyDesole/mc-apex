@@ -775,4 +775,400 @@ const avatar = computed(() => props.entry?.avatar_url ?? null)
   );
   animation: crownFloat 3s ease-in-out infinite;
 }
+/* Медиа-запросы пьедестала: правила скопированы из HomeView.css */
+@media (max-width: 900px) {
+  .home-content {
+    width: min(100% - 28px, 760px);
+    padding-top: 20px;
+  }
+
+  .hero {
+    min-height: 480px;
+  }
+
+  .stats__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .news-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .news-card--featured {
+    grid-column: span 2;
+  }
+
+  .podium {
+    grid-template-columns: 1fr 1.08fr 1fr;
+    gap: 7px;
+  }
+
+  .podium-card--first {
+    min-height: 350px;
+  }
+
+  .podium-card--second {
+    min-height: 292px;
+  }
+
+  .podium-card--third {
+    min-height: 275px;
+  }
+
+  .clan-podium {
+    min-height: 300px;
+  }
+
+  .clan-podium--first {
+    min-height: 340px;
+  }
+
+  .rank-row {
+    grid-template-columns: 32px 40px minmax(0, 1fr) 35px 55px 13px;
+    gap: 9px;
+  }
+
+  .clan-row {
+    grid-template-columns: 32px 40px minmax(0, 1fr) 48px 48px 48px 13px;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 680px) {
+  .home-content {
+    width: calc(100% - 20px);
+    padding: 12px 0 35px;
+  }
+
+  .hero {
+    min-height: 470px;
+    padding: 70px 15px 65px;
+    border-radius: 21px;
+  }
+
+  .hero__side {
+    display: none;
+  }
+
+  .hero__bottom {
+    left: 15px;
+    right: 15px;
+  }
+
+  .hero__bottom-center {
+    display: none !important;
+  }
+
+  .hero__title-main {
+    font-size: 66px;
+  }
+
+  .hero__title-sub {
+    margin-left: 15px;
+    font-size: 43px;
+    letter-spacing: 7px;
+  }
+
+  .hero__subtitle {
+    max-width: 310px;
+    font-size: 12px;
+  }
+
+  .hero-actions {
+    width: min(100%, 300px);
+    flex-direction: column;
+  }
+
+  .hero-btn {
+    width: 100%;
+  }
+
+  .stats {
+    margin-bottom: 45px;
+  }
+
+  .stats__grid {
+    gap: 6px;
+  }
+
+  .stat-card {
+    min-height: 76px;
+    gap: 9px;
+    padding: 11px;
+  }
+
+  .stat-card__icon {
+    width: 35px;
+    height: 35px;
+    flex-basis: 35px;
+  }
+
+  .stat-card__icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .stat-card__content strong {
+    font-size: 17px;
+  }
+
+  .stat-card__content span {
+    font-size: 7px;
+  }
+
+  .stat-card__number {
+    display: none;
+  }
+
+  .sections {
+    gap: 52px;
+  }
+
+  .section-head {
+    align-items: flex-end;
+  }
+
+  .section-head__mark {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+  }
+
+  .section-head h2 {
+    font-size: 18px;
+  }
+
+  .section-count {
+    display: none;
+  }
+
+  .section-link {
+    padding: 6px;
+    font-size: 8px;
+  }
+
+  .section-link svg {
+    width: 12px;
+  }
+
+  .news-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .news-card--featured {
+    grid-column: auto;
+  }
+
+  .news-card__cover,
+  .news-card--featured .news-card__cover {
+    height: 175px;
+  }
+
+  .podium {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .podium-card--first,
+  .podium-card--second,
+  .podium-card--third {
+    min-height: 0;
+    padding-top: 20px;
+  }
+
+  .podium-card--first {
+    order: -1;
+    padding-top: 34px;
+  }
+
+  .podium-card--first .podium-avatar {
+    width: 82px;
+    height: 82px;
+  }
+
+  .podium-card--second,
+  .podium-card--third {
+    display: grid;
+    grid-template-columns: 38px 60px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 13px;
+  }
+
+  .podium-card--second .podium-rank,
+  .podium-card--third .podium-rank {
+    grid-column: 1;
+    grid-row: 1 / 4;
+  }
+
+  .podium-card--second .podium-avatar,
+  .podium-card--third .podium-avatar {
+    grid-column: 2;
+    grid-row: 1 / 4;
+    width: 58px;
+    height: 58px;
+    margin: 0;
+  }
+
+  .podium-card--second .podium-name,
+  .podium-card--third .podium-name {
+    grid-column: 3;
+    grid-row: 1;
+    margin: 0;
+    text-align: left;
+  }
+
+  .podium-card--second .podium-tier,
+  .podium-card--third .podium-tier {
+    grid-column: 4;
+    grid-row: 1 / 3;
+    margin: 0;
+  }
+
+  .podium-card--second .podium-score,
+  .podium-card--third .podium-score {
+    grid-column: 3;
+    grid-row: 2;
+    justify-content: flex-start;
+    margin: 0;
+  }
+
+  .podium-card--second .podium-base,
+  .podium-card--third .podium-base {
+    grid-column: 3 / 5;
+    grid-row: 3;
+    width: auto;
+    margin-top: 5px;
+    padding: 5px 0 0;
+    text-align: left;
+  }
+
+  .rank-row {
+    grid-template-columns: 28px 38px minmax(0, 1fr) 31px 12px;
+    gap: 8px;
+    min-height: 60px;
+    padding: 8px 10px;
+  }
+
+  .rank-row__avatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .rank-row__score {
+    display: none;
+  }
+
+  .rank-row__arrow {
+    grid-column: 5;
+  }
+
+  .rank-row__tier {
+    font-size: 17px;
+  }
+
+  .clan-podium {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 38px 60px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 13px;
+  }
+
+  .clan-podium--first {
+    min-height: 0;
+    padding-top: 30px;
+  }
+
+  .clan-podium__rank {
+    grid-column: 1;
+    grid-row: 1 / 4;
+  }
+
+  .clan-podium__avatar,
+  .clan-podium--first .clan-podium__avatar {
+    grid-column: 2;
+    grid-row: 1 / 4;
+    width: 58px;
+    height: 58px;
+    margin: 0;
+    border-radius: 14px;
+  }
+
+  .clan-podium__tag {
+    grid-column: 3;
+    grid-row: 1;
+    margin: 0;
+  }
+
+  .clan-podium h3 {
+    grid-column: 3;
+    grid-row: 2;
+    margin: 0;
+    text-align: left;
+  }
+
+  .clan-podium__stats {
+    grid-column: 4;
+    grid-row: 1 / 3;
+    margin: 0;
+    gap: 10px;
+  }
+
+  .clan-podium__base {
+    grid-column: 3 / 5;
+    grid-row: 3;
+    width: auto;
+    margin-top: 5px;
+    padding: 5px 0 0;
+    text-align: left;
+  }
+
+  .clan-podium__crown {
+    top: 3px;
+  }
+
+  .clans-list {
+    gap: 6px;
+  }
+
+  .clan-row {
+    grid-template-columns: 28px 40px minmax(0, 1fr) 13px;
+    gap: 8px;
+    min-height: 62px;
+    padding: 8px 10px;
+  }
+
+  .clan-row__avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .clan-row__meta {
+    font-size: 7px;
+  }
+
+  .clan-row__metric {
+    display: none;
+  }
+
+  .clan-row__arrow {
+    grid-column: 4;
+  }
+
+  .home-footer__top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .footer-socials {
+    justify-content: flex-start;
+  }
+
+  .home-footer__bottom {
+    flex-direction: column;
+  }
+}
+
 </style>

@@ -1040,4 +1040,326 @@ function rankOf(slotIdx) {
   font-size: 12px;
   font-weight: 950;
 }
+/* Медиа-запросы пьедестала: правила скопированы из PlayersView.css */
+@media (max-width: 900px) {
+  .rating-page {
+    width: calc(100% - 32px);
+
+    margin: 24px auto 48px;
+  }
+
+  .rating-head__title {
+    font-size: 24px;
+  }
+
+  .mountain {
+    min-height: 450px;
+
+    aspect-ratio: 1400 / 650;
+  }
+
+  .podium__slot--rank1 {
+    top: 20%;
+    left: 50%;
+
+    width: clamp(180px, 28%, 260px);
+  }
+
+  .podium__slot--rank2 {
+    top: 61%;
+    left: 25%;
+
+    width: clamp(150px, 22%, 220px);
+  }
+
+  .podium__slot--rank3 {
+    top: 81%;
+    left: 75%;
+
+    width: clamp(150px, 22%, 220px);
+  }
+
+  .apex-marker {
+    top: 8%;
+  }
+
+  .rank-player__avatar-wrap {
+    width: 48px;
+    height: 48px;
+  }
+
+  .rest__row {
+    grid-template-columns: 52px minmax(180px, 1fr) minmax(140px, .7fr) 76px 20px;
+
+    gap: 11px;
+  }
+}
+
+@media (max-width: 640px) {
+  .rating-page {
+    width: calc(100% - 24px);
+
+    margin: 16px auto 40px;
+  }
+
+  .rating-head {
+    flex-direction: column;
+    align-items: stretch;
+
+    gap: 14px;
+  }
+
+  .rating-head__eyebrow {
+    font-size: 8px;
+  }
+
+  .rating-head__title {
+    font-size: 22px;
+
+    letter-spacing: -.5px;
+  }
+
+  .rating-head__sub {
+    font-size: 12.5px;
+  }
+
+  .mode-tabs {
+    width: 100%;
+  }
+
+  .mode-tab {
+    flex: 1;
+
+    padding: 9px 10px;
+
+    font-size: 12.5px;
+  }
+
+  .sub-tabs {
+    gap: 6px;
+
+    padding: 0;
+    margin-bottom: 18px;
+
+    flex-wrap: nowrap;
+
+    overflow-x: auto;
+
+    scrollbar-width: none;
+  }
+
+  .sub-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sub-tab {
+    flex-shrink: 0;
+
+    padding: 6px 11px;
+
+    font-size: 12px;
+
+    white-space: nowrap;
+  }
+
+  .mountain {
+    display: none;
+  }
+
+  .mobile-podium {
+    display: flex;
+  }
+
+  .rank-player {
+    padding: 6px 8px;
+
+    gap: 9px;
+
+    border-radius: 11px;
+  }
+
+  .rank-player__avatar-wrap {
+    width: 42px;
+    height: 42px;
+  }
+
+  .rank-player__avatar {
+    border-radius: 10px;
+  }
+
+  .rank-player__name {
+    font-size: 12.5px;
+  }
+
+  .rank-player__tier {
+    height: 18px;
+
+    min-width: 23px;
+
+    font-size: 9px;
+  }
+
+  .rank-player__clan {
+    font-size: 9px;
+  }
+
+  .rank-player__role {
+    font-size: 8px;
+  }
+
+  .rest__head {
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+  }
+
+  .rest__title {
+    font-size: 13px;
+
+    letter-spacing: .6px;
+  }
+
+  .rest__row {
+    grid-template-columns:
+        34px
+        minmax(0, 1fr)
+        auto
+        16px;
+
+    gap: 8px;
+
+    min-height: 60px;
+
+    padding: 7px 8px 7px 5px;
+  }
+
+  .rest__rank {
+    min-height: 38px;
+  }
+
+  .rest__rank-number {
+    font-size: 10px;
+  }
+
+  .rest__score {
+    min-width: 58px;
+
+    padding: 6px 7px;
+
+    font-size: 10px;
+  }
+
+  .rest__arrow {
+    display: flex;
+  }
+
+  .rest-player__avatar-wrap {
+    width: 34px;
+    height: 34px;
+  }
+
+  .rest-player__avatar {
+    border-radius: 9px;
+  }
+
+  .rest-player__name {
+    font-size: 11.5px;
+  }
+
+  .rest-player__meta {
+    font-size: 8px;
+  }
+
+  .rest__eyebrow {
+    font-size: 7px;
+  }
+}
+
+@media (max-width: 420px) {
+  .rating-page {
+    width: calc(100% - 18px);
+  }
+
+  .rating-head__title {
+    font-size: 20px;
+  }
+
+  .mobile-podium__row {
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+
+    gap: 9px;
+
+    padding: 9px;
+  }
+
+  .mobile-podium__score {
+    min-width: 43px;
+
+    padding: 5px 6px;
+
+    font-size: 11px;
+  }
+
+  .rank-player__avatar-wrap {
+    width: 38px;
+    height: 38px;
+  }
+
+  .rank-player__avatar--fallback {
+    font-size: 16px;
+  }
+
+  .rank-player__name {
+    font-size: 12px;
+  }
+
+  .rank-player__role {
+    display: none;
+  }
+
+  .rest__row {
+    grid-template-columns:
+        30px
+        minmax(0, 1fr)
+        auto
+        14px;
+
+    gap: 6px;
+
+    padding-right: 5px;
+  }
+
+  .rest__rank-number {
+    font-size: 9px;
+  }
+
+  .rest-player {
+    gap: 8px;
+  }
+
+  .rest-player__avatar-wrap {
+    width: 32px;
+    height: 32px;
+  }
+
+  .rest-player__name {
+    font-size: 11px;
+  }
+
+  .rest-player__clan {
+    margin-right: 2px;
+  }
+
+  .rest-player__meta {
+    gap: 5px;
+  }
+
+  .rest__score {
+    min-width: 52px;
+
+    padding: 5px 6px;
+
+    font-size: 9px;
+  }
+}
+
 </style>

@@ -594,6 +594,367 @@ function formatDate(value) {
         </div>
 </template>
 
-<style scoped>
+<style>
 @import "./ClanWarCard.css";
+/* Медиа-запросы карточки: правила скопированы из ClanWarsTab.css */
+@media (max-width: 800px) {
+  .wars-hero {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .hero-main {
+    flex-basis: calc(100% - 20px);
+  }
+
+  .hero-stats {
+    order: 3;
+  }
+
+  .hero-create {
+    margin-left: auto;
+  }
+
+  .match {
+    grid-template-columns: minmax(0, 1fr) 50px minmax(0, 1fr);
+  }
+
+  .team__name {
+    max-width: 140px;
+  }
+}
+
+@media (max-width: 620px) {
+  .tab {
+    gap: 12px;
+  }
+
+  .wars-hero {
+    padding: 15px;
+    gap: 13px;
+  }
+
+  .hero-main {
+    flex-basis: 100%;
+  }
+
+  .hero-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .hero-copy h2 {
+    font-size: 15px;
+  }
+
+  .hero-copy p {
+    font-size: 9px;
+  }
+
+  .hero-stats {
+    flex: 1;
+  }
+
+  .hero-stat {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .hero-create {
+    flex: 1;
+    margin-left: 0;
+  }
+
+  .match {
+    grid-template-columns: 1fr;
+    gap: 11px;
+
+    padding: 15px 13px 13px;
+  }
+
+  .team,
+  .team--enemy {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .team--enemy .team__identity {
+    flex-direction: row;
+  }
+
+  .team__score {
+    margin-left: auto;
+  }
+
+  .match-vs {
+    display: none;
+  }
+
+  .team__name {
+    max-width: none;
+  }
+
+  .participants {
+    grid-template-columns: 1fr;
+  }
+
+  .participants__divider {
+    display: none;
+  }
+
+  .active-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .scoreboard {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .scoreboard__vs {
+    padding: 2px 0;
+  }
+
+  .modal-bg {
+    padding: 10px;
+  }
+
+  .modal {
+    max-height: calc(100vh - 20px);
+    border-radius: 14px;
+  }
+}
+
+@media (max-width: 440px) {
+  .hero-stats {
+    width: 100%;
+  }
+
+  .hero-create {
+    width: 100%;
+    flex: none;
+  }
+
+  .war-card__top {
+    padding-left: 11px;
+    padding-right: 11px;
+  }
+
+  .war-meta {
+    flex-wrap: wrap;
+    padding: 7px 12px;
+  }
+
+  .war-meta__result {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 1px;
+  }
+
+  .war-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .team__avatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .team__name {
+    font-size: 11px;
+  }
+
+  .team__score {
+    font-size: 21px;
+  }
+
+  .modal-head {
+    padding: 15px 16px;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .modal-foot {
+    padding: 12px 16px;
+  }
+
+  .btn-cancel,
+  .btn-save {
+    flex: 1;
+  }
+}
+
+/* Правила действий и участников: элементы в этом компоненте,
+   правила оставались у родителя и не применялись */
+
+.war-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+
+  margin: 0 14px 11px;
+  padding: 8px 10px;
+
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.022);
+
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.action-button {
+  min-height: 35px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  border-radius: 8px;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+      transform 0.16s ease,
+      background 0.16s ease,
+      border-color 0.16s ease,
+      opacity 0.16s ease;
+}
+
+.action-button--accept {
+  color: #fff;
+  background: #16a34a;
+  border: 1px solid rgba(74, 222, 128, 0.18);
+}
+
+.action-button--decline {
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.active-war {
+  border-top: 1px solid rgba(255, 255, 255, 0.045);
+}
+
+.participants-toggle {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  min-height: 38px;
+  padding: 0 14px;
+
+  color: var(--text-dim);
+  background: transparent;
+
+  border: 0;
+
+  cursor: pointer;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  transition:
+      color 0.16s ease,
+      background 0.16s ease;
+}
+
+.team-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.team-dot--mine {
+  background: #8b5cf6;
+}
+
+.participant {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  min-width: 0;
+
+  padding: 4px 0;
+
+  color: var(--text);
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.team-dot--enemy {
+  background: #64748b;
+}
+
+.active-action {
+  min-height: 34px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  border-radius: 8px;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+      transform 0.16s ease,
+      background 0.16s ease,
+      border-color 0.16s ease,
+      color 0.16s ease;
+}
+
+.active-action--join {
+  color: #fff;
+  background: #16a34a;
+  border: 1px solid rgba(74, 222, 128, 0.15);
+}
+
+.active-action--leave {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.045);
+  border: 1px solid rgba(239, 68, 68, 0.16);
+}
+
+.active-action--result {
+  color: #c4b5fd;
+  background: rgba(124, 58, 237, 0.075);
+  border: 1px solid rgba(124, 58, 237, 0.18);
+}
+
+.completed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  min-height: 38px;
+  margin-top: 0;
+  padding: 0 14px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.045);
+
+  font-size: 9px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
 </style>
