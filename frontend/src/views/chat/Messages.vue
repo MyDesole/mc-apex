@@ -9,6 +9,7 @@ import UserName from '@/components/players/UserName.vue'
 import ChatAttachmentsInput from '@/components/chat/ChatAttachmentsInput.vue'
 import { userLink } from '@/utils/links.js'
 import { usePresence } from '@/composables/chat/presence.js'
+import { useMessagePolling } from '@/composables/chat/useMessagePolling.js'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -16,6 +17,7 @@ const router = useRouter()
 
 const { latestMessage } = useRealtimeMessages()
 const { isOnline: isPlayerOnline, refresh: refreshPresence } = usePresence()
+
 
 const tierColors = {
   'S+': '#fbbf24',
@@ -34,6 +36,16 @@ const tierColors = {
 const conversations = ref([])
 const activeConversation = ref(null)
 const messages = ref([])
+
+/*
+ * Запасной опрос: если соединение с Reverb отвалилось и не поднялось,
+ * сообщения всё равно придут — пусть и с небольшой задержкой. Опрос
+ * включается только когда открыт диалог.
+ */
+useMessagePolling(
+    computed(() => activeConversation.value?.id ?? null),
+    messages,
+)
 
 const loadingList = ref(true)
 const loadingChat = ref(false)
