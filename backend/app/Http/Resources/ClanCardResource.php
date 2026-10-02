@@ -20,6 +20,9 @@ class ClanCardResource extends JsonResource
             'id' => $clan->id,
             'name' => $clan->name,
             'tag' => $clan->tag,
+            // Описание и лимит участников нужны карточке в списке кланов
+            'description' => $clan->description,
+            'max_members' => (int) $clan->max_members,
             'avatar' => $clan->avatar,
             'avatar_url' => $clan->avatar_url,
             'banner_color' => $clan->banner_color,

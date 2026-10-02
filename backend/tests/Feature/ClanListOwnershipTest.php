@@ -73,6 +73,41 @@ class ClanListOwnershipTest extends TestCase
         $this->assertNull($response->json('data.0.my_clan_id'));
     }
 
+    /**
+     * Все поля, которые читает карточка клана в списке.
+     *
+     * Регрессия: при переводе списка на ClanCardResource из ресурса
+     * выпали description и max_members — в интерфейсе описание
+     * пропадало, а лимит участников показывался как 0.
+     */
+    public function test_list_exposes_every_field_used_by_the_card(): void
+    {
+        $me = User::factory()->create();
+
+        $clan = $this->clan('Клан формы', $me);
+        $clan->update(['description' => 'Описание клана', 'max_members' => 30]);
+
+        $response = $this->actingAs($me)->getJson('/api/clans')->assertOk();
+        $data = $response->json('data.0');
+
+        foreach ([
+            'id', 'name', 'tag', 'description', 'max_members', 'members_count',
+            'power', 'wins', 'losses', 'is_open', 'leader', 'my_clan_id',
+            'is_highlighted', 'highlight_until', 'highlight_color', 'highlight_effect',
+            'entry_fee', 'avatar_url',
+        ] as $key) {
+            $this->assertArrayHasKey($key, $data, "Пропало поле {$key}");
+        }
+
+        // Значения, а не только ключи
+        $this->assertSame('Описание клана', $data['description']);
+        $this->assertSame(30, $data['max_members']);
+        $this->assertSame(1, $data['members_count']);
+
+        // Лидер отдаётся карточкой игрока, где ник — username
+        $this->assertSame($me->username, $data['leader']['username']);
+    }
+
     public function test_list_still_exposes_expected_fields(): void
     {
         $me = User::factory()->create();
