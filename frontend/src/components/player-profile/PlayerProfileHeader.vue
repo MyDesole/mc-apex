@@ -678,12 +678,36 @@ const coverStyle = computed(() => {
           </h1>
 
           <span
+              v-if="user.is_verified"
+              class="profile-header__verified"
+              title="Подтверждённый профиль"
+              aria-label="Подтверждённый профиль"
+          >
+    <svg
+        width="11"
+        height="11"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="3"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+    >
+      <path d="m5 12 4 4L19 6" />
+    </svg>
+  </span>
+
+          <span
               v-if="roleLabel"
               class="profile-header__role"
-              :class="`profile-header__role--${user.role}`"
+              :class="{
+      [`profile-header__role--${user.role}`]: true,
+      'profile-header__role--media': isMedia,
+    }"
           >
-            {{ roleLabel }}
-          </span>
+    {{ roleLabel }}
+  </span>
 
         </div>
 
@@ -695,18 +719,21 @@ const coverStyle = computed(() => {
             v-if="playerBadges.length"
             class="profile-header__badges"
         >
-          <span
-              v-for="badge in playerBadges"
-              :key="badge.slug"
-              class="profile-badge"
-              :style="{ '--badge-color': badge.color || '#7c3aed' }"
-              :title="badge.name"
-          >
-            <span class="profile-badge__icon">
-              <AppIcon :icon="badge.icon" :size="13" />
-            </span>
-            <span class="profile-badge__text">{{ badgeLabel(badge) }}</span>
-          </span>
+  <span
+      v-for="badge in playerBadges"
+      :key="badge.slug"
+      class="profile-badge"
+      :style="{ '--badge-color': badge.color || '#7c3aed' }"
+      :title="badge.name"
+  >
+    <span class="profile-badge__icon">
+      <AppIcon :icon="badge.icon" :size="12" />
+    </span>
+
+    <span class="profile-badge__text">
+      {{ badgeLabel(badge) }}
+    </span>
+  </span>
         </div>
 
         <!-- Status -->
@@ -868,46 +895,45 @@ const coverStyle = computed(() => {
 
 <style scoped>
 /* =========================================================
-   HEADER
+   PROFILE HEADER — PREMIUM DARK / GLASS
    ========================================================= */
 
 .profile-header {
   --player-accent: #7c3aed;
+  --player-accent-soft: rgba(124, 58, 237, 0.16);
 
   position: relative;
-
   min-height: 390px;
 
   margin: -24px -24px 24px;
   padding: 28px;
 
   overflow: hidden;
-
   isolation: isolate;
 
   background:
       radial-gradient(
-          circle at 75% 28%,
-          color-mix(
-              in srgb,
-              var(--player-accent) 30%,
-              transparent
-          ),
-          transparent 32%
+          circle at 76% 22%,
+          color-mix(in srgb, var(--player-accent) 26%, transparent),
+          transparent 34%
       ),
       linear-gradient(
           135deg,
           #090912 0%,
-          #0d0e1e 50%,
+          #0d0e1e 48%,
           #07070f 100%
       );
 
   border-bottom: 1px solid
   color-mix(
       in srgb,
-      var(--player-accent) 35%,
+      var(--player-accent) 32%,
       rgba(255, 255, 255, 0.06)
   );
+
+  box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.025),
+      0 20px 60px rgba(0, 0, 0, 0.18);
 }
 
 /* =========================================================
@@ -917,27 +943,18 @@ const coverStyle = computed(() => {
 .profile-header__cover {
   position: absolute;
   inset: 0;
-
   z-index: 0;
 
   background:
       radial-gradient(
-          ellipse at 75% 15%,
-          color-mix(
-              in srgb,
-              var(--player-accent) 40%,
-              transparent
-          ),
-          transparent 45%
+          ellipse at 78% 8%,
+          color-mix(in srgb, var(--player-accent) 34%, transparent),
+          transparent 46%
       ),
       radial-gradient(
-          ellipse at 15% 90%,
-          color-mix(
-              in srgb,
-              var(--player-accent) 13%,
-              transparent
-          ),
-          transparent 40%
+          ellipse at 12% 92%,
+          color-mix(in srgb, var(--player-accent) 10%, transparent),
+          transparent 42%
       );
 
   background-size: cover;
@@ -947,7 +964,7 @@ const coverStyle = computed(() => {
 }
 
 .profile-header__cover--image {
-  opacity: 0.72;
+  opacity: 0.7;
 }
 
 .profile-header__cover::after {
@@ -960,13 +977,13 @@ const coverStyle = computed(() => {
       linear-gradient(
           90deg,
           rgba(5, 5, 13, 0.98) 0%,
-          rgba(5, 5, 13, 0.84) 40%,
-          rgba(5, 5, 13, 0.38) 100%
+          rgba(5, 5, 13, 0.82) 42%,
+          rgba(5, 5, 13, 0.3) 100%
       ),
       linear-gradient(
           0deg,
           rgba(5, 5, 13, 0.98) 0%,
-          transparent 68%
+          transparent 70%
       );
 }
 
@@ -976,28 +993,22 @@ const coverStyle = computed(() => {
 
 .profile-header__aurora {
   position: absolute;
-
   z-index: 1;
 
   width: 620px;
   height: 280px;
 
-  right: -130px;
-  top: 10px;
+  right: -140px;
+  top: 0;
 
   background:
       radial-gradient(
           ellipse,
-          color-mix(
-              in srgb,
-              var(--player-accent) 36%,
-              transparent
-          ),
+          color-mix(in srgb, var(--player-accent) 34%, transparent),
           transparent 70%
       );
 
-  filter: blur(30px);
-
+  filter: blur(32px);
   transform: rotate(-12deg);
 
   pointer-events: none;
@@ -1006,17 +1017,16 @@ const coverStyle = computed(() => {
 .profile-header__grid {
   position: absolute;
   inset: 0;
-
   z-index: 2;
 
   background-image:
       linear-gradient(
-          rgba(255, 255, 255, 0.035) 1px,
+          rgba(255, 255, 255, 0.032) 1px,
           transparent 1px
       ),
       linear-gradient(
           90deg,
-          rgba(255, 255, 255, 0.035) 1px,
+          rgba(255, 255, 255, 0.032) 1px,
           transparent 1px
       );
 
@@ -1025,11 +1035,11 @@ const coverStyle = computed(() => {
   mask-image:
       linear-gradient(
           to bottom,
-          rgba(0, 0, 0, 0.8),
+          rgba(0, 0, 0, 0.7),
           transparent 92%
       );
 
-  opacity: 0.45;
+  opacity: 0.42;
 
   pointer-events: none;
 }
@@ -1037,37 +1047,32 @@ const coverStyle = computed(() => {
 .profile-header__noise {
   position: absolute;
   inset: 0;
-
   z-index: 3;
 
   background-image:
       radial-gradient(
-          rgba(255, 255, 255, 0.08) 0.6px,
+          rgba(255, 255, 255, 0.07) 0.6px,
           transparent 0.6px
       );
 
   background-size: 5px 5px;
-
-  opacity: 0.07;
+  opacity: 0.055;
 
   pointer-events: none;
 }
 
 /* =========================================================
-   PROFILE EFFECT
+   PROFILE EFFECTS
    ========================================================= */
 
 .profile-header__effect {
   position: absolute;
-
   inset: -20%;
-
   z-index: 4;
 
   pointer-events: none;
 
-  opacity: 0.65;
-
+  opacity: 0.6;
   mix-blend-mode: screen;
 
   will-change: transform, opacity;
@@ -1079,7 +1084,7 @@ const coverStyle = computed(() => {
           ellipse at 72% 38%,
           color-mix(
               in srgb,
-              var(--profile-effect-color) 45%,
+              var(--profile-effect-color) 40%,
               transparent
           ),
           transparent 52%
@@ -1088,15 +1093,14 @@ const coverStyle = computed(() => {
           ellipse at 20% 75%,
           color-mix(
               in srgb,
-              var(--profile-effect-color) 25%,
+              var(--profile-effect-color) 22%,
               transparent
           ),
           transparent 55%
       );
 
   filter: blur(30px);
-
-  opacity: 0.72;
+  opacity: 0.68;
 }
 
 .profile-header--effect-pulse .profile-header__effect {
@@ -1105,7 +1109,7 @@ const coverStyle = computed(() => {
           ellipse at 75% 30%,
           color-mix(
               in srgb,
-              var(--profile-effect-color) 50%,
+              var(--profile-effect-color) 48%,
               transparent
           ),
           transparent 50%
@@ -1114,34 +1118,29 @@ const coverStyle = computed(() => {
           ellipse at 20% 80%,
           color-mix(
               in srgb,
-              var(--profile-effect-color) 24%,
+              var(--profile-effect-color) 22%,
               transparent
           ),
           transparent 52%
       );
 
-  filter: blur(35px);
+  filter: blur(34px);
+  opacity: 0.5;
 
-  opacity: 0.55;
-
-  animation:
-      profilePulse 2.2s ease-in-out infinite;
+  animation: profilePulse 2.4s ease-in-out infinite;
 }
 
 .profile-header--effect-gradient .profile-header__effect {
   inset: -50%;
 
-  background:
-      var(--profile-effect-gradient);
+  background: var(--profile-effect-gradient);
 
-  opacity: 0.18;
-
+  opacity: 0.16;
   filter: blur(50px);
 
   transform: rotate(-10deg) scale(1.2);
 
-  animation:
-      profileGradient 7s ease-in-out infinite;
+  animation: profileGradient 8s ease-in-out infinite;
 }
 
 .profile-header--effect-fire .profile-header__effect {
@@ -1150,56 +1149,52 @@ const coverStyle = computed(() => {
   background:
       radial-gradient(
           ellipse at 50% 100%,
-          rgba(250, 204, 21, 0.65) 0%,
-          rgba(249, 115, 22, 0.5) 20%,
-          rgba(239, 68, 68, 0.3) 42%,
+          rgba(250, 204, 21, 0.62) 0%,
+          rgba(249, 115, 22, 0.48) 20%,
+          rgba(239, 68, 68, 0.26) 42%,
           transparent 72%
       ),
       radial-gradient(
           ellipse at 20% 100%,
-          rgba(249, 115, 22, 0.28),
+          rgba(249, 115, 22, 0.25),
           transparent 45%
       ),
       radial-gradient(
           ellipse at 80% 100%,
-          rgba(239, 68, 68, 0.24),
+          rgba(239, 68, 68, 0.22),
           transparent 45%
       );
 
-  filter: blur(20px);
-
-  opacity: 0.82;
+  filter: blur(21px);
+  opacity: 0.78;
 
   transform-origin: 50% 100%;
 
-  animation:
-      profileFire 1.4s ease-in-out infinite alternate;
+  animation: profileFire 1.5s ease-in-out infinite alternate;
 }
 
 .profile-header--effect-ice .profile-header__effect {
   background:
       radial-gradient(
           ellipse at 75% 20%,
-          rgba(165, 243, 252, 0.55),
+          rgba(165, 243, 252, 0.5),
           transparent 30%
       ),
       radial-gradient(
           ellipse at 25% 70%,
-          rgba(6, 182, 212, 0.38),
+          rgba(6, 182, 212, 0.34),
           transparent 45%
       ),
       linear-gradient(
           135deg,
-          rgba(6, 182, 212, 0.12),
-          rgba(165, 243, 252, 0.1)
+          rgba(6, 182, 212, 0.1),
+          rgba(165, 243, 252, 0.08)
       );
 
-  filter: blur(24px);
+  filter: blur(25px);
+  opacity: 0.72;
 
-  opacity: 0.8;
-
-  animation:
-      profileIce 4s ease-in-out infinite;
+  animation: profileIce 4.5s ease-in-out infinite;
 }
 
 .profile-header--effect-legendary .profile-header__effect {
@@ -1208,35 +1203,34 @@ const coverStyle = computed(() => {
   background:
       radial-gradient(
           ellipse at 72% 25%,
-          rgba(250, 204, 21, 0.55),
+          rgba(250, 204, 21, 0.5),
           transparent 30%
       ),
       radial-gradient(
           ellipse at 28% 75%,
-          rgba(249, 115, 22, 0.42),
+          rgba(249, 115, 22, 0.38),
           transparent 38%
       ),
       radial-gradient(
           ellipse at 52% 52%,
-          rgba(239, 68, 68, 0.16),
+          rgba(239, 68, 68, 0.14),
           transparent 55%
       ),
       conic-gradient(
           from 0deg,
-          rgba(250, 204, 21, 0.08),
-          rgba(249, 115, 22, 0.18),
-          rgba(239, 68, 68, 0.08),
-          rgba(250, 204, 21, 0.14),
-          rgba(249, 115, 22, 0.08)
+          rgba(250, 204, 21, 0.06),
+          rgba(249, 115, 22, 0.15),
+          rgba(239, 68, 68, 0.06),
+          rgba(250, 204, 21, 0.12),
+          rgba(249, 115, 22, 0.06)
       );
 
   filter: blur(28px);
-
-  opacity: 0.72;
+  opacity: 0.68;
 
   animation:
-      legendaryRotate 10s linear infinite,
-      legendaryPulse 2.8s ease-in-out infinite;
+      legendaryRotate 11s linear infinite,
+      legendaryPulse 3s ease-in-out infinite;
 }
 
 /* =========================================================
@@ -1246,7 +1240,6 @@ const coverStyle = computed(() => {
 .profile-header__effect-particles {
   position: absolute;
   inset: 0;
-
   z-index: 5;
 
   pointer-events: none;
@@ -1264,10 +1257,9 @@ const coverStyle = computed(() => {
 
   box-shadow:
       0 0 8px #facc15,
-      0 0 18px rgba(249, 115, 22, 0.7);
+      0 0 18px rgba(249, 115, 22, 0.65);
 
-  animation:
-      legendaryParticle 4s ease-in-out infinite;
+  animation: legendaryParticle 4s ease-in-out infinite;
 }
 
 .profile-header__effect-particles span:nth-child(1) {
@@ -1333,14 +1325,12 @@ const coverStyle = computed(() => {
   color:
       color-mix(
           in srgb,
-          var(--player-accent) 12%,
+          var(--player-accent) 10%,
           transparent
       );
 
   font-size: clamp(180px, 23vw, 330px);
-
   font-weight: 1000;
-
   line-height: 0.8;
 
   letter-spacing: -0.08em;
@@ -1352,7 +1342,7 @@ const coverStyle = computed(() => {
       1px
       color-mix(
           in srgb,
-          var(--player-accent) 16%,
+          var(--player-accent) 14%,
           transparent
       );
 
@@ -1360,11 +1350,11 @@ const coverStyle = computed(() => {
       0 0 70px
       color-mix(
           in srgb,
-          var(--player-accent) 20%,
+          var(--player-accent) 18%,
           transparent
       );
 
-  opacity: 0.7;
+  opacity: 0.62;
 }
 
 /* =========================================================
@@ -1373,7 +1363,6 @@ const coverStyle = computed(() => {
 
 .profile-header__topline {
   position: relative;
-
   z-index: 20;
 
   display: flex;
@@ -1386,16 +1375,14 @@ const coverStyle = computed(() => {
 .profile-header__eyebrow {
   display: inline-flex;
   align-items: center;
-
   gap: 8px;
 
-  color: rgba(255, 255, 255, 0.46);
+  color: rgba(255, 255, 255, 0.42);
 
   font-size: 10px;
   font-weight: 900;
 
   letter-spacing: 1.8px;
-
   text-transform: uppercase;
 }
 
@@ -1411,30 +1398,33 @@ const coverStyle = computed(() => {
       0 0 12px
       color-mix(
           in srgb,
-          var(--player-accent) 90%,
+          var(--player-accent) 85%,
           transparent
       );
 
-  animation:
-      pulse 2s ease-in-out infinite;
+  animation: pulse 2s ease-in-out infinite;
 }
 
 .profile-header__edit {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
 
   gap: 7px;
 
   min-height: 34px;
-
   padding: 0 12px;
 
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.68);
 
-  background: rgba(8, 8, 18, 0.62);
+  background:
+      linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.045),
+          rgba(255, 255, 255, 0.018)
+      );
 
-  border: 1px solid rgba(255, 255, 255, 0.09);
-
+  border: 1px solid rgba(255, 255, 255, 0.085);
   border-radius: 8px;
 
   font-size: 11px;
@@ -1442,13 +1432,14 @@ const coverStyle = computed(() => {
 
   cursor: pointer;
 
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px);
 
   transition:
-      color 0.2s ease,
-      border-color 0.2s ease,
-      background 0.2s ease,
-      transform 0.2s ease;
+      color 0.18s ease,
+      border-color 0.18s ease,
+      background 0.18s ease,
+      transform 0.18s ease,
+      box-shadow 0.18s ease;
 }
 
 .profile-header__edit:hover {
@@ -1457,18 +1448,26 @@ const coverStyle = computed(() => {
   border-color:
       color-mix(
           in srgb,
-          var(--player-accent) 55%,
+          var(--player-accent) 48%,
           rgba(255, 255, 255, 0.1)
       );
 
   background:
       color-mix(
           in srgb,
-          var(--player-accent) 12%,
-          rgba(8, 8, 18, 0.7)
+          var(--player-accent) 10%,
+          rgba(8, 8, 18, 0.72)
       );
 
   transform: translateY(-1px);
+
+  box-shadow:
+      0 8px 22px
+      color-mix(
+          in srgb,
+          var(--player-accent) 10%,
+          transparent
+      );
 }
 
 /* =========================================================
@@ -1477,7 +1476,6 @@ const coverStyle = computed(() => {
 
 .profile-header__content {
   position: relative;
-
   z-index: 15;
 
   display: flex;
@@ -1486,7 +1484,6 @@ const coverStyle = computed(() => {
   gap: 25px;
 
   min-height: 280px;
-
   padding-top: 28px;
 }
 
@@ -1509,9 +1506,7 @@ const coverStyle = computed(() => {
 
 .profile-header__avatar-glow {
   position: absolute;
-
   inset: -18px;
-
   z-index: 0;
 
   border-radius: 50%;
@@ -1519,20 +1514,18 @@ const coverStyle = computed(() => {
   background:
       color-mix(
           in srgb,
-          var(--avatar-frame-color) 28%,
+          var(--avatar-frame-color) 26%,
           transparent
       );
 
   filter: blur(25px);
-
-  opacity: 0.7;
+  opacity: 0.68;
 
   pointer-events: none;
 }
 
 .profile-header__avatar-frame {
   position: relative;
-
   z-index: 2;
 
   width: 118px;
@@ -1569,15 +1562,15 @@ const coverStyle = computed(() => {
           0 0 10px
           color-mix(
               in srgb,
-              var(--avatar-frame-color) 80%,
+              var(--avatar-frame-color) 75%,
               transparent
           )
       )
       drop-shadow(
-          0 0 25px
+          0 0 24px
           color-mix(
               in srgb,
-              var(--avatar-frame-color) 45%,
+              var(--avatar-frame-color) 40%,
               transparent
           )
       );
@@ -1644,12 +1637,11 @@ const coverStyle = computed(() => {
 
 .profile-header__identity {
   min-width: 0;
-
   max-width: 650px;
 }
 
 /* =========================================================
-   TIER DISPLAY
+   TIER
    ========================================================= */
 
 .tier-display {
@@ -1663,13 +1655,12 @@ const coverStyle = computed(() => {
   width: fit-content;
 
   margin-bottom: 12px;
-
   padding: 7px 14px 7px 7px;
 
   border: 1px solid
   color-mix(
       in srgb,
-      var(--player-accent) 42%,
+      var(--player-accent) 38%,
       rgba(255, 255, 255, 0.08)
   );
 
@@ -1680,8 +1671,8 @@ const coverStyle = computed(() => {
           135deg,
           color-mix(
               in srgb,
-              var(--player-accent) 13%,
-              rgba(8, 8, 18, 0.82)
+              var(--player-accent) 11%,
+              rgba(8, 8, 18, 0.84)
           ),
           rgba(8, 8, 18, 0.68)
       );
@@ -1690,10 +1681,10 @@ const coverStyle = computed(() => {
       0 8px 30px
       color-mix(
           in srgb,
-          var(--player-accent) 12%,
+          var(--player-accent) 10%,
           transparent
       ),
-      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      inset 0 1px 0 rgba(255, 255, 255, 0.055);
 
   backdrop-filter: blur(14px);
 }
@@ -1714,7 +1705,7 @@ const coverStyle = computed(() => {
           from 45deg,
           transparent,
           var(--player-accent),
-          rgba(255, 255, 255, 0.75),
+          rgba(255, 255, 255, 0.7),
           var(--player-accent),
           transparent
       );
@@ -1734,7 +1725,7 @@ const coverStyle = computed(() => {
           0 0 12px
           color-mix(
               in srgb,
-              var(--player-accent) 55%,
+              var(--player-accent) 50%,
               transparent
           )
       );
@@ -1754,7 +1745,7 @@ const coverStyle = computed(() => {
           145deg,
           color-mix(
               in srgb,
-              var(--player-accent) 32%,
+              var(--player-accent) 28%,
               #121322
           ),
           #07070f
@@ -1771,7 +1762,7 @@ const coverStyle = computed(() => {
       0 0 12px
       color-mix(
           in srgb,
-          var(--player-accent) 80%,
+          var(--player-accent) 75%,
           transparent
       );
 }
@@ -1783,7 +1774,7 @@ const coverStyle = computed(() => {
 .tier-display__eyebrow {
   margin-bottom: 2px;
 
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.34);
 
   font-size: 7px;
   font-weight: 900;
@@ -1805,7 +1796,7 @@ const coverStyle = computed(() => {
       0 0 20px
       color-mix(
           in srgb,
-          var(--player-accent) 28%,
+          var(--player-accent) 25%,
           transparent
       );
 }
@@ -1816,7 +1807,7 @@ const coverStyle = computed(() => {
   color:
       color-mix(
           in srgb,
-          var(--player-accent) 80%,
+          var(--player-accent) 78%,
           white
       );
 
@@ -1831,7 +1822,6 @@ const coverStyle = computed(() => {
   align-items: center;
 
   gap: 3px;
-
   margin-left: 5px;
 }
 
@@ -1842,114 +1832,29 @@ const coverStyle = computed(() => {
   height: 12px;
 
   background: var(--player-accent);
-
   opacity: 0.25;
 }
 
 .tier-display__ornament span:nth-child(2) {
   height: 19px;
-
   opacity: 0.55;
 }
 
 .tier-display__ornament span:nth-child(3) {
   height: 27px;
-
   opacity: 0.9;
 }
 
 /* =========================================================
-   NAME
+   NAME + VERIFIED
    ========================================================= */
-
-/* Бейджи из магазина */
-.profile-header__badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.profile-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 3px 11px 3px 4px;
-  color: var(--badge-color, #a78bfa);
-  background: rgba(124, 58, 237, 0.1);
-  border: 1px solid rgba(124, 58, 237, 0.35);
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1;
-  white-space: nowrap;
-  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-}
-
-.profile-badge:hover {
-  transform: translateY(-1px);
-  background: rgba(124, 58, 237, 0.18);
-  border-color: var(--badge-color, #7c3aed);
-}
-
-.profile-badge__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  color: var(--badge-color, #a78bfa);
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid var(--badge-color, rgba(124, 58, 237, 0.5));
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.profile-badge__text {
-  max-width: 140px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* =========================================================
-   МЕДИЙКА — уникальный вид профиля
-   ========================================================= */
-
-.profile-header--media {
-  position: relative;
-}
-
-/* Розово-фиолетовая подсветка карточки */
-.profile-header--media::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  background:
-          radial-gradient(circle at 12% 0%, rgba(244, 114, 182, 0.16), transparent 45%),
-          radial-gradient(circle at 88% 100%, rgba(168, 85, 247, 0.14), transparent 45%);
-}
-
-.profile-header__role--media {
-  color: #fff;
-  background: linear-gradient(135deg, #ec4899, #a855f7);
-  border-color: transparent;
-  box-shadow: 0 4px 16px rgba(236, 72, 153, 0.35);
-}
-
-.profile-header__role--media::before {
-  content: '★';
-  margin-right: 5px;
-  font-size: 10px;
-}
 
 .profile-header__name-row {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
 
-  gap: 10px;
+  gap: 8px;
 
   min-width: 0;
 }
@@ -1972,9 +1877,210 @@ const coverStyle = computed(() => {
       0 0 40px
       color-mix(
           in srgb,
-          var(--player-accent) 15%,
+          var(--player-accent) 14%,
           transparent
       );
+}
+
+/* Instagram-like verification */
+
+.profile-header__verified {
+  position: relative;
+
+  width: 18px;
+  height: 18px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  color: #fff;
+
+  background:
+      linear-gradient(
+          135deg,
+          #60a5fa,
+          #3b82f6 55%,
+          #2563eb
+      );
+
+  border-radius: 50%;
+
+  box-shadow:
+      0 0 0 2px rgba(59, 130, 246, 0.08),
+      0 3px 12px rgba(37, 99, 235, 0.28);
+
+  transform: translateY(1px);
+
+  cursor: default;
+}
+
+.profile-header__verified::after {
+  content: '';
+
+  position: absolute;
+  inset: 2px;
+
+  border: 1px solid rgba(255, 255, 255, 0.17);
+  border-radius: 50%;
+
+  pointer-events: none;
+}
+
+.profile-header__verified svg {
+  position: relative;
+  z-index: 1;
+
+  width: 11px;
+  height: 11px;
+}
+
+/* =========================================================
+   BADGES — PURCHASED BADGES
+   ========================================================= */
+
+.profile-header__badges {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 6px;
+
+  margin-top: 9px;
+  margin-bottom: 8px;
+}
+
+.profile-badge {
+  --badge-color: #8b5cf6;
+
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 6px;
+
+  min-height: 26px;
+
+  padding: 0 9px 0 4px;
+
+  color:
+      color-mix(
+          in srgb,
+          var(--badge-color) 82%,
+          white
+      );
+
+  background:
+      linear-gradient(
+          100deg,
+          color-mix(
+              in srgb,
+              var(--badge-color) 9%,
+              transparent
+          ),
+          rgba(255, 255, 255, 0.022)
+      );
+
+  border: 1px solid
+  color-mix(
+      in srgb,
+      var(--badge-color) 27%,
+      rgba(255, 255, 255, 0.055)
+  );
+
+  border-radius: 7px;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  line-height: 1;
+
+  white-space: nowrap;
+
+  box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.045);
+
+  transition:
+      transform 0.16s ease,
+      border-color 0.16s ease,
+      background 0.16s ease,
+      box-shadow 0.16s ease;
+}
+
+.profile-badge:hover {
+  transform: translateY(-1px);
+
+  background:
+      linear-gradient(
+          100deg,
+          color-mix(
+              in srgb,
+              var(--badge-color) 14%,
+              transparent
+          ),
+          rgba(255, 255, 255, 0.035)
+      );
+
+  border-color:
+      color-mix(
+          in srgb,
+          var(--badge-color) 48%,
+          rgba(255, 255, 255, 0.08)
+      );
+
+  box-shadow:
+      0 5px 16px
+      color-mix(
+          in srgb,
+          var(--badge-color) 11%,
+          transparent
+      ),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.profile-badge__icon {
+  width: 19px;
+  height: 19px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  color: var(--badge-color);
+
+  background:
+      color-mix(
+          in srgb,
+          var(--badge-color) 11%,
+          rgba(5, 5, 10, 0.72)
+      );
+
+  border: 1px solid
+  color-mix(
+      in srgb,
+      var(--badge-color) 32%,
+      transparent
+  );
+
+  border-radius: 5px;
+
+  box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.profile-badge__text {
+  max-width: 120px;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
 }
 
 /* =========================================================
@@ -1984,17 +2090,26 @@ const coverStyle = computed(() => {
 .profile-header__role {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
 
-  min-height: 25px;
+  min-height: 23px;
 
-  padding: 0 9px;
+  padding: 0 8px;
+
+  color: var(--text-dim, rgba(255, 255, 255, 0.65));
+
+  background: rgba(255, 255, 255, 0.035);
+
+  border: 1px solid rgba(255, 255, 255, 0.075);
 
   border-radius: 6px;
 
   font-size: 8px;
-  font-weight: 950;
+  font-weight: 900;
 
-  letter-spacing: 0.8px;
+  line-height: 1;
+
+  letter-spacing: 0.55px;
 
   text-transform: uppercase;
 
@@ -2006,34 +2121,147 @@ const coverStyle = computed(() => {
 .profile-header__role--admin {
   color: #facc15;
 
-  background: rgba(250, 204, 21, 0.1);
+  background: rgba(250, 204, 21, 0.055);
 
-  border: 1px solid rgba(250, 204, 21, 0.3);
+  border-color: rgba(250, 204, 21, 0.18);
 
   box-shadow:
-      0 0 16px rgba(250, 204, 21, 0.12);
+      0 0 14px rgba(250, 204, 21, 0.08);
 }
 
 .profile-header__role--tester {
-  color: #06b6d4;
+  color: #67e8f9;
 
-  background: rgba(6, 182, 212, 0.1);
+  background: rgba(6, 182, 212, 0.055);
 
-  border: 1px solid rgba(6, 182, 212, 0.3);
+  border-color: rgba(6, 182, 212, 0.18);
 
   box-shadow:
-      0 0 16px rgba(6, 182, 212, 0.1);
+      0 0 14px rgba(6, 182, 212, 0.08);
 }
 
 .profile-header__role--moderator {
-  color: #a855f7;
+  color: #c4b5fd;
 
-  background: rgba(168, 85, 247, 0.1);
+  background: rgba(168, 85, 247, 0.055);
 
-  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-color: rgba(168, 85, 247, 0.18);
 
   box-shadow:
-      0 0 16px rgba(168, 85, 247, 0.1);
+      0 0 14px rgba(168, 85, 247, 0.08);
+}
+
+/* =========================================================
+   MEDIA ROLE
+   ========================================================= */
+
+.profile-header--media {
+  position: relative;
+}
+
+.profile-header--media::after {
+  content: '';
+
+  position: absolute;
+  inset: 0;
+
+  z-index: 7;
+
+  pointer-events: none;
+
+  background:
+      radial-gradient(
+          circle at 8% 5%,
+          rgba(244, 114, 182, 0.08),
+          transparent 34%
+      ),
+      radial-gradient(
+          circle at 94% 92%,
+          rgba(168, 85, 247, 0.07),
+          transparent 38%
+      );
+}
+
+.profile-header__role--media {
+  position: relative;
+
+  min-height: 23px;
+
+  padding: 0 8px 0 7px;
+
+  color: #fce7f3;
+
+  background:
+      linear-gradient(
+          135deg,
+          rgba(236, 72, 153, 0.13),
+          rgba(168, 85, 247, 0.11)
+      );
+
+  border: 1px solid rgba(236, 72, 153, 0.28);
+
+  box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.055),
+      0 4px 15px rgba(236, 72, 153, 0.08);
+}
+
+.profile-header__role--media::before {
+  content: '';
+
+  width: 5px;
+  height: 5px;
+
+  margin-right: 5px;
+
+  flex-shrink: 0;
+
+  background: #f472b6;
+
+  border-radius: 50%;
+
+  box-shadow:
+      0 0 8px rgba(244, 114, 182, 0.8);
+}
+
+.profile-header__role--media::after {
+  content: '';
+
+  position: absolute;
+  inset: -1px;
+
+  border-radius: inherit;
+
+  background:
+      linear-gradient(
+          90deg,
+          transparent,
+          rgba(244, 114, 182, 0.16),
+          transparent
+      );
+
+  opacity: 0;
+
+  transition: opacity 0.2s ease;
+
+  pointer-events: none;
+}
+
+.profile-header__role--media:hover::after {
+  opacity: 1;
+}
+
+.profile-header--media .profile-header__accent-line {
+  background:
+      linear-gradient(
+          90deg,
+          transparent,
+          rgba(236, 72, 153, 0.82),
+          rgba(168, 85, 247, 0.76),
+          transparent
+      );
+
+  box-shadow:
+      0 0 18px rgba(236, 72, 153, 0.22);
 }
 
 /* =========================================================
@@ -2043,7 +2271,7 @@ const coverStyle = computed(() => {
 .profile-header__username {
   margin: 8px 0 0;
 
-  color: rgba(255, 255, 255, 0.38);
+  color: rgba(255, 255, 255, 0.34);
 
   font-size: 12px;
   font-weight: 700;
@@ -2063,7 +2291,7 @@ const coverStyle = computed(() => {
 
   margin-top: 8px;
 
-  color: rgba(255, 255, 255, 0.48);
+  color: rgba(255, 255, 255, 0.46);
 
   font-size: 11px;
   font-weight: 700;
@@ -2099,7 +2327,7 @@ const coverStyle = computed(() => {
 
   margin: 11px 0 0;
 
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.52);
 
   font-size: 12px;
   line-height: 1.55;
@@ -2118,19 +2346,19 @@ const coverStyle = computed(() => {
   margin-top: 13px;
   padding: 9px 12px;
 
-  color: rgba(255, 255, 255, 0.48);
+  color: rgba(255, 255, 255, 0.46);
 
   background:
       color-mix(
           in srgb,
           var(--player-accent) 4%,
-          rgba(255, 255, 255, 0.025)
+          rgba(255, 255, 255, 0.022)
       );
 
   border-left: 2px solid
   color-mix(
       in srgb,
-      var(--player-accent) 65%,
+      var(--player-accent) 60%,
       transparent
   );
 
@@ -2147,7 +2375,7 @@ const coverStyle = computed(() => {
   color:
       color-mix(
           in srgb,
-          var(--player-accent) 75%,
+          var(--player-accent) 72%,
           white
       );
 
@@ -2197,9 +2425,9 @@ const coverStyle = computed(() => {
 
   padding: 7px 10px;
 
-  background: rgba(255, 255, 255, 0.035);
+  background: rgba(255, 255, 255, 0.032);
 
-  border: 1px solid rgba(255, 255, 255, 0.065);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 
   border-radius: 7px;
 
@@ -2207,7 +2435,7 @@ const coverStyle = computed(() => {
 }
 
 .profile-header__stat-label {
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.28);
 
   font-size: 8px;
   font-weight: 900;
@@ -2216,7 +2444,7 @@ const coverStyle = computed(() => {
 }
 
 .profile-header__stat strong {
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.84);
 
   font-size: 11px;
   font-weight: 900;
@@ -2226,7 +2454,7 @@ const coverStyle = computed(() => {
   color:
       color-mix(
           in srgb,
-          var(--player-accent) 85%,
+          var(--player-accent) 82%,
           white
       );
 }
@@ -2247,7 +2475,7 @@ const coverStyle = computed(() => {
 
   margin-bottom: 5px;
 
-  color: rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.26);
 
   font-size: 7px;
   font-weight: 900;
@@ -2259,7 +2487,7 @@ const coverStyle = computed(() => {
   color:
       color-mix(
           in srgb,
-          var(--player-accent) 80%,
+          var(--player-accent) 78%,
           white
       );
 }
@@ -2273,7 +2501,7 @@ const coverStyle = computed(() => {
 
   border-radius: 999px;
 
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.065);
 }
 
 .tier-progress__value {
@@ -2288,7 +2516,7 @@ const coverStyle = computed(() => {
           90deg,
           color-mix(
               in srgb,
-              var(--player-accent) 65%,
+              var(--player-accent) 60%,
               transparent
           ),
           var(--player-accent),
@@ -2299,7 +2527,7 @@ const coverStyle = computed(() => {
       0 0 12px
       color-mix(
           in srgb,
-          var(--player-accent) 65%,
+          var(--player-accent) 62%,
           transparent
       );
 }
@@ -2320,8 +2548,7 @@ const coverStyle = computed(() => {
   background: #fff;
 
   box-shadow:
-      0 0 12px
-      var(--player-accent);
+      0 0 12px var(--player-accent);
 }
 
 /* =========================================================
@@ -2348,7 +2575,7 @@ const coverStyle = computed(() => {
 
   pointer-events: none;
 
-  opacity: 0.85;
+  opacity: 0.8;
 }
 
 .rank-mark__outer {
@@ -2364,11 +2591,11 @@ const coverStyle = computed(() => {
           transparent,
           color-mix(
               in srgb,
-              var(--player-accent) 80%,
+              var(--player-accent) 76%,
               transparent
           ),
           transparent 90deg,
-          rgba(255, 255, 255, 0.4) 180deg,
+          rgba(255, 255, 255, 0.35) 180deg,
           transparent 220deg,
           var(--player-accent) 300deg,
           transparent
@@ -2390,7 +2617,7 @@ const coverStyle = computed(() => {
           0 0 22px
           color-mix(
               in srgb,
-              var(--player-accent) 30%,
+              var(--player-accent) 28%,
               transparent
           )
       );
@@ -2406,10 +2633,10 @@ const coverStyle = computed(() => {
   background:
       linear-gradient(
           145deg,
-          rgba(255, 255, 255, 0.13),
+          rgba(255, 255, 255, 0.11),
           color-mix(
               in srgb,
-              var(--player-accent) 12%,
+              var(--player-accent) 11%,
               #07070f
           )
       );
@@ -2429,7 +2656,7 @@ const coverStyle = computed(() => {
           circle,
           color-mix(
               in srgb,
-              var(--player-accent) 18%,
+              var(--player-accent) 17%,
               #080811
           ),
           #050509 72%
@@ -2448,7 +2675,7 @@ const coverStyle = computed(() => {
       0 0 20px
       color-mix(
           in srgb,
-          var(--player-accent) 90%,
+          var(--player-accent) 88%,
           transparent
       ),
       0 3px 15px rgba(0, 0, 0, 0.8);
@@ -2460,16 +2687,16 @@ const coverStyle = computed(() => {
   color:
       color-mix(
           in srgb,
-          var(--player-accent) 80%,
+          var(--player-accent) 78%,
           white
       );
 
-  background: rgba(5, 5, 12, 0.7);
+  background: rgba(5, 5, 12, 0.68);
 
   border: 1px solid
   color-mix(
       in srgb,
-      var(--player-accent) 35%,
+      var(--player-accent) 32%,
       transparent
   );
 
@@ -2498,7 +2725,7 @@ const coverStyle = computed(() => {
   width: 400px;
   height: 150px;
 
-  opacity: 0.3;
+  opacity: 0.28;
 
   pointer-events: none;
 }
@@ -2529,7 +2756,7 @@ const coverStyle = computed(() => {
 
   border-left: 45px solid transparent;
   border-right: 45px solid transparent;
-  border-bottom: 65px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 65px solid rgba(255, 255, 255, 0.055);
 }
 
 .profile-header__peak span:nth-child(1) {
@@ -2574,13 +2801,13 @@ const coverStyle = computed(() => {
           transparent,
           color-mix(
               in srgb,
-              var(--player-accent) 95%,
+              var(--player-accent) 90%,
               transparent
           ),
-          rgba(255, 255, 255, 0.8),
+          rgba(255, 255, 255, 0.72),
           color-mix(
               in srgb,
-              var(--player-accent) 95%,
+              var(--player-accent) 90%,
               transparent
           ),
           transparent
@@ -2590,7 +2817,7 @@ const coverStyle = computed(() => {
       0 0 18px
       color-mix(
           in srgb,
-          var(--player-accent) 45%,
+          var(--player-accent) 42%,
           transparent
       );
 }
@@ -2601,7 +2828,6 @@ const coverStyle = computed(() => {
 
 .profile-header--compact {
   min-height: 190px;
-
   height: 190px;
 
   margin: -24px -24px 20px;
@@ -2609,22 +2835,8 @@ const coverStyle = computed(() => {
   padding: 18px 22px 20px;
 }
 
-/*
- * Compact layout:
- *
- * ┌─────────────────────────────────────────────┐
- * │ PLAYER                         Настроить    │
- * │                                             │
- * │  [AVATAR]  [D] D TIER   [CLAN] Name  ADMIN │
- * │            CURRENT RANK       status chips  │
- * │                                             │
- * │  ─────────────────────────────────────────  │
- * └─────────────────────────────────────────────┘
- */
-
 .profile-header__compact-content {
   position: relative;
-
   z-index: 15;
 
   display: flex;
@@ -2638,8 +2850,6 @@ const coverStyle = computed(() => {
 
   padding-top: 10px;
 }
-
-/* Compact avatar */
 
 .profile-header__compact-avatar-wrap {
   position: relative;
@@ -2660,7 +2870,8 @@ const coverStyle = computed(() => {
   padding: 3px;
 }
 
-.profile-header__avatar-frame--compact .profile-header__avatar {
+.profile-header__avatar-frame--compact
+.profile-header__avatar {
   font-size: 25px;
 }
 
@@ -2669,7 +2880,9 @@ const coverStyle = computed(() => {
   inset: -12px;
 }
 
-/* Compact identity */
+/* =========================================================
+   COMPACT IDENTITY
+   ========================================================= */
 
 .profile-header__compact-identity {
   min-width: 0;
@@ -2683,8 +2896,6 @@ const coverStyle = computed(() => {
 
   gap: 5px;
 }
-
-/* Compact tier */
 
 .profile-header__compact-tier {
   display: inline-flex;
@@ -2711,7 +2922,7 @@ const coverStyle = computed(() => {
   border: 1px solid
   color-mix(
       in srgb,
-      var(--player-accent) 55%,
+      var(--player-accent) 52%,
       transparent
   );
 
@@ -2720,7 +2931,7 @@ const coverStyle = computed(() => {
           145deg,
           color-mix(
               in srgb,
-              var(--player-accent) 30%,
+              var(--player-accent) 27%,
               #11121f
           ),
           #07070f
@@ -2750,7 +2961,7 @@ const coverStyle = computed(() => {
           0 0 7px
           color-mix(
               in srgb,
-              var(--player-accent) 50%,
+              var(--player-accent) 45%,
               transparent
           )
       );
@@ -2764,7 +2975,7 @@ const coverStyle = computed(() => {
 }
 
 .profile-header__compact-tier-name {
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(255, 255, 255, 0.8);
 
   font-size: 9px;
   line-height: 1;
@@ -2780,7 +2991,7 @@ const coverStyle = computed(() => {
   color:
       color-mix(
           in srgb,
-          var(--player-accent) 80%,
+          var(--player-accent) 78%,
           white
       );
 
@@ -2790,15 +3001,17 @@ const coverStyle = computed(() => {
   letter-spacing: 1px;
 }
 
-/* Compact name */
+/* =========================================================
+   COMPACT NAME
+   ========================================================= */
 
 .profile-header__compact-name-row {
   display: flex;
   align-items: center;
 
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 
-  gap: 7px;
+  gap: 6px;
 
   min-width: 0;
 }
@@ -2829,12 +3042,27 @@ const coverStyle = computed(() => {
       0 0 25px
       color-mix(
           in srgb,
-          var(--player-accent) 12%,
+          var(--player-accent) 11%,
           transparent
       );
 }
 
-.profile-header--compact .profile-header__role {
+.profile-header__compact-name-row
+.profile-header__verified {
+  width: 15px;
+  height: 15px;
+
+  transform: translateY(0);
+}
+
+.profile-header__compact-name-row
+.profile-header__verified svg {
+  width: 9px;
+  height: 9px;
+}
+
+.profile-header--compact
+.profile-header__role {
   min-height: 19px;
 
   flex: 0 0 auto;
@@ -2843,15 +3071,17 @@ const coverStyle = computed(() => {
 
   font-size: 6px;
 
-  letter-spacing: 0.6px;
+  letter-spacing: 0.55px;
 
   border-radius: 4px;
 }
 
-/* Compact username */
+/* =========================================================
+   COMPACT USERNAME
+   ========================================================= */
 
 .profile-header__compact-username {
-  color: rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.27);
 
   font-size: 8px;
   font-weight: 700;
@@ -2859,7 +3089,9 @@ const coverStyle = computed(() => {
   line-height: 1;
 }
 
-/* Compact meta */
+/* =========================================================
+   COMPACT META
+   ========================================================= */
 
 .profile-header__compact-meta {
   display: flex;
@@ -2879,14 +3111,13 @@ const coverStyle = computed(() => {
   align-items: center;
 
   min-width: 0;
-
   max-width: 180px;
 
   gap: 4px;
 
   overflow: hidden;
 
-  color: rgba(255, 255, 255, 0.42);
+  color: rgba(255, 255, 255, 0.4);
 
   font-size: 7px;
   font-weight: 700;
@@ -2894,7 +3125,6 @@ const coverStyle = computed(() => {
   font-style: italic;
 
   white-space: nowrap;
-
   text-overflow: ellipsis;
 }
 
@@ -2922,11 +3152,11 @@ const coverStyle = computed(() => {
 
   padding: 3px 5px;
 
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.38);
 
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.035);
 
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.065);
 
   border-radius: 4px;
 
@@ -2936,7 +3166,9 @@ const coverStyle = computed(() => {
   letter-spacing: 0.5px;
 }
 
-/* Compact vertical score */
+/* =========================================================
+   COMPACT PROGRESS
+   ========================================================= */
 
 .profile-header__compact-progress {
   position: relative;
@@ -2950,7 +3182,7 @@ const coverStyle = computed(() => {
 
   border-radius: 999px;
 
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.065);
 
   box-shadow:
       inset 0 0 4px rgba(0, 0, 0, 0.4);
@@ -2970,18 +3202,18 @@ const coverStyle = computed(() => {
           to top,
           color-mix(
               in srgb,
-              var(--player-accent) 55%,
+              var(--player-accent) 52%,
               transparent
           ),
           var(--player-accent),
-          rgba(255, 255, 255, 0.9)
+          rgba(255, 255, 255, 0.88)
       );
 
   box-shadow:
       0 0 12px
       color-mix(
           in srgb,
-          var(--player-accent) 70%,
+          var(--player-accent) 65%,
           transparent
       );
 }
@@ -2997,7 +3229,7 @@ const coverStyle = computed(() => {
   color:
       color-mix(
           in srgb,
-          var(--player-accent) 75%,
+          var(--player-accent) 72%,
           white
       );
 
@@ -3009,8 +3241,9 @@ const coverStyle = computed(() => {
    COMPACT EFFECT TUNING
    ========================================================= */
 
-.profile-header--compact .profile-header__effect {
-  opacity: 0.55;
+.profile-header--compact
+.profile-header__effect {
+  opacity: 0.5;
 }
 
 .profile-header--compact.profile-header--effect-fire
@@ -3026,7 +3259,7 @@ const coverStyle = computed(() => {
 .profile-header--compact.profile-header--effect-legendary
 .profile-header__effect {
   inset: -70%;
-  opacity: 0.48;
+  opacity: 0.45;
 }
 
 /* =========================================================
@@ -3054,7 +3287,7 @@ const coverStyle = computed(() => {
   }
 
   50% {
-    opacity: 0.75;
+    opacity: 0.7;
     transform: scale(1.05);
   }
 }
@@ -3173,14 +3406,14 @@ const coverStyle = computed(() => {
 }
 
 /* =========================================================
-   RESPONSIVE
+   RESPONSIVE — TABLET
    ========================================================= */
 
 @media (max-width: 1000px) {
   .profile-header__rank-mark {
     right: 1%;
 
-    opacity: 0.45;
+    opacity: 0.42;
 
     transform:
         translateY(-50%)
@@ -3195,7 +3428,7 @@ const coverStyle = computed(() => {
 
 @media (max-width: 900px) {
   .profile-header__rank-mark {
-    opacity: 0.32;
+    opacity: 0.28;
 
     transform:
         translateY(-50%)
@@ -3203,6 +3436,10 @@ const coverStyle = computed(() => {
         scale(0.65);
   }
 }
+
+/* =========================================================
+   RESPONSIVE — MOBILE
+   ========================================================= */
 
 @media (max-width: 700px) {
   .profile-header {
@@ -3241,7 +3478,6 @@ const coverStyle = computed(() => {
 
   .profile-header__name {
     font-size: 32px;
-
     letter-spacing: -1.2px;
   }
 
@@ -3258,7 +3494,6 @@ const coverStyle = computed(() => {
 
   .profile-header__tier-watermark {
     right: -2%;
-
     font-size: 180px;
   }
 
@@ -3270,12 +3505,42 @@ const coverStyle = computed(() => {
     display: none;
   }
 
-  .profile-header--effect-fire .profile-header__effect {
+  .profile-header--effect-fire
+  .profile-header__effect {
     inset: 20% -25% -25%;
   }
 
   .profile-header__quote {
     max-width: 100%;
+  }
+
+  .profile-header__badges {
+    gap: 5px;
+  }
+
+  .profile-badge {
+    min-height: 24px;
+    padding-right: 7px;
+    font-size: 8px;
+  }
+
+  .profile-badge__icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .profile-badge__text {
+    max-width: 100px;
+  }
+
+  .profile-header__verified {
+    width: 16px;
+    height: 16px;
+  }
+
+  .profile-header__verified svg {
+    width: 10px;
+    height: 10px;
   }
 }
 
@@ -3286,7 +3551,6 @@ const coverStyle = computed(() => {
 @media (max-width: 700px) {
   .profile-header--compact {
     height: 170px;
-
     min-height: 170px;
 
     margin: -16px -16px 18px;
@@ -3327,24 +3591,35 @@ const coverStyle = computed(() => {
   .profile-header__compact-progress {
     height: 60px;
   }
+
+  .profile-header__compact-name-row
+  .profile-header__verified {
+    width: 14px;
+    height: 14px;
+  }
+
+  .profile-header__compact-name-row
+  .profile-header__verified svg {
+    width: 8px;
+    height: 8px;
+  }
 }
 
 @media (max-width: 480px) {
   .profile-header--compact {
     height: 155px;
-
     min-height: 155px;
 
     padding: 13px 14px 15px;
   }
 
-  .profile-header--compact .profile-header__eyebrow {
+  .profile-header--compact
+  .profile-header__eyebrow {
     font-size: 8px;
   }
 
   .profile-header__compact-content {
     height: 96px;
-
     gap: 9px;
   }
 
@@ -3360,14 +3635,12 @@ const coverStyle = computed(() => {
 
   .profile-header__compact-name {
     font-size: 18px;
-
     letter-spacing: -0.5px;
   }
 
   .profile-header__compact-tier-icon {
     width: 23px;
     height: 23px;
-
     font-size: 7px;
   }
 
@@ -3385,13 +3658,11 @@ const coverStyle = computed(() => {
 
   .profile-header__compact-status {
     max-width: 80px;
-
     font-size: 6px;
   }
 
   .profile-header__compact-chip {
     padding: 2px 4px;
-
     font-size: 5px;
   }
 
@@ -3404,16 +3675,28 @@ const coverStyle = computed(() => {
     display: none;
   }
 
-  .profile-header--compact .profile-header__edit {
+  .profile-header--compact
+  .profile-header__edit {
     min-height: 28px;
-
     padding: 0 8px;
-
     font-size: 9px;
   }
 
-  .profile-header--compact .profile-header__edit svg {
+  .profile-header--compact
+  .profile-header__edit svg {
     display: none;
+  }
+
+  .profile-header__compact-name-row {
+    gap: 5px;
+  }
+
+  .profile-header__compact-name-row
+  .profile-header__role {
+    min-height: 18px;
+    padding: 0 5px;
+    font-size: 5px;
   }
 }
 </style>
+

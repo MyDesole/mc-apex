@@ -1,8 +1,9 @@
 /**
  * Оформление подсветки клана: цвета и эффекты.
  *
- * Ключи совпадают с effect_value предметов магазина и с набором
- * App\Support\ClanHighlight на сервере.
+ * Ключи совпадают с effect_value предметов магазина, с набором
+ * App\Support\ClanHighlight на сервере и с классами .effect-*
+ * в ClansView — поэтому купленное сразу видно на карточке клана.
  */
 
 export const HIGHLIGHT_COLORS = {
@@ -14,23 +15,30 @@ export const HIGHLIGHT_COLORS = {
     rose: { name: 'Розовая', color: '#ec4899', glow: 'rgba(236, 72, 153, 0.42)' },
 }
 
+/**
+ * Эффекты: те же, что отрисованы в ClansView.
+ */
 export const HIGHLIGHT_EFFECTS = {
-    frame: { name: 'Рамка', animated: false },
     glow: { name: 'Свечение', animated: false },
     pulse: { name: 'Пульсация', animated: true },
-    animated: { name: 'Перелив', animated: true },
+    gradient: { name: 'Градиент', animated: true },
+    fire: { name: 'Огонь', animated: true },
+    ice: { name: 'Лёд', animated: false },
+    aurora: { name: 'Северное сияние', animated: true },
     legendary: { name: 'Легендарный', animated: true },
 }
 
+/** Базовый эффект, если игрок ничего не покупал. */
+export const DEFAULT_HIGHLIGHT_EFFECT = 'glow'
+
 export const DEFAULT_HIGHLIGHT_COLOR = 'gold'
-export const DEFAULT_HIGHLIGHT_EFFECT = 'frame'
 
 /** Настройки цвета: для неизвестного ключа берём золото. */
 export function highlightColor(key) {
     return HIGHLIGHT_COLORS[key] ?? HIGHLIGHT_COLORS[DEFAULT_HIGHLIGHT_COLOR]
 }
 
-/** Эффект: неизвестный ключ считаем базовой рамкой. */
+/** Эффект: неизвестный ключ считаем базовым свечением. */
 export function highlightEffect(key) {
     return HIGHLIGHT_EFFECTS[key] ?? HIGHLIGHT_EFFECTS[DEFAULT_HIGHLIGHT_EFFECT]
 }
@@ -53,12 +61,10 @@ export function highlightStyle(clan) {
             '--hl-color': color.color,
             '--hl-glow': color.glow,
         },
-        class: {
-            'hl-effect-glow': effect === HIGHLIGHT_EFFECTS.glow,
-            'hl-effect-pulse': effect === HIGHLIGHT_EFFECTS.pulse,
-            'hl-effect-animated': effect === HIGHLIGHT_EFFECTS.animated,
-            'hl-effect-legendary': effect === HIGHLIGHT_EFFECTS.legendary,
-        },
+        // Классы совпадают с .effect-* в ClansView
+        class: Object.fromEntries(
+            Object.keys(HIGHLIGHT_EFFECTS).map((key) => [`effect-${key}`, effect === HIGHLIGHT_EFFECTS[key]])
+        ),
         color,
         effect,
     }

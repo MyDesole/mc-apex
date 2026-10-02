@@ -7,6 +7,7 @@ use App\Models\ClanApplication;
 use App\Models\ClanMember;
 use App\Models\ClanWar;
 use App\Models\CoinTransaction;
+use App\Http\Resources\ClanCardResource;
 use App\Models\User;
 use App\Notifications\ClanApplicationAcceptedNotification;
 use App\Notifications\ClanApplicationDeclinedNotification;
@@ -54,11 +55,14 @@ class ClanService
 
         $counts = $this->memberCounts($clans->pluck('id'));
 
-        $clans->getCollection()->transform(function (Clan $clan) use ($counts, $myClanId) {
+        // Отдаём через ресурс: он считает признак подсветки с учётом срока
+        // и отдаёт цвет с эффектом. Ручной transform этого не делал,
+        // поэтому истёкшая подсветка продолжала подсвечиваться.
+        $clans->through(function (Clan $clan) use ($counts, $myClanId) {
             $clan->members_count = (int) ($counts[$clan->id] ?? 0);
             $clan->my_clan_id = $clan->id === $myClanId ? $myClanId : null;
 
-            return $clan;
+            return (new ClanCardResource($clan))->resolve();
         });
 
         return $clans;

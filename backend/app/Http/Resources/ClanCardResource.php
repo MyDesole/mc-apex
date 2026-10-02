@@ -27,7 +27,15 @@ class ClanCardResource extends JsonResource
             'wins' => (int) $clan->wins,
             'losses' => (int) $clan->losses,
             'is_open' => (bool) $clan->is_open,
-            'is_highlighted' => (bool) $clan->is_highlighted,
+            // Плата за вступление: заявитель видит её до подачи заявки
+            'entry_fee' => (int) $clan->entry_fee,
+            'is_highlighted' => $clan->isHighlightActive(),
+            // id своего клана: по нему фронтенд ведёт клик во вкладку «Мой клан»
+            'my_clan_id' => $clan->my_clan_id ?? null,
+            // Срок подсветки: фронтенд показывает дату и гасит эффекты
+            'highlight_until' => $clan->highlight_until?->toIso8601String(),
+            'highlight_color' => $clan->highlight_color,
+            'highlight_effect' => $clan->highlight_effect,
             'members_count' => (int) ($clan->members_count ?? 0),
             'leader' => $clan->relationLoaded('leader') && $clan->leader
                 ? new UserCardResource($clan->leader)
