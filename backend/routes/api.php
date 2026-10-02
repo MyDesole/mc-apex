@@ -198,6 +198,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/unread-count', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'unreadCount']);
 
+        // --- ПРИСУТСТВИЕ: кто онлайн — apex:presence ---
+        Route::get('/presence', [\App\Domains\Chat\Controllers\Api\PresenceController::class, 'index']);
+        Route::post('/presence/online', [\App\Domains\Chat\Controllers\Api\PresenceController::class, 'online']);
+        Route::post('/presence/offline', [\App\Domains\Chat\Controllers\Api\PresenceController::class, 'offline']);
+
+        // --- ПОИСК ПО СООБЩЕНИЯМ ДИАЛОГА — apex:chat-search ---
+        Route::get('/conversations/{conversation}/search', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'searchMessages'])
+            ->whereNumber('conversation');
+
         // --- ВЛОЖЕНИЯ В ЧАТЕ — apex:chat-attachments ---
         Route::post('/attachments', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'uploadAttachment'])
             ->middleware('throttle:40,1');

@@ -1692,3 +1692,106 @@
     padding: 10px 8px 6px;
   }
 }
+
+/* Точка онлайна и поиск по сообщениям */
+
+/*
+ * Точка онлайна на аватаре. Аватар у диалога и в шапке — position:
+ * relative, поэтому точка ставится в угол.
+ */
+.conv__online-dot,
+.chat__head-status {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+
+  width: 12px;
+  height: 12px;
+
+  border: 2px solid var(--bg, #0b0b12);
+  border-radius: 50%;
+
+  background: #22c55e;
+
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.55);
+}
+
+.chat__head-status {
+  right: 2px;
+  bottom: 2px;
+
+  width: 11px;
+  height: 11px;
+}
+
+/* Выключенное состояние: точки нет, пока игрок не в сети */
+.conv__online-dot,
+.chat__head-status:not(.chat__head-status--online) {
+  display: none;
+}
+
+.chat__head-status--online {
+  display: block;
+}
+
+/* Переключатель «Люди / Сообщения» в панели поиска */
+.search-tabs {
+  display: flex;
+  gap: 4px;
+
+  margin-top: 8px;
+  padding: 3px;
+
+  background: rgba(255, 255, 255, 0.035);
+  border-radius: 9px;
+}
+
+.search-tab {
+  flex: 1;
+
+  padding: 6px 10px;
+
+  color: var(--text-dim, #8888a0);
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+      color 0.15s ease,
+      background 0.15s ease;
+}
+
+.search-tab:hover {
+  color: var(--text, #e2e2e8);
+}
+
+.search-tab--active {
+  color: #fff;
+  background: var(--accent, #7c3aed);
+}
+
+/* Найденное сообщение: текст фрагмента в две строки */
+.search-item--message .search-item__sub {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+
+  overflow: hidden;
+
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.search-item__avatar--message {
+  width: 34px;
+  height: 34px;
+
+  font-size: 12px;
+}

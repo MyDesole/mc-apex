@@ -37,6 +37,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // вместо 401.
         $middleware->appendToGroup('api', [
             \App\Http\Middleware\EnsureUserIsNotBanned::class,
+            // Отмечает время последней активности: по нему определяется
+            // онлайн, если presence-канал недоступен
+            \App\Http\Middleware\TouchLastSeen::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

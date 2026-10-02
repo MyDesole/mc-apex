@@ -20,6 +20,9 @@ vi.mock('@/services/chat/chat.js', () => ({
     search: vi.fn(),
     uploadMany: vi.fn(),
     upload: vi.fn(),
+    presence: vi.fn().mockResolvedValue({ online: [] }),
+    presenceOnline: vi.fn().mockResolvedValue({ online: [] }),
+    presenceOffline: vi.fn().mockResolvedValue({ ok: true }),
   },
 }))
 

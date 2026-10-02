@@ -105,4 +105,36 @@ export const chatApi = {
     search(q) {
         return api.get(`/chat/search?q=${encodeURIComponent(q)}`)
     },
+
+    /**
+     * Поиск по тексту сообщений внутри диалога.
+     *
+     * Ищем только в текущем диалоге: доступ проверяет сервер.
+     */
+    searchMessages(conversationId, q) {
+        return api.get(
+            `/chat/conversations/${conversationId}/search?q=${encodeURIComponent(q)}`,
+        )
+    },
+
+    /* ----------------------------- Присутствие ----------------------------- */
+
+    /** Кто онлайн: без аргументов — все, со списком — только указанные. */
+    presence(userIds = null) {
+        const query = Array.isArray(userIds) && userIds.length
+            ? `?user_ids=${userIds.join(',')}`
+            : ''
+
+        return api.get(`/chat/presence${query}`)
+    },
+
+    /** Отметить вход на сайт. */
+    presenceOnline() {
+        return api.post('/chat/presence/online')
+    },
+
+    /** Отметить выход. */
+    presenceOffline() {
+        return api.post('/chat/presence/offline')
+    },
 }

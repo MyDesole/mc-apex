@@ -122,6 +122,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'equipped_badges' => 'array',
         'referred_by' => 'integer',
         'clan_joined_at' => 'datetime',
+        'last_seen_at' => 'datetime',
 
     ];
 

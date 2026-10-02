@@ -230,4 +230,25 @@ class ChatController extends Controller
 
         return response()->json($result);
     }
+
+    /**
+     * Поиск по тексту сообщений внутри диалога.
+     *
+     * Доступ проверяется политикой: искать можно только в своём диалоге.
+     */
+    public function searchMessages(Request $request, Conversation $conversation): JsonResponse
+    {
+        $this->authorize('view', $conversation);
+
+        $messages = $this->chat->searchMessages(
+            $conversation,
+            $request->user(),
+            (string) $request->query('q', ''),
+        );
+
+        return response()->json([
+            'messages' => $messages,
+            'total' => count($messages),
+        ]);
+    }
 }

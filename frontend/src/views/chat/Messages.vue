@@ -8,12 +8,14 @@ import { useRealtimeMessages } from '@/composables/chat/useRealtimeMessages.js'
 import UserName from '@/components/players/UserName.vue'
 import ChatAttachmentsInput from '@/components/chat/ChatAttachmentsInput.vue'
 import { userLink } from '@/utils/links.js'
+import { usePresence } from '@/composables/chat/presence.js'
 
 const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
 
 const { latestMessage } = useRealtimeMessages()
+const { isOnline: isPlayerOnline, refresh: refreshPresence } = usePresence()
 
 const tierColors = {
   'S+': '#fbbf24',
@@ -60,6 +62,28 @@ const directPartner = computed(() => {
       ) || null
   )
 })
+
+/**
+ * Онлайн ли собеседник в личном диалоге.
+ *
+ * Сначала спрашиваем присутствие, а если ответа ещё нет, берём признак
+ * из данных диалога: так точка не мигает при первой отрисовке.
+ */
+const directPartnerOnline = computed(() => {
+  if (!directPartner.value) return false
+
+  return isPlayerOnline(directPartner.value.id)
+      || Boolean(directPartner.value.is_online)
+})
+
+/** Онлайн ли кто-то из участников диалога в списке. */
+function conversationOnline(conversation) {
+  if (conversation.type === 'clan_message') return false
+
+  return (conversation.users || [])
+      .filter((u) => u.id !== auth.user?.id)
+      .some((u) => isPlayerOnline(u.id) || Boolean(u.is_online))
+}
 
 function goToPlayer(user) {
   if (!user?.id) return
@@ -364,6 +388,42 @@ async function scrollToBottom(smooth = false) {
       behavior: smooth ? 'smooth' : 'auto',
     })
   })
+}
+
+/**
+ * Догружает историю, пока нужное сообщение не окажется в ленте.
+ *
+ * Поиск ищет по всей истории, а в ленте загружен только её хвост.
+ * Поэтому перед переходом к найденному сообщению подтягиваем старые.
+ *
+ * @param {number} messageId  куда нужно попасть
+ * @returns {Promise<boolean>} нашлось ли сообщение
+ */
+async function ensureMessageLoaded(messageId) {
+  /* Уже в ленте — ничего делать не нужно */
+  const inList = () => messages.value.some((m) => m.id === messageId)
+
+  if (inList()) return true
+
+  /*
+   * Ограничение на число шагов: история может быть очень длинной, а
+   * бесконечная догрузка подвесила бы страницу.
+   */
+  const maxSteps = 20
+  let steps = 0
+
+  while (!inList() && hasMoreHistory.value && steps < maxSteps) {
+    const before = messages.value.length
+
+    await loadOlder()
+
+    steps++
+
+    /* История не выросла — дальше идти незачем */
+    if (messages.value.length === before) break
+  }
+
+  return inList()
 }
 
 async function scrollToMessage(id) {
@@ -678,7 +738,14 @@ const searchQuery = ref('')
 const searchResults = ref({
   users: [],
   clans: [],
+  messages: [],
 })
+
+/** Режим поиска: люди и кланы или сообщения текущего диалога. */
+const searchMode = ref('people')
+
+/** Идёт ли поиск по сообщениям. */
+const messageSearchLoading = ref(false)
 const searchLoading = ref(false)
 
 const searchWrapEl = ref(null)
@@ -708,20 +775,74 @@ async function runSearch(query) {
   searchLoading.value = true
 
   try {
+    if (searchMode.value === 'messages') {
+      await runMessageSearch(query)
+      searchResults.value = { ...searchResults.value, users: [], clans: [] }
+
+      return
+    }
+
+    searchResults.value.messages = []
+
     const data = await chatApi.search(query)
 
     searchResults.value = {
       users: data.users ?? [],
       clans: data.clans ?? [],
+      messages: [],
     }
   } catch {
     searchResults.value = {
       users: [],
       clans: [],
+      messages: [],
     }
   } finally {
     searchLoading.value = false
   }
+}
+
+/** Переключение режима поиска. */
+function setSearchMode(mode) {
+  if (searchMode.value === mode) return
+
+  searchMode.value = mode
+
+  runSearch(searchQuery.value)
+}
+
+/** Ищет по тексту сообщений в текущем диалоге. */
+async function runMessageSearch(query) {
+  if (!activeConversation.value || query.trim().length < 2) {
+    searchResults.value.messages = []
+
+    return
+  }
+
+  messageSearchLoading.value = true
+
+  try {
+    const data = await chatApi.searchMessages(activeConversation.value.id, query)
+
+    searchResults.value.messages = data.messages ?? []
+  } catch {
+    searchResults.value.messages = []
+  } finally {
+    messageSearchLoading.value = false
+  }
+}
+
+/**
+ * Открывает найденное сообщение в ленте.
+ *
+ * Сообщение может быть выше загруженной истории, поэтому сначала
+ * догружаем её до нужного места, затем прокручиваем и подсвечиваем.
+ */
+async function openFoundMessage(message) {
+  searchOpen.value = false
+
+  await ensureMessageLoaded(message.id)
+  await scrollToMessage(message.id)
 }
 
 function toggleSearch() {
@@ -744,6 +865,7 @@ function resetSearch() {
   clearTimeout(searchTimer)
 
   searchQuery.value = ''
+  searchMode.value = 'people'
 
   searchResults.value = {
     users: [],
@@ -1136,6 +1258,12 @@ onUnmounted(() => {
                     }}
                   </template>
                 </template>
+
+                <!-- Точка онлайна: у личных диалогов состояние берём по собеседнику -->
+                <span
+                    v-if="conversationOnline(c)"
+                    class="conv__online-dot"
+                ></span>
               </template>
             </div>
 
@@ -1302,7 +1430,13 @@ onUnmounted(() => {
               </template>
             </div>
 
-            <span class="chat__head-status"></span>
+            <span
+                class="chat__head-status"
+                :class="{
+                'chat__head-status--online':
+                  directPartnerOnline,
+              }"
+            ></span>
           </div>
 
           <div class="chat__head-body">
@@ -2031,15 +2165,43 @@ onUnmounted(() => {
                   v-model="searchQuery"
                   type="text"
                   class="search-input"
-                  placeholder="Игрок или клан..."
+                  :placeholder="
+                    searchMode === 'messages'
+                        ? 'Поиск в этом диалоге...'
+                        : 'Игрок или клан...'
+                  "
                   autofocus
               />
+            </div>
+
+            <!-- Режим поиска: по людям или по сообщениям текущего диалога -->
+            <div
+                v-if="activeConversation"
+                class="search-tabs"
+            >
+              <button
+                  type="button"
+                  class="search-tab"
+                  :class="{ 'search-tab--active': searchMode === 'people' }"
+                  @click="setSearchMode('people')"
+              >
+                Люди
+              </button>
+
+              <button
+                  type="button"
+                  class="search-tab"
+                  :class="{ 'search-tab--active': searchMode === 'messages' }"
+                  @click="setSearchMode('messages')"
+              >
+                Сообщения
+              </button>
             </div>
           </div>
 
           <div class="search-body scroll-thin">
             <div
-                v-if="searchLoading"
+                v-if="searchLoading || messageSearchLoading"
                 class="search-hint"
             >
               Поиск...
@@ -2194,18 +2356,79 @@ onUnmounted(() => {
                 </button>
               </div>
 
+              <!-- Найденные сообщения текущего диалога -->
               <div
                   v-if="
-                  !searchResults.users.length &&
-                  !searchResults.clans.length
+                  searchMode === 'messages' &&
+                  searchResults.messages.length
+                "
+                  class="search-section"
+              >
+                <div class="search-section__title">
+                  Сообщения
+                </div>
+
+                <button
+                    v-for="m in searchResults.messages"
+                    :key="m.id"
+                    type="button"
+                    class="search-item search-item--message"
+                    @click="openFoundMessage(m)"
+                >
+                  <div class="search-item__avatar search-item__avatar--message">
+                    <img
+                        v-if="m.user?.avatar_url"
+                        :src="m.user.avatar_url"
+                        :alt="m.user.username"
+                    />
+
+                    <template v-else>
+                      {{
+                        (m.user?.username || 'И')
+                            .charAt(0)
+                            .toUpperCase()
+                      }}
+                    </template>
+                  </div>
+
+                  <div class="search-item__body">
+                    <div class="search-item__name">
+                      {{ m.user?.username || 'Игрок' }}
+                    </div>
+
+                    <div class="search-item__sub">
+                      {{ m.snippet }}
+                    </div>
+                  </div>
+                </button>
+              </div>
+
+              <div
+                  v-if="
+                  searchMode === 'messages'
+                    ? (messageSearchLoading
+                        ? false
+                        : !searchResults.messages.length)
+                    : (!searchResults.users.length &&
+                       !searchResults.clans.length)
                 "
                   class="search-hint"
               >
-                {{
-                  searchQuery.trim() === ''
-                      ? 'У тебя пока нет друзей'
-                      : 'Ничего не найдено'
-                }}
+                <template v-if="searchMode === 'messages'">
+                  {{
+                    searchQuery.trim().length < 2
+                        ? 'Введи хотя бы два символа'
+                        : 'В этом диалоге ничего не найдено'
+                  }}
+                </template>
+
+                <template v-else>
+                  {{
+                    searchQuery.trim() === ''
+                        ? 'У тебя пока нет друзей'
+                        : 'Ничего не найдено'
+                  }}
+                </template>
               </div>
             </template>
           </div>

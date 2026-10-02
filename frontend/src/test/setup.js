@@ -83,6 +83,18 @@ if (!URL.revokeObjectURL) URL.revokeObjectURL = () => {}
  * Отвечаем пустым объектом: тестам важна разметка, а не данные.
  * Проверки, которым нужен ответ, подменяют fetch сами.
  */
+/*
+ * Никаких обращений к сервисам при монтировании быть не должно, но
+ * страховка полезна: неизвестный метод чата не сломает тест.
+ */
+if (!window.Echo) {
+  window.Echo = {
+    private: () => ({ listen: () => {} }),
+    join: () => ({ here: () => {}, joining: () => {}, leaving: () => {} }),
+    leave: () => {},
+  }
+}
+
 globalThis.fetch = vi.fn(() =>
   Promise.resolve({
     ok: true,

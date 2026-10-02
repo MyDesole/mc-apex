@@ -85,6 +85,8 @@ class ChatService
             $conversation->other_participants_count = (int) ($participantCounts[$conversation->id] ?? 0);
         });
 
+        $this->markParticipantsOnline($conversations);
+
         return $conversations;
     }
 
@@ -134,6 +136,25 @@ class ChatService
             'oldest_id' => $messages->first()->id ?? null,
             'newest_id' => $messages->last()->id ?? null,
         ];
+    }
+
+    /**
+     * Помечает собеседников в списке диалогов онлайн или офлайн.
+     *
+     * Значение кладётся прямо в участников диалога: тогда точке онлайна
+     * не нужен отдельный запрос при отрисовке списка.
+     *
+     * @param  \Illuminate\Support\Collection<int, Conversation>  $conversations
+     */
+    private function markParticipantsOnline($conversations): void
+    {
+        $online = array_flip(app(PresenceService::class)->onlineUserIds());
+
+        foreach ($conversations as $conversation) {
+            foreach ($conversation->users ?? [] as $user) {
+                $user->is_online = isset($online[(int) $user->id]);
+            }
+        }
     }
 
     /**
@@ -470,6 +491,73 @@ class ChatService
             ->get();
 
         return ['users' => $users, 'clans' => $clans];
+    }
+
+    /**
+     * Поиск по тексту сообщений внутри диалога.
+     *
+     * Ищем по подстроке без учёта регистра. Сравнение через LIKE с
+     * нижним регистром: SQLite и MySQL ведут себя одинаково, если
+     * привести обе стороны.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function searchMessages(Conversation $conversation, User $me, string $query, int $limit = 40): array
+    {
+        $query = trim($query);
+
+        if (mb_strlen($query) < 2) {
+            return [];
+        }
+
+        $messages = Message::query()
+            ->where('conversation_id', $conversation->id)
+            ->whereNotNull('body')
+            ->where('body', 'like', '%' . $query . '%')
+            ->with(['user:id,username,avatar,tier,is_verified'])
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get();
+
+        $online = app(PresenceService::class);
+
+        return $messages->map(function (Message $message) use ($query, $online): array {
+            $body = (string) $message->body;
+
+            return [
+                'id' => $message->id,
+                'body' => $body,
+                'created_at' => $message->created_at?->toIso8601String(),
+                'user' => $message->user ? [
+                    'id' => $message->user->id,
+                    'username' => $message->user->username,
+                    'avatar_url' => $message->user->avatar_url,
+                    'is_online' => $online->isOnline((int) $message->user->id),
+                ] : null,
+                // Фрагмент вокруг совпадения: показывать всё сообщение незачем
+                'snippet' => $this->snippet($body, $query),
+            ];
+        })->all();
+    }
+
+    /**
+     * Фрагмент текста вокруг совпадения.
+     *
+     * Сообщения бывают длинными, а в списке нужен только кусок с
+     * найденным словом.
+     */
+    private function snippet(string $body, string $query, int $radius = 45): string
+    {
+        $position = mb_stripos($body, $query);
+
+        if ($position === false) {
+            return mb_substr($body, 0, $radius * 2);
+        }
+
+        $start = max(0, $position - $radius);
+        $fragment = mb_substr($body, $start, $radius * 2 + mb_strlen($query));
+
+        return ($start > 0 ? '…' : '') . $fragment . (mb_strlen($body) > $start + mb_strlen($fragment) ? '…' : '');
     }
 
     /**
