@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import { userLink } from '@/utils/links.js'
 import AppIcon from '@/components/AppIcon.vue'
 
 const props = defineProps({
@@ -78,6 +79,15 @@ const likeCount = computed(() => {
 
 const author = computed(() => {
   return props.reply.user ?? props.reply.author ?? {}
+})
+
+/** Ссылка на профиль автора: по нику, а не по id. */
+const authorLink = computed(() => {
+  const person = author.value
+
+  if (!person?.id && !person?.username) return null
+
+  return userLink(person)
 })
 
 const authorName = computed(() => {
@@ -255,8 +265,8 @@ function onDelete() {
       <header class="forum-reply__header">
         <div class="forum-reply__identity">
           <RouterLink
-              v-if="userId"
-              :to="`/profile/${userId}`"
+              v-if="authorLink"
+              :to="authorLink"
               class="forum-reply__avatar"
               :class="{
               'forum-reply__avatar--image': avatar,
@@ -297,7 +307,7 @@ function onDelete() {
             <div class="forum-reply__author-row">
               <RouterLink
                   v-if="userId"
-                  :to="`/profile/${userId}`"
+                  :to="authorLink"
                   class="forum-reply__author"
               >
                 {{ authorName }}
