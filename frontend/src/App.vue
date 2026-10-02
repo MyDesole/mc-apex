@@ -1,6 +1,6 @@
 <script setup>
-import AppLayout from './layouts/AppLayout.vue'
-import DialogHost from './components/DialogHost.vue'
+import AppLayout from '@/layouts/AppLayout.vue'
+import DialogHost from '@/components/core/DialogHost.vue'
 </script>
 
 <template>

@@ -1,0 +1,147 @@
+.toast {
+  position: fixed;
+  top: calc(var(--header-height, 64px) + 16px);
+  right: 20px;
+  z-index: 3000;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  max-width: 380px;
+  padding: 14px 14px 14px 18px;
+  background: #16161f;
+  border: 1px solid #262634;
+  border-radius: 12px;
+  box-shadow:
+      0 20px 50px -20px rgba(0, 0, 0, 0.8),
+      0 2px 6px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.toast:hover {
+  transform: translateY(-1px);
+  border-color: #30303f;
+}
+
+/* Цветная полоса слева */
+.toast__bar {
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--type-color);
+  box-shadow: 0 0 8px var(--type-color);
+}
+
+/* Иконка */
+.toast__icon {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--type-color);
+  background: color-mix(in srgb, var(--type-color) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--type-color) 28%, transparent);
+  border-radius: 8px;
+}
+
+/* Тело */
+.toast__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.toast__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.toast__type {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--type-color);
+}
+
+.toast__time {
+  font-size: 10px;
+  color: #6c6c78;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.toast__title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #f3f4f6;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toast__text {
+  font-size: 12px;
+  color: #b8b8c7;
+  line-height: 1.45;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Закрыть */
+.toast__close {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #6c6c78;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.toast__close:hover {
+  color: #e5e7eb;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Transition */
+.toast-enter-active,
+.toast-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .toast {
+    left: 12px;
+    right: 12px;
+    max-width: none;
+  }
+}

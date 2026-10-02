@@ -4,8 +4,8 @@
  * Файлы сразу уходят на сервер, наружу отдаём их id через v-model.
  */
 import { computed, ref } from 'vue'
-import { forumApi } from '@/services/forum.js'
-import AppIcon from '@/components/AppIcon.vue'
+import { forumApi } from '@/services/forum/forum.js'
+import AppIcon from '@/components/core/AppIcon.vue'
 
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },
@@ -132,131 +132,5 @@ function remove(index) {
 </template>
 
 <style scoped>
-.attach {
-  margin-top: 12px;
-}
-
-.attach__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-}
-
-.attach__pick {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 14px;
-  color: var(--text);
-  background: var(--bg-card);
-  border: 1px dashed var(--border-hover, #343443);
-  border-radius: 9px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease;
-}
-
-.attach__pick:hover {
-  background: var(--bg-card-hover, #1a1a26);
-  border-color: var(--accent);
-}
-
-.attach__pick--busy {
-  opacity: 0.6;
-  cursor: progress;
-}
-
-.attach__pick input {
-  display: none;
-}
-
-.attach__hint {
-  color: var(--text-muted, #5e5e70);
-  font-size: 12px;
-}
-
-.attach__error {
-  margin: 8px 0 0;
-  color: #fca5a5;
-  font-size: 12px;
-}
-
-.attach__list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 10px;
-}
-
-.attach__item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 7px 10px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-}
-
-.attach__thumb {
-  width: 38px;
-  height: 38px;
-  object-fit: cover;
-  border-radius: 6px;
-  flex-shrink: 0;
-}
-
-.attach__file-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  color: var(--text-dim);
-  background: var(--bg);
-  border-radius: 6px;
-  flex-shrink: 0;
-}
-
-.attach__meta {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  flex: 1;
-}
-
-.attach__name {
-  overflow: hidden;
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.attach__name:hover {
-  color: var(--accent-light);
-}
-
-.attach__size {
-  color: var(--text-muted, #5e5e70);
-  font-size: 11px;
-}
-
-.attach__remove {
-  display: inline-flex;
-  padding: 5px;
-  color: var(--text-dim);
-  background: transparent;
-  border: 0;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.attach__remove:hover {
-  color: #fca5a5;
-  background: rgba(239, 68, 68, 0.1);
-}
+@import "@/components/forum/ForumAttachmentsInput.css";
 </style>

@@ -1,0 +1,491 @@
+/* ============================================================
+   FRIEND HOVER CARD — APEX / CINEMATIC
+   ============================================================ */
+
+.friend-hover {
+  position: fixed;
+  width: 380px;
+  z-index: 3000;
+  pointer-events: none;
+}
+
+.friend-hover__card {
+  position: relative;
+  overflow: hidden;
+
+  background:
+      linear-gradient(
+          145deg,
+          rgba(17, 18, 37, .98),
+          rgba(7, 8, 18, .99)
+      );
+
+  border: 1px solid rgba(255, 255, 255, .07);
+  border-radius: 16px;
+
+  box-shadow:
+      0 28px 70px rgba(0, 0, 0, .72),
+      0 0 0 1px rgba(139, 92, 246, .08) inset,
+      0 0 40px rgba(139, 92, 246, .06);
+}
+
+/* ambient glow */
+.friend-hover__card::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -90px;
+  width: 230px;
+  height: 230px;
+  border-radius: 50%;
+
+  background:
+      radial-gradient(
+          circle,
+          color-mix(
+              in srgb,
+              var(--accent-color, #8b5cf6) 14%,
+              transparent
+          ),
+          transparent 70%
+      );
+
+  pointer-events: none;
+}
+
+/* subtle bottom accent */
+.friend-hover__card::after {
+  content: '';
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: 0;
+  height: 1px;
+
+  background:
+      linear-gradient(
+          90deg,
+          transparent,
+          rgba(139, 92, 246, .35),
+          transparent
+      );
+
+  pointer-events: none;
+}
+
+/* ============================================================
+   COVER / HEADER
+   ============================================================ */
+
+.friend-hover__cover {
+  position: relative;
+  padding: 16px;
+
+  min-height: 116px;
+
+  background-color: #080914;
+  background-size: cover;
+  background-position: center;
+
+  border-bottom: 1px solid rgba(255, 255, 255, .055);
+}
+
+.friend-hover__cover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+
+  background:
+      linear-gradient(
+          180deg,
+          rgba(5, 5, 13, .18),
+          rgba(5, 5, 13, .7)
+      ),
+      linear-gradient(
+          135deg,
+          rgba(139, 92, 246, .1),
+          transparent 55%
+      );
+
+  pointer-events: none;
+}
+
+.friend-hover__header {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ============================================================
+   AVATAR
+   ============================================================ */
+
+.friend-hover__avatar {
+  position: relative;
+
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  color: #f8fafc;
+
+  background:
+      radial-gradient(
+          circle at 50% 30%,
+          color-mix(
+              in srgb,
+              var(--accent-color, #8b5cf6) 28%,
+              transparent
+          ),
+          transparent 68%
+      ),
+      #0c0d19;
+
+  border: 1px solid
+  color-mix(
+      in srgb,
+      var(--accent-color, #8b5cf6) 35%,
+      rgba(255, 255, 255, .08)
+  );
+
+  border-radius: 12px;
+
+  font-size: 22px;
+  font-weight: 900;
+
+  box-shadow:
+      0 8px 22px rgba(0, 0, 0, .45),
+      0 0 18px
+      color-mix(
+          in srgb,
+          var(--accent-color, #8b5cf6) 14%,
+          transparent
+      );
+
+  isolation: isolate;
+}
+
+.friend-hover__avatar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+
+  background:
+      linear-gradient(
+          145deg,
+          rgba(255, 255, 255, .08),
+          transparent 40%
+      );
+
+  pointer-events: none;
+}
+
+.friend-hover__avatar img {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+
+  filter: saturate(.92);
+}
+
+/* ============================================================
+   PLAYER INFO
+   ============================================================ */
+
+.friend-hover__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.friend-hover__name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  margin-bottom: 4px;
+
+  color: #f8fafc;
+
+  font-size: 15px;
+  font-weight: 900;
+
+  letter-spacing: -.2px;
+
+  text-shadow:
+      0 2px 10px rgba(0, 0, 0, .65);
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.friend-hover__status {
+  margin: 0;
+
+  color:
+      color-mix(
+          in srgb,
+          var(--accent-color, #a78bfa) 90%,
+          white
+      );
+
+  font-size: 11px;
+  font-weight: 800;
+
+  letter-spacing: .15px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.friend-hover__bio {
+  margin: 0;
+
+  color: #a7b0c0;
+
+  font-size: 11px;
+  line-height: 1.45;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.friend-hover__quote {
+  margin: 4px 0 0;
+
+  color: #7f8aa0;
+
+  font-size: 10.5px;
+  font-style: italic;
+  line-height: 1.4;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+/* ============================================================
+   VERIFIED
+   ============================================================ */
+
+.verified {
+  display: inline-flex;
+  flex-shrink: 0;
+
+  filter:
+      drop-shadow(0 0 5px rgba(29, 161, 242, .55));
+}
+
+/* ============================================================
+   TIER
+   ============================================================ */
+
+.friend-hover__tier {
+  position: relative;
+
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+      radial-gradient(
+          circle at 50% 35%,
+          rgba(255, 255, 255, .06),
+          transparent 65%
+      ),
+      rgba(5, 6, 14, .82);
+
+  border: 1px solid;
+  border-radius: 11px;
+
+  font-size: 18px;
+  font-weight: 950;
+  letter-spacing: -.5px;
+
+  backdrop-filter: blur(10px);
+
+  text-shadow:
+      0 0 12px currentColor,
+      0 2px 8px rgba(0, 0, 0, .6);
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+
+.friend-hover__footer {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+
+  padding: 12px 16px 14px;
+
+  background:
+      linear-gradient(
+          180deg,
+          rgba(9, 10, 20, .82),
+          rgba(6, 7, 15, .96)
+      );
+}
+
+/* ============================================================
+   MODES
+   ============================================================ */
+
+.friend-hover__modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.mode-badge {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 20px;
+  padding: 2px 8px;
+
+  color: var(--color);
+
+  background:
+      color-mix(
+          in srgb,
+          var(--color) 10%,
+          rgba(255, 255, 255, .015)
+      );
+
+  border: 1px solid
+  color-mix(
+      in srgb,
+      var(--color) 28%,
+      transparent
+  );
+
+  border-radius: 5px;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  text-transform: uppercase;
+  letter-spacing: .65px;
+
+  box-shadow:
+      inset 0 1px rgba(255, 255, 255, .025);
+}
+
+/* ============================================================
+   META
+   ============================================================ */
+
+.friend-hover__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  min-height: 21px;
+  padding: 3px 8px;
+
+  color: #8f9bad;
+
+  background:
+      rgba(255, 255, 255, .025);
+
+  border: 1px solid rgba(255, 255, 255, .055);
+  border-radius: 5px;
+
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: .1px;
+
+  backdrop-filter: blur(8px);
+}
+
+.meta-pill svg {
+  flex-shrink: 0;
+  opacity: .8;
+}
+
+.meta-pill--discord {
+  color: #929cf0;
+  border-color: rgba(88, 101, 242, .25);
+  background: rgba(88, 101, 242, .055);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 600px) {
+  .friend-hover {
+    width: min(380px, calc(100vw - 24px));
+  }
+
+  .friend-hover__cover {
+    padding: 14px;
+  }
+
+  .friend-hover__footer {
+    padding: 11px 14px 13px;
+  }
+
+  .friend-hover__avatar {
+    width: 54px;
+    height: 54px;
+    border-radius: 11px;
+  }
+
+  .friend-hover__tier {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    font-size: 17px;
+  }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .friend-hover__card,
+  .friend-hover__avatar,
+  .friend-hover__tier {
+    transition: none;
+  }
+}

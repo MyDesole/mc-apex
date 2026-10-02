@@ -1,12 +1,12 @@
 <script setup>
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { ref } from 'vue'
-import { adminApi } from '@/services/admin.js'
-import AdminBanModal from './AdminBanModal.vue'
-import AdminRoleModal from './AdminRoleModal.vue'
-import AdminAchievementsModal from './AdminAchievementsModal.vue'
-import AdminAspectsModal from './AdminAspectsModal.vue'
-import AdminTierTestModal from './AdminTierTestModal.vue'
+import { adminApi } from '@/services/core/admin.js'
+import AdminBanModal from '@/components/admin/AdminBanModal.vue'
+import AdminRoleModal from '@/components/admin/AdminRoleModal.vue'
+import AdminAchievementsModal from '@/components/admin/AdminAchievementsModal.vue'
+import AdminAspectsModal from '@/components/admin/AdminAspectsModal.vue'
+import AdminTierTestModal from '@/components/admin/AdminTierTestModal.vue'
 
 const props = defineProps({
   user: { type: Object, required: true },
@@ -128,71 +128,5 @@ function onUpdated() {
 </template>
 
 <style scoped>
-.actions {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.btn-menu {
-  width: 34px;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-dim);
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-menu:hover {
-  color: var(--text);
-  border-color: var(--border-hover);
-  background: var(--bg-card-hover);
-}
-
-.menu {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  z-index: 100;
-  min-width: 200px;
-  padding: 6px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-}
-
-.menu-item {
-  display: block;
-  width: 100%;
-  padding: 9px 12px;
-  color: var(--text-dim);
-  background: transparent;
-  border: 0;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.menu-item:hover {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.menu-item.danger:hover {
-  color: #f87171;
-  background: rgba(239, 68, 68, 0.08);
-}
-
-.menu-item.success:hover {
-  color: #4ade80;
-  background: rgba(34, 197, 94, 0.08);
-}
+@import "@/components/admin/AdminUserActions.css";
 </style>

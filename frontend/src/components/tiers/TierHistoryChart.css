@@ -1,0 +1,270 @@
+.chart {
+  position: relative;
+  height: 320px;
+  overflow: hidden;
+
+  padding: 16px 16px 14px;
+
+  background:
+      radial-gradient(
+          circle at 72% 0%,
+          rgba(139, 92, 246, 0.11),
+          transparent 34%
+      ),
+      linear-gradient(
+          145deg,
+          #101020 0%,
+          #0b0c17 48%,
+          #080914 100%
+      );
+
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 16px;
+
+  box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.035),
+      0 18px 45px rgba(0, 0, 0, 0.28);
+}
+
+/* ambient purple light */
+
+.chart::before {
+  content: '';
+
+  position: absolute;
+  width: 220px;
+  height: 220px;
+
+  top: -150px;
+  right: -70px;
+
+  background: rgba(139, 92, 246, 0.16);
+  filter: blur(70px);
+
+  pointer-events: none;
+}
+
+.chart::after {
+  content: '';
+
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 0;
+
+  height: 1px;
+
+  background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(139, 92, 246, 0.35),
+      transparent
+  );
+
+  opacity: 0.7;
+}
+
+.chart__glow {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: -100px;
+
+  height: 150px;
+
+  background: rgba(139, 92, 246, 0.07);
+  filter: blur(60px);
+
+  pointer-events: none;
+}
+
+.chart__header {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  min-height: 34px;
+  margin-bottom: 6px;
+}
+
+.chart__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chart__dot {
+  position: relative;
+
+  width: 7px;
+  height: 7px;
+
+  flex: 0 0 7px;
+
+  background: #8b5cf6;
+  border-radius: 50%;
+
+  box-shadow:
+      0 0 0 4px rgba(139, 92, 246, 0.08),
+      0 0 12px rgba(139, 92, 246, 0.75);
+}
+
+.chart__dot::after {
+  content: '';
+
+  position: absolute;
+  inset: -3px;
+
+  border: 1px solid rgba(139, 92, 246, 0.22);
+  border-radius: 50%;
+
+  animation: chart-pulse 2.6s ease-out infinite;
+}
+
+.chart__label {
+  display: block;
+
+  color: #e6e6ef;
+
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+
+  letter-spacing: 0.13em;
+}
+
+.chart__caption {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #68687d;
+
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.chart__count {
+  padding: 5px 8px;
+
+  color: #8989a0;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 6px;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 0.08em;
+}
+
+.chart__body {
+  position: relative;
+  z-index: 1;
+
+  height: calc(100% - 42px);
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+
+  height: 100%;
+
+  text-align: center;
+}
+
+.empty__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+
+  margin-bottom: 12px;
+
+  color: #8b5cf6;
+
+  background:
+      radial-gradient(
+          circle,
+          rgba(139, 92, 246, 0.16),
+          rgba(139, 92, 246, 0.025)
+      );
+
+  border: 1px solid rgba(139, 92, 246, 0.18);
+  border-radius: 10px;
+
+  font-size: 20px;
+  font-weight: 300;
+
+  box-shadow:
+      0 0 25px rgba(139, 92, 246, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.empty__title {
+  color: #d6d6e1;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.empty__text {
+  max-width: 240px;
+
+  margin-top: 5px;
+
+  color: #5f6073;
+
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+@keyframes chart-pulse {
+  0% {
+    opacity: 0.65;
+    transform: scale(0.8);
+  }
+
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
+@media (max-width: 600px) {
+  .chart {
+    height: 290px;
+    padding: 14px 12px 12px;
+    border-radius: 13px;
+  }
+
+  .chart__header {
+    margin-bottom: 4px;
+  }
+
+  .chart__caption {
+    display: none;
+  }
+
+  .chart__count {
+    font-size: 8px;
+    padding: 4px 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart__dot::after {
+    animation: none;
+  }
+}

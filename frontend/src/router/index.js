@@ -1,20 +1,20 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useTitleBlink } from '@/composables/useTitleBlink'
+import { useTitleBlink } from '@/composables/core/useTitleBlink.js'
 
-import HomeView from '../views/HomeView.vue'
-import LoginView from '../views/LoginView.vue'
-import RegisterView from '../views/RegisterView.vue'
-import ProfileView from '../views/ProfileView.vue'
-import PlayerView from '@/views/PlayerView.vue'
-import PlayersView from "@/views/PlayersView.vue";
-import FriendsView from "@/views/FriendsView.vue";
-import NotificationsView from "@/views/NotificationsView.vue";
-import ClansView from "@/views/ClansView.vue";
-import ClanCreateView from "@/views/ClanCreateView.vue";
-import ShopView from '@/views/ShopView.vue'
-import InventoryView from '@/views/InventoryView.vue'
-import ClanView from "@/views/ClanView.vue";
-import ForumView from '@/views/ForumView.vue'
+import HomeView from '@/views/players/HomeView.vue'
+import LoginView from '@/views/auth/LoginView.vue'
+import RegisterView from '@/views/auth/RegisterView.vue'
+import ProfileView from '@/views/players/ProfileView.vue'
+import PlayerView from '@/views/players/PlayerView.vue'
+import PlayersView from "@/views/players/PlayersView.vue";
+import FriendsView from "@/views/friends/FriendsView.vue";
+import NotificationsView from "@/views/notifications/NotificationsView.vue";
+import ClansView from "@/views/clan/ClansView.vue";
+import ClanCreateView from "@/views/clan/ClanCreateView.vue";
+import ShopView from '@/views/shop/ShopView.vue'
+import InventoryView from '@/views/shop/InventoryView.vue'
+import ClanView from "@/views/clan/ClanView.vue";
+import ForumView from '@/views/forum/ForumView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -24,7 +24,7 @@ const router = createRouter({
     {
       path: '/messages/:id?',
       name: 'messages',
-      component: () => import('../views/Messages.vue'),
+      component: () => import('@/views/chat/Messages.vue'),
       meta: { title: 'Сообщения', requiresAuth: true },
     },
     { path: '/register', name: 'register', component: RegisterView, meta: { title: 'Регистрация', guest: true } },
@@ -36,28 +36,28 @@ const router = createRouter({
     { path: '/friends', name: 'friends', component: FriendsView, meta: { title: 'Друзья', auth: true } },
     { path: '/notifications', name: 'notifications', component: NotificationsView, meta: { title: 'Уведомления', auth: true } },
     { path: '/clans', name: 'clans', component: ClansView, meta: { title: 'Кланы' } },
-    { path: '/news', name: 'news', component: () => import('@/views/NewsView.vue'), meta: { title: 'Новости' } },
-    { path: '/my-clan', name: 'my-clan', component: () => import('@/views/MyClanView.vue'), meta: { title: 'Мой клан', auth: true } },
-    { path: '/forgot-password', name: 'forgot-password', component: () => import('../views/ForgotPasswordView.vue'), meta: { title: 'Восстановление пароля' } },
-    { path: '/reset-password', name: 'reset-password', component: () => import('../views/ResetPasswordView.vue'), meta: { title: 'Сброс пароля' } },
-    { path: '/verify-email', name: 'verify-email', component: () => import('@/views/VerifyEmailView.vue'), meta: { title: 'Подтверждение почты', guest: true } },
-    { path: '/news/:id', name: 'news-item', component: () => import('@/views/NewsItemView.vue'), meta: { title: 'Новость' } },
+    { path: '/news', name: 'news', component: () => import('@/views/news/NewsView.vue'), meta: { title: 'Новости' } },
+    { path: '/my-clan', name: 'my-clan', component: () => import('@/views/clan/MyClanView.vue'), meta: { title: 'Мой клан', auth: true } },
+    { path: '/forgot-password', name: 'forgot-password', component: () => import('@/views/auth/ForgotPasswordView.vue'), meta: { title: 'Восстановление пароля' } },
+    { path: '/reset-password', name: 'reset-password', component: () => import('@/views/auth/ResetPasswordView.vue'), meta: { title: 'Сброс пароля' } },
+    { path: '/verify-email', name: 'verify-email', component: () => import('@/views/auth/VerifyEmailView.vue'), meta: { title: 'Подтверждение почты', guest: true } },
+    { path: '/news/:id', name: 'news-item', component: () => import('@/views/news/NewsItemView.vue'), meta: { title: 'Новость' } },
     { path: '/shop', name: 'shop', component: ShopView, meta: { title: 'Магазин' } },
     { path: '/inventory', name: 'inventory', component: InventoryView, meta: { title: 'Инвентарь', auth: true } },
-    { path: '/wallet', name: 'wallet', component: () => import('@/views/WalletView.vue'), meta: { title: 'Кошелёк', auth: true } },
+    { path: '/wallet', name: 'wallet', component: () => import('@/views/shop/WalletView.vue'), meta: { title: 'Кошелёк', auth: true } },
     { path: '/forum', name: 'forum', component: ForumView, meta: { title: 'Форум' } },
-    { path: '/forum/new', name: 'forum-new', component: () => import('@/views/ForumNewView.vue'), meta: { title: 'Новая тема', auth: true } },
+    { path: '/forum/new', name: 'forum-new', component: () => import('@/views/forum/ForumNewView.vue'), meta: { title: 'Новая тема', auth: true } },
     // Без whereNumber: при обновлении страницы маршрут должен совпасть.
     // Регулярка в строке JS требует двойного экранирования (\\d), иначе это литерал «d».
-    { path: '/forum/:id', name: 'forum-topic', component: () => import('@/views/ForumTopicView.vue'), meta: { title: 'Тема форума' } },
+    { path: '/forum/:id', name: 'forum-topic', component: () => import('@/views/forum/ForumTopicView.vue'), meta: { title: 'Тема форума' } },
     { path: '/clans/create', name: 'clan-create', component: ClanCreateView, meta: { title: 'Создать клан', auth: true } },
-    { path: '/admin', name: 'admin', component: () => import('@/views/AdminView.vue'), meta: { title: 'Админ-панель', auth: true, role: ['moderator', 'admin'] } },
+    { path: '/admin', name: 'admin', component: () => import('@/views/admin/AdminView.vue'), meta: { title: 'Админ-панель', auth: true, role: ['moderator', 'admin'] } },
     { path: '/clans/:id', name: 'clan', component: ClanView, meta: { title: 'Клан' } },
     // Каноничная красивая ссылка на клан: /clan/Имя_клана (или /clan/7)
     { path: '/clan/:id', name: 'clan-slug', component: ClanView, meta: { title: 'Клан' } },
-    { path: '/tournaments', name: 'tournaments', component: () => import('@/views/TournamentsView.vue'), meta: { title: 'Турниры' } },
-    { path: '/tester', name: 'tester', component: () => import('@/views/TesterView.vue'), meta: { title: 'Тестер', auth: true, role: ['tester', 'admin'] } },
-    { path: '/tournaments/:id', name: 'tournament', component: () => import('@/views/TournamentView.vue'), meta: { title: 'Турнир', auth: true } },
+    { path: '/tournaments', name: 'tournaments', component: () => import('@/views/tournaments/TournamentsView.vue'), meta: { title: 'Турниры' } },
+    { path: '/tester', name: 'tester', component: () => import('@/views/tiers/TesterView.vue'), meta: { title: 'Тестер', auth: true, role: ['tester', 'admin'] } },
+    { path: '/tournaments/:id', name: 'tournament', component: () => import('@/views/tournaments/TournamentView.vue'), meta: { title: 'Турнир', auth: true } },
   ],
 })
 

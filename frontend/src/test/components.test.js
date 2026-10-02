@@ -15,7 +15,7 @@ import { createPinia } from 'pinia'
 import { readdirSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 
-import { buildTestRouter } from './router.js'
+import { buildTestRouter } from '@/test/router.js'
 
 const SRC = join(process.cwd(), 'src')
 
