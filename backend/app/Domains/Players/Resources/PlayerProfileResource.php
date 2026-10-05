@@ -22,6 +22,12 @@ class PlayerProfileResource extends JsonResource
         $user = $this->resource;
 
         return array_merge($user->toArray(), [
+            /*
+             * Готовый признак: странице проще проверить одно поле, чем
+             * сверять роль со списком. Персонал не участвует в рейтинге.
+             */
+            'is_staff' => $user->isStaff(),
+
             // Единой связи aspects у User нет: это два разных отношения
             'aspects' => [
                 'pvp' => $user->aspectPvp,

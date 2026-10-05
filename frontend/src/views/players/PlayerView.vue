@@ -22,6 +22,12 @@ const loading = ref(true)
 const error = ref(null)
 
 const clanMember = computed(() => user.value?.clan_member ?? null)
+
+/*
+ * Персонал не участвует в рейтинге, поэтому блок места в топе ему не
+ * показываем: места у него нет и не будет.
+ */
+const isStaff = computed(() => Boolean(user.value?.is_staff))
 const isMe = computed(() => auth.user?.id === user.value?.id)
 
 async function load(id) {
@@ -100,7 +106,10 @@ watch(
         <ClanBadge :clan-member="clanMember" />
       </div>
 
-      <div class="block-col">
+      <div
+          v-if="!isStaff"
+          class="block-col"
+      >
         <h3 class="block-title">Место в топе</h3>
         <RankBadge
             :position="rank.position"

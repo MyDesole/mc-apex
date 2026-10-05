@@ -58,19 +58,34 @@ class PlayerProfileService
     }
 
     /**
-     * Место в рейтинге по tier_score. Нулевой счёт места не имеет.
+     * Место в рейтинге по tier_score.
+     *
+     * Места нет в двух случаях: счёт нулевой и игрок состоит в персонале.
+     * Персонал не попадает в сам рейтинг, поэтому и место в профиле ему
+     * показывать нечего — иначе значок места был бы, а в списке его нет.
      *
      * @return array{0: ?int, 1: int}
      */
     public function rankOf(User $player): array
     {
-        if ((int) $player->tier_score <= 0) {
+        if ((int) $player->tier_score <= 0 || $player->isStaff()) {
             return [null, 0];
         }
 
         return [
-            User::where('tier_score', '>', $player->tier_score)->count() + 1,
-            User::where('tier_score', '>', 0)->count(),
+            /*
+             * Считаем только тех, кто есть в рейтинге: без персонала.
+             * Иначе место смещалось бы на число персонала с большим счётом.
+             */
+            User::query()
+                ->excludeStaff()
+                ->where('tier_score', '>', $player->tier_score)
+                ->count() + 1,
+
+            User::query()
+                ->excludeStaff()
+                ->where('tier_score', '>', 0)
+                ->count(),
         ];
     }
 
