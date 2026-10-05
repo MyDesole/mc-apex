@@ -418,10 +418,97 @@ const profileCompleteness = computed(() => {
       </section>
 
       <!-- ===================================================
-           TIER HISTORY
+           BRIDGE TECHNIQUES (бридж-профиль)
            =================================================== -->
 
-      <section class="profile-section">
+      <section
+          v-if="bridgeMode"
+          class="profile-section"
+      >
+        <div class="section-heading">
+          <div>
+            <span class="section-heading__eyebrow">
+              BRIDGE MASTERY
+            </span>
+
+            <h3>Виды бриджа</h3>
+          </div>
+
+          <span
+              v-if="bridgeTechniques.length"
+              class="section-heading__count"
+          >
+            {{ bridgeTechniques.length }}
+          </span>
+        </div>
+
+        <ul
+            v-if="bridgeTechniques.length"
+            class="bridge-card-list"
+        >
+          <li
+              v-for="row in bridgeTechniques"
+              :key="row.id"
+              class="bridge-card-item"
+          >
+            <div class="bridge-card-item__main">
+              <span class="bridge-card-item__name">
+                {{ row.technique?.label }}
+              </span>
+
+              <span
+                  v-if="row.variants?.length"
+                  class="bridge-card-item__variants"
+              >
+                <span
+                    v-for="variant in row.variants"
+                    :key="variant.id"
+                    class="bridge-card-item__pill"
+                    :class="{ 'bridge-card-item__pill--special': variant.is_special }"
+                >
+                  {{ variant.label }}
+                </span>
+              </span>
+            </div>
+
+            <div class="bridge-card-item__scores">
+              <span class="bridge-card-item__score">
+                {{ row.score }}/10
+              </span>
+
+              <span class="bridge-card-item__total">
+                {{ row.total }}/300
+              </span>
+            </div>
+          </li>
+        </ul>
+
+        <div
+            v-else
+            class="profile-empty profile-empty--large"
+        >
+          <div class="profile-empty__icon profile-empty__icon--chart">
+            ⌂
+          </div>
+
+          <div class="profile-empty__content">
+            <strong>Пока нет подтверждённых видов</strong>
+
+            <span>
+              Подтверди вид роликом — тестер проверит и поставит оценку.
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================
+           TIER HISTORY (PvP-профиль)
+           =================================================== -->
+
+      <section
+          v-else
+          class="profile-section"
+      >
         <div class="section-heading">
           <div>
             <span class="section-heading__eyebrow">

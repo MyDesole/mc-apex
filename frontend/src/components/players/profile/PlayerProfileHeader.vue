@@ -894,33 +894,11 @@ const coverStyle = computed(() => {
             </strong>
           </div>
 
-          <div class="bridge-rank-block__techs">
-            <span class="bridge-rank-block__label">
-              Подтверждённые виды · {{ bridgeTechniques.length }}
-            </span>
 
-            <div
-                v-if="bridgeTechniques.length"
-                class="bridge-rank-block__pills"
-            >
-              <span
-                  v-for="row in bridgeTechniques"
-                  :key="row.id"
-                  class="bridge-rank-pill"
-              >
-                {{ row.technique?.label }}
 
-                <b>{{ row.score }}/10</b>
-              </span>
-            </div>
 
-            <span
-                v-else
-                class="bridge-rank-block__empty"
-            >
-              Пока ни одного вида
-            </span>
-          </div>
+
+
         </div>
 
         <!-- Tier Progress -->

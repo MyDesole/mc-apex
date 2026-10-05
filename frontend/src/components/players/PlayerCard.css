@@ -597,6 +597,103 @@
    CHART
    ========================================================= */
 
+/* ---------------- Виды бриджа в карточке ---------------- */
+
+.bridge-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  margin: 0;
+  padding: 0;
+
+  list-style: none;
+}
+
+.bridge-card-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  padding: 12px 14px;
+
+  border: 1px solid rgba(139, 92, 246, 0.28);
+  border-left: 3px solid #8b5cf6;
+  border-radius: 12px;
+
+  background: linear-gradient(
+      90deg,
+      rgba(139, 92, 246, 0.13),
+      rgba(255, 255, 255, 0.02)
+  );
+}
+
+.bridge-card-item__main {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  min-width: 0;
+}
+
+.bridge-card-item__name {
+  color: var(--text, #e5e5eb);
+
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.bridge-card-item__variants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.bridge-card-item__pill {
+  padding: 2px 9px;
+
+  color: rgba(196, 181, 253, 0.85);
+  background: rgba(139, 92, 246, 0.16);
+
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 999px;
+
+  font-size: 10.5px;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+.bridge-card-item__pill--special {
+  color: #fde68a;
+  background: rgba(251, 191, 36, 0.16);
+  border-color: rgba(251, 191, 36, 0.5);
+}
+
+.bridge-card-item__scores {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+
+  white-space: nowrap;
+}
+
+.bridge-card-item__score {
+  color: #c4b5fd;
+
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.bridge-card-item__total {
+  color: rgba(255, 255, 255, 0.45);
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .chart-section {
   min-height: 120px;
 }

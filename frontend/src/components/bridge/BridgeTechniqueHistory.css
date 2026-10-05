@@ -169,3 +169,65 @@
     justify-content: flex-start;
   }
 }
+
+/* ---------------- Подвиды в строке истории ---------------- */
+
+.bridge-history__variants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+
+  grid-column: 1 / -1;
+
+  margin-top: 4px;
+}
+
+.bridge-history__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 3px 10px;
+
+  color: rgba(196, 181, 253, 0.85);
+  background: rgba(139, 92, 246, 0.12);
+
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 999px;
+
+  font-size: 10.5px;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+.bridge-history__pill--toggle {
+  cursor: pointer;
+
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.bridge-history__pill--toggle:hover:not(:disabled) {
+  border-color: rgba(139, 92, 246, 0.55);
+}
+
+.bridge-history__pill--toggle:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.bridge-history__pill--on {
+  color: #ddd6fe;
+  background: rgba(139, 92, 246, 0.3);
+  border-color: rgba(139, 92, 246, 0.65);
+}
+
+.bridge-history__pill--special {
+  border-color: rgba(251, 191, 36, 0.55);
+}
+
+.bridge-history__pill--special.bridge-history__pill--on {
+  color: #fde68a;
+  background: rgba(251, 191, 36, 0.2);
+  border-color: rgba(251, 191, 36, 0.75);
+}

@@ -5,7 +5,6 @@ import PlayerCard from '@/components/players/PlayerCard.vue'
 import ClanBadge from '@/components/clan/ClanBadge.vue'
 import RankBadge from '@/components/players/RankBadge.vue'
 import BridgeTechniques from '@/components/bridge/BridgeTechniques.vue'
-import BridgeRankBadge from '@/components/bridge/BridgeRankBadge.vue'
 import FriendButton from '@/components/friends/FriendButton.vue'
 import { api } from '@/services/core/api.js'
 import { useAuthStore } from '@/stores/core/auth.js'
@@ -121,23 +120,6 @@ watch(
     <!--
       Бридж-профиль: техники первыми, звание бриджера — главный ранг
     -->
-    <div
-        v-if="isBridgeProfile"
-        class="bridge-wrap bridge-wrap--lead"
-    >
-      <BridgeRankBadge
-          v-if="bridgeRank"
-          :rank="bridgeRank"
-          size="lg"
-      />
-
-      <BridgeTechniques
-          :techniques="bridge.techniques"
-          :summary="bridge.summary"
-          :rank="bridge.rank"
-      />
-    </div>
-
     <section
         class="blocks"
         :class="{ 'blocks--demoted': isBridgeProfile }"

@@ -7,7 +7,6 @@ import ClanBadge from '@/components/clan/ClanBadge.vue'
 import RankBadge from '@/components/players/RankBadge.vue'
 import ProfileCustomizeModal from '@/components/players/ProfileCustomizeModal.vue'
 import TierTestForm from '@/components/tiers/TierTestForm.vue'
-import BridgeTechniques from '@/components/bridge/BridgeTechniques.vue'
 import BridgeTechniqueForm from '@/components/bridge/BridgeTechniqueForm.vue'
 import BridgeTechniqueHistory from '@/components/bridge/BridgeTechniqueHistory.vue'
 
@@ -60,15 +59,17 @@ const isBridgeProfile = computed(() => {
 
 // Модалка подтверждения вида и ссылки на блоки: после подачи их надо обновить
 const showBridgeForm = ref(false)
-const bridgeBlock = ref(null)
 const bridgeHistory = ref(null)
 
-/** После подачи заявки обновляем и список видов, и историю. */
+/**
+ * После подачи заявки обновляем историю и данные профиля: виды бриджа
+ * показываются в карточке игрока, и им нужен свежий ответ.
+ */
 async function onBridgeCreated() {
   showBridgeForm.value = false
 
-  bridgeBlock.value?.load()
   bridgeHistory.value?.load()
+  loadRecommendations()
 }
 
 /*
@@ -463,21 +464,7 @@ onMounted(async () => {
         </div>
 
         <div v-show="bridgeOpen">
-          <BridgeTechniques
-              ref="bridgeBlock"
-              :techniques="bridge.techniques"
-              :summary="bridge.summary"
-              :rank="bridgeRank"
-              editable
-          />
-
-          <div class="bridge-history-block">
-            <h3 class="bridge-history-block__title">
-              История подтверждений
-            </h3>
-
-            <BridgeTechniqueHistory ref="bridgeHistory" />
-          </div>
+          <BridgeTechniqueHistory ref="bridgeHistory" />
         </div>
       </section>
 

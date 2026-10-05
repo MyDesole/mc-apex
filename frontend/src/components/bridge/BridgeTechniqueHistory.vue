@@ -13,6 +13,7 @@ const loading = ref(true)
 const error = ref('')
 const rows = ref([])
 const busyId = ref(null)
+const togglingVariants = ref(null)
 
 // Только то, что игрок уже заявлял: пустые виды в истории не нужны
 const submissions = computed(() =>
@@ -58,6 +59,37 @@ function formatDate(value) {
     month: '2-digit',
     year: 'numeric',
   })
+}
+
+/** Отмечен ли подвид в заявке. */
+function isVariantOn(submission, variantId) {
+  return (submission.variants ?? []).some(v => v.id === variantId)
+}
+
+/**
+ * Игрок включает и выключает подвиды своей заявки.
+ *
+ * Пока тестер не подтвердил, набор можно менять в любой момент.
+ */
+async function toggleVariant(row, variant) {
+  const current = (row.submission.variants ?? []).map(v => v.id)
+
+  const next = current.includes(variant.id)
+      ? current.filter(id => id !== variant.id)
+      : [...current, variant.id]
+
+  togglingVariants.value = row.submission.id
+  error.value = ''
+
+  try {
+    await bridgeApi.setVariants(row.submission.id, next)
+
+    await load()
+  } catch (e) {
+    error.value = e.message || 'Не удалось изменить подвиды'
+  } finally {
+    togglingVariants.value = null
+  }
 }
 
 /** Забрать заявку, пока тестер её не подтвердил. */
@@ -111,6 +143,41 @@ defineExpose({ load })
           <span class="bridge-history__date">
             {{ formatDate(row.submission.updated_at) }}
           </span>
+        </div>
+
+        <!-- Подвиды: у неподтверждённой заявки игрок правит набор сам -->
+        <div
+            v-if="row.technique.variants?.length"
+            class="bridge-history__variants"
+        >
+          <template v-if="!row.submission.is_confirmed">
+            <button
+                v-for="variant in row.technique.variants"
+                :key="variant.id"
+                type="button"
+                class="bridge-history__pill bridge-history__pill--toggle"
+                :class="{
+                  'bridge-history__pill--on': isVariantOn(row.submission, variant.id),
+                  'bridge-history__pill--special': variant.is_special,
+                }"
+                :disabled="togglingVariants === row.submission.id"
+                @click="toggleVariant(row, variant)"
+            >
+              {{ isVariantOn(row.submission, variant.id) ? '✓' : '+' }}
+              {{ variant.label }}
+            </button>
+          </template>
+
+          <template v-else>
+            <span
+                v-for="variant in (row.submission.variants ?? [])"
+                :key="variant.id"
+                class="bridge-history__pill"
+                :class="{ 'bridge-history__pill--special': variant.is_special }"
+            >
+              {{ variant.label }}
+            </span>
+          </template>
         </div>
 
         <div class="bridge-history__result">

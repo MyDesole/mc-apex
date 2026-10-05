@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use App\Domains\Players\Services\PlayerProfileService;
+use App\Domains\Bridge\Services\BridgeService;
 use App\Domains\Wallet\Services\RewardService;
 
 /**
@@ -119,15 +120,34 @@ class AuthService
             'tierTests',
             'friendsList',
             'friendsOf',
+            'bridgeRank',
         ]);
 
         [$position, $total] = app(PlayerProfileService::class)->rankOf($user);
+
+        $bridge = app(BridgeService::class);
 
         return [
             'user' => array_merge($user->toArray(), [
                 'aspects' => [
                     'pvp' => $user->aspectPvp,
                     'bedwars' => $user->aspectBedwars,
+                ],
+
+                /*
+                 * Сводка по бриджу: по ней страницы решают, показывать ли
+                 * приглашение подтвердить вид, и что писать в шапке.
+                 */
+                'bridge' => [
+                    'summary' => $bridge->summary($user),
+                    'rank' => $user->bridgeRank
+                        ? [
+                            'id' => $user->bridgeRank->id,
+                            'key' => $user->bridgeRank->key,
+                            'label' => $user->bridgeRank->label,
+                            'color' => $user->bridgeRank->color,
+                        ]
+                        : null,
                 ],
             ]),
             'rank' => [
