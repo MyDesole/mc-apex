@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { tierTestsApi } from '@/services/tiers/tierTests.js'
 import TierTestForm from '@/components/tiers/TierTestForm.vue'
 import { userLink } from '@/utils/links.js'
+import { confirm } from '@/utils/dialog.js'
 
 const loading = ref(true)
 const myTests = ref([])
@@ -39,6 +40,14 @@ const cancelError = ref('')
 
 async function cancelTest(test) {
   if (cancellingId.value) return
+
+  // Отмена безвозвратна — спрашиваем подтверждение
+  const ok = await confirm(
+      'Отменить заявку на тир-тест? Дождаться тестера будет нельзя.',
+      { danger: true, confirmText: 'Отменить' },
+  )
+
+  if (!ok) return
 
   cancellingId.value = test.id
   cancelError.value = ''

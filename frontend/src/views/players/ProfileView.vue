@@ -12,6 +12,7 @@ import { api } from '@/services/core/api.js'
 import { tierTestsApi } from '@/services/tiers/tierTests.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import { userLink } from '@/utils/links.js'
+import { confirm } from '@/utils/dialog.js'
 
 const auth = useAuthStore()
 
@@ -117,6 +118,14 @@ const cancellingActive = ref(false)
 
 async function cancelActiveTest() {
   if (!activeTest.value || cancellingActive.value) return
+
+  // Отмена безвозвратна — спрашиваем подтверждение
+  const ok = await confirm(
+      'Отменить заявку на тир-тест? Дождаться тестера будет нельзя.',
+      { danger: true, confirmText: 'Отменить' },
+  )
+
+  if (!ok) return
 
   cancellingActive.value = true
 

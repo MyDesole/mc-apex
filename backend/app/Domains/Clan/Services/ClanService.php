@@ -298,7 +298,33 @@ class ClanService
             );
         }
 
+        /*
+         * Проверка членства ДО транзакции: игрок не может быть в двух
+         * кланах. Отклоняем заявку здесь, чтобы при abort она не откатилась
+         * обратно в pending (иначе заявка зависла бы навсегда).
+         */
+        if (ClanMember::where('user_id', $application->user_id)->exists()) {
+            $application->update(['status' => 'declined']);
+
+            $this->abortUnprocessable(
+                'Игрок уже состоит в другом клане. Заявка отклонена.'
+            );
+        }
+
         DB::transaction(function () use ($clan, $application, $applicant) {
+            /*
+             * Внутри транзакции проверяем ещё раз под блокировкой: два клана
+             * могут принять заявки одновременно. Первый создаст членство,
+             * второй увидит его и упадёт по уникальному индексу.
+             */
+            $alreadyMember = ClanMember::where('user_id', $application->user_id)
+                ->lockForUpdate()
+                ->exists();
+
+            if ($alreadyMember) {
+                abort(409, 'Игрок уже состоит в другом клане.');
+            }
+
             // Списываем у заявителя и передаём лидеру
             if ($clan->entry_fee > 0 && $applicant) {
                 CoinService::debit(
