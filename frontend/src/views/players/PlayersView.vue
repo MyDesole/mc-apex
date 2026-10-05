@@ -285,11 +285,11 @@ function scorePercent(player) {
     </div>
 
     <!-- =========================================================
-         BRIDGE (категория «Не PvP»)
+         BRIDGE: категория «Не PvP» — топ бриджеров
          ========================================================= -->
 
     <div
-        v-else-if="false"
+        v-else-if="category === 'other' && !visiblePlayers.length"
         class="state state--empty"
     >
       <svg
@@ -302,22 +302,17 @@ function scorePercent(player) {
           stroke-linecap="round"
           stroke-linejoin="round"
       >
-        <path d="M12 2l9 4v6c0 5-3.5 9-9 10-5.5-1-9-5-9-10V6z" />
-        <path d="M12 8v4" />
-        <circle
-            cx="12"
-            cy="16"
-            r="0.5"
-            fill="currentColor"
-        />
+        <path d="M3 20h18" />
+        <path d="M5 20V9l7-5 7 5v11" />
+        <path d="M9 20v-6h6v6" />
       </svg>
 
       <span class="state__title">
-        В разработке
+        Пока никого
       </span>
 
       <span class="state__sub">
-        Скоро здесь появятся рейтинги по другим режимам
+        Топ появится, когда бридж-тестер подтвердит первые виды бриджа
       </span>
     </div>
 
