@@ -8,6 +8,25 @@
   color: #f8fafc;
 }
 
+/* Бридж-профиль: блоки ниже техник и приглушены */
+.blocks--demoted {
+  opacity: 0.62;
+
+  transition: opacity 0.2s ease;
+}
+
+.blocks--demoted:hover {
+  opacity: 1;
+}
+
+.bridge-wrap--lead {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  margin-bottom: 18px;
+}
+
 .blocks {
   display: grid;
   grid-template-columns: 1fr 1fr;

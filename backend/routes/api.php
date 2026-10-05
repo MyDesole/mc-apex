@@ -23,6 +23,7 @@ use App\Domains\Notifications\Controllers\NotificationController;
 use App\Domains\Tiers\Controllers\Api\Tester\TierTestController as TesterTierTestController;
 use App\Domains\Bridge\Controllers\Api\BridgeController;
 use App\Domains\Bridge\Controllers\Api\Tester\BridgeReviewController;
+use App\Domains\Bridge\Controllers\Api\Curator\BridgeTechniqueController as CuratorBridgeTechniqueController;
 
 // === Admin ===
 use App\Domains\Users\Controllers\Api\Admin\UserController as AdminUserController;
@@ -436,6 +437,35 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/submissions', [BridgeReviewController::class, 'index']);
         Route::post('/submissions/{submission}', [BridgeReviewController::class, 'review'])
             ->whereNumber('submission');
+
+        // Звания бриджера: тестер выдаёт их вручную
+        Route::get('/ranks', [BridgeReviewController::class, 'ranks']);
+        Route::get('/players', [BridgeReviewController::class, 'players']);
+        Route::post('/players/{user}/rank', [BridgeReviewController::class, 'assignRank'])
+            ->whereNumber('user');
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | КУРАТОР БРИДЖ-ТЕСТА (role: bridge_curator, admin)
+    |----------------------------------------------------------------------
+    |
+    | Куратор ведёт каталог: добавляет виды бриджа и подвиды к ним.
+    */
+    Route::middleware('role:bridge_curator,admin')->prefix('bridge-curator')->group(function () {
+        Route::get('/techniques', [CuratorBridgeTechniqueController::class, 'index']);
+        Route::post('/techniques', [CuratorBridgeTechniqueController::class, 'store']);
+        Route::put('/techniques/{technique}', [CuratorBridgeTechniqueController::class, 'update'])
+            ->whereNumber('technique');
+        Route::delete('/techniques/{technique}', [CuratorBridgeTechniqueController::class, 'destroy'])
+            ->whereNumber('technique');
+
+        Route::post('/techniques/{technique}/variants', [CuratorBridgeTechniqueController::class, 'storeVariant'])
+            ->whereNumber('technique');
+        Route::put('/variants/{variant}', [CuratorBridgeTechniqueController::class, 'updateVariant'])
+            ->whereNumber('variant');
+        Route::delete('/variants/{variant}', [CuratorBridgeTechniqueController::class, 'destroyVariant'])
+            ->whereNumber('variant');
     });
 
     /*

@@ -58,6 +58,7 @@ const router = createRouter({
     { path: '/tournaments', name: 'tournaments', component: () => import('@/views/tournaments/TournamentsView.vue'), meta: { title: 'Турниры' } },
     { path: '/tester', name: 'tester', component: () => import('@/views/tiers/TesterView.vue'), meta: { title: 'Тестер', auth: true, role: ['tester', 'admin'] } },
     { path: '/bridge-review', name: 'bridge-review', component: () => import('@/views/bridge/BridgeReviewView.vue'), meta: { title: 'Проверка бриджа', auth: true, role: ['bridge_tester', 'admin'] } },
+    { path: '/bridge-curator', name: 'bridge-curator', component: () => import('@/views/bridge/BridgeCuratorView.vue'), meta: { title: 'Виды бриджа', auth: true, role: ['bridge_curator', 'admin'] } },
     { path: '/tournaments/:id', name: 'tournament', component: () => import('@/views/tournaments/TournamentView.vue'), meta: { title: 'Турнир', auth: true } },
   ],
 })

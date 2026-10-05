@@ -19,7 +19,7 @@ trait HasRoles
      * Бридж-тестер здесь по той же причине, что и обычный тестер:
      * проверяющий не должен соревноваться с теми, кого проверяет.
      */
-    public const STAFF_ROLES = ['admin', 'moderator', 'tester', 'bridge_tester'];
+    public const STAFF_ROLES = ['admin', 'moderator', 'tester', 'bridge_tester', 'bridge_curator'];
 
     /** Роли, которым доступна админка. */
     public const ADMIN_PANEL_ROLES = ['moderator', 'admin'];
@@ -30,12 +30,16 @@ trait HasRoles
     /** Роли, которые проверяют бридж-заявки. */
     public const BRIDGE_TESTER_ROLES = ['bridge_tester', 'admin'];
 
+    /** Роли, которые ведут каталог видов и подвидов бриджа. */
+    public const BRIDGE_CURATOR_ROLES = ['bridge_curator', 'admin'];
+
     /** Человеческие названия ролей. */
     public const ROLE_LABELS = [
         'user' => 'Игрок',
         'media' => 'Медийка',
         'tester' => 'Тестер',
         'bridge_tester' => 'Бридж-тестер',
+        'bridge_curator' => 'Куратор бридж-теста',
         'moderator' => 'Модератор',
         'admin' => 'Администратор',
     ];
@@ -68,6 +72,12 @@ trait HasRoles
     public function isBridgeTester(): bool
     {
         return in_array($this->role, self::BRIDGE_TESTER_ROLES, true);
+    }
+
+    /** Куратор бриджа: ведёт каталог видов и подвидов. */
+    public function isBridgeCurator(): bool
+    {
+        return in_array($this->role, self::BRIDGE_CURATOR_ROLES, true);
     }
 
     /**

@@ -177,6 +177,20 @@ onMounted(loadCatalog)
           >
             {{ row.technique.description }}
           </span>
+
+          <!-- Подвиды: пиллы под названием вида -->
+          <span
+              v-if="row.technique.variants?.length"
+              class="variant-pills"
+          >
+            <span
+                v-for="variant in row.technique.variants"
+                :key="variant.id"
+                class="variant-pill"
+            >
+              {{ variant.label }}
+            </span>
+          </span>
         </div>
 
         <!-- Подтверждено: оценка тестера -->

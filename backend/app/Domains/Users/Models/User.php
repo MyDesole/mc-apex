@@ -34,6 +34,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'status', 'quote', 'favorite_clan_id',
         'featured_achievements', 'profile_visibility', 'card_background',
         'favorite_modes', 'discord_tag',
+        'profile_mode', 'bridge_rank_id', 'bridge_rank_by', 'bridge_rank_at',
         'apex_coins', 'apex_coins_spent', 'equipped_badges',
         'referral_code', 'referred_by',
         'is_verified', 'verified_reason', 'clan_joined_at',
@@ -115,6 +116,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_banned' => 'boolean',
         'banned_until' => 'datetime',
         'favorite_modes' => 'array',
+        'bridge_rank_at' => 'datetime',
         'featured_achievements' => 'array',
         'is_verified' => 'boolean',
         'apex_coins' => 'integer',
@@ -318,6 +320,12 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Friendship::class, 'friend_id')
             ->where('status', 'pending');
+    }
+
+    /** Звание бриджера: выдаёт бридж-тестер вручную. */
+    public function bridgeRank(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Domains\Bridge\Models\BridgeRank::class, 'bridge_rank_id');
     }
 
     public function clanMember(): \Illuminate\Database\Eloquent\Relations\HasOne

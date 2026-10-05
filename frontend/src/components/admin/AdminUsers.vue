@@ -50,6 +50,7 @@ const roleLabels = {
   user: 'Пользователь',
   tester: 'Тестер',
   bridge_tester: 'Бридж-тестер',
+  bridge_curator: 'Куратор бридж-теста',
   moderator: 'Модератор',
   admin: 'Администратор',
 }
@@ -78,6 +79,7 @@ onMounted(load)
         <option value="tester">Тестеры</option>
         <option value="media">Медийки</option>
         <option value="bridge_tester">Бридж-тестеры</option>
+        <option value="bridge_curator">Кураторы бриджа</option>
         <option value="moderator">Модераторы</option>
         <option value="admin">Администраторы</option>
       </select>

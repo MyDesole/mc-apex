@@ -1,0 +1,361 @@
+/* ============================================
+   КАТАЛОГ БРИДЖА ДЛЯ КУРАТОРА
+   ============================================ */
+
+.curator {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 16px 60px;
+}
+
+.curator__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  margin-bottom: 18px;
+}
+
+.curator__eyebrow {
+  color: rgba(255, 255, 255, 0.35);
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.curator__head h1 {
+  margin: 4px 0 6px;
+
+  color: var(--text, #e5e5eb);
+
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.curator__head p {
+  margin: 0;
+  max-width: 520px;
+
+  color: rgba(255, 255, 255, 0.45);
+
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.curator__count {
+  color: rgba(255, 255, 255, 0.45);
+
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.curator__count span {
+  color: #a78bfa;
+
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.curator__error {
+  padding: 11px 13px;
+  margin-bottom: 14px;
+
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.08);
+
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 10px;
+
+  font-size: 13px;
+}
+
+.curator__state {
+  padding: 36px;
+
+  color: rgba(255, 255, 255, 0.4);
+
+  font-size: 14px;
+  text-align: center;
+}
+
+/* ---------------- Создание ---------------- */
+
+.curator__create {
+  padding: 14px 16px;
+  margin-bottom: 18px;
+
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 13px;
+
+  background: rgba(139, 92, 246, 0.06);
+}
+
+.curator__create h2 {
+  margin: 0 0 10px;
+
+  color: rgba(255, 255, 255, 0.6);
+
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.create-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+  gap: 9px;
+}
+
+.create-row input,
+.tech__add-variant input,
+.tech__input {
+  padding: 9px 11px;
+
+  color: var(--text, #e5e5eb);
+  background: rgba(0, 0, 0, 0.28);
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+
+  font: inherit;
+  font-size: 13px;
+
+  outline: none;
+}
+
+.create-row input:focus,
+.tech__add-variant input:focus,
+.tech__input:focus {
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
+.create-row button {
+  padding: 9px 18px;
+
+  color: #fff;
+  background: var(--accent, #7c3aed);
+
+  border: none;
+  border-radius: 9px;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.create-row button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ---------------- Вид ---------------- */
+
+.curator__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tech {
+  padding: 13px 15px;
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 13px;
+
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.tech--off {
+  opacity: 0.55;
+}
+
+.tech__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.tech__titles {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+
+  min-width: 0;
+}
+
+.tech__label {
+  color: var(--text, #e5e5eb);
+
+  font-size: 15px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.tech__label:hover {
+  color: #c4b5fd;
+}
+
+.tech__key {
+  color: rgba(255, 255, 255, 0.28);
+
+  font-size: 11px;
+  font-family: ui-monospace, monospace;
+}
+
+.tech__actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.tech__badge {
+  padding: 3px 8px;
+
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+
+  border: 1px solid rgba(251, 191, 36, 0.22);
+  border-radius: 6px;
+
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.tech__mini {
+  padding: 5px 11px;
+
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.06);
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.tech__mini:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.tech__mini--danger {
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.tech__desc {
+  margin: 6px 0 0;
+
+  color: rgba(255, 255, 255, 0.42);
+
+  font-size: 12px;
+}
+
+/* ---------------- Пиллы подвидов ---------------- */
+
+.tech__variants {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+
+  margin-top: 11px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 4px 6px 4px 11px;
+
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.12);
+
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.pill--off {
+  opacity: 0.45;
+}
+
+.pill__toggle,
+.pill__remove {
+  width: 17px;
+  height: 17px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  color: inherit;
+  background: rgba(0, 0, 0, 0.25);
+
+  border: none;
+  border-radius: 50%;
+
+  font-size: 10px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.pill__remove:hover {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.25);
+}
+
+.tech__no-variants {
+  color: rgba(255, 255, 255, 0.28);
+
+  font-size: 11px;
+}
+
+.tech__add-variant {
+  display: flex;
+  gap: 8px;
+
+  margin-top: 11px;
+}
+
+.tech__add-variant input {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .create-row {
+    grid-template-columns: 1fr;
+  }
+
+  .curator__head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .tech__head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

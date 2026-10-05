@@ -9,7 +9,7 @@ class UpdateRoleRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'role' => ['required', 'in:user,media,tester,bridge_tester,moderator,admin'],
+            'role' => ['required', 'in:user,media,tester,bridge_tester,bridge_curator,moderator,admin'],
         ];
     }
 }

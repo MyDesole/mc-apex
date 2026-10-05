@@ -5,6 +5,7 @@ import PlayerCard from '@/components/players/PlayerCard.vue'
 import ClanBadge from '@/components/clan/ClanBadge.vue'
 import RankBadge from '@/components/players/RankBadge.vue'
 import BridgeTechniques from '@/components/bridge/BridgeTechniques.vue'
+import BridgeRankBadge from '@/components/bridge/BridgeRankBadge.vue'
 import FriendButton from '@/components/friends/FriendButton.vue'
 import { api } from '@/services/core/api.js'
 import { useAuthStore } from '@/stores/core/auth.js'
@@ -17,6 +18,12 @@ const aspects = ref([])
 const friendship = ref(null)
 const rank = ref({ position: null, total: 0 })
 const bridge = ref({ techniques: [], summary: {}, rank: { position: null, total: 0 } })
+
+// Режим профиля владельца: в бридж-профиле виды бриджа идут первыми
+const profileMode = ref('pvp')
+const bridgeRank = ref(null)
+
+const isBridgeProfile = computed(() => profileMode.value === 'bridge')
 const recommendations = ref([])
 const myRecommendation = ref(null)
 const canRecommend = ref(false)
@@ -41,6 +48,8 @@ async function load(id) {
   friendship.value = null
   rank.value = { position: null, total: 0 }
   bridge.value = { techniques: [], summary: {}, rank: { position: null, total: 0 } }
+  profileMode.value = 'pvp'
+  bridgeRank.value = null
   recommendations.value = []
   myRecommendation.value = null
   canRecommend.value = false
@@ -52,6 +61,8 @@ async function load(id) {
     friendship.value = data.friendship
     rank.value = data.rank ?? { position: null, total: 0 }
     bridge.value = data.bridge ?? { techniques: [], summary: {}, rank: { position: null, total: 0 } }
+    profileMode.value = data.profile_mode ?? 'pvp'
+    bridgeRank.value = data.bridge_rank ?? null
     recommendations.value = data.recommendations ?? []
     myRecommendation.value = data.my_recommendation ?? null
     canRecommend.value = data.can_recommend ?? false
@@ -104,7 +115,30 @@ watch(
         @recommendations-updated="load(route.params.id)"
     />
 
-    <section class="blocks">
+    <!--
+      Бридж-профиль: техники первыми, звание бриджера — главный ранг
+    -->
+    <div
+        v-if="isBridgeProfile"
+        class="bridge-wrap bridge-wrap--lead"
+    >
+      <BridgeRankBadge
+          v-if="bridgeRank"
+          :rank="bridgeRank"
+          size="lg"
+      />
+
+      <BridgeTechniques
+          :techniques="bridge.techniques"
+          :summary="bridge.summary"
+          :rank="bridge.rank"
+      />
+    </div>
+
+    <section
+        class="blocks"
+        :class="{ 'blocks--demoted': isBridgeProfile }"
+    >
       <div class="block-col">
         <h3 class="block-title">Клан</h3>
         <ClanBadge :clan-member="clanMember" />
@@ -114,16 +148,20 @@ watch(
           v-if="!isStaff"
           class="block-col"
       >
-        <h3 class="block-title">Место в топе</h3>
+        <h3 class="block-title">
+          {{ isBridgeProfile ? 'Место в бридже' : 'Место в топе' }}
+        </h3>
+
+        <!-- В бридж-профиле показываем место среди бриджеров -->
         <RankBadge
-            :position="rank.position"
-            :total="rank.total"
+            :position="isBridgeProfile ? bridge.rank.position : rank.position"
+            :total="isBridgeProfile ? bridge.rank.total : rank.total"
         />
       </div>
     </section>
 
     <div
-        v-if="bridge.techniques.length"
+        v-if="!isBridgeProfile && bridge.techniques.length"
         class="bridge-wrap"
     >
       <BridgeTechniques

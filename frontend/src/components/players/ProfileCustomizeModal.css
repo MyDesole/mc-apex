@@ -443,6 +443,64 @@
   gap: 10px;
 }
 
+/* ---------------- Режим профиля ---------------- */
+
+.profile-mode__hint {
+  margin: 0 0 12px;
+
+  color: rgba(255, 255, 255, 0.45);
+
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.profile-mode__options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.profile-mode__option {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  padding: 12px 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 11px;
+
+  background: rgba(255, 255, 255, 0.03);
+
+  text-align: left;
+  cursor: pointer;
+
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.profile-mode__option:hover {
+  border-color: rgba(139, 92, 246, 0.35);
+}
+
+.profile-mode__option--active {
+  border-color: rgba(139, 92, 246, 0.6);
+
+  background: rgba(139, 92, 246, 0.14);
+}
+
+.profile-mode__name {
+  color: var(--text, #e5e5eb);
+
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.profile-mode__desc {
+  color: rgba(255, 255, 255, 0.42);
+
+  font-size: 11px;
+}
+
 .section__title {
   position: relative;
 

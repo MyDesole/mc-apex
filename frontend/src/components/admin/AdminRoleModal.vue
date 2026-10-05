@@ -13,6 +13,7 @@ const roles = [
   { value: 'media', label: 'Медийка', desc: 'Ютубер или стример: участвует в топах, особый вид профиля' },
   { value: 'tester', label: 'Тестер', desc: 'Проводит тир-тесты' },
   { value: 'bridge_tester', label: 'Бридж-тестер', desc: 'Проверяет виды бриджа' },
+  { value: 'bridge_curator', label: 'Куратор бридж-теста', desc: 'Ведёт виды и подвиды бриджа' },
   { value: 'moderator', label: 'Модератор', desc: 'Следит за контентом' },
   { value: 'admin', label: 'Администратор', desc: 'Полный доступ' },
 ]

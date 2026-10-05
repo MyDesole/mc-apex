@@ -18,6 +18,9 @@ class UpdateProfileRequest extends BaseFormRequest
             'favorite_clan_id' => ['nullable', 'exists:clans,id'],
             'profile_visibility' => ['nullable', 'in:public,friends,private'],
 
+            // Режим профиля: в бридж-профиле виды бриджа выходят на первое место
+            'profile_mode' => ['nullable', 'in:pvp,bridge'],
+
             'discord_tag' => ['nullable', 'string', 'max:64'],
 
             'favorite_modes' => ['nullable', 'array'],
@@ -32,6 +35,7 @@ class UpdateProfileRequest extends BaseFormRequest
     {
         return [
             'profile_visibility.in' => 'Видимость профиля: public, friends или private.',
+            'profile_mode.in' => 'Режим профиля: pvp или bridge.',
             'favorite_modes.*.in' => 'Такого режима нет в списке.',
         ];
     }

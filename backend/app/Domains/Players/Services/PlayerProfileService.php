@@ -36,12 +36,26 @@ class PlayerProfileService
             'achievements',
             'friendsList',
             'friendsOf',
+            'bridgeRank',
         ]);
 
         [$position, $total] = $this->rankOf($player);
 
         return [
             'user' => (new PlayerProfileResource($player))->resolve(),
+
+            // Режим профиля: от него зависит порядок блоков на странице
+            'profile_mode' => $player->profile_mode ?? 'pvp',
+
+            // Звание бриджера: в бридж-профиле это главный ранг
+            'bridge_rank' => $player->bridgeRank
+                ? [
+                    'id' => $player->bridgeRank->id,
+                    'key' => $player->bridgeRank->key,
+                    'label' => $player->bridgeRank->label,
+                    'color' => $player->bridgeRank->color,
+                ]
+                : null,
             'friendship' => $this->friendshipPayload($player, $me),
             'rank' => [
                 'position' => $position,

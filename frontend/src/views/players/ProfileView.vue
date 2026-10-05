@@ -42,6 +42,12 @@ const recommendations = ref([])
 // Подтверждённые виды бриджа приходят вместе с профилем
 const bridge = ref({ techniques: [], summary: {}, rank: { position: null, total: 0 } })
 
+// Режим профиля: в бридж-профиле виды бриджа идут первыми
+const profileMode = ref('pvp')
+const bridgeRank = ref(null)
+
+const isBridgeProfile = computed(() => profileMode.value === 'bridge')
+
 
 /* =========================================================
    RECOMMENDATIONS
@@ -61,6 +67,8 @@ async function loadRecommendations() {
         data.recommendations ?? []
 
     bridge.value = data.bridge ?? { techniques: [], summary: {}, rank: { position: null, total: 0 } }
+    profileMode.value = data.profile_mode ?? 'pvp'
+    bridgeRank.value = data.bridge_rank ?? null
   } catch (e) {
     console.error('Не удалось загрузить отзывы:', e)
     recommendations.value = []
@@ -260,6 +268,22 @@ onMounted(async () => {
            PLAYER CARD
       ====================================================== -->
 
+      <!--
+        Бридж-профиль: виды бриджа выходят на первое место,
+        поэтому блок стоит до PvP.
+      -->
+      <section
+          v-if="isBridgeProfile"
+          class="tests-section tests-section--lead"
+      >
+        <BridgeTechniques
+            :techniques="bridge.techniques"
+            :summary="bridge.summary"
+            :rank="bridge.rank"
+            editable
+        />
+      </section>
+
       <section class="player-section">
 
         <PlayerCard
@@ -280,7 +304,10 @@ onMounted(async () => {
            COMPETITIVE STATUS
       ====================================================== -->
 
-      <section class="competitive-section">
+      <section
+          class="competitive-section"
+          :class="{ 'competitive-section--demoted': isBridgeProfile }"
+      >
 
         <header class="section-header">
 
@@ -432,7 +459,11 @@ onMounted(async () => {
            BRIDGE
       ====================================================== -->
 
-      <section class="tests-section">
+      <!-- Обычный профиль: бридж идёт внизу, как дополнение -->
+      <section
+          v-if="!isBridgeProfile"
+          class="tests-section"
+      >
         <BridgeTechniques
             :techniques="bridge.techniques"
             :summary="bridge.summary"

@@ -7,12 +7,20 @@
  * вид либо отклоняет его с причиной.
  */
 import { computed, onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { bridgeReviewApi } from '@/services/bridge/bridge.js'
 import { alert as alertDialog } from '@/utils/dialog.js'
+import BridgeRankBadge from '@/components/bridge/BridgeRankBadge.vue'
 
 const loading = ref(true)
 const error = ref('')
 const rows = ref([])
+
+// Звания: тестер выдаёт их вручную
+const ranks = ref([])
+const bridgers = ref([])
+const tab = ref('queue')
+const rankBusy = ref(null)
 
 const active = ref(null)
 const processing = ref(false)
@@ -25,6 +33,7 @@ function empty() {
     difficulty: 0,
     score: 0,
     notes: '',
+    rank_id: null,
   }
 }
 
@@ -50,13 +59,35 @@ async function load() {
   error.value = ''
 
   try {
-    const data = await bridgeReviewApi.pending()
+    const [pending, rankList, playerList] = await Promise.all([
+      bridgeReviewApi.pending(),
+      bridgeReviewApi.ranks(),
+      bridgeReviewApi.players(),
+    ])
 
-    rows.value = data.data ?? []
+    rows.value = pending.data ?? []
+    ranks.value = rankList.data ?? []
+    bridgers.value = playerList.data ?? []
   } catch (e) {
-    error.value = e.message || 'Не удалось загрузить заявки'
+    error.value = e.message || 'Не удалось загрузить данные'
   } finally {
     loading.value = false
+  }
+}
+
+/** Тестер выдаёт звание бриджеру. */
+async function setRank(entry, rankId) {
+  rankBusy.value = entry.user.id
+  error.value = ''
+
+  try {
+    const result = await bridgeReviewApi.assignRank(entry.user.id, rankId || null)
+
+    entry.rank = result.rank
+  } catch (e) {
+    error.value = e.message || 'Не удалось выдать звание'
+  } finally {
+    rankBusy.value = null
   }
 }
 
@@ -83,6 +114,11 @@ async function confirm() {
       score: Number(form.value.score) || 0,
       notes: form.value.notes || null,
     })
+
+    // Звание выдаём отдельно: оно не обязательно при каждом подтверждении
+    if (form.value.rank_id && active.value.user?.id) {
+      await bridgeReviewApi.assignRank(active.value.user.id, form.value.rank_id)
+    }
 
     close()
     await load()
@@ -143,14 +179,100 @@ onMounted(load)
       </div>
     </header>
 
+    <!-- Очередь заявок и бриджеры с званиями -->
+    <div class="review-tabs">
+      <button
+          type="button"
+          class="review-tab"
+          :class="{ 'review-tab--active': tab === 'queue' }"
+          @click="tab = 'queue'"
+      >
+        Очередь
+        <span v-if="rows.length" class="review-tab__badge">{{ rows.length }}</span>
+      </button>
+
+      <button
+          type="button"
+          class="review-tab"
+          :class="{ 'review-tab--active': tab === 'bridgers' }"
+          @click="tab = 'bridgers'"
+      >
+        Бриджеры
+        <span v-if="bridgers.length" class="review-tab__badge">{{ bridgers.length }}</span>
+      </button>
+    </div>
+
     <div v-if="error" class="bridge-review__error">{{ error }}</div>
 
     <div v-if="loading" class="bridge-review__state">
-      Загрузка заявок...
+      Загрузка...
     </div>
 
-    <div v-else-if="!rows.length" class="bridge-review__state">
+    <div v-else-if="tab === 'queue' && !rows.length" class="bridge-review__state">
       Заявок на проверку нет
+    </div>
+
+    <div v-else-if="tab === 'bridgers' && !bridgers.length" class="bridge-review__state">
+      Пока нет бриджеров с подтверждёнными видами
+    </div>
+
+    <!-- ================= БРИДЖЕРЫ: выдача званий ================= -->
+    <div v-else-if="tab === 'bridgers'" class="bridgers">
+      <article
+          v-for="entry in bridgers"
+          :key="entry.user.id"
+          class="bridger"
+      >
+        <div class="bridger__player">
+          <div class="bridger__avatar">
+            <img
+                v-if="entry.user.avatar_url"
+                :src="entry.user.avatar_url"
+                :alt="entry.user.username"
+            />
+
+            <span v-else>
+              {{ (entry.user.username || 'И')[0].toUpperCase() }}
+            </span>
+          </div>
+
+          <div>
+            <RouterLink
+                :to="'/players/' + entry.user.id"
+                class="bridger__name"
+            >
+              {{ entry.user.username }}
+            </RouterLink>
+
+            <div class="bridger__meta">
+              видов: <b>{{ entry.techniques_count }}</b>
+              · аспекты: <b>{{ entry.aspects_total }}</b>
+            </div>
+          </div>
+        </div>
+
+        <BridgeRankBadge
+            :rank="entry.rank"
+            empty-label="без звания"
+            size="sm"
+        />
+
+        <select
+            class="bridger__select"
+            :disabled="rankBusy === entry.user.id"
+            :value="entry.rank?.id ?? ''"
+            @change="setRank(entry, $event.target.value ? Number($event.target.value) : null)"
+        >
+          <option value="">— снять звание —</option>
+          <option
+              v-for="rank in ranks"
+              :key="rank.id"
+              :value="rank.id"
+          >
+            {{ rank.label }}
+          </option>
+        </select>
+      </article>
     </div>
 
     <div v-else class="bridge-review__list">
@@ -280,6 +402,24 @@ onMounted(load)
                 </span>
               </div>
             </div>
+
+            <label
+                v-if="ranks.length"
+                class="review-field review-field--wide"
+            >
+              <span>Звание бриджера <i>необязательно</i></span>
+
+              <select v-model.number="form.rank_id">
+                <option :value="null">— не менять звание —</option>
+                <option
+                    v-for="rank in ranks"
+                    :key="rank.id"
+                    :value="rank.id"
+                >
+                  {{ rank.label }}
+                </option>
+              </select>
+            </label>
 
             <label class="review-field review-field--wide">
               <span>Комментарий <i>обязателен при отказе</i></span>

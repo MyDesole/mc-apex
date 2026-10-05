@@ -40,6 +40,7 @@ const form = ref({
   quote: user.value?.quote ?? '',
   bio: user.value?.bio ?? '',
   discord_tag: user.value?.discord_tag ?? '',
+  profile_mode: user.value?.profile_mode ?? 'pvp',
   favorite_modes: cleanArray(user.value?.favorite_modes),
   featured_achievements: cleanArray(user.value?.featured_achievements),
 })
@@ -339,6 +340,38 @@ onBeforeUnmount(() => {
         <!-- BODY -->
         <div class="body">
           <div v-if="error" class="error">{{ error }}</div>
+
+          <!-- Режим профиля: определяет, что выходит на первое место -->
+          <section class="section profile-mode">
+            <h3 class="section__title">Режим профиля</h3>
+
+            <p class="profile-mode__hint">
+              В бридж-профиле виды бриджа выходят на первое место, а PvP уходит
+              на второй план. В PvP-профиле всё как обычно.
+            </p>
+
+            <div class="profile-mode__options">
+              <button
+                  type="button"
+                  class="profile-mode__option"
+                  :class="{ 'profile-mode__option--active': form.profile_mode === 'pvp' }"
+                  @click="form.profile_mode = 'pvp'"
+              >
+                <span class="profile-mode__name">PvP профиль</span>
+                <span class="profile-mode__desc">Аспекты, тиры, тир-тесты</span>
+              </button>
+
+              <button
+                  type="button"
+                  class="profile-mode__option"
+                  :class="{ 'profile-mode__option--active': form.profile_mode === 'bridge' }"
+                  @click="form.profile_mode = 'bridge'"
+              >
+                <span class="profile-mode__name">Бридж профиль</span>
+                <span class="profile-mode__desc">Виды бриджа и звание бриджера</span>
+              </button>
+            </div>
+          </section>
 
           <!-- === STYLE === -->
           <template v-if="tab === 'style'">

@@ -2,21 +2,23 @@
 
 namespace App\Domains\Bridge\Services;
 
+use App\Domains\Bridge\Models\BridgeRank;
 use App\Domains\Bridge\Models\BridgeTechnique;
+use App\Domains\Bridge\Models\BridgeTechniqueVariant;
 use App\Domains\Bridge\Models\UserBridgeTechnique;
 use App\Domains\Bridge\Notifications\BridgeSubmissionNotification;
 use App\Domains\Bridge\Notifications\BridgeTechniqueReviewedNotification;
 use App\Domains\Users\Models\User;
 use App\Support\Concerns\AbortsWithMessage;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
- * Бридж-тесты: виды бриджа, заявки игроков и проверка тестером.
+ * Бридж-тесты: виды бриджа, подвиды, заявки игроков и проверка тестером.
  *
  * Механика отличается от обычных тир-тестов: записи в очередь нет — игрок
- * отмечает, что умеет, и прикладывает видео. Тестер проверяет видео и
- * ставит оценки. До подтверждения вид в профиле показан серым.
+ * отмечает, что умеет, и прикладывает видео. Тестер проверяет видео, ставит
+ * оценки и присваивает звание бриджера.
  */
 class BridgeService
 {
@@ -27,11 +29,22 @@ class BridgeService
 
     /* ----------------------------- Каталог ----------------------------- */
 
-    /** Активные виды бриджа по порядку. */
+    /** Активные виды бриджа с подвидами. */
     public function techniques(): Collection
     {
         return BridgeTechnique::query()
             ->where('is_active', true)
+            ->with('variants')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+    }
+
+    /** Весь каталог вместе с выключенными видами — для куратора. */
+    public function fullCatalog(): Collection
+    {
+        return BridgeTechnique::query()
+            ->with('allVariants')
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
@@ -47,6 +60,7 @@ class BridgeService
     {
         $mine = UserBridgeTechnique::query()
             ->where('user_id', $user->id)
+            ->with('technique.variants')
             ->get()
             ->keyBy('technique_id');
 
@@ -62,7 +76,7 @@ class BridgeService
         return UserBridgeTechnique::query()
             ->where('user_id', $user->id)
             ->where('status', UserBridgeTechnique::STATUS_CONFIRMED)
-            ->with('technique')
+            ->with('technique.variants')
             ->get();
     }
 
@@ -153,9 +167,10 @@ class BridgeService
         return UserBridgeTechnique::query()
             ->where('status', UserBridgeTechnique::STATUS_DECLARED)
             ->with([
-                'user:id,username,avatar,tier,tier_score',
+                'user:id,username,avatar,tier,tier_score,bridge_rank_id',
+                'user.bridgeRank',
                 'user.clanMember.clan:id,name,tag,banner_color',
-                'technique',
+                'technique.variants',
             ])
             ->latest('updated_at')
             ->get();
@@ -217,6 +232,155 @@ class BridgeService
         $submission->user?->notify(
             new BridgeTechniqueReviewedNotification($submission, $confirmed)
         );
+    }
+
+    /* ----------------------------- Ранги бриджера ----------------------------- */
+
+    /** Все активные звания по возрастанию. */
+    public function ranks(): Collection
+    {
+        return BridgeRank::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+    }
+
+    /**
+     * Тестер присваивает звание бриджера.
+     *
+     * null снимает звание: игрок мог перестать играть или потерять уровень.
+     */
+    public function assignRank(User $player, User $reviewer, ?int $rankId): User
+    {
+        $rank = null;
+
+        if ($rankId !== null) {
+            $rank = BridgeRank::query()->find($rankId);
+
+            if (! $rank) {
+                $this->abortUnprocessable('Такого звания нет.');
+            }
+        }
+
+        $player->update([
+            'bridge_rank_id' => $rank?->id,
+            'bridge_rank_by' => $rank ? $reviewer->id : null,
+            'bridge_rank_at' => $rank ? now() : null,
+        ]);
+
+        return $player->fresh();
+    }
+
+    /* ----------------------------- Каталог: правки куратора ----------------------------- */
+
+    /**
+     * Куратор добавляет вид бриджа.
+     *
+     * Ключ делаем из названия: по нему потом ищут подвиды и понятно, что это.
+     */
+    public function createTechnique(string $label, ?string $description = null): BridgeTechnique
+    {
+        $key = $this->uniqueTechniqueKey($label);
+
+        $max = (int) BridgeTechnique::query()->max('sort_order');
+
+        return BridgeTechnique::create([
+            'key' => $key,
+            'label' => $label,
+            'description' => $description,
+            'sort_order' => $max + 1,
+            'is_active' => true,
+        ]);
+    }
+
+    /** Куратор правит вид: название, описание, порядок, видимость. */
+    public function updateTechnique(BridgeTechnique $technique, array $data): BridgeTechnique
+    {
+        $technique->update(array_filter([
+            'label' => $data['label'] ?? null,
+            'description' => array_key_exists('description', $data) ? $data['description'] : null,
+            'sort_order' => $data['sort_order'] ?? null,
+            'is_active' => $data['is_active'] ?? null,
+        ], fn ($value) => $value !== null));
+
+        return $technique->fresh();
+    }
+
+    /**
+     * Удаление вида.
+     *
+     * Если по виду уже есть заявки — не удаляем, а выключаем: иначе
+     * пропали бы подтверждённые достижения игроков.
+     */
+    public function deleteTechnique(BridgeTechnique $technique): void
+    {
+        if ($technique->submissions()->exists()) {
+            $technique->update(['is_active' => false]);
+
+            return;
+        }
+
+        $technique->delete();
+    }
+
+    /** Куратор добавляет подвид. */
+    public function createVariant(BridgeTechnique $technique, string $label): BridgeTechniqueVariant
+    {
+        $key = $this->uniqueVariantKey($technique, $label);
+
+        $max = (int) $technique->allVariants()->max('sort_order');
+
+        return $technique->allVariants()->create([
+            'key' => $key,
+            'label' => $label,
+            'sort_order' => $max + 1,
+            'is_active' => true,
+        ]);
+    }
+
+    /** Куратор правит подвид. */
+    public function updateVariant(BridgeTechniqueVariant $variant, array $data): BridgeTechniqueVariant
+    {
+        $variant->update(array_filter([
+            'label' => $data['label'] ?? null,
+            'sort_order' => $data['sort_order'] ?? null,
+            'is_active' => $data['is_active'] ?? null,
+        ], fn ($value) => $value !== null));
+
+        return $variant->fresh();
+    }
+
+    public function deleteVariant(BridgeTechniqueVariant $variant): void
+    {
+        $variant->delete();
+    }
+
+    /** Ключ вида: латиница из названия, с запасным вариантом. */
+    private function uniqueTechniqueKey(string $label): string
+    {
+        $base = Str::slug($label, '_') ?: 'technique';
+        $key = $base;
+        $i = 2;
+
+        while (BridgeTechnique::query()->where('key', $key)->exists()) {
+            $key = $base . '_' . $i++;
+        }
+
+        return $key;
+    }
+
+    private function uniqueVariantKey(BridgeTechnique $technique, string $label): string
+    {
+        $base = Str::slug($label, '_') ?: 'variant';
+        $key = $base;
+        $i = 2;
+
+        while ($technique->allVariants()->where('key', $key)->exists()) {
+            $key = $base . '_' . $i++;
+        }
+
+        return $key;
     }
 
     /* ----------------------------- Топ ----------------------------- */

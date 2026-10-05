@@ -446,6 +446,22 @@
    TESTS
 ============================================================ */
 
+/* Бридж-профиль: PvP уходит на второй план */
+.competitive-section--demoted {
+  opacity: 0.62;
+
+  transition: opacity 0.2s ease;
+}
+
+.competitive-section--demoted:hover {
+  opacity: 1;
+}
+
+/* Ведущий блок бридж-профиля */
+.tests-section--lead {
+  margin-top: 8px;
+}
+
 .tests-section {
   position: relative;
 

@@ -181,6 +181,37 @@
   font-size: 11px;
 }
 
+/* Подвиды: пиллы под названием вида */
+.variant-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+
+  margin-top: 5px;
+}
+
+.variant-pill {
+  padding: 2px 9px;
+
+  color: rgba(196, 181, 253, 0.85);
+  background: rgba(139, 92, 246, 0.1);
+
+  border: 1px solid rgba(139, 92, 246, 0.22);
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+/* В подтверждённом виде пиллы ярче */
+.bridge-item--confirmed .variant-pill {
+  color: #ddd6fe;
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
 .bridge-item__score {
   display: flex;
   align-items: baseline;
