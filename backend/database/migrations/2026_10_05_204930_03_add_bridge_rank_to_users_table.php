@@ -12,19 +12,22 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
+            /*
+             * Без ->after(): profile_mode добавляется следующей миграцией,
+             * и на MySQL позиционирование по несуществующей колонке падает.
+             * Порядок колонок в таблице ни на что не влияет.
+             */
             $table->foreignId('bridge_rank_id')
                 ->nullable()
-                ->after('profile_mode')
                 ->constrained('bridge_ranks')
                 ->nullOnDelete();
 
             $table->foreignId('bridge_rank_by')
                 ->nullable()
-                ->after('bridge_rank_id')
                 ->constrained('users')
                 ->nullOnDelete();
 
-            $table->timestamp('bridge_rank_at')->nullable()->after('bridge_rank_by');
+            $table->timestamp('bridge_rank_at')->nullable();
         });
     }
 

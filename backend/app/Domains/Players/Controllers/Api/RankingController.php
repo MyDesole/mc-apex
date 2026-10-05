@@ -77,7 +77,7 @@ class RankingController extends Controller
         }
 
         $rows = $query
-            ->orderByDesc('rating_sort')
+            ->orderByDesc('rating_score')
             ->orderByDesc('users.id')
             ->limit($limit + 1)
             ->get();
@@ -170,7 +170,7 @@ class RankingController extends Controller
         }
 
         $rows = $query
-            ->orderByDesc('rating_score')
+            ->orderByDesc('rating_sort')
             ->orderByDesc('users.id')
             ->limit($limit + 1)
             ->get();
