@@ -120,7 +120,8 @@ class PlayerProfileService
 
         return [
             'techniques' => BridgeSubmissionResource::collection(
-                $bridge->confirmedForUser($player)->load('technique')
+                // technique.variants нужен для пиллов: иначе список подвидов пуст
+                $bridge->confirmedForUser($player)->load('technique.variants')
             )->resolve(),
             'summary' => $bridge->summary($player),
             'rank' => [
