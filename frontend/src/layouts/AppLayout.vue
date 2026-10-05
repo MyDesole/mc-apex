@@ -444,6 +444,26 @@ watch(mobileMenuOpen, (open) => {
                   </RouterLink>
 
                   <RouterLink
+                      v-if="auth.user && ['bridge_tester', 'admin'].includes(auth.user.role)"
+                      to="/bridge-review"
+                      class="dropdown-item"
+                      @click="menuOpen = false"
+                  >
+                    <span class="dropdown-icon">⌁</span>
+                    <span>Проверка бриджа</span>
+                  </RouterLink>
+
+                  <RouterLink
+                      v-if="auth.user && ['bridge_curator', 'admin'].includes(auth.user.role)"
+                      to="/bridge-curator"
+                      class="dropdown-item"
+                      @click="menuOpen = false"
+                  >
+                    <span class="dropdown-icon">▦</span>
+                    <span>Виды бриджа</span>
+                  </RouterLink>
+
+                  <RouterLink
                       v-if="auth.user && ['moderator', 'admin'].includes(auth.user.role)"
                       to="/admin"
                       class="dropdown-item"

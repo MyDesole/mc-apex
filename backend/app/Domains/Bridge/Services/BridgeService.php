@@ -3,6 +3,7 @@
 namespace App\Domains\Bridge\Services;
 
 use App\Domains\Bridge\Models\BridgeRank;
+use App\Domains\Bridge\Models\BridgeVideoUpload;
 use App\Domains\Bridge\Models\BridgeTechnique;
 use App\Domains\Bridge\Models\BridgeTechniqueVariant;
 use App\Domains\Bridge\Models\UserBridgeTechnique;
@@ -88,7 +89,7 @@ class BridgeService
      * Повторная подача перезаписывает видео: если тестер отклонил заявку,
      * игрок может прислать новый ролик.
      */
-    public function declare(User $user, int $techniqueId, ?string $videoUrl): UserBridgeTechnique
+    public function declare(User $user, int $techniqueId, ?string $videoUrl, ?string $uploadId = null): UserBridgeTechnique
     {
         $technique = BridgeTechnique::query()
             ->where('is_active', true)
@@ -109,11 +110,32 @@ class BridgeService
             );
         }
 
+        // Видео, загруженное частями: берём путь из завершённой загрузки
+        $videoPath = null;
+
+        if ($uploadId !== null) {
+            $upload = BridgeVideoUpload::query()
+                ->where('uuid', $uploadId)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (! $upload) {
+                $this->abortUnprocessable('Загрузка видео не найдена.');
+            }
+
+            if (! $upload->isCompleted()) {
+                $this->abortUnprocessable('Видео ещё не догружено до конца.');
+            }
+
+            $videoPath = $upload->path;
+        }
+
         $submission = UserBridgeTechnique::updateOrCreate(
             ['user_id' => $user->id, 'technique_id' => $technique->id],
             [
                 'status' => UserBridgeTechnique::STATUS_DECLARED,
-                'video_url' => $videoUrl,
+                'video_url' => $videoPath ? null : $videoUrl,
+                'video_path' => $videoPath,
                 // Прошлые оценки тестера сбрасываются: видео новое
                 'stability' => null,
                 'speed' => null,
@@ -156,6 +178,9 @@ class BridgeService
             $this->abortUnprocessable('Подтверждённый вид убрать нельзя.');
         }
 
+        // Своё видео игрок забирает вместе с заявкой
+        app(BridgeVideoService::class)->deleteFor($submission);
+
         $submission->delete();
     }
 
@@ -196,6 +221,9 @@ class BridgeService
             'reviewed_at' => now(),
         ]);
 
+        // Тест проведён — ролик больше не нужен
+        app(BridgeVideoService::class)->deleteFor($submission);
+
         $this->notify($submission->fresh(), true);
 
         return $submission->fresh();
@@ -212,6 +240,9 @@ class BridgeService
             'reviewed_by' => $reviewer->id,
             'reviewed_at' => now(),
         ]);
+
+        // Заявка отклонена — видео тоже удаляем, но игрок может прислать новое
+        app(BridgeVideoService::class)->deleteFor($submission);
 
         $this->notify($submission->fresh(), false);
 

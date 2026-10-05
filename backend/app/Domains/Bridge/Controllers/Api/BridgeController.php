@@ -48,7 +48,8 @@ class BridgeController extends Controller
         $submission = $this->bridge->declare(
             user: $request->user(),
             techniqueId: (int) $validated['technique_id'],
-            videoUrl: $validated['video_url'],
+            videoUrl: null,
+            uploadId: $validated['upload_id'],
         );
 
         return response()->json([

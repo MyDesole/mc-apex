@@ -1,0 +1,141 @@
+/* ============================================
+   ЗАГРУЗКА ВИДЕО ЧАСТЯМИ
+   ============================================ */
+
+.uploader--disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.uploader__drop {
+  border: 1px dashed rgba(139, 92, 246, 0.35);
+  border-radius: 11px;
+
+  background: rgba(139, 92, 246, 0.05);
+
+  transition: background 0.16s ease;
+}
+
+.uploader__drop:hover {
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.uploader__pick {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  padding: 14px;
+
+  cursor: pointer;
+  text-align: center;
+}
+
+.uploader__pick input {
+  display: none;
+}
+
+.uploader__pick-title {
+  color: #c4b5fd;
+
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.uploader__pick-hint {
+  color: rgba(255, 255, 255, 0.4);
+
+  font-size: 11px;
+}
+
+.uploader__file {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  padding: 12px 14px;
+
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 11px;
+
+  background: rgba(139, 92, 246, 0.06);
+}
+
+.uploader__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+}
+
+.uploader__name {
+  overflow: hidden;
+
+  color: var(--text, #e5e5eb);
+
+  font-size: 12px;
+  font-weight: 700;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uploader__size,
+.uploader__status {
+  color: rgba(255, 255, 255, 0.45);
+
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.uploader__bar {
+  height: 6px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.uploader__fill {
+  height: 100%;
+
+  border-radius: 999px;
+
+  background: linear-gradient(90deg, #7c3aed, #a78bfa);
+
+  transition: width 0.2s ease;
+}
+
+.uploader__fill--done {
+  background: linear-gradient(90deg, #22c55e, #4ade80);
+}
+
+.uploader__fill--error {
+  background: linear-gradient(90deg, #dc2626, #f87171);
+}
+
+.uploader__cancel {
+  padding: 4px 10px;
+
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.06);
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 7px;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.uploader__error {
+  margin: 8px 0 0;
+
+  color: #fca5a5;
+
+  font-size: 11px;
+}

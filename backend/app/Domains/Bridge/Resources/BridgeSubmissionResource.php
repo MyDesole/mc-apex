@@ -24,7 +24,21 @@ class BridgeSubmissionResource extends JsonResource
             'id' => $row->id,
             'status' => $row->status,
             'is_confirmed' => $row->isConfirmed(),
-            'video_url' => $row->video_url,
+
+            /*
+             * Видео лежит в закрытом хранилище, поэтому отдаём подписанную
+             * ссылку на время просмотра. Внешняя ссылка остаётся только у
+             * старых заявок.
+             */
+            'video_url' => $row->video_path
+                ? \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                    'bridge.video',
+                    now()->addHours(3),
+                    ['submission' => $row->id],
+                )
+                : $row->video_url,
+
+            'has_video' => (bool) ($row->video_path || $row->video_url),
 
             'stability' => $row->stability,
             'speed' => $row->speed,

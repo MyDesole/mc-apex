@@ -8,6 +8,8 @@ use App\Domains\Bridge\Notifications\BridgeSubmissionNotification;
 use App\Domains\Bridge\Services\BridgeService;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -23,6 +25,13 @@ class BridgeTechniqueTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Storage::fake('local');
+    }
+
     private function technique(string $label = 'Telly Bridge'): BridgeTechnique
     {
         return BridgeTechnique::create([
@@ -31,6 +40,33 @@ class BridgeTechniqueTest extends TestCase
             'sort_order' => 1,
             'is_active' => true,
         ]);
+    }
+
+/** Прогоняет чанковую загрузку и возвращает upload_id. */
+    private function uploadVideo(User $user, int $size = 1024): string
+    {
+        Sanctum::actingAs($user);
+
+        $init = $this->postJson('/api/bridge/uploads', [
+            'file_name' => 'bridge.mp4',
+            'size' => $size,
+            'mime' => 'video/mp4',
+        ])->assertCreated();
+
+        $uuid = $init->json('uuid');
+
+        $this->post(
+            "/api/bridge/uploads/{$uuid}/chunks",
+            [
+                'index' => 0,
+                'chunk' => UploadedFile::fake()->createWithContent('part.mp4', str_repeat('A', $size)),
+            ],
+            ['Accept' => 'application/json'],
+        )->assertOk();
+
+        $this->postJson("/api/bridge/uploads/{$uuid}/complete")->assertOk();
+
+        return $uuid;
     }
 
     private function service(): BridgeService
@@ -43,15 +79,17 @@ class BridgeTechniqueTest extends TestCase
         $player = User::factory()->create();
         $technique = $this->technique();
 
+        $uploadId = $this->uploadVideo($player);
+
         Sanctum::actingAs($player);
 
         $this->postJson('/api/bridge/techniques', [
             'technique_id' => $technique->id,
-            'video_url' => 'https://youtu.be/abc123',
+            'upload_id' => $uploadId,
         ])
             ->assertCreated()
             ->assertJsonPath('submission.status', 'declared')
-            ->assertJsonPath('submission.video_url', 'https://youtu.be/abc123');
+            ->assertJsonPath('submission.has_video', true);
 
         $this->assertDatabaseHas('user_bridge_techniques', [
             'user_id' => $player->id,
@@ -69,7 +107,7 @@ class BridgeTechniqueTest extends TestCase
 
         $this->postJson('/api/bridge/techniques', [
             'technique_id' => $technique->id,
-        ])->assertStatus(422)->assertJsonValidationErrors(['video_url']);
+        ])->assertStatus(422)->assertJsonValidationErrors(['upload_id']);
 
         $this->assertSame(0, UserBridgeTechnique::query()->count());
     }
@@ -82,9 +120,11 @@ class BridgeTechniqueTest extends TestCase
 
         Sanctum::actingAs($player);
 
+        $uploadId = $this->uploadVideo($player);
+
         $this->postJson('/api/bridge/techniques', [
             'technique_id' => $first->id,
-            'video_url' => 'https://youtu.be/abc123',
+            'upload_id' => $uploadId,
         ])->assertCreated();
 
         $response = $this->getJson('/api/bridge/techniques')->assertOk();

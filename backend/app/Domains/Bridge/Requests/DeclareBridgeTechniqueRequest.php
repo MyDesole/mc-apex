@@ -16,7 +16,9 @@ class DeclareBridgeTechniqueRequest extends BaseFormRequest
     {
         return [
             'technique_id' => ['required', 'integer', 'exists:bridge_techniques,id'],
-            'video_url' => ['required', 'string', 'max:512', 'url'],
+
+            // Видео сначала грузится частями, здесь — идентификатор загрузки
+            'upload_id' => ['required', 'uuid', 'exists:bridge_video_uploads,uuid'],
         ];
     }
 
@@ -24,14 +26,15 @@ class DeclareBridgeTechniqueRequest extends BaseFormRequest
     {
         return [
             'technique_id' => 'вид бриджа',
-            'video_url' => 'ссылка на видео',
+            'upload_id' => 'видео',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'video_url.url' => 'Ссылка на видео должна быть полным адресом (https://...).',
+            'upload_id.required' => 'Сначала загрузи видео.',
+            'upload_id.exists' => 'Загрузка видео не найдена, попробуй ещё раз.',
         ];
     }
 }

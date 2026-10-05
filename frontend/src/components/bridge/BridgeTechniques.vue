@@ -8,6 +8,7 @@
  */
 import { computed, onMounted, ref } from 'vue'
 import { bridgeApi } from '@/services/bridge/bridge.js'
+import BridgeVideoUploader from '@/components/bridge/BridgeVideoUploader.vue'
 import { alert as alertDialog, confirm as confirmDialog } from '@/utils/dialog.js'
 
 const props = defineProps({
@@ -26,7 +27,7 @@ const error = ref('')
 
 const formOpen = ref(false)
 const submitting = ref(false)
-const form = ref({ technique_id: null, video_url: '' })
+const form = ref({ technique_id: null, upload_id: null })
 
 const confirmedCount = computed(() => props.summary?.confirmed_count ?? props.techniques.length)
 const aspectsTotal = computed(() => props.summary?.aspects_total ?? 0)
@@ -67,19 +68,19 @@ async function loadCatalog() {
 }
 
 function openForm() {
-  form.value = { technique_id: available.value[0]?.technique?.id ?? null, video_url: '' }
+  form.value = { technique_id: available.value[0]?.technique?.id ?? null, upload_id: null }
   error.value = ''
   formOpen.value = true
 }
 
 async function submit() {
-  if (!form.value.technique_id || !form.value.video_url) return
+  if (!form.value.technique_id || !form.value.upload_id) return
 
   submitting.value = true
   error.value = ''
 
   try {
-    await bridgeApi.declare(form.value.technique_id, form.value.video_url.trim())
+    await bridgeApi.declare(form.value.technique_id, form.value.upload_id)
 
     formOpen.value = false
     await loadCatalog()
@@ -217,7 +218,7 @@ onMounted(loadCatalog)
           </span>
 
           <a
-              v-if="row.submission.video_url"
+              v-if="row.submission.has_video"
               :href="row.submission.video_url"
               target="_blank"
               rel="noopener"
@@ -279,22 +280,18 @@ onMounted(loadCatalog)
           </select>
         </label>
 
-        <label class="bridge-form__field">
-          <span>Ссылка на видео</span>
+        <div class="bridge-form__field">
+          <span>Видео</span>
 
-          <input
-              v-model="form.video_url"
-              type="url"
-              placeholder="https://youtu.be/..."
-              maxlength="512"
-          />
-        </label>
+          <BridgeVideoUploader v-model="form.upload_id" />
+        </div>
 
         <p class="bridge-form__note">
           Видео должно быть записано на сервере, а не в одиночном мире:
           около двух минут, без обрезки неудач, с видимым CPS-модом и
           Keystrokes. Если показываешь несколько бриджей — пришли
-          отдельный ролик на каждый.
+          отдельный ролик на каждый. После проверки тестером ролик
+          удаляется.
         </p>
 
         <div class="bridge-form__actions">
@@ -309,7 +306,7 @@ onMounted(loadCatalog)
           <button
               type="button"
               class="bridge-form__submit"
-              :disabled="submitting || !form.technique_id || !form.video_url"
+              :disabled="submitting || !form.technique_id || !form.upload_id"
               @click="submit"
           >
             {{ submitting ? 'Отправка...' : 'Отправить на проверку' }}

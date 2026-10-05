@@ -24,6 +24,7 @@ use App\Domains\Tiers\Controllers\Api\Tester\TierTestController as TesterTierTes
 use App\Domains\Bridge\Controllers\Api\BridgeController;
 use App\Domains\Bridge\Controllers\Api\Tester\BridgeReviewController;
 use App\Domains\Bridge\Controllers\Api\Curator\BridgeTechniqueController as CuratorBridgeTechniqueController;
+use App\Domains\Bridge\Controllers\Api\BridgeVideoController;
 
 // === Admin ===
 use App\Domains\Users\Controllers\Api\Admin\UserController as AdminUserController;
@@ -122,6 +123,15 @@ Route::get('/ranking', [\App\Domains\Players\Controllers\Api\RankingController::
 
 // Профиль открывается и по id, и по нику: /api/users/Ник
 Route::get('/players/{user}', [PlayerController::class, 'show']);
+
+/*
+ * Видео бридж-заявки. Лежит в закрытом хранилище, поэтому доступ только по
+ * подписанной ссылке с ограниченным сроком — прямого адреса к файлу нет.
+ */
+Route::get('/bridge/videos/{submission}', [BridgeVideoController::class, 'show'])
+    ->middleware('signed')
+    ->name('bridge.video')
+    ->whereNumber('submission');
 Route::get('/users/{user}', [PlayerController::class, 'show']);
 
 /*
@@ -424,6 +434,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/techniques', [BridgeController::class, 'store']);
         Route::delete('/submissions/{submission}', [BridgeController::class, 'destroy'])
             ->whereNumber('submission');
+
+        /*
+         * Видео грузится частями: ролик на две минуты может весить сотни
+         * мегабайт, одним запросом он не пройдёт.
+         */
+        Route::post('/uploads', [BridgeVideoController::class, 'init']);
+        Route::post('/uploads/{upload:uuid}/chunks', [BridgeVideoController::class, 'chunk']);
+        Route::post('/uploads/{upload:uuid}/complete', [BridgeVideoController::class, 'complete']);
     });
 
     /*

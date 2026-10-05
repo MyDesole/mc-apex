@@ -12,17 +12,45 @@ export const bridgeApi = {
         return api.get('/bridge/techniques')
     },
 
-    /** Отметить вид и приложить видео. */
-    declare(techniqueId, videoUrl) {
+    /** Отметить вид: видео уже загружено частями. */
+    declare(techniqueId, uploadId) {
         return api.post('/bridge/techniques', {
             technique_id: techniqueId,
-            video_url: videoUrl,
+            upload_id: uploadId,
         })
     },
 
     /** Убрать свою заявку (подтверждённую убрать нельзя). */
     withdraw(submissionId) {
         return api.delete(`/bridge/submissions/${submissionId}`)
+    },
+}
+
+/**
+ * Видео бриджа: грузится частями прямо на Apex.
+ *
+ * Ролик на две минуты может весить сотни мегабайт, поэтому одним запросом
+ * он не пройдёт.
+ */
+export const bridgeVideoApi = {
+    /** Начать загрузку: сколько частей ждать. */
+    init({ file_name, size, mime }) {
+        return api.post('/bridge/uploads', { file_name, size, mime })
+    },
+
+    /** Отправить одну часть. */
+    chunk(uuid, index, blob) {
+        const form = new FormData()
+
+        form.append('index', String(index))
+        form.append('chunk', blob, `part-${index}`)
+
+        return api.post(`/bridge/uploads/${uuid}/chunks`, form)
+    },
+
+    /** Собрать части в готовый файл. */
+    complete(uuid) {
+        return api.post(`/bridge/uploads/${uuid}/complete`)
     },
 }
 

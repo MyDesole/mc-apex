@@ -27,7 +27,7 @@ class UserBridgeTechnique extends Model
     public const MAX_ASPECT = 100;
 
     protected $fillable = [
-        'user_id', 'technique_id', 'status', 'video_url',
+        'user_id', 'technique_id', 'status', 'video_url', 'video_path',
         'stability', 'speed', 'difficulty', 'score',
         'review_notes', 'reviewed_by', 'reviewed_at',
     ];
