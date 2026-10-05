@@ -104,7 +104,7 @@ class BridgeVideoUploadTest extends TestCase
 
         $this->postJson('/api/bridge/uploads', [
             'file_name' => 'huge.mp4',
-            'size' => BridgeVideoUpload::MAX_SIZE + 1,
+            'size' => config('bridge.max_video_size') + 1,
             'mime' => 'video/mp4',
         ])->assertStatus(422)->assertJsonValidationErrors(['size']);
     }
@@ -127,7 +127,7 @@ class BridgeVideoUploadTest extends TestCase
         $player = User::factory()->create();
 
         // Больше одной части, но ровно по границе чанка
-        $size = BridgeVideoUpload::CHUNK_SIZE + 1024;
+        $size = config('bridge.chunk_size') + 1024;
 
         $uploadId = $this->uploadVideo($player, $size);
 
@@ -181,7 +181,7 @@ class BridgeVideoUploadTest extends TestCase
 
         $init = $this->postJson('/api/bridge/uploads', [
             'file_name' => 'bridge.mp4',
-            'size' => BridgeVideoUpload::CHUNK_SIZE * 3,
+            'size' => config('bridge.chunk_size') * 3,
             'mime' => 'video/mp4',
         ])->assertCreated();
 

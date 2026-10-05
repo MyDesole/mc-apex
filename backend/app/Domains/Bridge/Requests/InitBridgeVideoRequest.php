@@ -14,7 +14,12 @@ class InitBridgeVideoRequest extends BaseFormRequest
     {
         return [
             'file_name' => ['required', 'string', 'max:255'],
-            'size' => ['required', 'integer', 'min:1', 'max:' . BridgeVideoUpload::MAX_SIZE],
+            'size' => [
+                'required',
+                'integer',
+                'min:1',
+                'max:' . (int) config('bridge.max_video_size', BridgeVideoUpload::MAX_SIZE),
+            ],
             'mime' => ['required', 'string', 'max:96'],
         ];
     }

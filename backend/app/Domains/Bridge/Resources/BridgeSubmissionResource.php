@@ -33,7 +33,7 @@ class BridgeSubmissionResource extends JsonResource
             'video_url' => $row->video_path
                 ? \Illuminate\Support\Facades\URL::temporarySignedRoute(
                     'bridge.video',
-                    now()->addHours(3),
+                    now()->addHours((int) config('bridge.video_url_ttl_hours', 3)),
                     ['submission' => $row->id],
                 )
                 : $row->video_url,

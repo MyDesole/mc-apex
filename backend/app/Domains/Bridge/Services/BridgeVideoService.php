@@ -53,7 +53,7 @@ class BridgeVideoService
             $this->abortUnprocessable('Пустой файл.');
         }
 
-        if ($size > BridgeVideoUpload::MAX_SIZE) {
+        if ($size > $this->maxSize()) {
             $this->abortUnprocessable('Видео больше 300 МБ — сожми ролик.');
         }
 
@@ -61,7 +61,7 @@ class BridgeVideoService
             $this->abortUnprocessable('Такой формат видео не поддерживается. Нужен MP4, WebM или MOV.');
         }
 
-        $totalChunks = (int) ceil($size / BridgeVideoUpload::CHUNK_SIZE);
+        $totalChunks = (int) ceil($size / $this->chunkSize());
 
         $upload = BridgeVideoUpload::create([
             'uuid' => (string) Str::uuid(),
@@ -78,7 +78,7 @@ class BridgeVideoService
 
         return [
             'uuid' => $upload->uuid,
-            'chunk_size' => BridgeVideoUpload::CHUNK_SIZE,
+            'chunk_size' => $this->chunkSize(),
             'received' => [],
         ];
     }
@@ -264,6 +264,18 @@ class BridgeVideoService
     }
 
     /* ----------------------------- Вспомогательное ----------------------------- */
+
+    /** Размер одной части: ограничен лимитами PHP и nginx на сервере. */
+    public function chunkSize(): int
+    {
+        return max(262144, (int) config('bridge.chunk_size', BridgeVideoUpload::CHUNK_SIZE));
+    }
+
+    /** Наибольший размер ролика. */
+    public function maxSize(): int
+    {
+        return (int) config('bridge.max_video_size', BridgeVideoUpload::MAX_SIZE);
+    }
 
     private function assertOwner(User $user, BridgeVideoUpload $upload): void
     {
