@@ -10,4 +10,7 @@ export const tierTestsApi = {
     update(id, payload) {
         return api.put(`/tier-tests/${id}`, payload)
     },
+    cancel(id, reason = null) {
+        return api.post(`/tier-tests/${id}/cancel`, { reason })
+    },
 }

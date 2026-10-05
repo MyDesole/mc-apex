@@ -48,7 +48,11 @@ class TierTestResource extends JsonResource
                 : null,
 
             'tester' => $test->relationLoaded('tester') && $test->tester
-                ? ['id' => $test->tester->id, 'username' => $test->tester->username]
+                ? [
+                    'id' => $test->tester->id,
+                    'username' => $test->tester->username,
+                    'avatar_url' => $test->tester->avatar_url,
+                ]
                 : null,
 
             'claimer' => $test->relationLoaded('claimer') && $test->claimer

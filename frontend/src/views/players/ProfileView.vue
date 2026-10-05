@@ -9,6 +9,7 @@ import ProfileCustomizeModal from '@/components/players/ProfileCustomizeModal.vu
 import TierTestForm from '@/components/tiers/TierTestForm.vue'
 
 import { api } from '@/services/core/api.js'
+import { tierTestsApi } from '@/services/tiers/tierTests.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import { userLink } from '@/utils/links.js'
 
@@ -72,7 +73,35 @@ function onCustomizeUpdated() {
 
 const showTierTestForm = ref(false)
 
+/*
+ * Активная заявка: ожидает тестера или уже в работе. Пока она есть,
+ * кнопка записи недоступна — при клике объясняем, почему.
+ */
+const activeTest = ref(null)
+const showActiveTestModal = ref(false)
+
+async function loadActiveTest() {
+  if (!auth.user?.id) return
+
+  try {
+    const data = await tierTestsApi.list()
+
+    activeTest.value = (data.my_tests || []).find(
+        t => t.status === 'pending' || t.status === 'in_progress',
+    ) ?? null
+  } catch {
+    /* Не критично: просто не покажем состояние заявки */
+    activeTest.value = null
+  }
+}
+
 function openTierTestForm() {
+  if (activeTest.value) {
+    showActiveTestModal.value = true
+
+    return
+  }
+
   showTierTestForm.value = true
 }
 
@@ -80,7 +109,31 @@ function onTierTestCreated() {
   showTierTestForm.value = false
 
   auth.fetchMe()
+  loadActiveTest()
 }
+
+/** Отмена активной заявки из модалки. */
+const cancellingActive = ref(false)
+
+async function cancelActiveTest() {
+  if (!activeTest.value || cancellingActive.value) return
+
+  cancellingActive.value = true
+
+  try {
+    await tierTestsApi.cancel(activeTest.value.id)
+
+    activeTest.value = null
+    showActiveTestModal.value = false
+  } catch (e) {
+    // Ошибку показываем в модалке
+    activeTestCancelError.value = e.message || 'Не удалось отменить'
+  } finally {
+    cancellingActive.value = false
+  }
+}
+
+const activeTestCancelError = ref('')
 
 
 /* =========================================================
@@ -93,6 +146,7 @@ onMounted(async () => {
   }
 
   await loadRecommendations()
+  await loadActiveTest()
 })
 </script>
 
@@ -308,6 +362,8 @@ onMounted(async () => {
           <button
               type="button"
               class="tests-section__button"
+              :class="{ 'tests-section__button--disabled': activeTest }"
+              :disabled="Boolean(activeTest)"
               @click="openTierTestForm"
           >
 
@@ -373,8 +429,89 @@ onMounted(async () => {
 
       <TierTestForm
           v-model="showTierTestForm"
+          :active-test="activeTest"
           @created="onTierTestCreated"
       />
+
+      <!-- Объяснение, почему запись недоступна -->
+      <Teleport to="body">
+        <div
+            v-if="showActiveTestModal"
+            class="active-test-modal-bg"
+            @click.self="showActiveTestModal = false"
+        >
+          <div class="active-test-modal">
+            <header class="active-test-modal__head">
+              <h3>
+                {{
+                  activeTest?.status === 'in_progress'
+                    ? 'Тест уже в работе'
+                    : 'Заявка уже отправлена'
+                }}
+              </h3>
+
+              <button
+                  type="button"
+                  class="active-test-modal__close"
+                  @click="showActiveTestModal = false"
+                  aria-label="Закрыть"
+              >
+                ×
+              </button>
+            </header>
+
+            <div class="active-test-modal__body">
+              <p>
+                {{
+                  activeTest?.status === 'in_progress'
+                    ? 'Тестер уже взял твою заявку в работу. Дождись результата — отменить тест на этом этапе нельзя.'
+                    : 'Заявка ждёт тестера. Вторую создавать не нужно — дождись этой или отмени её.'
+                }}
+              </p>
+
+              <div
+                  v-if="activeTest"
+                  class="active-test-modal__meta"
+              >
+                <span>{{ activeTest.mode === 'pvp' ? 'PvP' : 'BedWars' }}</span>
+
+                <span class="sep">·</span>
+
+                <span>
+                  {{ new Date(activeTest.created_at).toLocaleDateString('ru-RU') }}
+                </span>
+              </div>
+
+              <p
+                  v-if="activeTestCancelError"
+                  class="active-test-modal__error"
+              >
+                {{ activeTestCancelError }}
+              </p>
+            </div>
+
+            <footer class="active-test-modal__foot">
+              <button
+                  type="button"
+                  class="active-test-modal__close-btn"
+                  @click="showActiveTestModal = false"
+              >
+                Понятно
+              </button>
+
+              <button
+                  v-if="activeTest?.status === 'pending'"
+                  type="button"
+                  class="active-test-modal__cancel-btn"
+                  :disabled="cancellingActive"
+                  @click="cancelActiveTest"
+              >
+                {{ cancellingActive ? 'Отмена…' : 'Отменить заявку' }}
+              </button>
+            </footer>
+          </div>
+        </div>
+      </Teleport>
 
     </template>
 

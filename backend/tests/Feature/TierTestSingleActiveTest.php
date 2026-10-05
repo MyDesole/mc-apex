@@ -164,6 +164,99 @@ class TierTestSingleActiveTest extends TestCase
         $response->assertJsonPath('history.0.result_tier', 'A');
     }
 
+    public function test_player_can_cancel_their_pending_request(): void
+    {
+        $player = User::factory()->create();
+
+        $test = TierTest::create([
+            'user_id' => $player->id,
+            'mode' => 'pvp',
+            'status' => 'pending',
+            'contact_type' => 'discord',
+            'contact_value' => 'tester#0001',
+            'preferred_time' => 'завтра',
+        ]);
+
+        Sanctum::actingAs($player);
+
+        $this->postJson("/api/tier-tests/{$test->id}/cancel")
+            ->assertOk()
+            ->assertJsonPath('tier_test.status', 'cancelled');
+    }
+
+    public function test_player_cannot_cancel_a_request_in_progress(): void
+    {
+        $player = User::factory()->create();
+        $tester = User::factory()->create(['role' => 'tester']);
+
+        $test = TierTest::create([
+            'user_id' => $player->id,
+            'tester_id' => $tester->id,
+            'claimed_by' => $tester->id,
+            'claimed_at' => now(),
+            'mode' => 'pvp',
+            'status' => 'in_progress',
+            'contact_type' => 'discord',
+            'contact_value' => 'tester#0001',
+            'preferred_time' => 'сейчас',
+        ]);
+
+        Sanctum::actingAs($player);
+
+        $this->postJson("/api/tier-tests/{$test->id}/cancel")
+            ->assertStatus(422);
+    }
+
+    public function test_player_cannot_cancel_someone_elses_request(): void
+    {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+
+        $test = TierTest::create([
+            'user_id' => $owner->id,
+            'mode' => 'pvp',
+            'status' => 'pending',
+            'contact_type' => 'discord',
+            'contact_value' => 'tester#0001',
+            'preferred_time' => 'завтра',
+        ]);
+
+        Sanctum::actingAs($other);
+
+        $this->postJson("/api/tier-tests/{$test->id}/cancel")
+            ->assertForbidden();
+    }
+
+    public function test_history_returns_the_tester_avatar(): void
+    {
+        $player = User::factory()->create();
+        $tester = User::factory()->create([
+            'role' => 'tester',
+            'username' => 'AvatarTester',
+            'avatar' => 'avatars/tester.png',
+        ]);
+
+        TierTest::create([
+            'user_id' => $player->id,
+            'tester_id' => $tester->id,
+            'mode' => 'pvp',
+            'status' => 'completed',
+            'completed_at' => now(),
+            'result_tier' => 'A',
+            'result_score' => 75,
+            'contact_type' => 'discord',
+            'contact_value' => 'tester#0001',
+            'preferred_time' => 'вчера',
+        ]);
+
+        Sanctum::actingAs($player);
+
+        $response = $this->getJson("/api/players/{$player->id}/tier-history")->assertOk();
+
+        $response->assertJsonPath('history.0.tester.username', 'AvatarTester');
+        $response->assertJsonPath('history.0.tester.avatar_url', $tester->avatar_url);
+    }
+
     public function test_manual_test_by_admin_closes_the_active_request(): void
     {
         $player = User::factory()->create();

@@ -582,6 +582,19 @@
   height: 15px;
 }
 
+/* Запись недоступна, пока есть активная заявка */
+.tests-section__button--disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+
+  filter: saturate(0.6);
+}
+
+.tests-section__button--disabled:hover {
+  transform: none;
+}
+
 .tests-section__button:hover {
   transform: translateY(-2px);
 
@@ -892,4 +905,168 @@
   .profile-loading__orb span {
     animation: none;
   }
+}
+
+
+/* =========================================================
+   МОДАЛКА «ЗАЯВКА УЖЕ ЕСТЬ»
+========================================================= */
+
+.active-test-modal-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 16px;
+
+  background: rgba(6, 7, 14, 0.72);
+
+  backdrop-filter: blur(6px);
+}
+
+.active-test-modal {
+  width: 100%;
+  max-width: 420px;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+
+  background: #10111c;
+
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.active-test-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 18px 20px 14px;
+}
+
+.active-test-modal__head h3 {
+  margin: 0;
+
+  color: #e5e5eb;
+
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.active-test-modal__close {
+  width: 30px;
+  height: 30px;
+
+  color: #858798;
+  background: transparent;
+
+  border: none;
+  border-radius: 8px;
+
+  font-size: 22px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.active-test-modal__close:hover {
+  color: #e5e5eb;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.active-test-modal__body {
+  padding: 0 20px 18px;
+
+  color: #9a9cad;
+
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.active-test-modal__body p {
+  margin: 0;
+}
+
+.active-test-modal__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-top: 12px;
+
+  color: #6b6d7c;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.active-test-modal__meta .sep {
+  opacity: 0.5;
+}
+
+.active-test-modal__error {
+  margin-top: 12px !important;
+
+  color: #fca5a5 !important;
+}
+
+.active-test-modal__foot {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+
+  padding: 14px 20px;
+
+  background: rgba(255, 255, 255, 0.02);
+
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.active-test-modal__close-btn {
+  padding: 9px 16px;
+
+  color: #e5e5eb;
+  background: rgba(255, 255, 255, 0.06);
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.active-test-modal__close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.active-test-modal__cancel-btn {
+  padding: 9px 16px;
+
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.1);
+
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 9px;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.active-test-modal__cancel-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.16);
+}
+
+.active-test-modal__cancel-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
 }

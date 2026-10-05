@@ -67,6 +67,23 @@ class TierTestController extends Controller
             'tier_test' => $test->load(['tester:id,username,avatar']),
         ], 201);
     }
+    /**
+     * Игрок отменяет собственную заявку.
+     *
+     * Разрешено только пока заявка ожидает тестера. Заявку в работе
+     * отменяет тестер — игроку остаётся ждать результата.
+     */
+    public function cancel(Request $request, TierTest $tierTest): JsonResponse
+    {
+        $cancelled = $this->tierTests->cancelByPlayer(
+            tierTest: $tierTest,
+            player: $request->user(),
+            reason: $request->input('reason'),
+        );
+
+        return response()->json(['tier_test' => $cancelled->load('tester:id,username,avatar')]);
+    }
+
     public function history(Request $request, User $user): JsonResponse
     {
         $tests = $user->tierTests()

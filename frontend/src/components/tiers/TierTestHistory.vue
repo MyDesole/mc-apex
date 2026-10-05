@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { tierTestsApi } from '@/services/tiers/tierTests.js'
 import TierTestForm from '@/components/tiers/TierTestForm.vue'
+import { userLink } from '@/utils/links.js'
 
 const loading = ref(true)
 const myTests = ref([])
@@ -31,6 +32,27 @@ const activeTest = computed(() =>
         t => t.status === 'pending' || t.status === 'in_progress',
     ) ?? null
 )
+
+/** Отмена собственной заявки, пока она ждёт тестера. */
+const cancellingId = ref(null)
+const cancelError = ref('')
+
+async function cancelTest(test) {
+  if (cancellingId.value) return
+
+  cancellingId.value = test.id
+  cancelError.value = ''
+
+  try {
+    await tierTestsApi.cancel(test.id)
+
+    await load()
+  } catch (e) {
+    cancelError.value = e.message || 'Не удалось отменить заявку'
+  } finally {
+    cancellingId.value = null
+  }
+}
 
 const statusLabels = {
   pending: 'Ожидает',
@@ -127,6 +149,13 @@ onMounted(load)
         </div>
       </div>
 
+      <div
+          v-if="cancelError"
+          class="cancel-error"
+      >
+        {{ cancelError }}
+      </div>
+
       <!-- LIST -->
       <div v-else class="list">
         <div
@@ -169,9 +198,26 @@ onMounted(load)
             <template v-if="t.tester">
               <span class="test-tester__label">Тестер</span>
 
-              <span class="test-tester__name">
-                {{ t.tester.username }}
-              </span>
+              <RouterLink
+                  :to="userLink(t.tester)"
+                  class="test-tester__person"
+              >
+                <span class="test-tester__avatar">
+                  <img
+                      v-if="t.tester.avatar_url"
+                      :src="t.tester.avatar_url"
+                      :alt="t.tester.username"
+                  />
+
+                  <span v-else class="test-tester__avatar-fallback">
+                    {{ (t.tester.username || 'Т')[0].toUpperCase() }}
+                  </span>
+                </span>
+
+                <span class="test-tester__name">
+                  {{ t.tester.username }}
+                </span>
+              </RouterLink>
             </template>
 
             <span
@@ -201,6 +247,16 @@ onMounted(load)
           >
             —
           </div>
+
+          <button
+              v-if="t.status === 'pending'"
+              type="button"
+              class="test-cancel"
+              :disabled="cancellingId === t.id"
+              @click="cancelTest(t)"
+          >
+            {{ cancellingId === t.id ? 'Отмена…' : 'Отменить' }}
+          </button>
         </div>
       </div>
     </template>

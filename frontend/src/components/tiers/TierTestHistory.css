@@ -175,7 +175,7 @@ h2 {
   position: relative;
 
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) auto auto;
+  grid-template-columns: 28px minmax(0, 1fr) auto auto auto auto;
 
   align-items: center;
 
@@ -328,12 +328,57 @@ h2 {
 
 /* Кто провёл тест: раньше этого в истории не было */
 .test-tester {
-  min-width: 130px;
+  min-width: 150px;
 
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 2px;
+}
+
+.test-tester__person {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  max-width: 180px;
+
+  text-decoration: none;
+}
+
+.test-tester__person:hover .test-tester__name {
+  color: #a78bfa;
+}
+
+.test-tester__avatar {
+  width: 24px;
+  height: 24px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  border-radius: 50%;
+
+  background: rgba(139, 92, 246, 0.18);
+}
+
+.test-tester__avatar img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.test-tester__avatar-fallback {
+  color: #c4b5fd;
+
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .test-tester__label {
@@ -387,6 +432,50 @@ h2 {
 
 .test-result--empty {
   color: #454756;
+
+  font-size: 13px;
+}
+
+/* Отмена заявки, пока она ждёт тестера */
+.test-cancel {
+  padding: 6px 10px;
+
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.08);
+
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  border-radius: 7px;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+      background 0.18s ease,
+      border-color 0.18s ease;
+}
+
+.test-cancel:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.test-cancel:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Ошибка отмены */
+.cancel-error {
+  padding: 10px 12px;
+  margin-bottom: 10px;
+
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.08);
+
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
 
   font-size: 13px;
 }

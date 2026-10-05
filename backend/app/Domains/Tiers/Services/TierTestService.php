@@ -234,6 +234,34 @@ class TierTestService
         return $test;
     }
 
+    /**
+     * Отмена заявки самим игроком.
+     *
+     * Игрок может отозвать заявку, пока её не взяли в работу. После этого
+     * судьба теста — за тестером: отмену в работе делает только он.
+     */
+    public function cancelByPlayer(TierTest $tierTest, User $player, ?string $reason = null): TierTest
+    {
+        if ($tierTest->user_id !== $player->id) {
+            abort(403, 'Это не ваша заявка.');
+        }
+
+        if ($tierTest->status !== 'pending') {
+            $this->abortUnprocessable(
+                $tierTest->status === 'in_progress'
+                    ? 'Тест уже в работе. Отменить его может только тестер.'
+                    : 'Эту заявку уже нельзя отменить.'
+            );
+        }
+
+        $tierTest->update([
+            'status' => 'cancelled',
+            'notes' => $reason,
+        ]);
+
+        return $tierTest->fresh();
+    }
+
     public function cancel(TierTest $tierTest, User $tester, ?string $reason): TierTest
     {
         $this->assertClaimedBy($tierTest, $tester);

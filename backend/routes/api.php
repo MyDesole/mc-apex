@@ -311,6 +311,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [TierTestController::class, 'index']);
         Route::post('/', [TierTestController::class, 'store']);
         Route::get('/{tierTest}', [TierTestController::class, 'show'])->whereNumber('tierTest');
+        Route::post('/{tierTest}/cancel', [TierTestController::class, 'cancel'])->whereNumber('tierTest');
         Route::put('/{tierTest}', [TierTestController::class, 'update'])->whereNumber('tierTest');
     });
 
