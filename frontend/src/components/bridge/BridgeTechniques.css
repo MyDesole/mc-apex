@@ -421,3 +421,53 @@
     flex-direction: column;
   }
 }
+
+/* ---------------- Переключаемые подвиды ---------------- */
+
+.variant-pill--toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  cursor: pointer;
+
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.variant-pill--toggle:hover:not(:disabled) {
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
+.variant-pill--toggle:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Включённый подвид */
+.variant-pill--on {
+  color: #ddd6fe;
+  background: rgba(139, 92, 246, 0.28);
+  border-color: rgba(139, 92, 246, 0.6);
+}
+
+/* Особый подвид выделяется */
+.variant-pill--special {
+  border-color: rgba(251, 191, 36, 0.55);
+}
+
+.variant-pill--special.variant-pill--on {
+  background: rgba(251, 191, 36, 0.18);
+  border-color: rgba(251, 191, 36, 0.7);
+  color: #fde68a;
+}
+
+.variant-pill__mark {
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.variant-pill__star {
+  color: #fbbf24;
+
+  font-size: 9px;
+}

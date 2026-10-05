@@ -19,8 +19,18 @@ const rows = ref([])
 // Звания: тестер выдаёт их вручную
 const ranks = ref([])
 const bridgers = ref([])
+const history = ref([])
 const tab = ref('queue')
 const rankBusy = ref(null)
+
+// Подвиды выбранной заявки: тестер включает и выключает их
+const reviewVariants = ref([])
+
+const rankLabel = computed(() => {
+  if (!form.value.rank_id) return 'не меняем'
+
+  return ranks.value.find(r => r.id === form.value.rank_id)?.label ?? 'не меняем'
+})
 
 const active = ref(null)
 const processing = ref(false)
@@ -43,31 +53,27 @@ const total = computed(() =>
     + (Number(form.value.difficulty) || 0),
 )
 
-const tierForTotal = computed(() => {
-  const value = total.value
-
-  if (value >= 213) return 'A'
-  if (value >= 168) return 'B'
-  if (value >= 123) return 'C'
-  if (value >= 63) return 'D'
-
-  return 'E'
-})
+/*
+ * Тира в бридже нет: раньше он считался из суммы аспектов, но ранг
+ * бриджера выдаёт тестер вручную. Оставляем только общую статистику.
+ */
 
 async function load() {
   loading.value = true
   error.value = ''
 
   try {
-    const [pending, rankList, playerList] = await Promise.all([
+    const [pending, rankList, playerList, historyList] = await Promise.all([
       bridgeReviewApi.pending(),
       bridgeReviewApi.ranks(),
       bridgeReviewApi.players(),
+      bridgeReviewApi.history(),
     ])
 
     rows.value = pending.data ?? []
     ranks.value = rankList.data ?? []
     bridgers.value = playerList.data ?? []
+    history.value = historyList.data ?? []
   } catch (e) {
     error.value = e.message || 'Не удалось загрузить данные'
   } finally {
@@ -95,6 +101,19 @@ function open(row) {
   active.value = row
   form.value = empty()
   error.value = ''
+
+  // Отмечаем подвиды, которые заявил игрок
+  const claimed = (row.variants ?? []).map(v => v.id)
+
+  reviewVariants.value = (row.technique?.variants ?? []).map(v => ({
+    ...v,
+    enabled: claimed.includes(v.id),
+  }))
+}
+
+/** Тестер включает или выключает подвид заявки. */
+function toggleReviewVariant(variant) {
+  variant.enabled = !variant.enabled
 }
 
 function close() {
@@ -113,6 +132,7 @@ async function confirm() {
       difficulty: Number(form.value.difficulty) || 0,
       score: Number(form.value.score) || 0,
       notes: form.value.notes || null,
+      variants: reviewVariants.value.filter(v => v.enabled).map(v => v.id),
     })
 
     // Звание выдаём отдельно: оно не обязательно при каждом подтверждении
@@ -200,6 +220,16 @@ onMounted(load)
         Бриджеры
         <span v-if="bridgers.length" class="review-tab__badge">{{ bridgers.length }}</span>
       </button>
+
+      <button
+          type="button"
+          class="review-tab"
+          :class="{ 'review-tab--active': tab === 'history' }"
+          @click="tab = 'history'"
+      >
+        История
+        <span v-if="history.length" class="review-tab__badge">{{ history.length }}</span>
+      </button>
     </div>
 
     <div v-if="error" class="bridge-review__error">{{ error }}</div>
@@ -214,6 +244,47 @@ onMounted(load)
 
     <div v-else-if="tab === 'bridgers' && !bridgers.length" class="bridge-review__state">
       Пока нет бриджеров с подтверждёнными видами
+    </div>
+
+    <div v-else-if="tab === 'history' && !history.length" class="bridge-review__state">
+      Проверок пока не было
+    </div>
+
+    <!-- ============ ИСТОРИЯ: все проверки, включая чужие ============ -->
+    <div v-else-if="tab === 'history'" class="history">
+      <article
+          v-for="row in history"
+          :key="row.id"
+          class="history-row"
+          :class="row.is_confirmed ? 'history-row--ok' : 'history-row--no'"
+      >
+        <div class="history-row__who">
+          <RouterLink
+              :to="'/players/' + (row.user?.id ?? '')"
+              class="history-row__name"
+          >
+            {{ row.user?.username }}
+          </RouterLink>
+
+          <span class="history-row__tech">{{ row.technique?.label }}</span>
+        </div>
+
+        <div class="history-row__result">
+          <span
+              v-if="row.is_confirmed"
+              class="history-row__score"
+          >
+            {{ row.score }}/10 · {{ row.total }}/300
+          </span>
+
+          <span v-else class="history-row__rejected">отклонено</span>
+        </div>
+
+        <div class="history-row__reviewer">
+          <span class="history-row__label">проверил</span>
+          {{ row.reviewer?.username ?? '—' }}
+        </div>
+      </article>
     </div>
 
     <!-- ================= БРИДЖЕРЫ: выдача званий ================= -->
@@ -396,10 +467,36 @@ onMounted(load)
               </div>
 
               <div>
-                <span class="review-result__label">Тир</span>
+                <span class="review-result__label">Звание</span>
                 <span class="review-result__value review-result__value--tier">
-                  {{ tierForTotal }}
+                  {{ rankLabel }}
                 </span>
+              </div>
+            </div>
+
+            <!-- Подвиды: тестер включает и выключает их перед подтверждением -->
+            <div
+                v-if="reviewVariants.length"
+                class="review-field review-field--wide"
+            >
+              <span>Подвиды <i>тестер подтверждает набор</i></span>
+
+              <div class="review-variants">
+                <button
+                    v-for="variant in reviewVariants"
+                    :key="variant.id"
+                    type="button"
+                    class="review-variant"
+                    :class="{
+                      'review-variant--on': variant.enabled,
+                      'review-variant--special': variant.is_special,
+                    }"
+                    @click="toggleReviewVariant(variant)"
+                >
+                  <span class="review-variant__mark">{{ variant.enabled ? '✓' : '+' }}</span>
+                  {{ variant.label }}
+                  <span v-if="variant.is_special" class="review-variant__star">★</span>
+                </button>
               </div>
             </div>
 

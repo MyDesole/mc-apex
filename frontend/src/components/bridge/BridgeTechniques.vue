@@ -27,6 +27,7 @@ const error = ref('')
 
 const formOpen = ref(false)
 const submitting = ref(false)
+const togglingVariants = ref(null)
 const form = ref({ technique_id: null, upload_id: null })
 
 const confirmedCount = computed(() => props.summary?.confirmed_count ?? props.techniques.length)
@@ -89,6 +90,38 @@ async function submit() {
   } finally {
     submitting.value = false
   }
+}
+
+/**
+ * Игрок включает и выключает подвиды своей заявки.
+ *
+ * Пока заявку не подтвердил тестер, набор можно менять в любой момент.
+ */
+async function toggleVariant(row, variant) {
+  const current = (row.submission.variants ?? []).map(v => v.id)
+  const has = current.includes(variant.id)
+
+  const next = has
+      ? current.filter(id => id !== variant.id)
+      : [...current, variant.id]
+
+  togglingVariants.value = row.submission.id
+  error.value = ''
+
+  try {
+    await bridgeApi.setVariants(row.submission.id, next)
+
+    await loadCatalog()
+  } catch (e) {
+    error.value = e.message || 'Не удалось изменить подвиды'
+  } finally {
+    togglingVariants.value = null
+  }
+}
+
+/** Отмечен ли подвид в заявке. */
+function isVariantOn(row, variantId) {
+  return (row.submission?.variants ?? []).some(v => v.id === variantId)
 }
 
 async function withdraw(row) {
@@ -179,18 +212,47 @@ onMounted(loadCatalog)
             {{ row.technique.description }}
           </span>
 
-          <!-- Подвиды: пиллы под названием вида -->
+          <!--
+            Подвиды: у неподтверждённой заявки игрок включает и выключает их
+            сам, у подтверждённой — просто показываем набор.
+          -->
           <span
               v-if="row.technique.variants?.length"
               class="variant-pills"
           >
-            <span
-                v-for="variant in row.technique.variants"
-                :key="variant.id"
-                class="variant-pill"
-            >
-              {{ variant.label }}
-            </span>
+            <template v-if="editable && row.submission && !row.submission.is_confirmed">
+              <button
+                  v-for="variant in row.technique.variants"
+                  :key="variant.id"
+                  type="button"
+                  class="variant-pill variant-pill--toggle"
+                  :class="{
+                    'variant-pill--on': isVariantOn(row, variant.id),
+                    'variant-pill--special': variant.is_special,
+                  }"
+                  :disabled="togglingVariants === row.submission.id"
+                  @click="toggleVariant(row, variant)"
+              >
+                <span class="variant-pill__mark">
+                  {{ isVariantOn(row, variant.id) ? '✓' : '+' }}
+                </span>
+                {{ variant.label }}
+              </button>
+            </template>
+
+            <template v-else>
+              <span
+                  v-for="variant in (row.submission?.variants?.length
+                      ? row.submission.variants
+                      : row.technique.variants)"
+                  :key="variant.id"
+                  class="variant-pill"
+                  :class="{ 'variant-pill--special': variant.is_special }"
+              >
+                {{ variant.label }}
+                <span v-if="variant.is_special" class="variant-pill__star">★</span>
+              </span>
+            </template>
           </span>
         </div>
 

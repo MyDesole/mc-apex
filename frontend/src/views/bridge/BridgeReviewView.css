@@ -610,3 +610,152 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------------- Подвиды при проверке ---------------- */
+
+.review-variants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.review-variant {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 6px 12px;
+
+  color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.04);
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.review-variant--on {
+  color: #ddd6fe;
+  background: rgba(139, 92, 246, 0.22);
+  border-color: rgba(139, 92, 246, 0.55);
+}
+
+.review-variant--special {
+  border-color: rgba(251, 191, 36, 0.5);
+}
+
+.review-variant--special.review-variant--on {
+  background: rgba(251, 191, 36, 0.16);
+  color: #fde68a;
+}
+
+.review-variant__mark {
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.review-variant__star {
+  color: #fbbf24;
+
+  font-size: 9px;
+}
+
+/* ---------------- История проверок ---------------- */
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) auto minmax(0, 1fr);
+
+  align-items: center;
+  gap: 12px;
+
+  padding: 11px 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-left-width: 3px;
+  border-radius: 11px;
+
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.history-row--ok {
+  border-left-color: #22c55e;
+}
+
+.history-row--no {
+  border-left-color: #ef4444;
+}
+
+.history-row__name {
+  color: var(--text, #e5e5eb);
+
+  font-size: 13px;
+  font-weight: 800;
+
+  text-decoration: none;
+}
+
+.history-row__name:hover {
+  color: #c4b5fd;
+}
+
+.history-row__tech {
+  margin-left: 8px;
+
+  color: rgba(255, 255, 255, 0.45);
+
+  font-size: 12px;
+}
+
+.history-row__score {
+  color: #c4b5fd;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  white-space: nowrap;
+}
+
+.history-row__rejected {
+  color: #fca5a5;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.history-row__reviewer {
+  color: rgba(255, 255, 255, 0.5);
+
+  font-size: 12px;
+  text-align: right;
+}
+
+.history-row__label {
+  color: rgba(255, 255, 255, 0.28);
+
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+@media (max-width: 720px) {
+  .history-row {
+    grid-template-columns: 1fr;
+  }
+
+  .history-row__reviewer {
+    text-align: left;
+  }
+}

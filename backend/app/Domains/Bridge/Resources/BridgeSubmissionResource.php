@@ -40,6 +40,9 @@ class BridgeSubmissionResource extends JsonResource
 
             'has_video' => (bool) ($row->video_path || $row->video_url),
 
+            // Какие подвиды заявлены: id + подписи для показа
+            'variants' => $this->variantPayload($row),
+
             'stability' => $row->stability,
             'speed' => $row->speed,
             'difficulty' => $row->difficulty,
@@ -65,5 +68,36 @@ class BridgeSubmissionResource extends JsonResource
             'created_at' => $row->created_at?->toIso8601String(),
             'updated_at' => $row->updated_at?->toIso8601String(),
         ];
+    }
+
+    /**
+     * Подвиды заявки: id и подписи.
+     *
+     * Отдаём и id, и подписи: странице нужны подписи для показа, а
+     * переключателям — id, чтобы не сверять их со справочником.
+     *
+     * @return array<int, array{id:int, label:string, is_special:bool}>
+     */
+    private function variantPayload(\App\Domains\Bridge\Models\UserBridgeTechnique $row): array
+    {
+        $ids = $row->variants ?? [];
+
+        if ($ids === [] || ! $row->relationLoaded('technique') || ! $row->technique) {
+            return [];
+        }
+
+        $all = $row->technique->relationLoaded('variants')
+            ? $row->technique->variants
+            : $row->technique->variants()->get();
+
+        return $all
+            ->whereIn('id', $ids)
+            ->map(fn ($variant) => [
+                'id' => $variant->id,
+                'label' => $variant->label,
+                'is_special' => (bool) $variant->is_special,
+            ])
+            ->values()
+            ->all();
     }
 }

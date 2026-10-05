@@ -17,6 +17,9 @@ class RegisterRequest extends BaseFormRequest
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'verification_token' => ['required', 'string'],
             'referral_code' => ['nullable', 'string', 'max:32'],
+
+            // Бриджер или пвпшер: сразу задаёт вид профиля
+            'profile_mode' => ['nullable', 'in:pvp,bridge'],
         ];
     }
 
@@ -27,6 +30,7 @@ class RegisterRequest extends BaseFormRequest
             'username.unique' => 'Такой ник уже занят.',
             'password.confirmed' => 'Пароли не совпадают.',
             'password.min' => 'Пароль должен быть не короче 8 символов.',
+            'profile_mode.in' => 'Профиль: pvp или bridge.',
         ];
     }
 }

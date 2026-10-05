@@ -19,6 +19,10 @@ class DeclareBridgeTechniqueRequest extends BaseFormRequest
 
             // Видео сначала грузится частями, здесь — идентификатор загрузки
             'upload_id' => ['required', 'uuid', 'exists:bridge_video_uploads,uuid'],
+
+            // Какие подвиды вида игрок показывает в ролике
+            'variants' => ['nullable', 'array'],
+            'variants.*' => ['integer', 'exists:bridge_technique_variants,id'],
         ];
     }
 

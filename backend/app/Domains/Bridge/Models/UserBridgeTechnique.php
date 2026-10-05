@@ -27,7 +27,7 @@ class UserBridgeTechnique extends Model
     public const MAX_ASPECT = 100;
 
     protected $fillable = [
-        'user_id', 'technique_id', 'status', 'video_url', 'video_path',
+        'user_id', 'technique_id', 'status', 'video_url', 'video_path', 'variants',
         'stability', 'speed', 'difficulty', 'score',
         'review_notes', 'reviewed_by', 'reviewed_at',
     ];
@@ -38,6 +38,7 @@ class UserBridgeTechnique extends Model
         'difficulty' => 'integer',
         'score' => 'integer',
         'reviewed_at' => 'datetime',
+        'variants' => 'array',
     ];
 
     public function user(): BelongsTo

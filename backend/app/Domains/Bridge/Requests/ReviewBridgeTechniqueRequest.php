@@ -27,6 +27,10 @@ class ReviewBridgeTechniqueRequest extends BaseFormRequest
             'difficulty' => ['required_if:confirm,true', 'nullable', 'integer', 'min:0', "max:{$max}"],
             'score' => ['required_if:confirm,true', 'nullable', 'integer', 'min:0', "max:{$maxScore}"],
 
+            // Тестер может поправить набор подвидов при подтверждении
+            'variants' => ['nullable', 'array'],
+            'variants.*' => ['integer', 'exists:bridge_technique_variants,id'],
+
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
     }

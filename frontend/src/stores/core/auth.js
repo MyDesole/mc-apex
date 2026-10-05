@@ -98,7 +98,7 @@ export const useAuthStore = defineStore('auth', () => {
     /**
      * Шаг 3: создать аккаунт. Требует verification_token.
      */
-    async function register(username, password, passwordConfirmation) {
+    async function register(username, password, passwordConfirmation, profileMode = 'pvp') {
         loading.value = true
 
         try {
@@ -110,6 +110,7 @@ export const useAuthStore = defineStore('auth', () => {
                 password_confirmation: passwordConfirmation,
                 verification_token: verificationToken.value,
                 referral_code: referralCode.value,
+                profile_mode: profileMode,
             })
 
             // сбрасываем одноразовый токен — он уже использован

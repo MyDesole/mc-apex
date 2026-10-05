@@ -16,6 +16,9 @@ class BridgeVariantRequest extends BaseFormRequest
             'label' => [$this->isMethod('post') ? 'required' : 'sometimes', 'string', 'max:96'],
             'sort_order' => ['sometimes', 'integer', 'min:0', 'max:10000'],
             'is_active' => ['sometimes', 'boolean'],
+
+            // Особый подвид выделяется в списке у игрока и тестера
+            'is_special' => ['sometimes', 'boolean'],
         ];
     }
 

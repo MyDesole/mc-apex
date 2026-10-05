@@ -46,13 +46,25 @@ class BridgeReviewController extends Controller
                 'difficulty' => (int) $validated['difficulty'],
                 'score' => (int) $validated['score'],
                 'notes' => $validated['notes'] ?? null,
+                'variants' => $validated['variants'] ?? null,
             ])
             : $this->bridge->reject($submission, $request->user(), $validated['notes'] ?? null);
 
         return response()->json([
             'submission' => (new BridgeSubmissionResource(
-                $result->load('technique', 'user')
+                // reviewer нужен: в истории видно, кто проводил проверку
+                $result->load('technique.variants', 'user', 'reviewer:id,username,avatar')
             ))->resolve(),
+        ]);
+    }
+
+    /** История всех проверок: куратор видит и чужие проверки. */
+    public function history(): JsonResponse
+    {
+        return response()->json([
+            'data' => BridgeSubmissionResource::collection(
+                $this->bridge->history()
+            )->resolve(),
         ]);
     }
 

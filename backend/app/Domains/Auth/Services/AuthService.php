@@ -65,6 +65,7 @@ class AuthService
         string $password,
         string $verificationToken,
         ?string $referralCode = null,
+        string $profileMode = 'pvp',
     ): User {
         $email = $this->verification->consumeToken($verificationToken);
 
@@ -82,6 +83,8 @@ class AuthService
             'password' => $password,
             'referral_code' => $this->generateReferralCode(),
             'referred_by' => $referrer?->id,
+            // Бриджер сразу получает бридж-профиль
+            'profile_mode' => $profileMode === 'bridge' ? 'bridge' : 'pvp',
         ]);
 
         if ($referrer) {

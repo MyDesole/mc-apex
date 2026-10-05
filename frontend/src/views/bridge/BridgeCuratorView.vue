@@ -135,6 +135,16 @@ async function removeVariant(variant) {
   }
 }
 
+/** Пометить подвид особым: он выделяется у игрока и тестера. */
+async function toggleSpecial(variant) {
+  try {
+    await bridgeCuratorApi.setVariantSpecial(variant.id, !variant.is_special)
+    await load()
+  } catch (e) {
+    await alertDialog(e.message || 'Не удалось изменить подвид')
+  }
+}
+
 async function toggleVariant(variant) {
   try {
     await bridgeCuratorApi.updateVariant(variant.id, { is_active: !variant.is_active })
@@ -260,11 +270,31 @@ onMounted(load)
           </div>
         </header>
 
+        <!-- Описание: щёлкни, чтобы изменить -->
         <p
-            v-if="technique.description"
-            class="tech__desc"
+            v-if="editing?.id === technique.id && editing.field === 'description'"
+            class="tech__desc-edit"
         >
-          {{ technique.description }}
+          <input
+              v-model="editValue"
+              class="tech__input"
+              maxlength="255"
+              placeholder="Короткое описание вида"
+              @keyup.enter="saveEdit(technique)"
+              @keyup.esc="cancelEdit"
+          />
+
+          <button type="button" class="tech__mini" @click="saveEdit(technique)">ок</button>
+          <button type="button" class="tech__mini" @click="cancelEdit">отмена</button>
+        </p>
+
+        <p
+            v-else
+            class="tech__desc"
+            :class="{ 'tech__desc--empty': !technique.description }"
+            @click="startEdit(technique, 'description')"
+        >
+          {{ technique.description || 'Добавить описание' }}
         </p>
 
         <!-- Подвиды: пиллы -->
@@ -276,6 +306,16 @@ onMounted(load)
               :class="{ 'pill--off': !variant.is_active }"
           >
             {{ variant.label }}
+
+            <button
+                type="button"
+                class="pill__star"
+                :class="{ 'pill__star--on': variant.is_special }"
+                :title="variant.is_special ? 'Снять отметку «особый»' : 'Пометить особым'"
+                @click="toggleSpecial(variant)"
+            >
+              ★
+            </button>
 
             <button
                 type="button"

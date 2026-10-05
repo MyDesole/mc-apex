@@ -105,6 +105,7 @@ class AuthController extends Controller
             password: $request->string('password')->toString(),
             verificationToken: $request->string('verification_token')->toString(),
             referralCode: $request->input('referral_code'),
+            profileMode: $request->string('profile_mode', 'pvp')->toString(),
         );
 
         $this->auth->loginAfterRegister($user);

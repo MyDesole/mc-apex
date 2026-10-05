@@ -27,8 +27,13 @@ trait HasRoles
     /** Роли, которые могут проводить тир-тесты. */
     public const TESTER_ROLES = ['tester', 'admin'];
 
-    /** Роли, которые проверяют бридж-заявки. */
-    public const BRIDGE_TESTER_ROLES = ['bridge_tester', 'admin'];
+    /**
+     * Роли, которые проверяют бридж-заявки.
+     *
+     * Куратор здесь наравне с тестером: он тоже проводит тесты и, кроме
+     * того, видит все проверки остальных тестеров.
+     */
+    public const BRIDGE_TESTER_ROLES = ['bridge_tester', 'bridge_curator', 'admin'];
 
     /** Роли, которые ведут каталог видов и подвидов бриджа. */
     public const BRIDGE_CURATOR_ROLES = ['bridge_curator', 'admin'];

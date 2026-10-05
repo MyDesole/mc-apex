@@ -42,6 +42,7 @@ class BridgeTechniqueController extends Controller
                     'key' => $variant->key,
                     'label' => $variant->label,
                     'is_active' => (bool) $variant->is_active,
+                    'is_special' => (bool) $variant->is_special,
                     'sort_order' => (int) $variant->sort_order,
                 ])->values(),
             ])->values(),
@@ -94,6 +95,7 @@ class BridgeTechniqueController extends Controller
                 'key' => $variant->key,
                 'label' => $variant->label,
                 'is_active' => (bool) $variant->is_active,
+                'is_special' => (bool) $variant->is_special,
                 'sort_order' => (int) $variant->sort_order,
             ],
         ], 201);
@@ -110,6 +112,7 @@ class BridgeTechniqueController extends Controller
                 'key' => $updated->key,
                 'label' => $updated->label,
                 'is_active' => (bool) $updated->is_active,
+                'is_special' => (bool) $updated->is_special,
                 'sort_order' => (int) $updated->sort_order,
             ],
         ]);

@@ -24,6 +24,13 @@ export const bridgeApi = {
     withdraw(submissionId) {
         return api.delete(`/bridge/submissions/${submissionId}`)
     },
+
+    /** Включить или выключить подвиды своей заявки. */
+    setVariants(submissionId, variantIds) {
+        return api.put(`/bridge/submissions/${submissionId}/variants`, {
+            variants: variantIds,
+        })
+    },
 }
 
 /**
@@ -69,6 +76,11 @@ export const bridgeReviewApi = {
         return api.get('/bridge-review/ranks')
     },
 
+    /** История всех проверок: куратор видит и чужие проверки. */
+    history() {
+        return api.get('/bridge-review/history')
+    },
+
     /** Бриджеры: здесь тестер выдаёт звания. */
     players() {
         return api.get('/bridge-review/players')
@@ -108,6 +120,11 @@ export const bridgeCuratorApi = {
 
     updateVariant(id, payload) {
         return api.put(`/bridge-curator/variants/${id}`, payload)
+    },
+
+    /** Пометить подвид особым. */
+    setVariantSpecial(id, isSpecial) {
+        return api.put(`/bridge-curator/variants/${id}`, { is_special: isSpecial })
     },
 
     deleteVariant(id) {

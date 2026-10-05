@@ -32,6 +32,7 @@ class BridgeTechniqueResource extends JsonResource
                         'id' => $variant->id,
                         'key' => $variant->key,
                         'label' => $variant->label,
+                        'is_special' => (bool) $variant->is_special,
                     ])
                     ->values()
                     ->all()

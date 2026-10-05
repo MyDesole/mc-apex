@@ -11,11 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class BridgeTechniqueVariant extends Model
 {
     protected $fillable = [
-        'technique_id', 'key', 'label', 'sort_order', 'is_active',
+        'technique_id', 'key', 'label', 'is_special', 'sort_order', 'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_special' => 'boolean',
         'sort_order' => 'integer',
     ];
 

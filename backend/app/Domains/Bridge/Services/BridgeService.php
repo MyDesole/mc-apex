@@ -89,8 +89,13 @@ class BridgeService
      * Повторная подача перезаписывает видео: если тестер отклонил заявку,
      * игрок может прислать новый ролик.
      */
-    public function declare(User $user, int $techniqueId, ?string $videoUrl, ?string $uploadId = null): UserBridgeTechnique
-    {
+    public function declare(
+        User $user,
+        int $techniqueId,
+        ?string $videoUrl,
+        ?string $uploadId = null,
+        array $variants = [],
+    ): UserBridgeTechnique {
         $technique = BridgeTechnique::query()
             ->where('is_active', true)
             ->find($techniqueId);
@@ -136,6 +141,7 @@ class BridgeService
                 'status' => UserBridgeTechnique::STATUS_DECLARED,
                 'video_url' => $videoPath ? null : $videoUrl,
                 'video_path' => $videoPath,
+                'variants' => $this->normalizeVariants($technique, $variants),
                 // Прошлые оценки тестера сбрасываются: видео новое
                 'stability' => null,
                 'speed' => null,
@@ -210,7 +216,7 @@ class BridgeService
     {
         $this->assertAwaitingReview($submission);
 
-        $submission->update([
+        $update = [
             'status' => UserBridgeTechnique::STATUS_CONFIRMED,
             'stability' => $data['stability'],
             'speed' => $data['speed'],
@@ -219,7 +225,19 @@ class BridgeService
             'review_notes' => $data['notes'] ?? null,
             'reviewed_by' => $reviewer->id,
             'reviewed_at' => now(),
-        ]);
+        ];
+
+        // Тестер подтверждает свой набор подвидов, если прислал его
+        if (array_key_exists('variants', $data) && $data['variants'] !== null) {
+            $submission->loadMissing('technique');
+
+            $update['variants'] = $this->normalizeVariants(
+                $submission->technique,
+                $data['variants'],
+            );
+        }
+
+        $submission->update($update);
 
         // Тест проведён — ролик больше не нужен
         app(BridgeVideoService::class)->deleteFor($submission);
@@ -247,6 +265,74 @@ class BridgeService
         $this->notify($submission->fresh(), false);
 
         return $submission->fresh();
+    }
+
+    /**
+     * Игрок или тестер включает и выключает подвиды заявки.
+     *
+     * Игрок правит только свою неподтверждённую заявку: после проверки
+     * набор зафиксирован тестером.
+     */
+    public function setVariants(User $actor, UserBridgeTechnique $submission, array $variantIds): UserBridgeTechnique
+    {
+        $isOwner = $submission->user_id === $actor->id;
+        $isReviewer = $actor->isBridgeTester();
+
+        if (! $isOwner && ! $isReviewer) {
+            $this->abortForbidden('Это не ваша заявка.');
+        }
+
+        if ($isOwner && ! $isReviewer && $submission->isConfirmed()) {
+            $this->abortUnprocessable(
+                'Заявка уже подтверждена — подвиды зафиксировал тестер.'
+            );
+        }
+
+        $submission->loadMissing('technique');
+
+        $submission->update([
+            'variants' => $this->normalizeVariants($submission->technique, $variantIds),
+        ]);
+
+        return $submission->fresh();
+    }
+
+    /**
+     * Оставляет только подвиды этого вида и убирает дубли.
+     *
+     * Так чужой подвид из другого вида в заявку не попадёт.
+     */
+    private function normalizeVariants(?BridgeTechnique $technique, array $ids): array
+    {
+        if (! $technique) {
+            return [];
+        }
+
+        $allowed = $technique->allVariants()->pluck('id')->all();
+
+        return array_values(array_unique(array_filter(
+            array_map('intval', $ids),
+            fn (int $id) => in_array($id, $allowed, true),
+        )));
+    }
+
+    /** История всех проверок: что и кто проверял. */
+    public function history(): Collection
+    {
+        return UserBridgeTechnique::query()
+            ->whereIn('status', [
+                UserBridgeTechnique::STATUS_CONFIRMED,
+                UserBridgeTechnique::STATUS_REJECTED,
+            ])
+            ->with([
+                'user:id,username,avatar,tier,tier_score,bridge_rank_id',
+                'user.bridgeRank',
+                'technique.variants',
+                'reviewer:id,username,avatar',
+            ])
+            ->latest('reviewed_at')
+            ->limit(200)
+            ->get();
     }
 
     private function assertAwaitingReview(UserBridgeTechnique $submission): void
@@ -377,6 +463,7 @@ class BridgeService
             'label' => $data['label'] ?? null,
             'sort_order' => $data['sort_order'] ?? null,
             'is_active' => $data['is_active'] ?? null,
+            'is_special' => $data['is_special'] ?? null,
         ], fn ($value) => $value !== null));
 
         return $variant->fresh();

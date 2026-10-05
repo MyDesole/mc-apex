@@ -4,6 +4,7 @@ namespace App\Domains\Bridge\Controllers\Api;
 
 use App\Domains\Bridge\Models\UserBridgeTechnique;
 use App\Domains\Bridge\Requests\DeclareBridgeTechniqueRequest;
+use App\Domains\Bridge\Requests\UpdateBridgeVariantsRequest;
 use App\Domains\Bridge\Resources\BridgeSubmissionResource;
 use App\Domains\Bridge\Resources\BridgeTechniqueResource;
 use App\Domains\Bridge\Services\BridgeService;
@@ -50,6 +51,7 @@ class BridgeController extends Controller
             techniqueId: (int) $validated['technique_id'],
             videoUrl: null,
             uploadId: $validated['upload_id'],
+            variants: $validated['variants'] ?? [],
         );
 
         return response()->json([
@@ -65,6 +67,24 @@ class BridgeController extends Controller
         $this->bridge->withdraw($request->user(), $submission);
 
         return response()->json(['ok' => true]);
+    }
+
+    /** Игрок включает и выключает подвиды своей заявки. */
+    public function updateVariants(
+        UpdateBridgeVariantsRequest $request,
+        UserBridgeTechnique $submission,
+    ): JsonResponse {
+        $updated = $this->bridge->setVariants(
+            actor: $request->user(),
+            submission: $submission,
+            variantIds: $request->validated()['variants'] ?? [],
+        );
+
+        return response()->json([
+            'submission' => (new BridgeSubmissionResource(
+                $updated->load('technique.variants', 'user')
+            ))->resolve(),
+        ]);
     }
 
     /** Подтверждённые виды игрока — публичный профиль бриджера. */

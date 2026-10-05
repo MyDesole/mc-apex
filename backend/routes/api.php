@@ -435,6 +435,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/submissions/{submission}', [BridgeController::class, 'destroy'])
             ->whereNumber('submission');
 
+        // Игрок включает и выключает подвиды своей заявки
+        Route::put('/submissions/{submission}/variants', [BridgeController::class, 'updateVariants'])
+            ->whereNumber('submission');
+
         /*
          * Видео грузится частями: ролик на две минуты может весить сотни
          * мегабайт, одним запросом он не пройдёт.
@@ -451,10 +455,16 @@ Route::middleware('auth:sanctum')->group(function () {
     |
     | Раздел видят только эти роли, поэтому остальные игроки его не видят.
     */
-    Route::middleware('role:bridge_tester,admin')->prefix('bridge-review')->group(function () {
+    Route::middleware('role:bridge_tester,bridge_curator,admin')->prefix('bridge-review')->group(function () {
         Route::get('/submissions', [BridgeReviewController::class, 'index']);
         Route::post('/submissions/{submission}', [BridgeReviewController::class, 'review'])
             ->whereNumber('submission');
+
+        /*
+         * История всех проверок: куратор видит и то, что проводили
+         * остальные тестеры, а не только свою очередь.
+         */
+        Route::get('/history', [BridgeReviewController::class, 'history']);
 
         // Звания бриджера: тестер выдаёт их вручную
         Route::get('/ranks', [BridgeReviewController::class, 'ranks']);
