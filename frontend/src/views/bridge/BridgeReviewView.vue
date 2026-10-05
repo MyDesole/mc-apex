@@ -8,9 +8,9 @@
  */
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import BridgeRankBadge from '@/components/bridge/BridgeRankBadge.vue'
 import { bridgeReviewApi } from '@/services/bridge/bridge.js'
 import { alert as alertDialog } from '@/utils/dialog.js'
-import BridgeRankBadge from '@/components/bridge/BridgeRankBadge.vue'
 
 const loading = ref(true)
 const error = ref('')
@@ -374,6 +374,12 @@ onMounted(load)
               текущий тир: <b>{{ row.user?.tier ?? '—' }}</b>
               · {{ row.user?.tier_score ?? 0 }}%
             </div>
+
+            <BridgeRankBadge
+                v-if="row.user?.bridge_rank"
+                :rank="row.user.bridge_rank"
+                size="sm"
+            />
           </div>
         </div>
 
@@ -413,7 +419,17 @@ onMounted(load)
           <header class="review-modal__head">
             <div>
               <h2>{{ active.technique?.label }}</h2>
-              <span>{{ active.user?.username }}</span>
+
+              <div class="review-modal__player">
+                <span>{{ active.user?.username }}</span>
+
+                <!-- Текущее звание: видно, какой ранг у игрока сейчас -->
+                <BridgeRankBadge
+                    :rank="active.user?.bridge_rank"
+                    empty-label="без звания"
+                    size="sm"
+                />
+              </div>
             </div>
 
             <button type="button" class="review-modal__close" @click="close">✕</button>

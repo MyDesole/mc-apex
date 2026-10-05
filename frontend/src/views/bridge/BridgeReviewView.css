@@ -759,3 +759,18 @@
     text-align: left;
   }
 }
+
+/* Игрок и его текущее звание в шапке модалки */
+.review-modal__player {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  margin-top: 5px;
+}
+
+.review-modal__player > span {
+  color: rgba(255, 255, 255, 0.55);
+
+  font-size: 12px;
+}

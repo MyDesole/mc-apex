@@ -33,6 +33,19 @@ class UserCardResource extends JsonResource
             'clan_color' => $user->clan_color,
             'role' => $user->role,
             'is_media' => $user->isMedia(),
+
+            /*
+             * Звание бриджера: тестеру нужно видеть, какой ранг у игрока
+             * сейчас, прежде чем подтверждать новый вид.
+             */
+            'bridge_rank' => $user->relationLoaded('bridgeRank') && $user->bridgeRank
+                ? [
+                    'id' => $user->bridgeRank->id,
+                    'key' => $user->bridgeRank->key,
+                    'label' => $user->bridgeRank->label,
+                    'color' => $user->bridgeRank->color,
+                ]
+                : null,
         ];
     }
 }

@@ -85,6 +85,9 @@ function toggleVariant(variant) {
 }
 
 function close() {
+  // Сбрасываем успех: иначе следующее открытие покажет экран успеха
+  success.value = false
+
   emit('update:modelValue', false)
 }
 
@@ -223,7 +226,7 @@ async function submit() {
 
     <!-- ===== УСПЕХ ===== -->
     <div
-        v-else-if="success"
+        v-else-if="modelValue && success"
         class="bridge-modal-bg"
         @click.self="close"
     >
