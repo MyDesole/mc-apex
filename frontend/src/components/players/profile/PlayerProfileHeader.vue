@@ -53,6 +53,12 @@ const props = defineProps({
     type: Object,
     default: null,
   },
+
+  // Подтверждённые виды: в бридже занимают место прогресса тира
+  bridgeTechniques: {
+    type: Array,
+    default: () => [],
+  },
 })
 
 const emit = defineEmits(['edit'])
@@ -867,9 +873,59 @@ const coverStyle = computed(() => {
 
         </div>
 
+        <!--
+          Бридж-режим: вместо прогресса тира показываем звание бриджера и
+          подтверждённые виды — по ним и видно уровень игрока.
+        -->
+        <div
+            v-if="bridgeMode"
+            class="bridge-rank-block"
+        >
+          <div class="bridge-rank-block__rank">
+            <span class="bridge-rank-block__label">
+              BRIDGE RANK
+            </span>
+
+            <strong
+                class="bridge-rank-block__value"
+                :style="{ color: bridgeRank?.color || '#8b5cf6' }"
+            >
+              {{ bridgeRank?.label ?? 'Без звания' }}
+            </strong>
+          </div>
+
+          <div class="bridge-rank-block__techs">
+            <span class="bridge-rank-block__label">
+              Подтверждённые виды · {{ bridgeTechniques.length }}
+            </span>
+
+            <div
+                v-if="bridgeTechniques.length"
+                class="bridge-rank-block__pills"
+            >
+              <span
+                  v-for="row in bridgeTechniques"
+                  :key="row.id"
+                  class="bridge-rank-pill"
+              >
+                {{ row.technique?.label }}
+
+                <b>{{ row.score }}/10</b>
+              </span>
+            </div>
+
+            <span
+                v-else
+                class="bridge-rank-block__empty"
+            >
+              Пока ни одного вида
+            </span>
+          </div>
+        </div>
+
         <!-- Tier Progress -->
         <div
-            v-if="tierProgress !== null"
+            v-else-if="tierProgress !== null"
             class="tier-progress"
         >
 

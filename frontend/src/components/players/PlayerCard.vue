@@ -59,6 +59,12 @@ const props = defineProps({
     type: Object,
     default: null,
   },
+
+  // Подтверждённые виды: хедер показывает их вместо прогресса тира
+  bridgeTechniques: {
+    type: Array,
+    default: () => [],
+  },
 })
 
 const emit = defineEmits([
@@ -325,6 +331,9 @@ const profileCompleteness = computed(() => {
           :editable="editable"
           :cover-url="user.cover_url"
           :accent="accent"
+          :bridge-mode="bridgeMode"
+          :bridge-rank="bridgeRank"
+          :bridge-techniques="bridgeTechniques"
           @edit="emit('edit')"
       />
 

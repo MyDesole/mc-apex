@@ -458,6 +458,52 @@
 }
 
 /* Ведущий блок бридж-профиля */
+/* ---------------- Сворачивание блоков ---------------- */
+
+/*
+ * Второй блок вида профиля свёрнут: в бридж-профиле это тир-тесты,
+ * в PvP — виды бриджа.
+ */
+.tests-section--collapsed .tests-section__divider {
+  margin-bottom: 0;
+
+  opacity: 0.4;
+}
+
+.tests-section--collapsed .tests-section__ambient {
+  opacity: 0.35;
+}
+
+.tests-section__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  flex-wrap: wrap;
+}
+
+.tests-section__toggle {
+  padding: 11px 16px;
+
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.05);
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 11px;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.tests-section__toggle:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
 /* ---------------- Бридж-секция профиля ---------------- */
 
 .tests-section--bridge {

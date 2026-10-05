@@ -1776,6 +1776,83 @@
    TIER PROGRESS
    ========================================================= */
 
+/* ---------------- Звание бриджера в шапке ---------------- */
+
+.bridge-rank-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  margin-top: 14px;
+  padding: 14px 16px;
+
+  border: 1px solid rgba(139, 92, 246, 0.28);
+  border-radius: 14px;
+
+  background: linear-gradient(
+      135deg,
+      rgba(139, 92, 246, 0.14),
+      rgba(255, 255, 255, 0.02)
+  );
+}
+
+.bridge-rank-block__label {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: rgba(255, 255, 255, 0.4);
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.bridge-rank-block__value {
+  font-size: 20px;
+  font-weight: 950;
+  letter-spacing: 0.3px;
+}
+
+.bridge-rank-block__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bridge-rank-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  padding: 5px 11px;
+
+  color: #ddd6fe;
+  background: rgba(139, 92, 246, 0.18);
+
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  border-radius: 999px;
+
+  font-size: 11.5px;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+.bridge-rank-pill b {
+  color: #fbbf24;
+
+  font-size: 10.5px;
+  font-weight: 900;
+}
+
+.bridge-rank-block__empty {
+  color: rgba(255, 255, 255, 0.35);
+
+  font-size: 12px;
+}
+
 .tier-progress {
   width: min(400px, 100%);
 

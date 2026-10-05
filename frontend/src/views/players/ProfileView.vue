@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import PlayerCard from '@/components/players/PlayerCard.vue'
 import TierTestHistory from '@/components/tiers/TierTestHistory.vue'
@@ -70,6 +70,18 @@ async function onBridgeCreated() {
   bridgeBlock.value?.load()
   bridgeHistory.value?.load()
 }
+
+/*
+ * Сворачивание блоков. Главный блок вида профиля раскрыт, второй свёрнут:
+ * в бридж-профиле это виды бриджа, в PvP — тир-тесты.
+ */
+const bridgeOpen = ref(true)
+const tierTestsOpen = ref(false)
+
+watch(isBridgeProfile, (bridge) => {
+  bridgeOpen.value = bridge
+  tierTestsOpen.value = !bridge
+}, { immediate: true })
 
 /* =========================================================
    RECOMMENDATIONS + PROFILE MODE
@@ -280,75 +292,6 @@ onMounted(async () => {
         </div>
       </header>
 
-      <!--
-        В bridge-режиме этот блок становится главным содержимым
-        профиля и располагается перед PvP-информацией.
-      -->
-      <section
-          v-if="isBridgeProfile"
-          class="tests-section tests-section--bridge"
-      >
-        <div class="tests-section__ambient" />
-
-        <header class="tests-section__header">
-          <div>
-            <span class="tests-section__eyebrow">
-              BRIDGE MASTERY
-            </span>
-
-            <h2>
-              Виды бриджа
-            </h2>
-
-            <p>
-              Подтверди вид роликом — тестер проверит и поставит оценку
-            </p>
-          </div>
-
-          <button
-              type="button"
-              class="tests-section__button tests-section__button--bridge"
-              @click="showBridgeForm = true"
-          >
-            <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-            >
-              <path
-                  d="M12 5v14M5 12h14"
-                  stroke-linecap="round"
-              />
-            </svg>
-
-            Подтвердить вид бриджа
-          </button>
-        </header>
-
-        <div class="tests-section__divider">
-          <span />
-          <i />
-          <span />
-        </div>
-
-        <BridgeTechniques
-            ref="bridgeBlock"
-            :techniques="bridge.techniques"
-            :summary="bridge.summary"
-            :rank="bridgeRank"
-            editable
-        />
-
-        <div class="bridge-history-block">
-          <h3 class="bridge-history-block__title">
-            История подтверждений
-          </h3>
-
-          <BridgeTechniqueHistory ref="bridgeHistory" />
-        </div>
-      </section>
-
       <section class="player-section">
         <PlayerCard
             :user="user"
@@ -359,6 +302,7 @@ onMounted(async () => {
             :can-recommend="false"
             :bridge-mode="isBridgeProfile"
             :bridge-rank="bridgeRank"
+            :bridge-techniques="bridge.techniques"
             @edit="showCustomize = true"
             @recommendations-updated="loadRecommendations"
         />
@@ -453,10 +397,95 @@ onMounted(async () => {
         </div>
       </section>
 
-      <!-- PvP-тесты. В bridge-режиме они вторичны. -->
+      <!--
+        Виды бриджа. Стоят там же, где раньше была запись на тир-тест:
+        в бридж-профиле это главный блок, в PvP — свёрнутый дополнительный.
+      -->
+      <section
+          class="tests-section tests-section--bridge"
+          :class="{
+            'tests-section--collapsed': !bridgeOpen,
+            'tests-section--demoted': !isBridgeProfile,
+          }"
+      >
+        <div class="tests-section__ambient" />
+
+        <header class="tests-section__header">
+          <div>
+            <span class="tests-section__eyebrow">
+              BRIDGE MASTERY
+            </span>
+
+            <h2>
+              Виды бриджа
+            </h2>
+
+            <p>
+              Подтверди вид роликом — тестер проверит и поставит оценку
+            </p>
+          </div>
+
+          <div class="tests-section__actions">
+            <button
+                type="button"
+                class="tests-section__button tests-section__button--bridge"
+                @click="showBridgeForm = true"
+            >
+              <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+              >
+                <path
+                    d="M12 5v14M5 12h14"
+                    stroke-linecap="round"
+                />
+              </svg>
+
+              Подтвердить вид бриджа
+            </button>
+
+            <button
+                type="button"
+                class="tests-section__toggle"
+                @click="bridgeOpen = !bridgeOpen"
+            >
+              {{ bridgeOpen ? 'Свернуть' : 'Развернуть' }}
+            </button>
+          </div>
+        </header>
+
+        <div class="tests-section__divider">
+          <span />
+          <i />
+          <span />
+        </div>
+
+        <div v-show="bridgeOpen">
+          <BridgeTechniques
+              ref="bridgeBlock"
+              :techniques="bridge.techniques"
+              :summary="bridge.summary"
+              :rank="bridgeRank"
+              editable
+          />
+
+          <div class="bridge-history-block">
+            <h3 class="bridge-history-block__title">
+              История подтверждений
+            </h3>
+
+            <BridgeTechniqueHistory ref="bridgeHistory" />
+          </div>
+        </div>
+      </section>
+
+      <!-- Тиры. В бридж-профиле свёрнуты: там главное — виды бриджа. -->
       <section
           class="tests-section"
           :class="{
+            'tests-section--collapsed': !tierTestsOpen,
             'tests-section--demoted': isBridgeProfile,
           }"
       >
@@ -477,6 +506,7 @@ onMounted(async () => {
             </p>
           </div>
 
+          <div class="tests-section__actions">
           <button
               type="button"
               class="tests-section__button"
@@ -499,59 +529,15 @@ onMounted(async () => {
 
             Новый тир-тест
           </button>
-        </header>
-
-        <div class="tests-section__divider">
-          <span />
-          <i />
-          <span />
-        </div>
-
-        <TierTestHistory />
-      </section>
-
-      <!--
-        В PvP-режиме bridge остаётся дополнительным разделом.
-        В bridge-режиме он уже был показан сверху.
-      -->
-      <section
-          v-if="!isBridgeProfile"
-          class="tests-section"
-      >
-        <header class="tests-section__header">
-          <div>
-            <span class="tests-section__eyebrow">
-              BRIDGE MASTERY
-            </span>
-
-            <h2>
-              Виды бриджа
-            </h2>
-
-            <p>
-              Подтверди вид роликом — тестер проверит и поставит оценку
-            </p>
-          </div>
 
           <button
               type="button"
-              class="tests-section__button"
-              @click="showBridgeForm = true"
+              class="tests-section__toggle"
+              @click="tierTestsOpen = !tierTestsOpen"
           >
-            <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-            >
-              <path
-                  d="M12 5v14M5 12h14"
-                  stroke-linecap="round"
-              />
-            </svg>
-
-            Подтвердить вид бриджа
+            {{ tierTestsOpen ? 'Свернуть' : 'Развернуть' }}
           </button>
+          </div>
         </header>
 
         <div class="tests-section__divider">
@@ -560,23 +546,10 @@ onMounted(async () => {
           <span />
         </div>
 
-        <BridgeTechniques
-            ref="bridgeBlock"
-            :techniques="bridge.techniques"
-            :summary="bridge.summary"
-            :rank="bridgeRank"
-            editable
-        />
-
-        <div class="bridge-history-block">
-          <h3 class="bridge-history-block__title">
-            История подтверждений
-          </h3>
-
-          <BridgeTechniqueHistory ref="bridgeHistory" />
+        <div v-show="tierTestsOpen">
+          <TierTestHistory />
         </div>
       </section>
-
       <footer class="profile-footer">
         <span />
 
@@ -723,12 +696,6 @@ onMounted(async () => {
 
 <style scoped>
 @import "@/views/players/ProfileView.css";
-
-.bridge-lead {
-  position: relative;
-
-  margin-top: 0;
-}
 
 .tests-section--demoted {
   opacity: .62;
