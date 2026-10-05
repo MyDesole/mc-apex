@@ -1,14 +1,26 @@
 <script setup>
 /**
- * Звание бриджера: в бридж-профиле это главный ранг.
+ * Звание бриджера.
  *
- * Отдельный компонент, потому что показывается и в профиле, и в панели
- * тестера, и в списке бриджеров.
+ * Цвет всегда берётся из ответа сервера.
+ * Компонент не знает ничего о конкретных рангах и не содержит
+ * локальной карты цветов.
  */
 defineProps({
-  rank: { type: Object, default: null },
-  size: { type: String, default: 'md' },
-  emptyLabel: { type: String, default: '' },
+  rank: {
+    type: Object,
+    default: null,
+  },
+
+  size: {
+    type: String,
+    default: 'md',
+  },
+
+  emptyLabel: {
+    type: String,
+    default: '',
+  },
 })
 </script>
 
@@ -17,10 +29,13 @@ defineProps({
       v-if="rank"
       class="bridge-rank"
       :class="`bridge-rank--${size}`"
-      :style="{ '--rank-color': rank.color || '#8b5cf6' }"
+      :style="{ '--rank-color': rank.color }"
   >
     <span class="bridge-rank__dot" />
-    {{ rank.label }}
+
+    <span class="bridge-rank__label">
+      {{ rank.label }}
+    </span>
   </span>
 
   <span

@@ -1,6 +1,8 @@
 /* ============================================
-   ТЕХНИКИ БРИДЖА В ПРОФИЛЕ
+   ВИДЫ БРИДЖА В ПРОФИЛЕ
    ============================================ */
+
+@import "./BridgeRequirements.css";
 
 .bridge-block {
   position: relative;
@@ -20,7 +22,7 @@
 
   gap: 14px;
 
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 .bridge-block__eyebrow {
@@ -72,15 +74,6 @@
   font-weight: 800;
 }
 
-.bridge-block__hint {
-  margin: 0 0 14px;
-
-  color: rgba(255, 255, 255, 0.42);
-
-  font-size: 12px;
-  line-height: 1.55;
-}
-
 .bridge-block__error {
   padding: 10px 12px;
   margin-bottom: 12px;
@@ -95,7 +88,7 @@
 }
 
 .bridge-block__state {
-  padding: 18px;
+  padding: 22px;
 
   color: rgba(255, 255, 255, 0.4);
 
@@ -123,39 +116,35 @@
 
   gap: 12px;
 
-  padding: 10px 13px;
+  padding: 11px 14px;
 
   border: 1px solid rgba(255, 255, 255, 0.05);
+  border-left-width: 3px;
+  border-left-color: rgba(255, 255, 255, 0.08);
   border-radius: 11px;
 
   background: rgba(255, 255, 255, 0.015);
-
-  /* Незаявленные виды приглушены */
-  opacity: 0.45;
-
-  transition:
-      opacity 0.18s ease,
-      border-color 0.18s ease,
-      background 0.18s ease;
 }
 
-/* Заявлено, ждёт проверки — серый, но заметный */
+/* Заявлено, ждёт проверки */
 .bridge-item--pending {
-  opacity: 0.72;
+  border-left-color: #fbbf24;
+  background: rgba(251, 191, 36, 0.05);
+}
 
-  border-color: rgba(251, 191, 36, 0.22);
-  background: rgba(251, 191, 36, 0.04);
+/* Отклонено */
+.bridge-item--rejected {
+  border-left-color: #ef4444;
+  background: rgba(239, 68, 68, 0.05);
 }
 
 /* Подтверждено тестером — яркий */
 .bridge-item--confirmed {
-  opacity: 1;
-
-  border-color: rgba(139, 92, 246, 0.3);
+  border-left-color: #8b5cf6;
 
   background: linear-gradient(
       90deg,
-      rgba(139, 92, 246, 0.12),
+      rgba(139, 92, 246, 0.14),
       rgba(255, 255, 255, 0.02)
   );
 }
@@ -165,51 +154,20 @@
 
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .bridge-item__label {
   color: var(--text, #e5e5eb);
 
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
 }
 
 .bridge-item__desc {
   color: rgba(255, 255, 255, 0.38);
 
-  font-size: 11px;
-}
-
-/* Подвиды: пиллы под названием вида */
-.variant-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-
-  margin-top: 5px;
-}
-
-.variant-pill {
-  padding: 2px 9px;
-
-  color: rgba(196, 181, 253, 0.85);
-  background: rgba(139, 92, 246, 0.1);
-
-  border: 1px solid rgba(139, 92, 246, 0.22);
-  border-radius: 999px;
-
-  font-size: 10px;
-  font-weight: 700;
-
-  white-space: nowrap;
-}
-
-/* В подтверждённом виде пиллы ярче */
-.bridge-item--confirmed .variant-pill {
-  color: #ddd6fe;
-  background: rgba(139, 92, 246, 0.2);
-  border-color: rgba(139, 92, 246, 0.4);
+  font-size: 11.5px;
 }
 
 .bridge-item__score {
@@ -223,7 +181,7 @@
 .bridge-item__score-value {
   color: #c4b5fd;
 
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 900;
 }
 
@@ -241,21 +199,29 @@
 }
 
 .bridge-item__badge {
-  padding: 3px 8px;
+  padding: 3px 9px;
 
   color: #fbbf24;
-  background: rgba(251, 191, 36, 0.1);
+  background: rgba(251, 191, 36, 0.12);
 
-  border: 1px solid rgba(251, 191, 36, 0.22);
+  border: 1px solid rgba(251, 191, 36, 0.25);
   border-radius: 6px;
 
   font-size: 10px;
   font-weight: 800;
+  letter-spacing: 0.4px;
   text-transform: uppercase;
+
+  white-space: nowrap;
 }
 
-.bridge-item__link,
-.bridge-item__remove {
+.bridge-item--rejected .bridge-item__badge {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.bridge-item__link {
   color: rgba(255, 255, 255, 0.6);
   background: none;
 
@@ -268,167 +234,47 @@
   cursor: pointer;
 }
 
-.bridge-item__remove:hover {
-  color: #fca5a5;
-}
-
-.bridge-item__empty {
-  color: rgba(255, 255, 255, 0.3);
-
-  font-size: 11px;
-  font-weight: 700;
-}
-
-/* ---------------- Подача ---------------- */
-
-.bridge-actions {
-  margin-top: 14px;
-}
-
-.bridge-actions__open {
-  width: 100%;
-
-  padding: 11px;
-
+.bridge-item__link:hover {
   color: #c4b5fd;
-  background: rgba(139, 92, 246, 0.1);
-
-  border: 1px dashed rgba(139, 92, 246, 0.35);
-  border-radius: 11px;
-
-  font-size: 13px;
-  font-weight: 800;
-
-  cursor: pointer;
 }
 
-.bridge-actions__open:hover:not(:disabled) {
-  background: rgba(139, 92, 246, 0.16);
-}
+/* ---------------- Подвиды ---------------- */
 
-.bridge-actions__open:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-
-.bridge-form {
+.variant-pills {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 5px;
 
-  padding: 15px;
-
-  border: 1px solid rgba(139, 92, 246, 0.25);
-  border-radius: 12px;
-
-  background: rgba(139, 92, 246, 0.06);
+  margin-top: 4px;
 }
 
-.bridge-form__field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.bridge-form__field span {
-  color: rgba(255, 255, 255, 0.55);
-
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.bridge-form__field select,
-.bridge-form__field input {
-  padding: 9px 11px;
-
-  color: var(--text, #e5e5eb);
-  background: rgba(0, 0, 0, 0.25);
-
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 9px;
-
-  font: inherit;
-  font-size: 13px;
-
-  outline: none;
-}
-
-.bridge-form__field select:focus,
-.bridge-form__field input:focus {
-  border-color: rgba(139, 92, 246, 0.5);
-}
-
-.bridge-form__note {
-  margin: 0;
-
-  color: rgba(255, 255, 255, 0.42);
-
-  font-size: 11px;
-  line-height: 1.55;
-}
-
-.bridge-form__actions {
-  display: flex;
-  gap: 9px;
-  justify-content: flex-end;
-}
-
-.bridge-form__cancel {
-  padding: 9px 15px;
-
-  color: rgba(255, 255, 255, 0.7);
-  background: rgba(255, 255, 255, 0.06);
-
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 9px;
-
-  font-size: 12px;
-  font-weight: 700;
-
-  cursor: pointer;
-}
-
-.bridge-form__submit {
-  padding: 9px 16px;
-
-  color: #fff;
-  background: var(--accent, #7c3aed);
-
-  border: none;
-  border-radius: 9px;
-
-  font-size: 12px;
-  font-weight: 800;
-
-  cursor: pointer;
-}
-
-.bridge-form__submit:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-@media (max-width: 640px) {
-  .bridge-item {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .bridge-block__head {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-}
-
-/* ---------------- Переключаемые подвиды ---------------- */
-
-.variant-pill--toggle {
+.variant-pill {
   display: inline-flex;
   align-items: center;
   gap: 5px;
 
+  padding: 3px 10px;
+
+  color: rgba(196, 181, 253, 0.85);
+  background: rgba(139, 92, 246, 0.1);
+
+  border: 1px solid rgba(139, 92, 246, 0.22);
+  border-radius: 999px;
+
+  font-size: 10.5px;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+/* В подтверждённом виде пиллы ярче */
+.bridge-item--confirmed .variant-pill {
+  color: #ddd6fe;
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.variant-pill--toggle {
   cursor: pointer;
 
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
@@ -456,9 +302,9 @@
 }
 
 .variant-pill--special.variant-pill--on {
+  color: #fde68a;
   background: rgba(251, 191, 36, 0.18);
   border-color: rgba(251, 191, 36, 0.7);
-  color: #fde68a;
 }
 
 .variant-pill__mark {
@@ -470,4 +316,17 @@
   color: #fbbf24;
 
   font-size: 9px;
+}
+
+@media (max-width: 640px) {
+  .bridge-item {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .bridge-block__head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }

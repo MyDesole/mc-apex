@@ -8,9 +8,12 @@ import RankBadge from '@/components/players/RankBadge.vue'
 import ProfileCustomizeModal from '@/components/players/ProfileCustomizeModal.vue'
 import TierTestForm from '@/components/tiers/TierTestForm.vue'
 import BridgeTechniques from '@/components/bridge/BridgeTechniques.vue'
+import BridgeTechniqueForm from '@/components/bridge/BridgeTechniqueForm.vue'
+import BridgeTechniqueHistory from '@/components/bridge/BridgeTechniqueHistory.vue'
 
 import { api } from '@/services/core/api.js'
 import { tierTestsApi } from '@/services/tiers/tierTests.js'
+
 import {
   activeTierTest,
   refreshActiveTierTest,
@@ -18,63 +21,95 @@ import {
   addCreatedTierTest,
   refreshTierTests,
 } from '@/composables/tiers/tierTestState.js'
+
 import { useAuthStore } from '@/stores/core/auth.js'
-import { userLink } from '@/utils/links.js'
 import { confirm } from '@/utils/dialog.js'
 
 const auth = useAuthStore()
 
 const user = computed(() => auth.user)
 
-const clanMember = computed(() =>
-    auth.user?.clan_member ?? null
-)
+const clanMember = computed(() => {
+  return auth.user?.clan_member ?? null
+})
 
-const rank = computed(() =>
-        auth.rank ?? {
-          position: null,
-          total: 0,
-        }
-)
+const rank = computed(() => {
+  return auth.rank ?? {
+    position: null,
+    total: 0,
+  }
+})
 
 const recommendations = ref([])
 
-// Подтверждённые виды бриджа приходят вместе с профилем
-const bridge = ref({ techniques: [], summary: {}, rank: { position: null, total: 0 } })
+const bridge = ref({
+  techniques: [],
+  summary: {},
+  rank: {
+    position: null,
+    total: 0,
+  },
+})
 
-// Режим профиля: в бридж-профиле виды бриджа идут первыми
 const profileMode = ref('pvp')
 const bridgeRank = ref(null)
 
-const isBridgeProfile = computed(() => profileMode.value === 'bridge')
+const isBridgeProfile = computed(() => {
+  return profileMode.value === 'bridge'
+})
 
+// Модалка подтверждения вида и ссылки на блоки: после подачи их надо обновить
+const showBridgeForm = ref(false)
+const bridgeBlock = ref(null)
+const bridgeHistory = ref(null)
+
+/** После подачи заявки обновляем и список видов, и историю. */
+async function onBridgeCreated() {
+  showBridgeForm.value = false
+
+  bridgeBlock.value?.load()
+  bridgeHistory.value?.load()
+}
 
 /* =========================================================
-   RECOMMENDATIONS
+   RECOMMENDATIONS + PROFILE MODE
 ========================================================= */
 
 async function loadRecommendations() {
-  if (!auth.user?.id) {
-    return
-  }
+  if (!auth.user?.id) return
 
   try {
-    // userLink() даёт путь фронтенда (/user/ник), а нужен эндпоинт API:
-    // /api/user/... не существует, запрос падал с 404
-    const data = await api.get(`/players/${auth.user.id}`)
+    const data = await api.get(
+        `/players/${auth.user.id}`,
+    )
 
     recommendations.value =
         data.recommendations ?? []
 
-    bridge.value = data.bridge ?? { techniques: [], summary: {}, rank: { position: null, total: 0 } }
-    profileMode.value = data.profile_mode ?? 'pvp'
-    bridgeRank.value = data.bridge_rank ?? null
+    bridge.value =
+        data.bridge ?? {
+          techniques: [],
+          summary: {},
+          rank: {
+            position: null,
+            total: 0,
+          },
+        }
+
+    profileMode.value =
+        data.profile_mode ?? 'pvp'
+
+    bridgeRank.value =
+        data.bridge_rank ?? null
   } catch (e) {
-    console.error('Не удалось загрузить отзывы:', e)
+    console.error(
+        'Не удалось загрузить профиль:',
+        e,
+    )
+
     recommendations.value = []
   }
 }
-
 
 /* =========================================================
    CUSTOMIZATION
@@ -88,18 +123,14 @@ function onCustomizeUpdated() {
   auth.fetchMe()
 }
 
-
 /* =========================================================
    TIER TEST
 ========================================================= */
 
 const showTierTestForm = ref(false)
 
-/*
- * Активная заявка: ожидает тестера или уже в работе. Пока она есть,
- * кнопка записи недоступна — при клике объясняем, почему.
- */
 const activeTest = activeTierTest
+
 const showActiveTestModal = ref(false)
 
 async function loadActiveTest() {
@@ -108,9 +139,10 @@ async function loadActiveTest() {
   try {
     const data = await tierTestsApi.list()
 
-    refreshActiveTierTest(data.my_tests)
+    refreshActiveTierTest(
+        data.my_tests,
+    )
   } catch {
-    /* Не критично: просто не покажем состояние заявки */
     clearActiveTierTest()
   }
 }
@@ -128,52 +160,54 @@ function openTierTestForm() {
 function onTierTestCreated(created) {
   showTierTestForm.value = false
 
-  /*
-   * Заявка из ответа сервера: у неё есть id, поэтому она сразу
-   * появляется в списке и кнопка гаснет — без перезагрузки страницы.
-   */
   addCreatedTierTest(created)
 
   auth.fetchMe()
 
-  // Следом уточняем список с сервера
   refreshTierTests()
 }
 
-/** Отмена активной заявки из модалки. */
 const cancellingActive = ref(false)
+const activeTestCancelError = ref('')
 
 async function cancelActiveTest() {
-  if (!activeTest.value || cancellingActive.value) return
+  if (
+      !activeTest.value
+      || cancellingActive.value
+  ) {
+    return
+  }
 
-  // Отмена безвозвратна — спрашиваем подтверждение
   const ok = await confirm(
       'Отменить заявку на тир-тест? Дождаться тестера будет нельзя.',
-      { danger: true, confirmText: 'Отменить' },
+      {
+        danger: true,
+        confirmText: 'Отменить',
+      },
   )
 
   if (!ok) return
 
   cancellingActive.value = true
+  activeTestCancelError.value = ''
 
   try {
-    await tierTestsApi.cancel(activeTest.value.id)
+    await tierTestsApi.cancel(
+        activeTest.value.id,
+    )
 
     clearActiveTierTest()
+
     showActiveTestModal.value = false
 
-    // Список тоже должен обновиться — заявка стала отменённой
     refreshTierTests()
   } catch (e) {
-    // Ошибку показываем в модалке
-    activeTestCancelError.value = e.message || 'Не удалось отменить'
+    activeTestCancelError.value =
+        e.message || 'Не удалось отменить'
   } finally {
     cancellingActive.value = false
   }
 }
-
-const activeTestCancelError = ref('')
-
 
 /* =========================================================
    INIT
@@ -189,16 +223,9 @@ onMounted(async () => {
 })
 </script>
 
-
 <template>
   <main class="profile-page">
-
     <template v-if="user">
-
-      <!-- =====================================================
-           AMBIENT
-      ====================================================== -->
-
       <div
           class="profile-page__ambient"
           aria-hidden="true"
@@ -221,13 +248,7 @@ onMounted(async () => {
         <span class="star star--6" />
       </div>
 
-
-      <!-- =====================================================
-           PAGE HEADER
-      ====================================================== -->
-
       <header class="profile-header">
-
         <div class="profile-header__eyebrow">
           <span class="profile-header__dot" />
 
@@ -240,9 +261,7 @@ onMounted(async () => {
           </span>
         </div>
 
-
         <div class="profile-header__main">
-
           <div>
             <h1>
               Профиль игрока
@@ -258,34 +277,79 @@ onMounted(async () => {
 
             ONLINE PROFILE
           </div>
-
         </div>
-
       </header>
 
-
-      <!-- =====================================================
-           PLAYER CARD
-      ====================================================== -->
-
       <!--
-        Бридж-профиль: виды бриджа выходят на первое место,
-        поэтому блок стоит до PvP.
+        В bridge-режиме этот блок становится главным содержимым
+        профиля и располагается перед PvP-информацией.
       -->
       <section
           v-if="isBridgeProfile"
-          class="tests-section tests-section--lead"
+          class="tests-section tests-section--bridge"
       >
+        <div class="tests-section__ambient" />
+
+        <header class="tests-section__header">
+          <div>
+            <span class="tests-section__eyebrow">
+              BRIDGE MASTERY
+            </span>
+
+            <h2>
+              Виды бриджа
+            </h2>
+
+            <p>
+              Подтверди вид роликом — тестер проверит и поставит оценку
+            </p>
+          </div>
+
+          <button
+              type="button"
+              class="tests-section__button tests-section__button--bridge"
+              @click="showBridgeForm = true"
+          >
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+            >
+              <path
+                  d="M12 5v14M5 12h14"
+                  stroke-linecap="round"
+              />
+            </svg>
+
+            Подтвердить вид бриджа
+          </button>
+        </header>
+
+        <div class="tests-section__divider">
+          <span />
+          <i />
+          <span />
+        </div>
+
         <BridgeTechniques
+            ref="bridgeBlock"
             :techniques="bridge.techniques"
             :summary="bridge.summary"
-            :rank="bridge.rank"
+            :rank="bridgeRank"
             editable
         />
+
+        <div class="bridge-history-block">
+          <h3 class="bridge-history-block__title">
+            История подтверждений
+          </h3>
+
+          <BridgeTechniqueHistory ref="bridgeHistory" />
+        </div>
       </section>
 
       <section class="player-section">
-
         <PlayerCard
             :user="user"
             editable
@@ -293,24 +357,24 @@ onMounted(async () => {
             :my-recommendation="null"
             :is-owner="true"
             :can-recommend="false"
+            :bridge-mode="isBridgeProfile"
+            :bridge-rank="bridgeRank"
             @edit="showCustomize = true"
             @recommendations-updated="loadRecommendations"
         />
-
       </section>
 
-
-      <!-- =====================================================
-           COMPETITIVE STATUS
-      ====================================================== -->
-
+      <!--
+        В bridge-профиле PvP остаётся доступным,
+        но визуально вторичен.
+      -->
       <section
           class="competitive-section"
-          :class="{ 'competitive-section--demoted': isBridgeProfile }"
+          :class="{
+            'competitive-section--demoted': isBridgeProfile,
+          }"
       >
-
         <header class="section-header">
-
           <div>
             <span>
               COMPETITIVE STATUS
@@ -325,16 +389,10 @@ onMounted(async () => {
             <i />
             STATUS
           </div>
-
         </header>
 
-
         <div class="competitive-grid">
-
-          <!-- CLAN -->
-
           <article class="competitive-card">
-
             <div class="competitive-card__top">
               <div>
                 <span>
@@ -354,14 +412,9 @@ onMounted(async () => {
             <ClanBadge
                 :clan-member="clanMember"
             />
-
           </article>
 
-
-          <!-- RANK -->
-
           <article class="competitive-card">
-
             <div class="competitive-card__top">
               <div>
                 <span>
@@ -369,39 +422,48 @@ onMounted(async () => {
                 </span>
 
                 <h3>
-                  Рейтинг
+                  {{ isBridgeProfile
+                    ? 'Место в бридже'
+                    : 'Рейтинг'
+                  }}
                 </h3>
               </div>
 
               <b>
-                RANK
+                {{ isBridgeProfile
+                  ? 'BRIDGE'
+                  : 'RANK'
+                }}
               </b>
             </div>
 
             <RankBadge
-                :position="rank.position"
-                :total="rank.total"
+                :position="
+                  isBridgeProfile
+                    ? bridge.rank.position
+                    : rank.position
+                "
+                :total="
+                  isBridgeProfile
+                    ? bridge.rank.total
+                    : rank.total
+                "
             />
-
           </article>
-
         </div>
-
       </section>
 
-
-      <!-- =====================================================
-           TIER TESTS
-      ====================================================== -->
-
-      <section class="tests-section">
-
+      <!-- PvP-тесты. В bridge-режиме они вторичны. -->
+      <section
+          class="tests-section"
+          :class="{
+            'tests-section--demoted': isBridgeProfile,
+          }"
+      >
         <div class="tests-section__ambient" />
 
         <header class="tests-section__header">
-
           <div>
-
             <span class="tests-section__eyebrow">
               NEXT ASCENT
             </span>
@@ -413,17 +475,16 @@ onMounted(async () => {
             <p>
               Новый результат — новый шаг вверх
             </p>
-
           </div>
-
 
           <button
               type="button"
               class="tests-section__button"
-              :class="{ 'tests-section__button--disabled': activeTest }"
+              :class="{
+                'tests-section__button--disabled': activeTest,
+              }"
               @click="openTierTestForm"
           >
-
             <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -437,11 +498,8 @@ onMounted(async () => {
             </svg>
 
             Новый тир-тест
-
           </button>
-
         </header>
-
 
         <div class="tests-section__divider">
           <span />
@@ -449,36 +507,77 @@ onMounted(async () => {
           <span />
         </div>
 
-
         <TierTestHistory />
-
       </section>
 
-
-      <!-- =====================================================
-           BRIDGE
-      ====================================================== -->
-
-      <!-- Обычный профиль: бридж идёт внизу, как дополнение -->
+      <!--
+        В PvP-режиме bridge остаётся дополнительным разделом.
+        В bridge-режиме он уже был показан сверху.
+      -->
       <section
           v-if="!isBridgeProfile"
           class="tests-section"
       >
+        <header class="tests-section__header">
+          <div>
+            <span class="tests-section__eyebrow">
+              BRIDGE MASTERY
+            </span>
+
+            <h2>
+              Виды бриджа
+            </h2>
+
+            <p>
+              Подтверди вид роликом — тестер проверит и поставит оценку
+            </p>
+          </div>
+
+          <button
+              type="button"
+              class="tests-section__button"
+              @click="showBridgeForm = true"
+          >
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+            >
+              <path
+                  d="M12 5v14M5 12h14"
+                  stroke-linecap="round"
+              />
+            </svg>
+
+            Подтвердить вид бриджа
+          </button>
+        </header>
+
+        <div class="tests-section__divider">
+          <span />
+          <i />
+          <span />
+        </div>
+
         <BridgeTechniques
+            ref="bridgeBlock"
             :techniques="bridge.techniques"
             :summary="bridge.summary"
-            :rank="bridge.rank"
+            :rank="bridgeRank"
             editable
         />
+
+        <div class="bridge-history-block">
+          <h3 class="bridge-history-block__title">
+            История подтверждений
+          </h3>
+
+          <BridgeTechniqueHistory ref="bridgeHistory" />
+        </div>
       </section>
 
-
-      <!-- =====================================================
-           FOOTER
-      ====================================================== -->
-
       <footer class="profile-footer">
-
         <span />
 
         <div>
@@ -488,13 +587,7 @@ onMounted(async () => {
         </div>
 
         <span />
-
       </footer>
-
-
-      <!-- =====================================================
-           MODALS
-      ====================================================== -->
 
       <ProfileCustomizeModal
           v-if="showCustomize"
@@ -508,7 +601,11 @@ onMounted(async () => {
           @created="onTierTestCreated"
       />
 
-      <!-- Объяснение, почему запись недоступна -->
+      <BridgeTechniqueForm
+          v-model="showBridgeForm"
+          @created="onBridgeCreated"
+      />
+
       <Teleport to="body">
         <div
             v-if="showActiveTestModal"
@@ -520,16 +617,16 @@ onMounted(async () => {
               <h3>
                 {{
                   activeTest?.status === 'in_progress'
-                    ? 'Тест уже в работе'
-                    : 'Заявка уже отправлена'
+                      ? 'Тест уже в работе'
+                      : 'Заявка уже отправлена'
                 }}
               </h3>
 
               <button
                   type="button"
                   class="active-test-modal__close"
-                  @click="showActiveTestModal = false"
                   aria-label="Закрыть"
+                  @click="showActiveTestModal = false"
               >
                 ×
               </button>
@@ -539,8 +636,8 @@ onMounted(async () => {
               <p>
                 {{
                   activeTest?.status === 'in_progress'
-                    ? 'Тестер уже взял твою заявку в работу. Дождись результата — отменить тест на этом этапе нельзя.'
-                    : 'Заявка ждёт тестера. Вторую создавать не нужно — дождись этой или отмени её.'
+                      ? 'Тестер уже взял твою заявку в работу. Дождись результата — отменить тест на этом этапе нельзя.'
+                      : 'Заявка ждёт тестера. Вторую создавать не нужно — дождись этой или отмени её.'
                 }}
               </p>
 
@@ -548,12 +645,24 @@ onMounted(async () => {
                   v-if="activeTest"
                   class="active-test-modal__meta"
               >
-                <span>{{ activeTest.mode === 'pvp' ? 'PvP' : 'BedWars' }}</span>
+                <span>
+                  {{
+                    activeTest.mode === 'pvp'
+                        ? 'PvP'
+                        : 'BedWars'
+                  }}
+                </span>
 
-                <span class="sep">·</span>
+                <span class="sep">
+                  ·
+                </span>
 
                 <span>
-                  {{ new Date(activeTest.created_at).toLocaleDateString('ru-RU') }}
+                  {{
+                    new Date(
+                        activeTest.created_at,
+                    ).toLocaleDateString('ru-RU')
+                  }}
                 </span>
               </div>
 
@@ -581,25 +690,22 @@ onMounted(async () => {
                   :disabled="cancellingActive"
                   @click="cancelActiveTest"
               >
-                {{ cancellingActive ? 'Отмена…' : 'Отменить заявку' }}
+                {{
+                  cancellingActive
+                      ? 'Отмена…'
+                      : 'Отменить заявку'
+                }}
               </button>
             </footer>
           </div>
         </div>
       </Teleport>
-
     </template>
-
-
-    <!-- =======================================================
-         LOADING
-    ======================================================== -->
 
     <div
         v-else
         class="profile-loading"
     >
-
       <div class="profile-loading__orb">
         <span />
       </div>
@@ -611,12 +717,32 @@ onMounted(async () => {
       <small>
         Загрузка профиля
       </small>
-
     </div>
-
   </main>
 </template>
 
 <style scoped>
 @import "@/views/players/ProfileView.css";
+
+.bridge-lead {
+  position: relative;
+
+  margin-top: 0;
+}
+
+.tests-section--demoted {
+  opacity: .62;
+
+  transition: opacity .2s ease;
+}
+
+.tests-section--demoted:hover {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tests-section--demoted {
+    transition: none;
+  }
+}
 </style>

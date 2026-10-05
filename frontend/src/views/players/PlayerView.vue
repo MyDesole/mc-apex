@@ -112,6 +112,8 @@ watch(
         :recommendations="recommendations"
         :my-recommendation="myRecommendation"
         :can-recommend="canRecommend"
+        :bridge-mode="isBridgeProfile"
+        :bridge-rank="bridgeRank"
         @recommendations-updated="load(route.params.id)"
     />
 

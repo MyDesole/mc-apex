@@ -948,7 +948,216 @@
   height: 27px;
   opacity: 0.9;
 }
+/* =========================================================
+   BRIDGE RANK
+   ========================================================= */
 
+.profile-header--bridge {
+    --player-accent: var(--bridge-rank-color, #7c3aed);
+}
+
+.bridge-display {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    width: fit-content;
+
+    margin-bottom: 12px;
+    padding: 7px 14px 7px 7px;
+
+    border: 1px solid
+    color-mix(
+            in srgb,
+            var(--player-accent) 38%,
+            rgba(255, 255, 255, 0.08)
+    );
+
+    border-radius: 10px;
+
+    background:
+            linear-gradient(
+                    135deg,
+                    color-mix(
+                            in srgb,
+                            var(--player-accent) 11%,
+                            rgba(8, 8, 18, 0.84)
+                    ),
+                    rgba(8, 8, 18, 0.68)
+            );
+
+    box-shadow:
+            0 8px 30px
+            color-mix(
+                    in srgb,
+                    var(--player-accent) 10%,
+                    transparent
+            ),
+            inset 0 1px 0 rgba(255, 255, 255, 0.055);
+
+    backdrop-filter: blur(14px);
+}
+
+.bridge-display__icon {
+    position: relative;
+
+    display: grid;
+    place-items: center;
+
+    width: 52px;
+    height: 52px;
+
+    flex-shrink: 0;
+
+    background:
+            conic-gradient(
+                    from 45deg,
+                    transparent,
+                    var(--player-accent),
+                    rgba(255, 255, 255, 0.7),
+                    var(--player-accent),
+                    transparent
+            );
+
+    clip-path: polygon(
+            50% 0%,
+            88% 20%,
+            100% 58%,
+            76% 94%,
+            24% 94%,
+            0% 58%,
+            12% 20%
+    );
+
+    filter:
+            drop-shadow(
+                    0 0 12px
+                    color-mix(
+                            in srgb,
+                            var(--player-accent) 50%,
+                            transparent
+                    )
+            );
+}
+
+.bridge-display__icon-inner {
+    display: grid;
+    place-items: center;
+
+    width: 44px;
+    height: 44px;
+
+    clip-path: inherit;
+
+    background:
+            linear-gradient(
+                    145deg,
+                    color-mix(
+                            in srgb,
+                            var(--player-accent) 28%,
+                            #121322
+                    ),
+                    #07070f
+            );
+
+    color: #fff;
+
+    font-size: 11px;
+    font-weight: 1000;
+
+    letter-spacing: 0.5px;
+
+    text-align: center;
+
+    text-shadow:
+            0 0 12px
+            color-mix(
+                    in srgb,
+                    var(--player-accent) 75%,
+                    transparent
+            );
+}
+
+.bridge-display__info {
+    min-width: 100px;
+}
+
+.bridge-display__eyebrow {
+    margin-bottom: 2px;
+
+    color: rgba(255, 255, 255, 0.34);
+
+    font-size: 7px;
+    font-weight: 900;
+
+    letter-spacing: 1.6px;
+}
+
+.bridge-display__name {
+    color: #fff;
+
+    font-size: 17px;
+    line-height: 1.05;
+
+    font-weight: 950;
+
+    letter-spacing: 0.5px;
+
+    text-shadow:
+            0 0 20px
+            color-mix(
+                    in srgb,
+                    var(--player-accent) 25%,
+                    transparent
+            );
+}
+
+.bridge-display__subtitle {
+    margin-top: 4px;
+
+    color:
+            color-mix(
+                    in srgb,
+                    var(--player-accent) 78%,
+                    white
+            );
+
+    font-size: 7px;
+    font-weight: 900;
+
+    letter-spacing: 1.1px;
+}
+
+.bridge-display__ornament {
+    display: flex;
+    align-items: center;
+
+    gap: 3px;
+    margin-left: 5px;
+}
+
+.bridge-display__ornament span {
+    display: block;
+
+    width: 2px;
+    height: 12px;
+
+    background: var(--player-accent);
+    opacity: 0.25;
+}
+
+.bridge-display__ornament span:nth-child(2) {
+    height: 19px;
+    opacity: 0.55;
+}
+
+.bridge-display__ornament span:nth-child(3) {
+    height: 27px;
+    opacity: 0.9;
+}
 /* =========================================================
    NAME + VERIFIED
    ========================================================= */

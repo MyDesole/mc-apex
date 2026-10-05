@@ -1,15 +1,13 @@
 <script setup>
 /**
- * Техники бриджа в профиле.
+ * Виды бриджа, которые знает игрок.
  *
- * Подтверждённые виды показаны ярко с оценкой тестера, заявленные но ещё
- * не проверенные — серыми. В своём профиле можно отметить новый вид и
- * приложить видео.
+ * Показывает подтверждённые виды ярко, заявленные — серыми, остальные
+ * приглушённо. Подача заявки живёт в отдельной модалке подтверждения,
+ * история — в отдельном блоке.
  */
 import { computed, onMounted, ref } from 'vue'
 import { bridgeApi } from '@/services/bridge/bridge.js'
-import BridgeVideoUploader from '@/components/bridge/BridgeVideoUploader.vue'
-import { alert as alertDialog, confirm as confirmDialog } from '@/utils/dialog.js'
 
 const props = defineProps({
   // Подтверждённые виды из ответа профиля
@@ -24,11 +22,7 @@ const props = defineProps({
 const catalog = ref([])
 const loading = ref(false)
 const error = ref('')
-
-const formOpen = ref(false)
-const submitting = ref(false)
 const togglingVariants = ref(null)
-const form = ref({ technique_id: null, upload_id: null })
 
 const confirmedCount = computed(() => props.summary?.confirmed_count ?? props.techniques.length)
 const aspectsTotal = computed(() => props.summary?.aspects_total ?? 0)
@@ -43,13 +37,9 @@ const rows = computed(() => {
     }))
   }
 
-  return catalog.value
+  // В своём профиле показываем только то, что игрок уже заявил
+  return catalog.value.filter(row => row.submission)
 })
-
-/** Свободные виды — их можно заявить. */
-const available = computed(() =>
-    catalog.value.filter(row => !row.submission),
-)
 
 async function loadCatalog() {
   if (!props.editable) return
@@ -65,30 +55,6 @@ async function loadCatalog() {
     error.value = e.message || 'Не удалось загрузить виды бриджа'
   } finally {
     loading.value = false
-  }
-}
-
-function openForm() {
-  form.value = { technique_id: available.value[0]?.technique?.id ?? null, upload_id: null }
-  error.value = ''
-  formOpen.value = true
-}
-
-async function submit() {
-  if (!form.value.technique_id || !form.value.upload_id) return
-
-  submitting.value = true
-  error.value = ''
-
-  try {
-    await bridgeApi.declare(form.value.technique_id, form.value.upload_id)
-
-    formOpen.value = false
-    await loadCatalog()
-  } catch (e) {
-    error.value = e.message || 'Не удалось отправить заявку'
-  } finally {
-    submitting.value = false
   }
 }
 
@@ -124,23 +90,9 @@ function isVariantOn(row, variantId) {
   return (row.submission?.variants ?? []).some(v => v.id === variantId)
 }
 
-async function withdraw(row) {
-  const ok = await confirmDialog(
-      `Убрать вид «${row.technique.label}» из профиля?`,
-      { danger: true, confirmText: 'Убрать' },
-  )
-
-  if (!ok) return
-
-  try {
-    await bridgeApi.withdraw(row.submission.id)
-    await loadCatalog()
-  } catch (e) {
-    await alertDialog(e.message || 'Не удалось убрать вид')
-  }
-}
-
 onMounted(loadCatalog)
+
+defineExpose({ load: loadCatalog })
 </script>
 
 <template>
@@ -152,7 +104,7 @@ onMounted(loadCatalog)
         </div>
 
         <h3 class="bridge-block__title">
-          Техники бриджа
+          {{ editable ? 'Мои виды бриджа' : 'Виды бриджа' }}
         </h3>
       </div>
 
@@ -174,12 +126,6 @@ onMounted(loadCatalog)
       </div>
     </header>
 
-    <p class="bridge-block__hint">
-      Вид становится ярким, когда бридж-тестер проверит видео.
-      Ролик должен быть записан на сервере, длиться около двух минут,
-      без обрезки неудач, с видимым CPS-модом и Keystrokes.
-    </p>
-
     <div v-if="error" class="bridge-block__error">{{ error }}</div>
 
     <div v-if="loading" class="bridge-block__state">
@@ -187,7 +133,9 @@ onMounted(loadCatalog)
     </div>
 
     <div v-else-if="!rows.length" class="bridge-block__state">
-      Пока нет подтверждённых видов
+      {{ editable
+          ? 'Пока ничего не подтверждено — нажми «Подтвердить вид»'
+          : 'Пока нет подтверждённых видов' }}
     </div>
 
     <ul v-else class="bridge-list">
@@ -198,6 +146,7 @@ onMounted(loadCatalog)
           :class="{
             'bridge-item--confirmed': row.submission?.is_confirmed,
             'bridge-item--pending': row.submission && !row.submission.is_confirmed,
+            'bridge-item--rejected': row.submission?.status === 'rejected',
           }"
       >
         <div class="bridge-item__main">
@@ -270,17 +219,16 @@ onMounted(loadCatalog)
           </span>
         </div>
 
-        <!-- Заявлено, ждёт проверки -->
         <div
-            v-else-if="row.submission"
+            v-else
             class="bridge-item__pending"
         >
           <span class="bridge-item__badge">
-            на проверке
+            {{ row.submission?.status === 'rejected' ? 'отклонён' : 'на проверке' }}
           </span>
 
           <a
-              v-if="row.submission.has_video"
+              v-if="row.submission?.has_video"
               :href="row.submission.video_url"
               target="_blank"
               rel="noopener"
@@ -288,94 +236,35 @@ onMounted(loadCatalog)
           >
             видео
           </a>
-
-          <button
-              v-if="editable"
-              type="button"
-              class="bridge-item__remove"
-              @click="withdraw(row)"
-          >
-            убрать
-          </button>
-        </div>
-
-        <!-- Свободный вид -->
-        <div
-            v-else
-            class="bridge-item__empty"
-        >
-          не заявлен
         </div>
       </li>
     </ul>
 
-    <!-- Подача нового вида -->
-    <div
+    <!--
+      Требования к ролику: за несоответствие заявку отклоняют, поэтому
+      блок заметный, а не серый текст.
+    -->
+    <aside
         v-if="editable"
-        class="bridge-actions"
+        class="bridge-requirements"
     >
-      <button
-          v-if="!formOpen"
-          type="button"
-          class="bridge-actions__open"
-          :disabled="!available.length"
-          @click="openForm"
-      >
-        {{ available.length ? '+ Заявить вид бриджа' : 'Все виды уже заявлены' }}
-      </button>
-
-      <div
-          v-else
-          class="bridge-form"
-      >
-        <label class="bridge-form__field">
-          <span>Вид бриджа</span>
-
-          <select v-model.number="form.technique_id">
-            <option
-                v-for="row in available"
-                :key="row.technique.id"
-                :value="row.technique.id"
-            >
-              {{ row.technique.label }}
-            </option>
-          </select>
-        </label>
-
-        <div class="bridge-form__field">
-          <span>Видео</span>
-
-          <BridgeVideoUploader v-model="form.upload_id" />
-        </div>
-
-        <p class="bridge-form__note">
-          Видео должно быть записано на сервере, а не в одиночном мире:
-          около двух минут, без обрезки неудач, с видимым CPS-модом и
-          Keystrokes. Если показываешь несколько бриджей — пришли
-          отдельный ролик на каждый. После проверки тестером ролик
-          удаляется.
-        </p>
-
-        <div class="bridge-form__actions">
-          <button
-              type="button"
-              class="bridge-form__cancel"
-              @click="formOpen = false"
-          >
-            Отмена
-          </button>
-
-          <button
-              type="button"
-              class="bridge-form__submit"
-              :disabled="submitting || !form.technique_id || !form.upload_id"
-              @click="submit"
-          >
-            {{ submitting ? 'Отправка...' : 'Отправить на проверку' }}
-          </button>
-        </div>
+      <div class="bridge-requirements__title">
+        <span class="bridge-requirements__icon">!</span>
+        Каким должно быть видео
       </div>
-    </div>
+
+      <ul class="bridge-requirements__list">
+        <li>Записано <b>на сервере</b>, не в одиночном мире</li>
+        <li>Длительность <b>около 2 минут</b></li>
+        <li><b>Неудачи обрезать нельзя</b></li>
+        <li>Должен быть виден <b>CPS-мод и Keystrokes</b></li>
+        <li>Несколько бриджей — <b>отдельный ролик на каждый</b></li>
+      </ul>
+
+      <p class="bridge-requirements__warn">
+        За подозрение в читах, монтаже или чужом клипе вызовем на проверку.
+      </p>
+    </aside>
   </section>
 </template>
 

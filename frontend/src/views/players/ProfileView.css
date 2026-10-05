@@ -458,6 +458,48 @@
 }
 
 /* Ведущий блок бридж-профиля */
+/* ---------------- Бридж-секция профиля ---------------- */
+
+.tests-section--bridge {
+  border-color: rgba(139, 92, 246, 0.28);
+
+  background: linear-gradient(
+      160deg,
+      rgba(139, 92, 246, 0.09),
+      rgba(255, 255, 255, 0.015)
+  );
+}
+
+/* Кнопка подтверждения: главное действие бридж-профиля */
+.tests-section__button--bridge {
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35);
+}
+
+.tests-section__button--bridge:hover {
+  box-shadow: 0 10px 30px rgba(124, 58, 237, 0.5);
+}
+
+/* История подтверждений внутри бридж-секции */
+.bridge-history-block {
+  margin-top: 20px;
+  padding-top: 16px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.bridge-history-block__title {
+  margin: 0 0 12px;
+
+  color: rgba(255, 255, 255, 0.5);
+
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
 .tests-section--lead {
   margin-top: 8px;
 }

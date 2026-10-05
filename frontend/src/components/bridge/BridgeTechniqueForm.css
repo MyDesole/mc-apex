@@ -1,0 +1,299 @@
+@import "./BridgeRequirements.css";
+
+/* ============================================
+   ПОДТВЕРЖДЕНИЕ ВИДА БРИДЖА
+   Классы с префиксом bridge-: CSS из @import глобальный, и общие имена
+   подрались бы с модалкой тир-теста.
+   ============================================ */
+
+.bridge-modal-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 18px;
+
+  background: rgba(6, 7, 14, 0.78);
+  backdrop-filter: blur(7px);
+}
+
+.bridge-modal {
+  width: 100%;
+  max-width: 560px;
+  max-height: 92vh;
+
+  overflow-y: auto;
+
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 18px;
+
+  background: #10111c;
+
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+}
+
+.bridge-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  padding: 18px 20px 14px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.bridge-modal__head h2 {
+  margin: 0;
+
+  color: var(--text, #e5e5eb);
+
+  font-size: 19px;
+  font-weight: 900;
+}
+
+.bridge-modal__close {
+  width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.05);
+
+  border: none;
+  border-radius: 9px;
+
+  cursor: pointer;
+}
+
+.bridge-modal__close:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.bridge-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+
+  padding: 18px 20px 20px;
+}
+
+.bridge-modal__error {
+  padding: 11px 13px;
+
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.09);
+
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  border-radius: 10px;
+
+  font-size: 13px;
+}
+
+.bridge-modal__empty {
+  padding: 30px;
+
+  color: rgba(255, 255, 255, 0.45);
+
+  font-size: 14px;
+  text-align: center;
+}
+
+.bridge-modal__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+
+  margin-top: 4px;
+}
+
+.bridge-modal__cancel {
+  padding: 11px 18px;
+
+  color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.06);
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.bridge-modal__submit {
+  padding: 11px 20px;
+
+  color: #fff;
+  background: var(--accent, #7c3aed);
+
+  border: none;
+  border-radius: 10px;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.bridge-modal__submit:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ---------------- Поля ---------------- */
+
+.bridge-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.bridge-field label {
+  color: rgba(255, 255, 255, 0.6);
+
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.bridge-field select {
+  padding: 11px 13px;
+
+  color: var(--text, #e5e5eb);
+  background: rgba(0, 0, 0, 0.3);
+
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 10px;
+
+  font: inherit;
+  font-size: 14px;
+
+  outline: none;
+}
+
+.bridge-field select:focus {
+  border-color: rgba(139, 92, 246, 0.55);
+}
+
+.bridge-field__hint {
+  color: rgba(255, 255, 255, 0.35);
+
+  font-size: 11px;
+}
+
+/* ---------------- Подвиды ---------------- */
+
+.bridge-variants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bridge-variant {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 7px 13px;
+
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.04);
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.bridge-variant:hover {
+  border-color: rgba(139, 92, 246, 0.45);
+}
+
+.bridge-variant--on {
+  color: #ddd6fe;
+  background: rgba(139, 92, 246, 0.24);
+  border-color: rgba(139, 92, 246, 0.6);
+}
+
+.bridge-variant--special {
+  border-color: rgba(251, 191, 36, 0.55);
+}
+
+.bridge-variant--special.bridge-variant--on {
+  color: #fde68a;
+  background: rgba(251, 191, 36, 0.18);
+  border-color: rgba(251, 191, 36, 0.75);
+}
+
+.bridge-variant__mark {
+  font-size: 11px;
+  font-weight: 900;
+}
+
+/* ---------------- Успех ---------------- */
+
+.bridge-modal--done {
+  max-width: 420px;
+}
+
+.bridge-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+
+  padding: 30px 26px;
+}
+
+.bridge-done__icon {
+  width: 52px;
+  height: 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #052e16;
+  background: #22c55e;
+
+  border-radius: 50%;
+
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.bridge-done h2 {
+  margin: 0;
+
+  color: var(--text, #e5e5eb);
+
+  font-size: 19px;
+  font-weight: 900;
+}
+
+.bridge-done p {
+  margin: 0;
+
+  color: rgba(255, 255, 255, 0.5);
+
+  font-size: 13px;
+  line-height: 1.55;
+  text-align: center;
+}

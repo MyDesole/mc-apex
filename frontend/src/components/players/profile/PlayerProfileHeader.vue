@@ -38,6 +38,21 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+
+  /*
+   * Бридж-профиль: вместо тира показываем звание бриджера.
+   * Подменяем значения, и шапка сама рисует ранг — переписывать каждое
+   * место с тиром не нужно.
+   */
+  bridgeMode: {
+    type: Boolean,
+    default: false,
+  },
+
+  bridgeRank: {
+    type: Object,
+    default: null,
+  },
 })
 
 const emit = defineEmits(['edit'])
@@ -50,6 +65,8 @@ const playerAccent = computed(() =>
     props.accent ||
     props.user.accent_color ||
     props.user.banner_color ||
+    // У звания бриджера свой цвет с сервера
+    (props.bridgeMode ? props.bridgeRank?.color : null) ||
     tierColor(props.user.tier)
 )
 
@@ -254,17 +271,28 @@ const tier = computed(() =>
     props.user.tier || 'UNRANKED'
 )
 
-const tierLabel = computed(() =>
-    String(tier.value)
-        .replace(/_/g, ' ')
-        .toUpperCase()
-)
+const tierLabel = computed(() => {
+  if (props.bridgeMode) {
+    return String(props.bridgeRank?.label ?? 'БЕЗ ЗВАНИЯ').toUpperCase()
+  }
+
+  return String(tier.value)
+      .replace(/_/g, ' ')
+      .toUpperCase()
+})
 
 const tierShort = computed(() => {
   const value = tierLabel.value
 
   if (value === 'UNRANKED') {
     return '—'
+  }
+
+  // У звания убираем приставку Bridge: в водяном знаке она лишняя
+  if (props.bridgeMode) {
+    const short = value.replace('BRIDGE', '').trim()
+
+    return (short || value).slice(0, 3)
   }
 
   return value
@@ -275,6 +303,11 @@ const tierShort = computed(() => {
 })
 
 const tierProgress = computed(() => {
+  // У бриджа прогресса нет: звание выдаёт тестер, а не очки
+  if (props.bridgeMode) {
+    return null
+  }
+
   const value =
       props.user.tier_progress ??
       props.user.rank_progress ??
@@ -296,6 +329,10 @@ const tierProgress = computed(() => {
 })
 
 const tierSubtitle = computed(() => {
+  if (props.bridgeMode) {
+    return props.bridgeRank ? 'BRIDGE RANK' : 'ЗВАНИЕ НЕ ВЫДАНО'
+  }
+
   if (tier.value === 'UNRANKED') {
     return 'AWAITING RANK'
   }

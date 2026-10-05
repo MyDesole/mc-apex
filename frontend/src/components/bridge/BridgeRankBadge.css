@@ -1,17 +1,28 @@
-/* ============================================
-   ЗВАНИЕ БРИДЖЕРА
-   ============================================ */
-
 .bridge-rank {
+  --rank-color: var(--accent, #a78bfa);
+
   display: inline-flex;
   align-items: center;
-  gap: 7px;
 
-  border: 1px solid color-mix(in srgb, var(--rank-color) 45%, transparent);
-  border-radius: 999px;
+  width: fit-content;
 
-  background: color-mix(in srgb, var(--rank-color) 14%, transparent);
+  gap: 8px;
+
   color: var(--rank-color);
+
+  background: color-mix(
+          in srgb,
+          var(--rank-color) 12%,
+          transparent
+  );
+
+  border: 1px solid color-mix(
+          in srgb,
+          var(--rank-color) 42%,
+          transparent
+  );
+
+  border-radius: 999px;
 
   font-weight: 900;
 
@@ -19,45 +30,65 @@
 }
 
 .bridge-rank__dot {
-  width: 6px;
-  height: 6px;
+  flex: 0 0 auto;
 
-  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
 
   border-radius: 50%;
 
   background: var(--rank-color);
 
-  box-shadow: 0 0 8px var(--rank-color);
+  box-shadow:
+          0 0 8px color-mix(
+                  in srgb,
+                  var(--rank-color) 75%,
+                  transparent
+          );
+}
+
+.bridge-rank__label {
+  line-height: 1;
 }
 
 .bridge-rank--sm {
-  padding: 3px 9px;
+  min-height: 26px;
+
+  padding: 0 9px;
 
   font-size: 10px;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
+}
+
+.bridge-rank--sm .bridge-rank__dot {
+  width: 5px;
+  height: 5px;
 }
 
 .bridge-rank--md {
-  padding: 5px 13px;
+  min-height: 32px;
 
-  font-size: 13px;
+  padding: 0 11px;
+
+  font-size: 12px;
 }
 
 .bridge-rank--lg {
-  padding: 8px 18px;
+  min-height: 44px;
 
-  font-size: 17px;
-  letter-spacing: 0.3px;
+  padding: 0 15px;
+
+  font-size: 16px;
+}
+
+.bridge-rank--lg .bridge-rank__dot {
+  width: 9px;
+  height: 9px;
 }
 
 .bridge-rank--empty {
-  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text-dim, #64748b);
 
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.4);
+  background: rgba(255,255,255,.025);
 
-  font-size: 12px;
-  font-weight: 700;
+  border-color: rgba(255,255,255,.08);
 }

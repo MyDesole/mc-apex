@@ -45,6 +45,20 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+
+  /*
+   * Бридж-профиль: в статистике показываем звание бриджера, а блок
+   * аспектов скрываем — он про PvP.
+   */
+  bridgeMode: {
+    type: Boolean,
+    default: false,
+  },
+
+  bridgeRank: {
+    type: Object,
+    default: null,
+  },
 })
 
 const emit = defineEmits([
@@ -201,8 +215,10 @@ function onFriendLeave() {
 const profileStats = computed(() => [
   {
     key: 'tier',
-    value: props.user.tier || '—',
-    label: 'Current tier',
+    value: props.bridgeMode
+        ? (props.bridgeRank?.label ?? 'Без звания')
+        : (props.user.tier || '—'),
+    label: props.bridgeMode ? 'Bridge rank' : 'Current tier',
     icon: '◆',
     accent: true,
   },
@@ -446,7 +462,7 @@ const profileCompleteness = computed(() => {
            =================================================== -->
 
       <section
-          v-if="hasAspects"
+          v-if="hasAspects && !bridgeMode"
           class="profile-section"
       >
         <div class="section-heading">
