@@ -4,9 +4,11 @@ namespace Tests\Feature;
 
 use App\Domains\Bridge\Models\BridgeTechnique;
 use App\Domains\Bridge\Models\UserBridgeTechnique;
+use App\Domains\Bridge\Notifications\BridgeSubmissionNotification;
 use App\Domains\Bridge\Services\BridgeService;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -368,6 +370,44 @@ class BridgeTechniqueTest extends TestCase
         Sanctum::actingAs($other);
 
         $this->deleteJson("/api/bridge/submissions/{$submission->id}")->assertForbidden();
+    }
+
+    public function test_reviewers_are_notified_about_new_submission(): void
+    {
+        $player = User::factory()->create();
+        $bridgeTester = User::factory()->create(['role' => 'bridge_tester']);
+        $admin = User::factory()->create(['role' => 'admin']);
+        $regularTester = User::factory()->create(['role' => 'tester']);
+
+        $technique = $this->technique();
+
+        Notification::fake();
+
+        $this->service()->declare($player, $technique->id, 'https://youtu.be/abc');
+
+        Notification::assertSentTo($bridgeTester, BridgeSubmissionNotification::class);
+        Notification::assertSentTo($admin, BridgeSubmissionNotification::class);
+        Notification::assertNotSentTo($regularTester, BridgeSubmissionNotification::class);
+    }
+
+    public function test_player_is_notified_about_review_result(): void
+    {
+        $player = User::factory()->create();
+        $tester = User::factory()->create(['role' => 'bridge_tester']);
+        $technique = $this->technique();
+
+        $submission = $this->service()->declare($player, $technique->id, 'https://youtu.be/abc');
+
+        Notification::fake();
+
+        $this->service()->confirm($submission, $tester, [
+            'stability' => 50, 'speed' => 70, 'difficulty' => 70, 'score' => 8,
+        ]);
+
+        Notification::assertSentTo(
+            $player,
+            \App\Domains\Bridge\Notifications\BridgeTechniqueReviewedNotification::class
+        );
     }
 
     public function test_bridge_testers_are_excluded_from_rankings(): void

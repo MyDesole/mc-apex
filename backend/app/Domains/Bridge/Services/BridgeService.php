@@ -4,6 +4,7 @@ namespace App\Domains\Bridge\Services;
 
 use App\Domains\Bridge\Models\BridgeTechnique;
 use App\Domains\Bridge\Models\UserBridgeTechnique;
+use App\Domains\Bridge\Notifications\BridgeSubmissionNotification;
 use App\Domains\Bridge\Notifications\BridgeTechniqueReviewedNotification;
 use App\Domains\Users\Models\User;
 use App\Support\Concerns\AbortsWithMessage;
@@ -94,7 +95,7 @@ class BridgeService
             );
         }
 
-        return UserBridgeTechnique::updateOrCreate(
+        $submission = UserBridgeTechnique::updateOrCreate(
             ['user_id' => $user->id, 'technique_id' => $technique->id],
             [
                 'status' => UserBridgeTechnique::STATUS_DECLARED,
@@ -109,6 +110,25 @@ class BridgeService
                 'reviewed_at' => null,
             ],
         );
+
+        $this->notifyReviewers($submission);
+
+        return $submission;
+    }
+
+    /**
+     * Сообщаем бридж-тестерам и админам: появилась заявка на проверку.
+     */
+    private function notifyReviewers(UserBridgeTechnique $submission): void
+    {
+        $submission->loadMissing('technique', 'user');
+
+        User::query()
+            ->whereIn('role', ['bridge_tester', 'admin'])
+            ->get()
+            ->each(fn (User $reviewer) => $reviewer->notify(
+                new BridgeSubmissionNotification($submission)
+            ));
     }
 
     /** Игрок убирает свою заявку. Подтверждённую убрать нельзя. */

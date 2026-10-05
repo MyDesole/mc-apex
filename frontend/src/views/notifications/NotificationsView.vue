@@ -164,6 +164,20 @@ async function open(notification) {
       await router.push('/profile')
     }
 
+    // Заявка на вид бриджа: ведём в раздел проверки
+    else if (type === 'bridge_submission') {
+      if (['bridge_tester', 'admin'].includes(auth.user?.role)) {
+        await router.push('/bridge-review')
+      } else {
+        await router.push('/profile')
+      }
+    }
+
+    // Результат проверки вида бриджа
+    else if (type === 'bridge_technique_reviewed') {
+      await router.push('/profile')
+    }
+
     else if (type === 'clan_application') {
       if (data.clan_id) {
         await router.push(`/clans/${data.clan_id}`)
