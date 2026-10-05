@@ -522,6 +522,15 @@ onMounted(() => {
                 {{ test.user?.tier ?? '—' }}
               </span>
 
+              <!-- Что игрок ждёт: помогает подобрать заявку под свой уровень -->
+              <span
+                  v-if="test.expected_tier"
+                  class="meta-item meta-item--expected"
+              >
+                <span class="meta-item__label">ОЖИДАЕТ</span>
+                {{ test.expected_tier }}
+              </span>
+
               <span class="meta-item">
                 <span class="meta-item__label">SCORE</span>
                 {{ test.user?.tier_score ?? 0 }}%

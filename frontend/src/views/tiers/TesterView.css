@@ -900,6 +900,16 @@ select {
   border-color: rgba(6, 182, 212, 0.16);
 }
 
+/* Ожидаемый ранг: заметный акцент, тестер выбирает заявку по нему */
+.meta-item--expected {
+  color: #c4b5fd;
+  font-weight: 800;
+}
+
+.meta-item--expected .meta-item__label {
+  color: rgba(196, 181, 253, 0.75);
+}
+
 .meta-item {
   display: inline-flex;
   align-items: center;
