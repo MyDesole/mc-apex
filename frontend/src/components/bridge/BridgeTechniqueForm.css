@@ -20,7 +20,143 @@
   background: rgba(6, 7, 14, 0.78);
   backdrop-filter: blur(7px);
 }
+.bridge-select {
+  position: relative;
+  width: 100%;
+}
 
+.bridge-select__trigger {
+  width: 100%;
+  min-height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 11px 13px;
+
+  color: var(--text, #e5e5eb);
+  background: rgba(0, 0, 0, 0.3);
+
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 10px;
+
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+          border-color 0.15s ease,
+          background 0.15s ease,
+          box-shadow 0.15s ease;
+}
+
+.bridge-select__trigger:hover {
+  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(255, 255, 255, 0.17);
+}
+
+.bridge-select--open .bridge-select__trigger {
+  border-color: rgba(139, 92, 246, 0.65);
+  background: rgba(0, 0, 0, 0.38);
+
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.bridge-select__chevron {
+  flex: 0 0 auto;
+
+  color: rgba(255, 255, 255, 0.45);
+
+  transition: transform 0.15s ease;
+}
+
+.bridge-select--open .bridge-select__chevron {
+  transform: rotate(180deg);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.bridge-select__dropdown {
+  position: absolute;
+  z-index: 20;
+
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+
+  max-height: 220px;
+  overflow-y: auto;
+
+  padding: 5px;
+
+  background: #171824;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+
+  box-shadow:
+          0 16px 40px rgba(0, 0, 0, 0.45),
+          0 4px 12px rgba(0, 0, 0, 0.25);
+
+  animation: bridge-select-in 0.12s ease-out;
+}
+
+.bridge-select__option {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  padding: 10px 11px;
+
+  color: rgba(255, 255, 255, 0.68);
+  background: transparent;
+
+  border: 0;
+  border-radius: 8px;
+
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+          color 0.12s ease,
+          background 0.12s ease;
+}
+
+.bridge-select__option:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.bridge-select__option--active {
+  color: #ddd6fe;
+  background: rgba(139, 92, 246, 0.14);
+}
+
+.bridge-select__option--active:hover {
+  background: rgba(139, 92, 246, 0.2);
+}
+
+@keyframes bridge-select-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 .bridge-modal {
   width: 100%;
   max-width: 560px;
