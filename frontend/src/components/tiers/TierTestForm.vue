@@ -4,6 +4,12 @@ import { tierTestsApi } from '@/services/tiers/tierTests.js'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
+
+  /*
+   * Активная заявка игрока, если она есть. Пока заявка в очереди или в
+   * работе, вторую создавать нельзя: сервер такую попытку отклонит.
+   */
+  activeTest: { type: Object, default: null },
 })
 
 const emit = defineEmits(['update:modelValue', 'created'])
@@ -69,7 +75,42 @@ async function submit() {
         </button>
       </header>
 
-      <div class="body">
+      <div v-if="!activeTest" class="body">
+        <!--
+          Заявка уже есть: вместо полей показываем её состояние, чтобы
+          человек не заполнял форму зря.
+        -->
+        <div
+            v-if="activeTest"
+            class="active-notice"
+        >
+          <div class="active-notice__title">
+            {{
+              activeTest.status === 'in_progress'
+                ? 'Тест уже идёт'
+                : 'Заявка уже отправлена'
+            }}
+          </div>
+
+          <div class="active-notice__text">
+            {{
+              activeTest.status === 'in_progress'
+                ? 'Тестер взял твою заявку в работу. Дождись результата.'
+                : 'Заявка ждёт тестера. Вторую создавать не нужно — дождись этой.'
+            }}
+          </div>
+
+          <div class="active-notice__meta">
+            <span>{{ activeTest.mode === 'pvp' ? 'PvP' : 'BedWars' }}</span>
+
+            <span class="sep">·</span>
+
+            <span>
+              {{ new Date(activeTest.created_at).toLocaleDateString('ru-RU') }}
+            </span>
+          </div>
+        </div>
+
         <div v-if="error" class="error">{{ error }}</div>
 
         <div class="field">
@@ -140,8 +181,12 @@ async function submit() {
       </div>
 
       <footer class="modal-foot">
-        <button class="btn-cancel" @click="close">Отмена</button>
+        <button class="btn-cancel" @click="close">
+          {{ activeTest ? 'Понятно' : 'Отмена' }}
+        </button>
+
         <button
+            v-if="!activeTest"
             class="btn-submit"
             :disabled="loading || !form.contact_value || !form.preferred_time"
             @click="submit"

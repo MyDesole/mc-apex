@@ -44,6 +44,9 @@ class TierTestController extends Controller
     {
         $validated = $request->validated();
 
+        // Одна активная заявка на игрока: иначе в очереди появляются дубли
+        $this->tierTests->assertNoActiveTierTest($request->user());
+
         $test = TierTest::create([
             'user_id' => $request->user()->id,
             'mode' => $validated['mode'],
@@ -68,8 +71,12 @@ class TierTestController extends Controller
     {
         $tests = $user->tierTests()
             ->where('status', 'completed')
+            ->with('tester:id,username,avatar')
             ->orderBy('completed_at')
-            ->get(['id', 'mode', 'result_tier', 'result_score', 'completed_at', 'aspects']);
+            ->get([
+                'id', 'mode', 'result_tier', 'result_score', 'completed_at',
+                'aspects', 'tester_id',
+            ]);
 
         return response()->json(['history' => $tests]);
     }

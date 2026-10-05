@@ -20,7 +20,7 @@ use App\Domains\Wallet\Services\RewardService;
  */
 class TierTestService
 {
-    use AbortsWithMessage;
+    use AbortsWithMessage, GuardsActiveTierTest;
 
     public const PER_PAGE = 30;
 
@@ -193,6 +193,16 @@ class TierTestService
         array $aspects,
         ?string $notes = null,
     ): TierTest {
+        /*
+         * Тест провели вручную — активная заявка больше не нужна.
+         * Отменяем, а не завершаем: результата в ней нет, и статус
+         * completed с пустым тиром испортил бы историю.
+         */
+        $this->activeTierTestFor($player->id)?->update([
+            'status' => 'cancelled',
+            'notes' => 'Тест проведён вручную администратором.',
+        ]);
+
         $score = $this->scoreFrom($mode, $aspects);
         $tier = $this->tierFor($score);
 

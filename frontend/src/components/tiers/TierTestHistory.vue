@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { tierTestsApi } from '@/services/tiers/tierTests.js'
 import TierTestForm from '@/components/tiers/TierTestForm.vue'
 
@@ -21,6 +21,16 @@ async function load() {
     loading.value = false
   }
 }
+
+/*
+ * Активная заявка: ожидает тестера или уже в работе. Пока она есть,
+ * вторую создавать нельзя — сервер такую попытку отклонит.
+ */
+const activeTest = computed(() =>
+    myTests.value.find(
+        t => t.status === 'pending' || t.status === 'in_progress',
+    ) ?? null
+)
 
 const statusLabels = {
   pending: 'Ожидает',
@@ -57,7 +67,10 @@ onMounted(load)
         </p>
       </div>
 
-      <TierTestForm @created="load" />
+      <TierTestForm
+          :active-test="activeTest"
+          @created="load"
+      />
     </header>
 
     <!-- LOADING -->
@@ -146,6 +159,27 @@ onMounted(load)
           >
             <span class="test-status__dot"></span>
             {{ statusLabels[t.status] }}
+          </div>
+
+          <!--
+            Кто провёл тест. Раньше в истории было только время и
+            результат, и понять, какой тестер ставил оценку, было нельзя.
+          -->
+          <div class="test-tester">
+            <template v-if="t.tester">
+              <span class="test-tester__label">Тестер</span>
+
+              <span class="test-tester__name">
+                {{ t.tester.username }}
+              </span>
+            </template>
+
+            <span
+                v-else
+                class="test-tester__label"
+            >
+              —
+            </span>
           </div>
 
           <div

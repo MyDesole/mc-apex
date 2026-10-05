@@ -326,6 +326,38 @@ h2 {
    RESULT
 ========================================================= */
 
+/* Кто провёл тест: раньше этого в истории не было */
+.test-tester {
+  min-width: 130px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.test-tester__label {
+  color: rgba(255, 255, 255, 0.4);
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.test-tester__name {
+  color: var(--text);
+
+  font-size: 13px;
+  font-weight: 700;
+
+  max-width: 160px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .test-result {
   min-width: 82px;
 

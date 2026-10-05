@@ -101,6 +101,49 @@
   gap: 16px;
 }
 
+/* Заявка уже есть: вместо полей показываем её состояние */
+.active-notice {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  padding: 16px;
+
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  border-radius: 12px;
+
+  background: rgba(124, 58, 237, 0.08);
+}
+
+.active-notice__title {
+  color: var(--text);
+
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.active-notice__text {
+  color: rgba(255, 255, 255, 0.65);
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.active-notice__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  color: rgba(255, 255, 255, 0.45);
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.active-notice__meta .sep {
+  opacity: 0.5;
+}
+
 .error {
   padding: 10px 12px;
   color: #fca5a5;
