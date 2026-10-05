@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import PlayerCard from '@/components/players/PlayerCard.vue'
 import ClanBadge from '@/components/clan/ClanBadge.vue'
 import RankBadge from '@/components/players/RankBadge.vue'
+import BridgeTechniques from '@/components/bridge/BridgeTechniques.vue'
 import FriendButton from '@/components/friends/FriendButton.vue'
 import { api } from '@/services/core/api.js'
 import { useAuthStore } from '@/stores/core/auth.js'
@@ -15,6 +16,7 @@ const user = ref(null)
 const aspects = ref([])
 const friendship = ref(null)
 const rank = ref({ position: null, total: 0 })
+const bridge = ref({ techniques: [], summary: {}, rank: { position: null, total: 0 } })
 const recommendations = ref([])
 const myRecommendation = ref(null)
 const canRecommend = ref(false)
@@ -38,6 +40,7 @@ async function load(id) {
   aspects.value = []
   friendship.value = null
   rank.value = { position: null, total: 0 }
+  bridge.value = { techniques: [], summary: {}, rank: { position: null, total: 0 } }
   recommendations.value = []
   myRecommendation.value = null
   canRecommend.value = false
@@ -48,6 +51,7 @@ async function load(id) {
     aspects.value = data.user.aspects ?? []
     friendship.value = data.friendship
     rank.value = data.rank ?? { position: null, total: 0 }
+    bridge.value = data.bridge ?? { techniques: [], summary: {}, rank: { position: null, total: 0 } }
     recommendations.value = data.recommendations ?? []
     myRecommendation.value = data.my_recommendation ?? null
     canRecommend.value = data.can_recommend ?? false
@@ -117,6 +121,17 @@ watch(
         />
       </div>
     </section>
+
+    <div
+        v-if="bridge.techniques.length"
+        class="bridge-wrap"
+    >
+      <BridgeTechniques
+          :techniques="bridge.techniques"
+          :summary="bridge.summary"
+          :rank="bridge.rank"
+      />
+    </div>
 
     <div v-if="!isMe" class="friend-block">
       <h3 class="block-title">Дружба</h3>

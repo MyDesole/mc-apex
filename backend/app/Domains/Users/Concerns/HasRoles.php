@@ -13,8 +13,13 @@ use Illuminate\Database\Eloquent\Builder;
  */
 trait HasRoles
 {
-    /** Роли, которые не участвуют в рейтингах и топах. */
-    public const STAFF_ROLES = ['admin', 'moderator', 'tester'];
+    /**
+     * Роли, которые не участвуют в рейтингах и топах.
+     *
+     * Бридж-тестер здесь по той же причине, что и обычный тестер:
+     * проверяющий не должен соревноваться с теми, кого проверяет.
+     */
+    public const STAFF_ROLES = ['admin', 'moderator', 'tester', 'bridge_tester'];
 
     /** Роли, которым доступна админка. */
     public const ADMIN_PANEL_ROLES = ['moderator', 'admin'];
@@ -22,11 +27,15 @@ trait HasRoles
     /** Роли, которые могут проводить тир-тесты. */
     public const TESTER_ROLES = ['tester', 'admin'];
 
+    /** Роли, которые проверяют бридж-заявки. */
+    public const BRIDGE_TESTER_ROLES = ['bridge_tester', 'admin'];
+
     /** Человеческие названия ролей. */
     public const ROLE_LABELS = [
         'user' => 'Игрок',
         'media' => 'Медийка',
         'tester' => 'Тестер',
+        'bridge_tester' => 'Бридж-тестер',
         'moderator' => 'Модератор',
         'admin' => 'Администратор',
     ];
@@ -53,6 +62,12 @@ trait HasRoles
     public function isMedia(): bool
     {
         return $this->role === 'media';
+    }
+
+    /** Бридж-тестер: проверяет заявки на виды бриджа. */
+    public function isBridgeTester(): bool
+    {
+        return in_array($this->role, self::BRIDGE_TESTER_ROLES, true);
     }
 
     /**

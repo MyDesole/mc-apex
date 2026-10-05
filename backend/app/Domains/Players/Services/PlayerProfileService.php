@@ -10,6 +10,8 @@ use App\Domains\Users\Models\User;
 use App\Support\Concerns\StoresUserFiles;
 use App\Domains\Players\Resources\PlayerProfileResource;
 use App\Domains\Achievements\Services\AchievementService;
+use App\Domains\Bridge\Resources\BridgeSubmissionResource;
+use App\Domains\Bridge\Services\BridgeService;
 
 /**
  * Профиль игрока: просмотр и редактирование.
@@ -45,6 +47,7 @@ class PlayerProfileService
                 'position' => $position,
                 'total' => $total,
             ],
+            'bridge' => $this->bridgePayload($player),
             'recommendations' => $this->recommendations($player),
             'my_recommendation' => $me
                 ? ProfileRecommendation::where('target_id', $player->id)
@@ -86,6 +89,30 @@ class PlayerProfileService
                 ->excludeStaff()
                 ->where('tier_score', '>', 0)
                 ->count(),
+        ];
+    }
+
+    /**
+     * Бридж игрока: подтверждённые виды и место в бридж-топе.
+     *
+     * Отдаём только подтверждённое: неподтверждённые виды видит сам игрок
+     * в своей форме, другим они ни к чему.
+     */
+    private function bridgePayload(User $player): array
+    {
+        $bridge = app(BridgeService::class);
+
+        [$position, $total] = $bridge->rankOf($player);
+
+        return [
+            'techniques' => BridgeSubmissionResource::collection(
+                $bridge->confirmedForUser($player)->load('technique')
+            )->resolve(),
+            'summary' => $bridge->summary($player),
+            'rank' => [
+                'position' => $position,
+                'total' => $total,
+            ],
         ];
     }
 

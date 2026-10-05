@@ -21,6 +21,8 @@ use App\Domains\Notifications\Controllers\NotificationController;
 
 // === Tester ===
 use App\Domains\Tiers\Controllers\Api\Tester\TierTestController as TesterTierTestController;
+use App\Domains\Bridge\Controllers\Api\BridgeController;
+use App\Domains\Bridge\Controllers\Api\Tester\BridgeReviewController;
 
 // === Admin ===
 use App\Domains\Users\Controllers\Api\Admin\UserController as AdminUserController;
@@ -406,6 +408,34 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('tournaments')->group(function () {
         Route::post('/{tournament}/register', [TournamentController::class, 'register'])->whereNumber('tournament');
         Route::post('/{tournament}/withdraw', [TournamentController::class, 'withdraw'])->whereNumber('tournament');
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | БРИДЖ — заявки игрока на виды бриджа
+    |----------------------------------------------------------------------
+    |
+    | Записи в очередь нет: игрок отмечает вид и прикладывает видео,
+    | проверяет его бридж-тестер.
+    */
+    Route::prefix('bridge')->group(function () {
+        Route::get('/techniques', [BridgeController::class, 'index']);
+        Route::post('/techniques', [BridgeController::class, 'store']);
+        Route::delete('/submissions/{submission}', [BridgeController::class, 'destroy'])
+            ->whereNumber('submission');
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | БРИДЖ-ТЕСТЕР (role: bridge_tester, admin)
+    |----------------------------------------------------------------------
+    |
+    | Раздел видят только эти роли, поэтому остальные игроки его не видят.
+    */
+    Route::middleware('role:bridge_tester,admin')->prefix('bridge-review')->group(function () {
+        Route::get('/submissions', [BridgeReviewController::class, 'index']);
+        Route::post('/submissions/{submission}', [BridgeReviewController::class, 'review'])
+            ->whereNumber('submission');
     });
 
     /*

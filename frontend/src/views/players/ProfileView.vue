@@ -7,6 +7,7 @@ import ClanBadge from '@/components/clan/ClanBadge.vue'
 import RankBadge from '@/components/players/RankBadge.vue'
 import ProfileCustomizeModal from '@/components/players/ProfileCustomizeModal.vue'
 import TierTestForm from '@/components/tiers/TierTestForm.vue'
+import BridgeTechniques from '@/components/bridge/BridgeTechniques.vue'
 
 import { api } from '@/services/core/api.js'
 import { tierTestsApi } from '@/services/tiers/tierTests.js'
@@ -38,6 +39,9 @@ const rank = computed(() =>
 
 const recommendations = ref([])
 
+// Подтверждённые виды бриджа приходят вместе с профилем
+const bridge = ref({ techniques: [], summary: {}, rank: { position: null, total: 0 } })
+
 
 /* =========================================================
    RECOMMENDATIONS
@@ -55,6 +59,8 @@ async function loadRecommendations() {
 
     recommendations.value =
         data.recommendations ?? []
+
+    bridge.value = data.bridge ?? { techniques: [], summary: {}, rank: { position: null, total: 0 } }
   } catch (e) {
     console.error('Не удалось загрузить отзывы:', e)
     recommendations.value = []
@@ -419,6 +425,20 @@ onMounted(async () => {
 
         <TierTestHistory />
 
+      </section>
+
+
+      <!-- =====================================================
+           BRIDGE
+      ====================================================== -->
+
+      <section class="tests-section">
+        <BridgeTechniques
+            :techniques="bridge.techniques"
+            :summary="bridge.summary"
+            :rank="bridge.rank"
+            editable
+        />
       </section>
 
 

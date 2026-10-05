@@ -18,7 +18,7 @@ class RankingRequest extends FormRequest
             'mode' => [
                 'nullable',
                 'string',
-                Rule::in(['overall', 'pvp', 'bedwars']),
+                Rule::in(['overall', 'pvp', 'bedwars', 'bridge']),
             ],
 
             'limit' => [

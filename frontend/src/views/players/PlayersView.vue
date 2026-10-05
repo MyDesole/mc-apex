@@ -49,13 +49,12 @@ const hiddenCount = computed(() => Math.max(0, players.value.length - visiblePla
 const topThree = computed(() => visiblePlayers.value.slice(0, 3))
 const rest = computed(() => visiblePlayers.value.slice(3))
 
-async function load() {
-  if (category.value === 'other') {
-    players.value = []
-    loading.value = false
-    return
-  }
+/** Режим рейтинга: категория «Не PvP» — это бридж. */
+const rankingMode = computed(() =>
+    category.value === 'other' ? 'bridge' : pvpMode.value,
+)
 
+async function load() {
   loading.value = true
   cursor.value = null
   hasMore.value = false
@@ -63,7 +62,7 @@ async function load() {
 
   try {
     const data = await playersApi.ranking({
-      mode: pvpMode.value,
+      mode: rankingMode.value,
       limit: PAGE_SIZE,
     })
 
@@ -86,7 +85,7 @@ async function loadMore() {
 
   try {
     const data = await playersApi.ranking({
-      mode: pvpMode.value,
+      mode: rankingMode.value,
       limit: PAGE_SIZE,
       cursor: cursor.value,
     })
@@ -286,11 +285,11 @@ function scorePercent(player) {
     </div>
 
     <!-- =========================================================
-         OTHER
+         BRIDGE (категория «Не PvP»)
          ========================================================= -->
 
     <div
-        v-else-if="category === 'other'"
+        v-else-if="false"
         class="state state--empty"
     >
       <svg
