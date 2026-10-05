@@ -4,11 +4,26 @@ import { tierTestsApi } from '@/services/tiers/tierTests.js'
 import TierTestForm from '@/components/tiers/TierTestForm.vue'
 import { userLink } from '@/utils/links.js'
 import { confirm } from '@/utils/dialog.js'
-import { refreshActiveTierTest } from '@/composables/tiers/tierTestState.js'
+import { activeTierTest, refreshActiveTierTest } from '@/composables/tiers/tierTestState.js'
 
 const loading = ref(true)
 const myTests = ref([])
 const asTester = ref([])
+
+/**
+ * После записи: сразу показываем заявку, потом уточняем список.
+ *
+ * Заявку берём из ответа сервера — так у неё есть настоящий id, и
+ * кнопка отмены работает сразу, без ожидания перезагрузки списка.
+ */
+function onCreated(created) {
+  if (created) {
+    activeTierTest.value = created
+    myTests.value = [created, ...myTests.value]
+  }
+
+  load()
+}
 
 async function load() {
   loading.value = true
@@ -104,7 +119,7 @@ onMounted(load)
 
       <TierTestForm
           :active-test="activeTest"
-          @created="load"
+          @created="onCreated"
       />
     </header>
 

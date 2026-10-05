@@ -27,6 +27,7 @@ class TierTestResource extends JsonResource
             'tester_id' => $test->tester_id,
             'claimed_by' => $test->claimed_by,
             'mode' => $test->mode,
+            'expected_tier' => $test->expected_tier,
             'status' => $test->status,
             'is_priority' => (bool) $test->is_priority,
             'priority_weight' => (int) $test->priority_weight,

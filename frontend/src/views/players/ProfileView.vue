@@ -105,8 +105,13 @@ function openTierTestForm() {
   showTierTestForm.value = true
 }
 
-function onTierTestCreated() {
+function onTierTestCreated(created) {
   showTierTestForm.value = false
+
+  // Заявка из ответа сервера: у неё есть id, кнопка гаснет сразу
+  if (created) {
+    activeTierTest.value = created
+  }
 
   auth.fetchMe()
   loadActiveTest()

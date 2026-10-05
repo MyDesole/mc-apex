@@ -28,6 +28,67 @@ class TierTestSingleActiveTest extends TestCase
         ];
     }
 
+    public function test_player_specifies_expected_tier(): void
+    {
+        $player = User::factory()->create();
+
+        Sanctum::actingAs($player);
+
+        $this->postJson('/api/tier-tests', [
+            'mode' => 'pvp',
+            'expected_tier' => 'B',
+            'contact_type' => 'discord',
+            'contact_value' => 'tester#0001',
+            'preferred_time' => 'сегодня вечером',
+        ])->assertCreated()
+            ->assertJsonPath('tier_test.expected_tier', 'B');
+
+        $this->assertDatabaseHas('tier_tests', [
+            'user_id' => $player->id,
+            'expected_tier' => 'B',
+        ]);
+    }
+
+    public function test_expected_tier_is_optional(): void
+    {
+        $player = User::factory()->create();
+
+        Sanctum::actingAs($player);
+
+        $this->postJson('/api/tier-tests', $this->payload())
+            ->assertCreated()
+            ->assertJsonPath('tier_test.expected_tier', null);
+    }
+
+    public function test_unknown_expected_tier_is_rejected(): void
+    {
+        $player = User::factory()->create();
+
+        Sanctum::actingAs($player);
+
+        $this->postJson('/api/tier-tests', array_merge($this->payload(), [
+            'expected_tier' => 'Z',
+        ]))->assertStatus(422)
+            ->assertJsonValidationErrors(['expected_tier']);
+
+        $this->assertSame(0, TierTest::query()->count());
+    }
+
+    public function test_my_tests_include_expected_tier(): void
+    {
+        $player = User::factory()->create();
+
+        Sanctum::actingAs($player);
+
+        $this->postJson('/api/tier-tests', array_merge($this->payload(), [
+            'expected_tier' => 'A',
+        ]))->assertCreated();
+
+        $this->getJson('/api/tier-tests')
+            ->assertOk()
+            ->assertJsonPath('my_tests.0.expected_tier', 'A');
+    }
+
     public function test_first_request_is_created(): void
     {
         $player = User::factory()->create();

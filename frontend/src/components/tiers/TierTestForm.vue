@@ -22,6 +22,7 @@ const success = ref(false)
 
 const form = ref({
   mode: 'pvp',
+  expected_tier: null,
   contact_type: 'discord',
   contact_value: '',
   preferred_time: '',
@@ -35,6 +36,7 @@ watch(() => props.modelValue, (open) => {
     error.value = ''
     form.value = {
       mode: 'pvp',
+      expected_tier: null,
       contact_type: 'discord',
       contact_value: '',
       preferred_time: '',
@@ -81,9 +83,12 @@ async function submit() {
   error.value = ''
 
   try {
-    await tierTestsApi.create(form.value)
+    const data = await tierTestsApi.create(form.value)
+
     success.value = true
-    emit('created')
+
+    // Отдаём созданную заявку: родитель обновит состояние сразу
+    emit('created', data?.tier_test ?? null)
   } catch (e) {
     error.value = e.message || 'Ошибка'
   } finally {
@@ -147,6 +152,23 @@ async function submit() {
               Аспектов ещё нет — результат спрогнозировать нельзя
             </span>
           </div>
+        </div>
+
+        <div class="field">
+          <label>Ожидаемый ранг</label>
+          <select v-model="form.expected_tier">
+            <option :value="null">— не знаю, на усмотрение тестера —</option>
+            <option value="S+">S+</option>
+            <option value="S">S</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+            <option value="E">E</option>
+          </select>
+          <small class="hint">
+            Помогает подобрать тестера под твой уровень
+          </small>
         </div>
 
         <div class="field">

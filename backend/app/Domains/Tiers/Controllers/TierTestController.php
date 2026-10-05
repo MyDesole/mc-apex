@@ -50,6 +50,7 @@ class TierTestController extends Controller
         $test = TierTest::create([
             'user_id' => $request->user()->id,
             'mode' => $validated['mode'],
+            'expected_tier' => $validated['expected_tier'] ?? null,
             'contact_type' => $validated['contact_type'],
             'contact_value' => $validated['contact_value'],
             'preferred_time' => $validated['preferred_time'],

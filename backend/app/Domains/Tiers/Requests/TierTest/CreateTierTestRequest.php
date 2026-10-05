@@ -10,6 +10,7 @@ class CreateTierTestRequest extends BaseFormRequest
     {
         return [
             'mode' => ['required', 'in:pvp,bedwars'],
+            'expected_tier' => ['nullable', 'in:S+,S,A,B,C,D,E'],
             'contact_type' => ['required', 'in:discord,telegram'],
             'contact_value' => ['required', 'string', 'max:128'],
             'preferred_time' => ['required', 'string', 'max:128'],
