@@ -1,16 +1,28 @@
 /**
- * Общее состояние тир-тестов и предсказание тира.
+ * Общее состояние тир-тестов: список заявок, активная заявка и тир.
  */
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import {
+const list = vi.fn()
+
+vi.mock('@/services/tiers/tierTests.js', () => ({
+  tierTestsApi: {
+    list: (...args) => list(...args),
+  },
+}))
+
+const {
   activeTierTest,
+  myTierTests,
+  testerTierTests,
   clearActiveTierTest,
   refreshActiveTierTest,
+  refreshTierTests,
+  addCreatedTierTest,
   tierForScore,
-} from '@/composables/tiers/tierTestState.js'
+} = await import('@/composables/tiers/tierTestState.js')
 
-describe('Состояние тир-тестов', () => {
+describe('Активная заявка', () => {
   beforeEach(() => {
     activeTierTest.value = null
   })
@@ -54,6 +66,56 @@ describe('Состояние тир-тестов', () => {
     refreshActiveTierTest([])
 
     expect(activeTierTest.value).toBeNull()
+  })
+})
+
+describe('Список заявок', () => {
+  beforeEach(() => {
+    myTierTests.value = []
+    testerTierTests.value = []
+    activeTierTest.value = null
+    list.mockReset()
+  })
+
+  it('загрузка наполняет список и активную заявку', async () => {
+    list.mockResolvedValue({
+      my_tests: [{ id: 1, status: 'pending' }],
+      as_tester: [{ id: 2 }],
+    })
+
+    await refreshTierTests()
+
+    expect(myTierTests.value).toHaveLength(1)
+    expect(testerTierTests.value).toHaveLength(1)
+    expect(activeTierTest.value?.id).toBe(1)
+  })
+
+  it('созданная заявка появляется сразу, без загрузки', () => {
+    myTierTests.value = [{ id: 5, status: 'completed' }]
+
+    addCreatedTierTest({ id: 9, status: 'pending' })
+
+    expect(myTierTests.value[0].id).toBe(9)
+    expect(myTierTests.value).toHaveLength(2)
+    expect(activeTierTest.value?.id).toBe(9)
+  })
+
+  it('созданная заявка без данных ничего не ломает', () => {
+    myTierTests.value = []
+
+    addCreatedTierTest(null)
+
+    expect(myTierTests.value).toHaveLength(0)
+  })
+
+  it('ошибка сети оставляет прежний список', async () => {
+    myTierTests.value = [{ id: 3, status: 'pending' }]
+
+    list.mockRejectedValue(new Error('сеть'))
+
+    await refreshTierTests()
+
+    expect(myTierTests.value).toHaveLength(1)
   })
 })
 

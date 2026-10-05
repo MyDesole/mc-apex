@@ -154,6 +154,16 @@
   color: var(--text-dim);
 }
 
+/* Ожидаемый тир: подсказка тестеру, к какому уровню готовится игрок */
+.player-meta--expected {
+  margin-top: 2px;
+}
+
+.player-meta--expected .expected-tier {
+  color: #a78bfa;
+  font-weight: 900;
+}
+
 .player-meta b {
   color: var(--text);
   font-weight: 800;

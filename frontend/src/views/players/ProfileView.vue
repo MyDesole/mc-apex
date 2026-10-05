@@ -10,7 +10,13 @@ import TierTestForm from '@/components/tiers/TierTestForm.vue'
 
 import { api } from '@/services/core/api.js'
 import { tierTestsApi } from '@/services/tiers/tierTests.js'
-import { activeTierTest, refreshActiveTierTest, clearActiveTierTest } from '@/composables/tiers/tierTestState.js'
+import {
+  activeTierTest,
+  refreshActiveTierTest,
+  clearActiveTierTest,
+  addCreatedTierTest,
+  refreshTierTests,
+} from '@/composables/tiers/tierTestState.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import { userLink } from '@/utils/links.js'
 import { confirm } from '@/utils/dialog.js'
@@ -108,13 +114,16 @@ function openTierTestForm() {
 function onTierTestCreated(created) {
   showTierTestForm.value = false
 
-  // Заявка из ответа сервера: у неё есть id, кнопка гаснет сразу
-  if (created) {
-    activeTierTest.value = created
-  }
+  /*
+   * Заявка из ответа сервера: у неё есть id, поэтому она сразу
+   * появляется в списке и кнопка гаснет — без перезагрузки страницы.
+   */
+  addCreatedTierTest(created)
 
   auth.fetchMe()
-  loadActiveTest()
+
+  // Следом уточняем список с сервера
+  refreshTierTests()
 }
 
 /** Отмена активной заявки из модалки. */
@@ -138,6 +147,9 @@ async function cancelActiveTest() {
 
     clearActiveTierTest()
     showActiveTestModal.value = false
+
+    // Список тоже должен обновиться — заявка стала отменённой
+    refreshTierTests()
   } catch (e) {
     // Ошибку показываем в модалке
     activeTestCancelError.value = e.message || 'Не удалось отменить'

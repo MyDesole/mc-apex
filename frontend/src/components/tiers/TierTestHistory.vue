@@ -1,57 +1,22 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+
 import { tierTestsApi } from '@/services/tiers/tierTests.js'
-import TierTestForm from '@/components/tiers/TierTestForm.vue'
 import { userLink } from '@/utils/links.js'
 import { confirm } from '@/utils/dialog.js'
-import { activeTierTest, refreshActiveTierTest } from '@/composables/tiers/tierTestState.js'
+import { onMounted, ref } from 'vue'
+import {
+  myTierTests,
+  testerTierTests,
+  tierTestsLoading,
+  refreshTierTests,
+} from '@/composables/tiers/tierTestState.js'
 
-const loading = ref(true)
-const myTests = ref([])
-const asTester = ref([])
+// Список живёт в общем сторе: его видят и профиль, и эта история
+const loading = tierTestsLoading
+const myTests = myTierTests
+const asTester = testerTierTests
 
-/**
- * После записи: сразу показываем заявку, потом уточняем список.
- *
- * Заявку берём из ответа сервера — так у неё есть настоящий id, и
- * кнопка отмены работает сразу, без ожидания перезагрузки списка.
- */
-function onCreated(created) {
-  if (created) {
-    activeTierTest.value = created
-    myTests.value = [created, ...myTests.value]
-  }
-
-  load()
-}
-
-async function load() {
-  loading.value = true
-
-  try {
-    const data = await tierTestsApi.list()
-
-    myTests.value = data.my_tests || []
-    asTester.value = data.as_tester || []
-
-    // Кнопка записи в профиле должна узнать об активной заявке сразу
-    refreshActiveTierTest(myTests.value)
-  } catch (e) {
-    console.error(e)
-  } finally {
-    loading.value = false
-  }
-}
-
-/*
- * Активная заявка: ожидает тестера или уже в работе. Пока она есть,
- * вторую создавать нельзя — сервер такую попытку отклонит.
- */
-const activeTest = computed(() =>
-    myTests.value.find(
-        t => t.status === 'pending' || t.status === 'in_progress',
-    ) ?? null
-)
+const load = refreshTierTests
 
 /** Отмена собственной заявки, пока она ждёт тестера. */
 const cancellingId = ref(null)
@@ -117,10 +82,6 @@ onMounted(load)
         </p>
       </div>
 
-      <TierTestForm
-          :active-test="activeTest"
-          @created="onCreated"
-      />
     </header>
 
     <!-- LOADING -->

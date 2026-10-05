@@ -220,6 +220,17 @@ async function copyContact(value) {
             <div class="player-meta">
               Текущий тир: <b>{{ test.user.tier }}</b> · {{ test.user.tier_score }}%
             </div>
+
+            <!-- Что игрок ждёт от теста: подсказка для подбора тестера -->
+            <div class="player-meta player-meta--expected">
+              <template v-if="test.expected_tier">
+                Ожидает: <b class="expected-tier">{{ test.expected_tier }}</b>
+              </template>
+
+              <template v-else>
+                Ранг не указан
+              </template>
+            </div>
           </div>
         </RouterLink>
 
