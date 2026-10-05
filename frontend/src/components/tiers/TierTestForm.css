@@ -153,6 +153,74 @@
   font-size: 13px;
 }
 
+/* Предсказание результата по текущим аспектам */
+.predict {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  padding: 13px 15px;
+
+  border: 1px solid rgba(124, 58, 237, 0.28);
+  border-radius: 12px;
+
+  background: rgba(124, 58, 237, 0.07);
+}
+
+.predict__tier {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.predict__tier-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  border-radius: 9px;
+
+  background: rgba(167, 139, 250, 0.18);
+  color: #c4b5fd;
+
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.predict__label {
+  color: rgba(255, 255, 255, 0.55);
+
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.predict__score {
+  color: #e5e5eb;
+
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.predict__hint {
+  color: rgba(255, 255, 255, 0.4);
+
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.predict--empty {
+  justify-content: center;
+
+  border-style: dashed;
+
+  background: rgba(255, 255, 255, 0.02);
+}
+
 .field {
   display: flex;
   flex-direction: column;

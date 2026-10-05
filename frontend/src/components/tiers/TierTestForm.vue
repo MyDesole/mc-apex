@@ -1,6 +1,8 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { tierTestsApi } from '@/services/tiers/tierTests.js'
+import { useAuthStore } from '@/stores/core/auth.js'
+import { tierForScore } from '@/composables/tiers/tierTestState.js'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -41,6 +43,35 @@ watch(() => props.modelValue, (open) => {
   }
 })
 
+/*
+ * Предсказание результата по текущим аспектам игрока.
+ *
+ * Сумма аспектов выбранного режима — это и есть итоговый балл теста.
+ * Пороги тира совпадают с серверным TierTestService::tierFor().
+ */
+const auth = useAuthStore()
+
+const ASPECT_FIELDS = {
+  pvp: ['block_placing', 'rotka', 'movement', 'aim', 'game_sense'],
+  bedwars: ['pvp', 'game_sense', 'bed_play', 'teamplay', 'building'],
+}
+
+const predictedScore = computed(() => {
+  const aspects = auth.user?.aspects?.[form.value.mode]
+
+  if (!aspects) return null
+
+  const fields = ASPECT_FIELDS[form.value.mode]
+
+  const total = fields.reduce((sum, field) => sum + (Number(aspects[field]) || 0), 0)
+
+  return fields.every(field => aspects[field] !== null && aspects[field] !== undefined)
+      ? total
+      : null
+})
+
+const predictedTier = computed(() => tierForScore(predictedScore.value))
+
 function close() {
   emit('update:modelValue', false)
 }
@@ -76,41 +107,6 @@ async function submit() {
       </header>
 
       <div v-if="!activeTest" class="body">
-        <!--
-          Заявка уже есть: вместо полей показываем её состояние, чтобы
-          человек не заполнял форму зря.
-        -->
-        <div
-            v-if="activeTest"
-            class="active-notice"
-        >
-          <div class="active-notice__title">
-            {{
-              activeTest.status === 'in_progress'
-                ? 'Тест уже идёт'
-                : 'Заявка уже отправлена'
-            }}
-          </div>
-
-          <div class="active-notice__text">
-            {{
-              activeTest.status === 'in_progress'
-                ? 'Тестер взял твою заявку в работу. Дождись результата.'
-                : 'Заявка ждёт тестера. Вторую создавать не нужно — дождись этой.'
-            }}
-          </div>
-
-          <div class="active-notice__meta">
-            <span>{{ activeTest.mode === 'pvp' ? 'PvP' : 'BedWars' }}</span>
-
-            <span class="sep">·</span>
-
-            <span>
-              {{ new Date(activeTest.created_at).toLocaleDateString('ru-RU') }}
-            </span>
-          </div>
-        </div>
-
         <div v-if="error" class="error">{{ error }}</div>
 
         <div class="field">
@@ -119,6 +115,38 @@ async function submit() {
             <option value="pvp">PvP (p-ранг)</option>
             <option value="bedwars">BedWars (b-ранг)</option>
           </select>
+        </div>
+
+        <!-- Предсказание по текущим аспектам -->
+        <div class="predict">
+          <template v-if="predictedTier">
+            <div class="predict__tier">
+              <span class="predict__tier-badge">
+                {{ predictedTier }}
+              </span>
+
+              <span class="predict__label">
+                примерный тир
+              </span>
+            </div>
+
+            <div class="predict__score">
+              {{ predictedScore }} / 100
+            </div>
+
+            <div class="predict__hint">
+              По текущим аспектам. Итог зависит от тестера.
+            </div>
+          </template>
+
+          <div
+              v-else
+              class="predict predict--empty"
+          >
+            <span class="predict__label">
+              Аспектов ещё нет — результат спрогнозировать нельзя
+            </span>
+          </div>
         </div>
 
         <div class="field">

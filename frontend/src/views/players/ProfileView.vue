@@ -10,6 +10,7 @@ import TierTestForm from '@/components/tiers/TierTestForm.vue'
 
 import { api } from '@/services/core/api.js'
 import { tierTestsApi } from '@/services/tiers/tierTests.js'
+import { activeTierTest, refreshActiveTierTest, clearActiveTierTest } from '@/composables/tiers/tierTestState.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import { userLink } from '@/utils/links.js'
 import { confirm } from '@/utils/dialog.js'
@@ -78,7 +79,7 @@ const showTierTestForm = ref(false)
  * Активная заявка: ожидает тестера или уже в работе. Пока она есть,
  * кнопка записи недоступна — при клике объясняем, почему.
  */
-const activeTest = ref(null)
+const activeTest = activeTierTest
 const showActiveTestModal = ref(false)
 
 async function loadActiveTest() {
@@ -87,17 +88,15 @@ async function loadActiveTest() {
   try {
     const data = await tierTestsApi.list()
 
-    activeTest.value = (data.my_tests || []).find(
-        t => t.status === 'pending' || t.status === 'in_progress',
-    ) ?? null
+    refreshActiveTierTest(data.my_tests)
   } catch {
     /* Не критично: просто не покажем состояние заявки */
-    activeTest.value = null
+    clearActiveTierTest()
   }
 }
 
 function openTierTestForm() {
-  if (activeTest.value) {
+  if (activeTierTest.value) {
     showActiveTestModal.value = true
 
     return
@@ -132,7 +131,7 @@ async function cancelActiveTest() {
   try {
     await tierTestsApi.cancel(activeTest.value.id)
 
-    activeTest.value = null
+    clearActiveTierTest()
     showActiveTestModal.value = false
   } catch (e) {
     // Ошибку показываем в модалке
@@ -372,7 +371,6 @@ onMounted(async () => {
               type="button"
               class="tests-section__button"
               :class="{ 'tests-section__button--disabled': activeTest }"
-              :disabled="Boolean(activeTest)"
               @click="openTierTestForm"
           >
 

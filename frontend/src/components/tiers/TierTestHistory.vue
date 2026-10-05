@@ -4,6 +4,7 @@ import { tierTestsApi } from '@/services/tiers/tierTests.js'
 import TierTestForm from '@/components/tiers/TierTestForm.vue'
 import { userLink } from '@/utils/links.js'
 import { confirm } from '@/utils/dialog.js'
+import { refreshActiveTierTest } from '@/composables/tiers/tierTestState.js'
 
 const loading = ref(true)
 const myTests = ref([])
@@ -17,6 +18,9 @@ async function load() {
 
     myTests.value = data.my_tests || []
     asTester.value = data.as_tester || []
+
+    // Кнопка записи в профиле должна узнать об активной заявке сразу
+    refreshActiveTierTest(myTests.value)
   } catch (e) {
     console.error(e)
   } finally {
