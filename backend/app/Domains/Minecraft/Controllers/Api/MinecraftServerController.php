@@ -10,8 +10,8 @@ use Illuminate\Http\Request;
 /**
  * Эндпоинты для плагина майнкрафт-сервера.
  *
- * Доступ только с общим секретом сервера. Пароль сюда приходит по HTTPS,
- * сразу сверяется с хешем и нигде не сохраняется и не логируется.
+ * Доступ только с общим секретом сервера. Пароль приходит по HTTPS, сразу
+ * сверяется с хешем и нигде не сохраняется и не логируется.
  */
 class MinecraftServerController extends Controller
 {
@@ -19,44 +19,35 @@ class MinecraftServerController extends Controller
     {
     }
 
-    /** Игрок зашёл впервые — выдаём код привязки. */
-    public function startLink(Request $request): JsonResponse
+    /**
+     * Заявлен ли ник и на какой аккаунт.
+     *
+     * По этому ответу плагин решает: просить пароль или отправить игрока
+     * заявить ник в профиле.
+     */
+    public function resolve(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'uuid' => ['required', 'string', 'max:36'],
-            'username' => ['required', 'string', 'max:32'],
+            'nickname' => ['required', 'string', 'max:32'],
         ]);
 
-        $uuid = $this->links->normalizeUuid($data['uuid']);
-
-        return response()->json(
-            $this->links->startLink($uuid, $data['username'])
-        );
+        return response()->json($this->links->resolveNickname($data['nickname']));
     }
 
-    /** Привязан ли игрок — плагин опрашивает, пока игрок вводит код. */
-    public function status(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'uuid' => ['required', 'string', 'max:36'],
-        ]);
-
-        return response()->json(
-            $this->links->status($this->links->normalizeUuid($data['uuid']))
-        );
-    }
-
-    /** Вход по паролю сайта. */
+    /** Вход по нику и паролю сайта. */
     public function login(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'uuid' => ['required', 'string', 'max:36'],
+            'nickname' => ['required', 'string', 'max:32'],
             'password' => ['required', 'string', 'max:255'],
+            'uuid' => ['nullable', 'string', 'max:36'],
         ]);
 
-        $uuid = $this->links->normalizeUuid($data['uuid']);
+        $uuid = isset($data['uuid']) && $data['uuid'] !== ''
+                ? $this->links->normalizeUuid($data['uuid'])
+                : null;
 
-        $result = $this->links->login($uuid, $data['password']);
+        $result = $this->links->login($data['nickname'], $data['password'], $uuid);
 
         $payload = [
             'ok' => $result['ok'],
@@ -67,12 +58,10 @@ class MinecraftServerController extends Controller
 
         if (! $result['ok']) {
             // 429 на блокировку, 401 на неверный пароль
-            $status = $result['reason'] === 'throttled' ? 429 : 401;
-
-            return response()->json($payload, $status);
+            return response()->json($payload, $result['reason'] === 'throttled' ? 429 : 401);
         }
 
-        $payload['player'] = $this->links->profilePayload($uuid);
+        $payload['player'] = $this->links->profilePayload($result['user']);
 
         return response()->json($payload);
     }
@@ -81,20 +70,53 @@ class MinecraftServerController extends Controller
     public function profile(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'uuid' => ['required', 'string', 'max:36'],
+            'nickname' => ['required', 'string', 'max:32'],
         ]);
 
-        $profile = $this->links->profilePayload(
-            $this->links->normalizeUuid($data['uuid'])
-        );
+        $profile = $this->links->profileByNickname($data['nickname']);
 
         if (! $profile) {
-            return response()->json(['linked' => false], 404);
+            return response()->json(['claimed' => false], 404);
         }
 
         return response()->json([
-            'linked' => true,
+            'claimed' => true,
             'player' => $profile,
+        ]);
+    }
+
+    /**
+     * На какой аккаунт заявлен ник.
+     *
+     * Нужно админу, когда игрок не может зайти: в offline-режиме доказать
+     * принадлежность ника нельзя, поэтому решает админ.
+     */
+    public function lookup(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'nickname' => ['required', 'string', 'max:32'],
+        ]);
+
+        $found = $this->links->lookupByNickname($data['nickname']);
+
+        return response()->json($found ?? [
+            'claimed' => false,
+            'nickname' => $data['nickname'],
+        ]);
+    }
+
+    /** Освободить ник от аккаунта. */
+    public function unlink(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'nickname' => ['required', 'string', 'max:32'],
+        ]);
+
+        $done = $this->links->adminRelease($data['nickname']);
+
+        return response()->json([
+            'ok' => $done,
+            'nickname' => $data['nickname'],
         ]);
     }
 }

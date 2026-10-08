@@ -135,10 +135,15 @@ Route::get('/players/{user}', [PlayerController::class, 'show']);
 | X-Minecraft-Server-Key, поэтому группа вынесена из-под сессий.
 */
 Route::middleware('minecraft.server')->prefix('minecraft')->group(function () {
-    Route::post('/link/start', [MinecraftServerController::class, 'startLink']);
-    Route::post('/link/status', [MinecraftServerController::class, 'status']);
+    // Заявлен ли ник и на какой аккаунт — по этому плагин решает, что делать
+    Route::post('/nickname/resolve', [MinecraftServerController::class, 'resolve']);
+
     Route::post('/auth/login', [MinecraftServerController::class, 'login']);
     Route::post('/profile', [MinecraftServerController::class, 'profile']);
+
+    // Инструменты админа: на какой аккаунт заявлен ник и как его освободить
+    Route::post('/admin/lookup', [MinecraftServerController::class, 'lookup']);
+    Route::post('/admin/unlink', [MinecraftServerController::class, 'unlink']);
 });
 
 /*

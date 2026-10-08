@@ -1,9 +1,10 @@
 <script setup>
 /**
- * Привязка майнкрафт-аккаунта.
+ * Ник в майнкрафте.
  *
- * Игрок заходит на сервер, получает в чате код и вводит его здесь.
- * После привязки вход в игру идёт по паролю от сайта.
+ * Игрок заявляет свой игровой ник здесь, под своей сессией. Ник уникален,
+ * и плагин на сервере пускает только того, чей ник совпадает с заявленным —
+ * поэтому зайти под чужим ником нельзя.
  */
 import { onMounted, ref } from 'vue'
 import { minecraftApi } from '@/services/minecraft/link.js'
@@ -14,9 +15,9 @@ const saving = ref(false)
 const error = ref('')
 const success = ref('')
 
-const linked = ref(false)
-const username = ref(null)
-const code = ref('')
+const claimed = ref(false)
+const nickname = ref(null)
+const input = ref('')
 
 async function load() {
   loading.value = true
@@ -25,18 +26,17 @@ async function load() {
   try {
     const data = await minecraftApi.status()
 
-    linked.value = data.linked
-    username.value = data.username
+    claimed.value = data.claimed
+    nickname.value = data.nickname
   } catch (e) {
-    error.value = e.message || 'Не удалось узнать состояние привязки'
+    error.value = e.message || 'Не удалось узнать состояние'
   } finally {
     loading.value = false
   }
 }
 
-/** Ввод кода из игры — с дефисом или без, регистр не важен. */
-async function link() {
-  const value = code.value.trim()
+async function save() {
+  const value = input.value.trim()
 
   if (!value) return
 
@@ -45,23 +45,23 @@ async function link() {
   success.value = ''
 
   try {
-    const data = await minecraftApi.link(value)
+    const data = await minecraftApi.claim(value)
 
-    linked.value = data.linked
-    username.value = data.username
-    code.value = ''
-    success.value = 'Аккаунт привязан. Теперь заходи на сервер со своим паролем.'
+    claimed.value = data.claimed
+    nickname.value = data.nickname
+    input.value = ''
+    success.value = 'Ник заявлен. Заходи на сервер со своим паролем от сайта.'
   } catch (e) {
-    error.value = e.message || 'Код не подошёл'
+    error.value = e.message || 'Не удалось заявить ник'
   } finally {
     saving.value = false
   }
 }
 
-async function unlink() {
+async function release() {
   const ok = await confirmDialog(
-      'Отвязать майнкрафт-аккаунт? Вход на сервер по паролю перестанет работать.',
-      { danger: true, confirmText: 'Отвязать' },
+      `Снять ник ${nickname.value}? Вход на сервер перестанет работать, пока не заявишь его заново.`,
+      { danger: true, confirmText: 'Снять' },
   )
 
   if (!ok) return
@@ -69,15 +69,34 @@ async function unlink() {
   saving.value = true
 
   try {
-    await minecraftApi.unlink()
+    await minecraftApi.release()
 
-    linked.value = false
-    username.value = null
+    claimed.value = false
+    nickname.value = null
     success.value = ''
   } catch (e) {
-    await alertDialog(e.message || 'Не удалось отвязать')
+    await alertDialog(e.message || 'Не удалось снять ник')
   } finally {
     saving.value = false
+  }
+}
+
+/** Смена ника: сначала снимаем текущий, потом вводим новый. */
+async function startChange() {
+  const ok = await confirmDialog(
+      'Сменить ник? Старый освободится, и его сможет занять кто угодно.',
+      { danger: true, confirmText: 'Сменить' },
+  )
+
+  if (!ok) return
+
+  try {
+    await minecraftApi.release()
+
+    claimed.value = false
+    nickname.value = null
+  } catch (e) {
+    await alertDialog(e.message || 'Не удалось снять ник')
   }
 }
 
@@ -92,61 +111,77 @@ onMounted(load)
     <div v-if="success" class="minecraft-link__success">{{ success }}</div>
 
     <div v-if="loading" class="minecraft-link__state">
-      Проверяем привязку...
+      Проверяем ник...
     </div>
 
-    <!-- Привязан -->
+    <!-- Ник заявлен -->
     <div
-        v-else-if="linked"
-        class="minecraft-link__linked"
+        v-else-if="claimed"
+        class="minecraft-link__claimed"
     >
       <div class="minecraft-link__info">
-        <span class="minecraft-link__label">Привязанный игрок</span>
-        <strong class="minecraft-link__name">{{ username }}</strong>
+        <span class="minecraft-link__label">Ник на сервере</span>
+        <strong class="minecraft-link__name">{{ nickname }}</strong>
       </div>
 
       <p class="minecraft-link__hint">
-        Вход на сервер идёт по паролю от сайта. Чтобы сменить игрока —
-        отвяжи и привяжи заново.
+        Вход на сервер идёт по паролю от сайта. Ник закреплён за твоим
+        аккаунтом: зайти под ним сможешь только ты.
       </p>
 
-      <button
-          type="button"
-          class="minecraft-link__unlink"
-          :disabled="saving"
-          @click="unlink"
-      >
-        Отвязать
-      </button>
+      <div class="minecraft-link__actions">
+        <button
+            type="button"
+            class="minecraft-link__change"
+            :disabled="saving"
+            @click="startChange"
+        >
+          Сменить ник
+        </button>
+
+        <button
+            type="button"
+            class="minecraft-link__unlink"
+            :disabled="saving"
+            @click="release"
+        >
+          Снять
+        </button>
+      </div>
     </div>
 
-    <!-- Не привязан -->
+    <!-- Ник не заявлен -->
     <div v-else>
       <p class="minecraft-link__hint">
-        Зайди на сервер, получи в чате код и введи его здесь.
-        После привязки вход в игру будет по паролю от сайта.
+        Укажи свой ник на сервере — ровно так, как он пишется в игре.
+        Зайти под чужим ником не получится: он закрепляется за твоим
+        аккаунтом.
       </p>
 
       <div class="minecraft-link__row">
         <input
-            v-model="code"
+            v-model="input"
             type="text"
             maxlength="16"
-            placeholder="XXXX-XXXX"
+            placeholder="MyDesole"
             autocomplete="off"
             spellcheck="false"
-            @keyup.enter="link"
+            @keyup.enter="save"
         />
 
         <button
             type="button"
             class="minecraft-link__submit"
-            :disabled="saving || !code.trim()"
-            @click="link"
+            :disabled="saving || !input.trim()"
+            @click="save"
         >
-          {{ saving ? '...' : 'Привязать' }}
+          {{ saving ? '...' : 'Заявить' }}
         </button>
       </div>
+
+      <p class="minecraft-link__note">
+        Только латиница, цифры и подчёркивание, от 3 до 16 символов.
+      </p>
     </div>
   </section>
 </template>

@@ -1,5 +1,5 @@
 /* ============================================
-   ПРИВЯЗКА МАЙНКРАФТ-АККАУНТА
+   НИК В МАЙНКРАФТЕ
    ============================================ */
 
 .minecraft-link__state {
@@ -17,6 +17,14 @@
   line-height: 1.55;
 }
 
+.minecraft-link__note {
+  margin: 8px 0 0;
+
+  color: rgba(255, 255, 255, 0.3);
+
+  font-size: 11px;
+}
+
 .minecraft-link__success {
   padding: 10px 12px;
   margin-bottom: 12px;
@@ -30,9 +38,9 @@
   font-size: 12px;
 }
 
-/* ---------------- Привязан ---------------- */
+/* ---------------- Ник заявлен ---------------- */
 
-.minecraft-link__linked {
+.minecraft-link__claimed {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -73,17 +81,22 @@
   font-weight: 900;
 }
 
-.minecraft-link__linked .minecraft-link__hint {
+.minecraft-link__claimed .minecraft-link__hint {
   margin: 0;
 }
 
+.minecraft-link__actions {
+  display: flex;
+  gap: 9px;
+}
+
+.minecraft-link__change,
 .minecraft-link__unlink {
   padding: 8px 14px;
 
-  color: #fca5a5;
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(255, 255, 255, 0.06);
 
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 9px;
 
   font-size: 12px;
@@ -92,12 +105,24 @@
   cursor: pointer;
 }
 
+.minecraft-link__change {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.minecraft-link__unlink {
+  color: #fca5a5;
+
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.minecraft-link__change:disabled,
 .minecraft-link__unlink:disabled {
   opacity: 0.5;
   cursor: default;
 }
 
-/* ---------------- Ввод кода ---------------- */
+/* ---------------- Ввод ника ---------------- */
 
 .minecraft-link__row {
   display: flex;
@@ -117,11 +142,8 @@
   border-radius: 10px;
 
   font: inherit;
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: 2px;
-  text-align: center;
-  text-transform: uppercase;
+  font-size: 15px;
+  font-weight: 700;
 
   outline: none;
 }

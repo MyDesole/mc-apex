@@ -1,24 +1,25 @@
 import { api } from '@/services/core/api.js'
 
 /**
- * Привязка майнкрафт-игрока к аккаунту.
+ * Ник в майнкрафте, заявленный на сайте.
  *
- * Игрок заходит на сервер, получает код в чате и вводит его здесь.
- * Пароль при привязке не участвует — он нужен только для входа в игре.
+ * Ник уникален: два аккаунта не могут заявить один и тот же. Плагин на
+ * сервере пускает только того, чей ник в игре совпадает с заявленным,
+ * поэтому зайти под чужим ником нельзя.
  */
 export const minecraftApi = {
-    /** Состояние привязки. */
+    /** Какой ник заявлен. */
     status() {
         return api.get('/players/me/minecraft/link')
     },
 
-    /** Ввести код из игры. */
-    link(code) {
-        return api.post('/players/me/minecraft/link', { code })
+    /** Заявить ник. */
+    claim(nickname) {
+        return api.post('/players/me/minecraft/link', { nickname })
     },
 
-    /** Отвязать игрока. */
-    unlink() {
+    /** Снять заявку. */
+    release() {
         return api.delete('/players/me/minecraft/link')
     },
 }

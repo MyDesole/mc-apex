@@ -8,7 +8,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Привязка майнкрафта со стороны игрока: он вводит код в профиле на сайте.
+ * Ник со стороны игрока: он заявляет его в профиле под своей сессией.
+ *
+ * Ник уникален на сайте, поэтому заявить чужой нельзя — а плагин пускает
+ * только того, чей ник в игре совпадает с заявленным.
  */
 class MinecraftLinkController extends Controller
 {
@@ -16,42 +19,42 @@ class MinecraftLinkController extends Controller
     {
     }
 
-    /** Состояние привязки для профиля. */
+    /** Состояние заявки для профиля. */
     public function show(Request $request): JsonResponse
     {
         $user = $request->user();
 
         return response()->json([
-            'linked' => (bool) $user->minecraft_uuid,
-            'username' => $user->minecraft_username,
-            'linked_at' => $user->minecraft_linked_at?->toIso8601String(),
+            'claimed' => (bool) $user->minecraft_username,
+            'nickname' => $user->minecraft_username,
+            'claimed_at' => $user->minecraft_linked_at?->toIso8601String(),
         ]);
     }
 
-    /** Ввести код, полученный в игре. */
+    /** Заявить ник. */
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'code' => ['required', 'string', 'max:16'],
+            'nickname' => ['required', 'string', 'max:32'],
         ]);
 
-        $user = $this->links->link($request->user(), $data['code']);
+        $user = $this->links->claimNickname($request->user(), $data['nickname']);
 
         return response()->json([
-            'linked' => true,
-            'username' => $user->minecraft_username,
-            'linked_at' => $user->minecraft_linked_at?->toIso8601String(),
+            'claimed' => true,
+            'nickname' => $user->minecraft_username,
+            'claimed_at' => $user->minecraft_linked_at?->toIso8601String(),
         ]);
     }
 
-    /** Отвязать игрока. */
+    /** Снять заявку ника. */
     public function destroy(Request $request): JsonResponse
     {
-        $this->links->unlink($request->user());
+        $this->links->releaseNickname($request->user());
 
         return response()->json([
-            'linked' => false,
-            'username' => null,
+            'claimed' => false,
+            'nickname' => null,
         ]);
     }
 }
