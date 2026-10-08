@@ -37,3 +37,6 @@
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Плагин майнкрафт-сервера: держим вне репозитория
+/minecraft-plugin/

@@ -35,6 +35,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'featured_achievements', 'profile_visibility', 'card_background',
         'favorite_modes', 'discord_tag',
         'profile_mode', 'bridge_rank_id', 'bridge_rank_by', 'bridge_rank_at',
+        'minecraft_uuid', 'minecraft_username', 'minecraft_linked_at',
         'apex_coins', 'apex_coins_spent', 'equipped_badges',
         'referral_code', 'referred_by',
         'is_verified', 'verified_reason', 'clan_joined_at',
@@ -44,6 +45,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'remember_token',
 
+        // UUID майнкрафта наружу не отдаём: страницам он не нужен
+        'minecraft_uuid',
     ];
 
     public function recalcTierFromAspects(): void
@@ -117,6 +120,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'banned_until' => 'datetime',
         'favorite_modes' => 'array',
         'bridge_rank_at' => 'datetime',
+        'minecraft_linked_at' => 'datetime',
         'featured_achievements' => 'array',
         'is_verified' => 'boolean',
         'apex_coins' => 'integer',

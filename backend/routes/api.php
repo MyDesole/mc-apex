@@ -25,6 +25,8 @@ use App\Domains\Bridge\Controllers\Api\BridgeController;
 use App\Domains\Bridge\Controllers\Api\Tester\BridgeReviewController;
 use App\Domains\Bridge\Controllers\Api\Curator\BridgeTechniqueController as CuratorBridgeTechniqueController;
 use App\Domains\Bridge\Controllers\Api\BridgeVideoController;
+use App\Domains\Minecraft\Controllers\Api\MinecraftServerController;
+use App\Domains\Minecraft\Controllers\Api\MinecraftLinkController;
 
 // === Admin ===
 use App\Domains\Users\Controllers\Api\Admin\UserController as AdminUserController;
@@ -125,6 +127,21 @@ Route::get('/ranking', [\App\Domains\Players\Controllers\Api\RankingController::
 Route::get('/players/{user}', [PlayerController::class, 'show']);
 
 /*
+|--------------------------------------------------------------------------
+| МАЙНКРАФТ-СЕРВЕР
+|--------------------------------------------------------------------------
+|
+| Сюда ходит плагин, а не браузер. Доступ по общему секрету в заголовке
+| X-Minecraft-Server-Key, поэтому группа вынесена из-под сессий.
+*/
+Route::middleware('minecraft.server')->prefix('minecraft')->group(function () {
+    Route::post('/link/start', [MinecraftServerController::class, 'startLink']);
+    Route::post('/link/status', [MinecraftServerController::class, 'status']);
+    Route::post('/auth/login', [MinecraftServerController::class, 'login']);
+    Route::post('/profile', [MinecraftServerController::class, 'profile']);
+});
+
+/*
  * Видео бридж-заявки. Лежит в закрытом хранилище, поэтому доступ только по
  * подписанной ссылке с ограниченным сроком — прямого адреса к файлу нет.
  */
@@ -182,6 +199,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('players/me')->group(function () {
         Route::match(['put', 'post'], '/', [PlayerController::class, 'updateMe']);
         Route::match(['put', 'post'], '/profile', [PlayerController::class, 'updateProfile']);
+
+        /*
+        |------------------------------------------------------------------
+        | Привязка майнкрафта: игрок вводит код, полученный в игре
+        |------------------------------------------------------------------
+        */
+        Route::get('/minecraft/link', [MinecraftLinkController::class, 'show']);
+        Route::post('/minecraft/link', [MinecraftLinkController::class, 'store']);
+        Route::delete('/minecraft/link', [MinecraftLinkController::class, 'destroy']);
         Route::put('/aspects', [PlayerController::class, 'updateAspects']);
 
         Route::post('/avatar/remove', [PlayerController::class, 'removeAvatar']);

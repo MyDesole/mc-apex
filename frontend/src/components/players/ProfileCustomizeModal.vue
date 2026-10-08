@@ -1,5 +1,6 @@
 <script setup>
 import { confirm as confirmDialog } from '@/utils/dialog.js'
+import MinecraftLinkBlock from '@/components/minecraft/MinecraftLinkBlock.vue'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useAuthStore } from '@/stores/core/auth.js'
 import { playersApi } from '@/services/players/players.js'
@@ -372,6 +373,9 @@ onBeforeUnmount(() => {
               </button>
             </div>
           </section>
+
+          <!-- Привязка майнкрафт-аккаунта: код приходит в чате на сервере -->
+          <MinecraftLinkBlock />
 
           <!-- === STYLE === -->
           <template v-if="tab === 'style'">

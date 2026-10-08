@@ -1,0 +1,152 @@
+/* ============================================
+   ПРИВЯЗКА МАЙНКРАФТ-АККАУНТА
+   ============================================ */
+
+.minecraft-link__state {
+  color: rgba(255, 255, 255, 0.4);
+
+  font-size: 12px;
+}
+
+.minecraft-link__hint {
+  margin: 0 0 12px;
+
+  color: rgba(255, 255, 255, 0.45);
+
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.minecraft-link__success {
+  padding: 10px 12px;
+  margin-bottom: 12px;
+
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.1);
+
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  border-radius: 9px;
+
+  font-size: 12px;
+}
+
+/* ---------------- Привязан ---------------- */
+
+.minecraft-link__linked {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+
+  padding: 14px 16px;
+
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-left: 4px solid #22c55e;
+  border-radius: 12px;
+
+  background: linear-gradient(
+      135deg,
+      rgba(34, 197, 94, 0.1),
+      rgba(255, 255, 255, 0.02)
+  );
+}
+
+.minecraft-link__info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.minecraft-link__label {
+  color: rgba(255, 255, 255, 0.4);
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.minecraft-link__name {
+  color: #86efac;
+
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.minecraft-link__linked .minecraft-link__hint {
+  margin: 0;
+}
+
+.minecraft-link__unlink {
+  padding: 8px 14px;
+
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.1);
+
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 9px;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.minecraft-link__unlink:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ---------------- Ввод кода ---------------- */
+
+.minecraft-link__row {
+  display: flex;
+  gap: 9px;
+}
+
+.minecraft-link__row input {
+  flex: 1;
+  min-width: 0;
+
+  padding: 11px 13px;
+
+  color: var(--text, #e5e5eb);
+  background: rgba(0, 0, 0, 0.3);
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-align: center;
+  text-transform: uppercase;
+
+  outline: none;
+}
+
+.minecraft-link__row input:focus {
+  border-color: rgba(139, 92, 246, 0.55);
+}
+
+.minecraft-link__submit {
+  padding: 11px 20px;
+
+  color: #fff;
+  background: var(--accent, #7c3aed);
+
+  border: none;
+  border-radius: 10px;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.minecraft-link__submit:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
