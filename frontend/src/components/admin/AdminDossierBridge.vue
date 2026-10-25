@@ -3,7 +3,7 @@
  * Бридж игрока в досье админа: исправить завышенные оценки тестера,
  * сменить статус заявки, удалить её и поменять звание бриджера.
  */
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { bridgeAdminApi, bridgeReviewApi } from '@/services/bridge/bridge.js'
 import { alert, confirm } from '@/utils/dialog.js'
 
@@ -19,10 +19,17 @@ const data = ref(null)
 const forms = ref({})
 const rankId = ref(null)
 const busy = ref(false)
+const selectedId = ref(null)
+
+const selected = computed(() => data.value?.submissions.find((s) => s.id === selectedId.value) ?? null)
 
 async function load() {
   data.value = await bridgeAdminApi.player(props.userId)
   rankId.value = data.value.rank?.id ?? null
+  // Выбранную заявку сохраняем, если она ещё есть, иначе берём первую
+  if (!data.value.submissions.some((s) => s.id === selectedId.value)) {
+    selectedId.value = data.value.submissions[0]?.id ?? null
+  }
   forms.value = Object.fromEntries(data.value.submissions.map((s) => [s.id, {
     status: s.status,
     stability: s.stability,
@@ -98,47 +105,47 @@ watch(() => props.userId, load)
 
     <p v-if="!data.submissions.length" class="kit-muted">Заявок на виды нет</p>
 
-    <ul class="bridge-admin__list">
-      <li v-for="s in data.submissions" :key="s.id" class="bridge-admin__row">
-        <div class="bridge-admin__head">
-          <b>{{ s.technique?.label ?? 'Вид удалён' }}</b>
-          <span class="kit-tag" :class="{ 'kit-tag--green': s.status === 'confirmed', 'kit-tag--red': s.status === 'rejected' }">
-            {{ STATUS[s.status] ?? s.status }}
-          </span>
-          <small class="kit-muted">
-            <template v-if="s.reviewer">тестер {{ s.reviewer.username }} · </template>
-            всего {{ s.total }}/{{ s.max_total }}
-          </small>
-        </div>
+    <template v-if="data.submissions.length">
+      <select v-model="selectedId" class="kit-select bridge-admin__picker" aria-label="Вид бриджа">
+        <option v-for="s in data.submissions" :key="s.id" :value="s.id">
+          {{ s.technique?.label ?? 'Вид удалён' }} — {{ STATUS[s.status] ?? s.status }} · {{ s.total }}/{{ s.max_total }}
+        </option>
+      </select>
+
+      <div v-if="selected" class="bridge-admin__row">
+        <small class="kit-muted">
+          <template v-if="selected.reviewer">тестер {{ selected.reviewer.username }} · </template>
+          всего {{ selected.total }}/{{ selected.max_total }}
+        </small>
 
         <div class="bridge-admin__fields">
           <label>Статус
-            <select v-model="forms[s.id].status" class="kit-select">
+            <select v-model="forms[selected.id].status" class="kit-select">
               <option value="declared">на проверке</option>
               <option value="confirmed">подтверждён</option>
               <option value="rejected">отклонён</option>
             </select>
           </label>
           <label>Стабильность
-            <input v-model="forms[s.id].stability" class="kit-input" type="number" min="0" max="100">
+            <input v-model="forms[selected.id].stability" class="kit-input" type="number" min="0" max="100">
           </label>
           <label>Скорость
-            <input v-model="forms[s.id].speed" class="kit-input" type="number" min="0" max="100">
+            <input v-model="forms[selected.id].speed" class="kit-input" type="number" min="0" max="100">
           </label>
           <label>Сложность
-            <input v-model="forms[s.id].difficulty" class="kit-input" type="number" min="0" max="100">
+            <input v-model="forms[selected.id].difficulty" class="kit-input" type="number" min="0" max="100">
           </label>
           <label>Владение
-            <input v-model="forms[s.id].score" class="kit-input" type="number" min="0" :max="s.max_score">
+            <input v-model="forms[selected.id].score" class="kit-input" type="number" min="0" :max="selected.max_score">
           </label>
         </div>
 
         <div class="bridge-admin__actions">
-          <button type="button" class="kit-btn kit-btn--primary" :disabled="busy" @click="save(s)">Сохранить</button>
-          <button type="button" class="kit-btn kit-btn--danger" :disabled="busy" @click="remove(s)">Удалить</button>
+          <button type="button" class="kit-btn kit-btn--primary" :disabled="busy" @click="save(selected)">Сохранить</button>
+          <button type="button" class="kit-btn kit-btn--danger" :disabled="busy" @click="remove(selected)">Удалить заявку</button>
         </div>
-      </li>
-    </ul>
+      </div>
+    </template>
   </section>
 </template>
 
@@ -151,12 +158,9 @@ watch(() => props.userId, load)
   margin: 8px 0;
 }
 
-.bridge-admin__list {
-  display: grid;
-  gap: 10px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.bridge-admin__picker {
+  width: 100%;
+  margin-bottom: 8px;
 }
 
 .bridge-admin__row {

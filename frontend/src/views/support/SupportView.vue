@@ -7,13 +7,14 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supportApi } from '@/services/support/support.js'
 import SupportThread from '@/components/support/SupportThread.vue'
-import { SUPPORT_STATUS, formatMessageTime } from '@/components/support/supportFormat.js'
+import { SUPPORT_CATEGORIES, SUPPORT_STATUS, formatMessageTime } from '@/components/support/supportFormat.js'
 
 const route = useRoute()
 const router = useRouter()
 
 const tickets = ref([])
-const categories = ref({})
+// Разделы есть сразу: форма не должна зависеть от загрузки списка
+const categories = ref({ ...SUPPORT_CATEGORIES })
 const current = ref(null)
 const loading = ref(true)
 const busy = ref(false)
@@ -29,7 +30,7 @@ let timer = null
 async function loadList() {
   const data = await supportApi.list()
   tickets.value = data.tickets ?? []
-  categories.value = data.categories ?? {}
+  if (data.categories) categories.value = data.categories
 }
 
 async function loadTicket() {

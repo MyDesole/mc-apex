@@ -5,6 +5,16 @@ export const SUPPORT_STATUS = {
     closed: 'закрыто',
 }
 
+/** Разделы обращений: те же, что на сервере (SupportTicket::CATEGORIES). */
+export const SUPPORT_CATEGORIES = {
+    account: 'Аккаунт и вход',
+    tier_test: 'Тир-тесты',
+    shop: 'Магазин и ApexCoin',
+    clan: 'Кланы',
+    bug: 'Ошибка на сайте',
+    other: 'Другое',
+}
+
 export function formatMessageTime(iso) {
     if (!iso) return ''
 
