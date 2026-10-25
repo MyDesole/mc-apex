@@ -598,25 +598,60 @@
 }
 
 .bridge-card-item {
-  display: flex;
+  position: relative;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
 
-  gap: 12px;
+  gap: 16px;
 
-  padding: 12px 14px;
+  padding: 14px 16px 14px 18px;
+
+  overflow: hidden;
 
   border: 1px solid var(--border);
-  border-left: 3px solid #8b5cf6;
   border-radius: 6px;
 
-  background: var(--bg-card);
+  background:
+      linear-gradient(
+          90deg,
+          color-mix(in srgb, var(--accent-color) 9%, transparent),
+          transparent 55%
+      ),
+      rgba(255, 255, 255, 0.015);
+
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+/* Метка слева — маленький блок вместо сплошной фиолетовой полосы */
+.bridge-card-item::before {
+  content: '';
+
+  position: absolute;
+  left: 0;
+  top: 50%;
+
+  width: 4px;
+  height: 60%;
+
+  transform: translateY(-50%);
+
+  background: var(--accent-color);
+  border-radius: 0 2px 2px 0;
+
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent-color) 60%, transparent);
+}
+
+.bridge-card-item:hover {
+  border-color: color-mix(in srgb, var(--accent-color) 40%, var(--border));
+  transform: translateY(-1px);
 }
 
 .bridge-card-item__main {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 7px;
 
   min-width: 0;
 }
@@ -624,7 +659,7 @@
 .bridge-card-item__name {
   color: var(--text, #e5e5eb);
 
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 800;
 }
 
@@ -635,15 +670,15 @@
 }
 
 .bridge-card-item__pill {
-  padding: 2px 9px;
+  padding: 2px 8px;
 
-  color: rgba(196, 181, 253, 0.85);
-  background: rgba(139, 92, 246, 0.16);
+  color: color-mix(in srgb, var(--accent-color) 55%, #fff);
+  background: color-mix(in srgb, var(--accent-color) 14%, transparent);
 
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--accent-color) 30%, transparent);
   border-radius: 4px;
 
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 700;
 
   white-space: nowrap;
@@ -651,32 +686,78 @@
 
 .bridge-card-item__pill--special {
   color: #fde68a;
-  background: rgba(251, 191, 36, 0.16);
-  border-color: rgba(251, 191, 36, 0.5);
+  background: rgba(251, 191, 36, 0.14);
+  border-color: rgba(251, 191, 36, 0.45);
 }
 
+/* Оценка справа: число, полоска из 10 делений, аспекты */
 .bridge-card-item__scores {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
+  display: grid;
+  justify-items: end;
+  gap: 6px;
 
   white-space: nowrap;
 }
 
 .bridge-card-item__score {
-  color: #c4b5fd;
+  color: var(--text-muted);
 
-  font-size: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.bridge-card-item__score b {
+  color: var(--text, #fff);
+
+  font-size: 20px;
   font-weight: 800;
 }
 
+.bridge-card-item__bar {
+  display: flex;
+  gap: 3px;
+}
+
+.bridge-card-item__bar i {
+  width: 9px;
+  height: 9px;
+
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.35);
+}
+
+.bridge-card-item__bar i.is-on {
+  background: var(--accent-color);
+  box-shadow:
+      inset 0 -2px 0 rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
 .bridge-card-item__total {
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-muted);
 
   font-size: 11px;
   font-weight: 700;
 }
 
+@media (max-width: 520px) {
+  .bridge-card-item {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .bridge-card-item__scores {
+    justify-items: start;
+    grid-template-columns: auto auto;
+    align-items: center;
+    column-gap: 12px;
+  }
+
+  .bridge-card-item__total {
+    grid-column: 1 / -1;
+  }
+}
 .chart-section {
   min-height: 120px;
 }

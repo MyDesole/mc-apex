@@ -64,6 +64,29 @@ const props = defineProps({
 
 const emit = defineEmits(['edit'])
 
+/* ---------- Звание бриджера: сводка для эмблемы в шапке ---------- */
+
+// Серое звание («Новичок») на тёмном фоне почти не видно — осветляем
+const bridgeColor = computed(() => props.bridgeRank?.color || '#8b5cf6')
+
+const bridgeStats = computed(() => {
+  const rows = props.bridgeTechniques ?? []
+
+  return {
+    count: rows.length,
+    best: rows.reduce((max, row) => Math.max(max, Number(row.score) || 0), 0),
+  }
+})
+
+function pluralTechniques(n) {
+  const mod10 = n % 10
+  const mod100 = n % 100
+
+  if (mod10 === 1 && mod100 !== 11) return 'вид'
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'вида'
+  return 'видов'
+}
+
 /* =========================================================
    PLAYER
    ========================================================= */
@@ -883,28 +906,32 @@ const coverStyle = computed(() => {
         -->
         <div
             v-if="bridgeMode"
-            class="bridge-rank-block"
+            class="bridge-hero"
+            :class="{ 'bridge-hero--empty': !bridgeRank }"
+            :style="{ '--rank': bridgeColor }"
         >
-          <div class="bridge-rank-block__rank">
-            <span class="bridge-rank-block__label">
-              Звание
-            </span>
+          <!-- Эмблема: блок в цвете звания -->
+          <span class="bridge-hero__emblem" aria-hidden="true">
+            <span class="bridge-hero__cube" />
+          </span>
 
-            <strong
-                class="bridge-rank-block__value"
-                :style="{ color: bridgeRank?.color || '#8b5cf6' }"
-            >
-              {{ bridgeRank?.label ?? 'Без звания' }}
+          <span class="bridge-hero__info">
+            <span class="bridge-hero__eyebrow">Звание бриджера</span>
+
+            <strong class="bridge-hero__name">
+              {{ bridgeRank?.label ?? 'Звание не выдано' }}
             </strong>
-          </div>
 
-
-
-
-
-
+            <span class="bridge-hero__meta">
+              <template v-if="bridgeStats.count">
+                {{ bridgeStats.count }} {{ pluralTechniques(bridgeStats.count) }} подтверждено
+                <span class="bridge-hero__dot">·</span>
+                лучшая оценка <b>{{ bridgeStats.best }}/10</b>
+              </template>
+              <template v-else>Пока нет подтверждённых видов</template>
+            </span>
+          </span>
         </div>
-
         <!-- Tier Progress -->
         <div
             v-else-if="tierProgress !== null"

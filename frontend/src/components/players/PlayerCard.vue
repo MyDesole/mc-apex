@@ -232,10 +232,12 @@ function onFriendLeave() {
 const profileStats = computed(() => [
   {
     key: 'tier',
+    // «Bridge Новичок» в узкой плитке переносился — приставку убираем,
+    // что это бридж, и так понятно по подписи
     value: props.bridgeMode
-        ? (props.bridgeRank?.label ?? 'Без звания')
+        ? (props.bridgeRank?.label?.replace(/^bridge\s+/i, '') ?? 'Нет')
         : (props.user.tier || '—'),
-    label: props.bridgeMode ? 'Звание бриджера' : 'Тир',
+    label: props.bridgeMode ? 'Звание' : 'Тир',
     icon: '◆',
     accent: true,
   },
@@ -481,11 +483,20 @@ const profileCompleteness = computed(() => {
 
             <div class="bridge-card-item__scores">
               <span class="bridge-card-item__score">
-                {{ row.score }}/10
+                <b>{{ row.score }}</b>/10
+              </span>
+
+              <!-- Владение видом: 10 делений, как полоска опыта -->
+              <span class="bridge-card-item__bar" :aria-label="`Владение ${row.score} из 10`">
+                <i
+                    v-for="n in 10"
+                    :key="n"
+                    :class="{ 'is-on': n <= row.score }"
+                />
               </span>
 
               <span class="bridge-card-item__total">
-                {{ row.total }}/300
+                аспекты {{ row.total }}/300
               </span>
             </div>
           </li>

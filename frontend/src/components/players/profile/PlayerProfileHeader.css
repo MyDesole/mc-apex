@@ -1625,76 +1625,185 @@
 
 /* ---------------- Звание бриджера в шапке ---------------- */
 
-.bridge-rank-block {
+/*
+ * Эмблема звания: блок в цвете звания + название и сводка по видам.
+ * Цвет звания бывает тёмным (серый «Новичок»), поэтому текст и
+ * свечение осветляем через color-mix — на тёмной шапке всё читается.
+ */
+.bridge-hero {
+  --rank: #8b5cf6;
+  --rank-light: color-mix(in srgb, var(--rank) 62%, #fff);
+
+  position: relative;
+
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  gap: 14px;
 
-  margin-top: 14px;
-  padding: 14px 16px;
+  width: fit-content;
+  max-width: 100%;
 
-  border: 1px solid var(--border);
+  margin-top: 16px;
+  padding: 12px 18px 12px 12px;
+
+  overflow: hidden;
+
+  background:
+      linear-gradient(
+          100deg,
+          color-mix(in srgb, var(--rank) 22%, rgba(10, 9, 16, 0.9)) 0%,
+          rgba(10, 9, 16, 0.78) 70%
+      );
+
+  border: 1px solid color-mix(in srgb, var(--rank) 55%, rgba(255, 255, 255, 0.08));
   border-radius: 6px;
 
-  background: var(--bg-card);
+  box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.07),
+      0 0 26px color-mix(in srgb, var(--rank) 20%, transparent);
 }
 
-.bridge-rank-block__label {
-  display: block;
+/* Тонкая полоса цвета звания слева */
+.bridge-hero::before {
+  content: '';
 
-  margin-bottom: 4px;
+  position: absolute;
+  inset: 0 auto 0 0;
 
-  color: rgba(255, 255, 255, 0.4);
+  width: 3px;
 
-  font-size: 12px;
+  background: var(--rank-light);
+  box-shadow: 0 0 12px var(--rank);
+}
+
+.bridge-hero__emblem {
+  display: grid;
+  place-items: center;
+
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+
+  background:
+      radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--rank) 40%, transparent), transparent 70%),
+      rgba(0, 0, 0, 0.35);
+
+  border: 1px solid color-mix(in srgb, var(--rank) 45%, transparent);
+  border-radius: 6px;
+}
+
+/* Куб из трёх граней: верх светлый, бока — цвет звания разной яркости */
+.bridge-hero__cube {
+  position: relative;
+
+  width: 22px;
+  height: 22px;
+
+  background:
+      linear-gradient(90deg,
+          color-mix(in srgb, var(--rank) 85%, #000) 0 50%,
+          color-mix(in srgb, var(--rank) 60%, #000) 50% 100%);
+
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--rank) 70%, transparent));
+}
+
+.bridge-hero__cube::before {
+  content: '';
+
+  position: absolute;
+  inset: 0 0 50% 0;
+
+  background: var(--rank-light);
+
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+.bridge-hero__info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  min-width: 0;
+}
+
+.bridge-hero__eyebrow {
+  color: rgba(255, 255, 255, 0.45);
+
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
 }
 
-.bridge-rank-block__value {
+.bridge-hero__name {
+  color: var(--rank-light);
+
+  font-family: var(--font-display);
   font-size: 20px;
   font-weight: 800;
-  letter-spacing: 0.3px;
+  line-height: 1.1;
+
+  text-shadow: 0 0 16px color-mix(in srgb, var(--rank) 45%, transparent);
+
+  overflow-wrap: anywhere;
 }
 
-.bridge-rank-block__pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+.bridge-hero__meta {
+  color: rgba(255, 255, 255, 0.55);
+
+  font-size: 12.5px;
+  font-weight: 600;
 }
 
-.bridge-rank-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-
-  padding: 5px 11px;
-
-  color: #ddd6fe;
-  background: rgba(139, 92, 246, 0.18);
-
-  border: 1px solid rgba(139, 92, 246, 0.35);
-  border-radius: 4px;
-
-  font-size: 11.5px;
-  font-weight: 700;
-
-  white-space: nowrap;
-}
-
-.bridge-rank-pill b {
+.bridge-hero__meta b {
   color: #fbbf24;
-
-  font-size: 12px;
   font-weight: 800;
 }
 
-.bridge-rank-block__empty {
-  color: rgba(255, 255, 255, 0.35);
-
-  font-size: 12px;
+.bridge-hero__dot {
+  margin: 0 4px;
+  opacity: 0.5;
 }
 
+.bridge-hero--empty {
+  --rank: #6b7280;
+}
+
+.bridge-hero--empty .bridge-hero__name {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 16px;
+  text-shadow: none;
+}
+
+/*
+ * На телефоне шапка — аватар (82px) + колонка с ником (отступ 18px).
+ * Эмблема в узкой колонке ломалась на слова, поэтому выводим её
+ * под аватар на всю ширину шапки.
+ */
+@media (max-width: 700px) {
+  .bridge-hero {
+    width: calc(100% + 100px);
+    max-width: none;
+    margin-left: -100px;
+  }
+}
+
+@media (max-width: 600px) {
+  .bridge-hero {
+    padding: 10px 12px 10px 10px;
+  }
+
+  .bridge-hero__emblem {
+    width: 44px;
+    height: 44px;
+  }
+
+  .bridge-hero__name {
+    font-size: 17px;
+  }
+}
 .tier-progress {
   width: min(400px, 100%);
 
