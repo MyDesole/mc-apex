@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SeasonResult extends Model
 {
-    protected $fillable = ['season_id', 'user_id', 'rank', 'tier', 'tier_score'];
+    protected $fillable = ['season_id', 'user_id', 'rank', 'tier', 'tier_score', 'rating_points'];
 
     public function season(): BelongsTo
     {

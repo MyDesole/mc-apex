@@ -32,7 +32,7 @@ class TopController extends Controller
         $players = User::query()
             ->excludeStaff()
             ->with('clanMember.clan:id,name,tag,banner_color')
-            ->orderByDesc('tier_score')
+            ->orderByDesc('rating_points')
             ->limit(self::LIMIT)
             ->get();
 

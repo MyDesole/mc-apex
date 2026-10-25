@@ -19,6 +19,8 @@ class StoreTournamentRequest extends BaseFormRequest
             'min_tier' => ['nullable', 'in:S,A,B,C,D,E'],
             'max_tier' => ['nullable', 'in:S,A,B,C,D,E'],
             'max_participants' => ['required', 'integer', 'min:2', 'max:128'],
+            // Очки общего рейтинга победителю турнира
+            'win_points' => ['sometimes', 'integer', 'min:0', 'max:10000'],
             'registration_starts_at' => ['nullable', 'date'],
             'registration_ends_at' => ['nullable', 'date', 'after:registration_starts_at'],
             'starts_at' => ['nullable', 'date'],

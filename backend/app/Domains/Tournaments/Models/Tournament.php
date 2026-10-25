@@ -13,13 +13,14 @@ class Tournament extends Model
         'name', 'slug', 'description', 'banner',
         'type', 'format', 'status',
         'prize_pool', 'prize_currency', 'prize_description',
-        'min_tier', 'max_tier', 'max_participants',
+        'min_tier', 'max_tier', 'max_participants', 'win_points',
         'registration_starts_at', 'registration_ends_at',
         'starts_at', 'ends_at', 'created_by',
     ];
 
     protected $casts = [
         'prize_pool' => 'decimal:2',
+        'win_points' => 'integer',
         'registration_starts_at' => 'datetime',
         'registration_ends_at' => 'datetime',
         'starts_at' => 'datetime',

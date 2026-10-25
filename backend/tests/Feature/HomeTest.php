@@ -165,7 +165,8 @@ class HomeTest extends TestCase
         $this->clan('Бан', 900, ['is_banned' => true]);
 
         ClanMember::create(['clan_id' => $strong->id, 'user_id' => $strong->leader_id, 'role' => 'leader']);
-        ClanMember::create(['clan_id' => $strong->id, 'user_id' => User::factory()->create()->id, 'role' => 'member']);
+        // Сила = половина очков участников: 1000 очков → 500
+        ClanMember::create(['clan_id' => $strong->id, 'user_id' => User::factory()->create(['rating_points' => 1000])->id, 'role' => 'member']);
 
         $response = $this->getJson('/api/home')->assertOk();
 

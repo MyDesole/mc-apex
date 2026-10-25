@@ -34,13 +34,15 @@ class SiteSettingsTest extends TestCase
         $this->actingAs($this->admin())->getJson('/api/admin/site-settings')->assertOk();
     }
 
-    public function test_index_returns_four_groups(): void
+    public function test_index_returns_all_groups(): void
     {
         $response = $this->actingAs($this->admin())
             ->getJson('/api/admin/site-settings')
             ->assertOk();
 
-        $this->assertSame(['hero', 'socials', 'footer', 'stats'], array_keys($response->json()));
+        $this->assertSame(['hero', 'socials', 'footer', 'stats', 'rating'], array_keys($response->json()));
+        // Очки рейтинга отдаются со значениями по умолчанию, даже если их не сохраняли
+        $this->assertSame(5, $response->json('rating.rating_match_win'));
     }
 
     public function test_index_returns_seeded_values_with_types(): void

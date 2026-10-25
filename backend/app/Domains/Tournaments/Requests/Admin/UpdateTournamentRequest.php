@@ -20,6 +20,7 @@ class UpdateTournamentRequest extends BaseFormRequest
             'min_tier' => ['nullable', 'in:S,A,B,C,D,E'],
             'max_tier' => ['nullable', 'in:S,A,B,C,D,E'],
             'max_participants' => ['sometimes', 'integer', 'min:2', 'max:128'],
+            'win_points' => ['sometimes', 'integer', 'min:0', 'max:10000'],
             'registration_starts_at' => ['nullable', 'date'],
             'registration_ends_at' => ['nullable', 'date'],
             'starts_at' => ['nullable', 'date'],

@@ -97,13 +97,16 @@ class Clan extends Model
     protected $appends = ['avatar_url', 'cover_url'];
 
 
+    /**
+     * Сила клана — половина очков рейтинга каждого участника (RatingService).
+     * Победы и поражения в войнах уже входят в очки игроков.
+     */
     public function recalculatePower(): void
     {
-        $this->power = $this->members()->sum('contribution')
-            + ($this->wins * 100)
-            - ($this->losses * 50);
+        app(\App\Domains\Players\Services\RatingService::class)->recalculateClans([$this->id]);
 
-        $this->save();
+        $this->power = (int) static::whereKey($this->id)->value('power');
+        $this->syncOriginalAttribute('power');
     }
 
     public function isMember(int $userId): bool

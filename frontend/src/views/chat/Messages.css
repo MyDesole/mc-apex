@@ -939,6 +939,32 @@ cursor: progress;
 }
 
 /* =========================================================
+DAY DIVIDER — «Сегодня», «25 октября», как в Telegram
+========================================================= */
+
+/* Обычный разделитель в потоке: «липкая» плашка наезжала на сообщения */
+.msg-day {
+display: flex;
+align-items: center;
+gap: 12px;
+
+margin: 14px 0 8px;
+
+color: var(--text-muted);
+
+font-size: 12px;
+font-weight: 600;
+}
+
+.msg-day::before,
+.msg-day::after {
+content: '';
+flex: 1;
+height: 1px;
+background: var(--border);
+}
+
+/* =========================================================
 MESSAGE
 ========================================================= */
 
@@ -1032,7 +1058,7 @@ position: relative;
 
 padding: 9px 12px 7px;
 
-background: #0d0d14, var(--bg-card);
+background: #0d0d14;
 
 border: 1px solid rgba(255, 255, 255, 0.065);
 border-radius: 6px 6px 6px 5px;
@@ -1828,7 +1854,7 @@ max-width: calc(100vw - 40px);
 
 overflow: hidden;
 
-background: #15151e, var(--bg-card);
+background: #15151e;
 
 border: 1px solid rgba(255, 255, 255, 0.09);
 border-radius: 6px;
@@ -2079,7 +2105,7 @@ flex-direction: column;
 
 overflow: hidden;
 
-background: #15151e, var(--bg-card);
+background: #15151e;
 
 border: 1px solid rgba(255, 255, 255, 0.09);
 border-radius: 6px;
@@ -2380,7 +2406,7 @@ padding:
 8px
 calc(8px + env(safe-area-inset-bottom));
 
-background: #15151e, var(--bg-card);
+background: #15151e;
 
 border-top: 1px solid rgba(255, 255, 255, 0.08);
 border-radius: 6px 6px 0 0;

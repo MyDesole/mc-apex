@@ -8,6 +8,7 @@ import BridgeTechniques from '@/components/bridge/BridgeTechniques.vue'
 import FriendButton from '@/components/friends/FriendButton.vue'
 import PlayerShowcase from '@/components/players/PlayerShowcase.vue'
 import PlayerSeasons from '@/components/players/profile/PlayerSeasons.vue'
+import PlayerRatingBreakdown from '@/components/players/profile/PlayerRatingBreakdown.vue'
 import { api } from '@/services/core/api.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 
@@ -18,6 +19,7 @@ const user = ref(null)
 const aspects = ref([])
 const friendship = ref(null)
 const rank = ref({ position: null, total: 0 })
+const rating = ref(null)
 const bridge = ref({ techniques: [], summary: {}, rank: { position: null, total: 0 } })
 
 // Режим профиля владельца: в бридж-профиле виды бриджа идут первыми
@@ -48,6 +50,7 @@ async function load(id) {
   aspects.value = []
   friendship.value = null
   rank.value = { position: null, total: 0 }
+  rating.value = null
   bridge.value = { techniques: [], summary: {}, rank: { position: null, total: 0 } }
   profileMode.value = 'pvp'
   bridgeRank.value = null
@@ -61,6 +64,7 @@ async function load(id) {
     aspects.value = data.user.aspects ?? []
     friendship.value = data.friendship
     rank.value = data.rank ?? { position: null, total: 0 }
+    rating.value = data.rating ?? null
     bridge.value = data.bridge ?? { techniques: [], summary: {}, rank: { position: null, total: 0 } }
     profileMode.value = data.profile_mode ?? 'pvp'
     bridgeRank.value = data.bridge_rank ?? null
@@ -147,6 +151,8 @@ watch(
               :total="isBridgeProfile ? bridge.rank.total : rank.total"
           />
         </section>
+
+        <PlayerRatingBreakdown v-if="!isStaff" :rating="rating" />
 
         <PlayerSeasons v-if="!isStaff" :user-id="user.id" />
 

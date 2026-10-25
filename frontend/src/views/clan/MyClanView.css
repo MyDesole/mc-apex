@@ -105,7 +105,7 @@
           circle at 90% 100%,
           color-mix(in srgb, var(--clan-color) 12%, transparent),
           transparent 38%
-      ), var(--card-bg), var(--bg-card);
+      ), var(--card-bg, var(--bg-card));
   box-shadow:
       0 24px 80px rgba(0, 0, 0, 0.24),
       inset 0 1px 0 rgba(255, 255, 255, 0.04);

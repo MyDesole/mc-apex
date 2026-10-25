@@ -35,6 +35,13 @@ trait ClanFixtures
 
         $this->member($clan, $leader, 'leader');
 
+        // Вступление пересчитывает силу из очков игроков (RatingService) —
+        // заданную в тесте силу ставим уже после этого
+        // (запросом: в памяти power уже равен заданному, update() не увидел бы изменения)
+        if (array_key_exists('power', $attributes)) {
+            Clan::whereKey($clan->id)->update(['power' => $attributes['power']]);
+        }
+
         return $clan;
     }
 

@@ -5,9 +5,23 @@
  * Пороги совпадают с TierTestService::TIER_THRESHOLDS на бэкенде,
  * подписи аспектов — с data/players/aspects.js.
  */
+import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ASPECTS, ASPECT_MAX } from '@/data/players/aspects.js'
 import { tierColors } from '@/data/players/profileCustomization.js'
+import { siteApi } from '@/services/site/site.js'
+
+// Очки за турниры и войны настраиваются в админке — берём с сервера
+const weights = ref({ match_win: 5, war_participation: 3, war_win: 7 })
+
+onMounted(async () => {
+  try {
+    const info = await siteApi.info()
+    if (info?.rating) weights.value = info.rating
+  } catch {
+    /* остаются значения по умолчанию */
+  }
+})
 
 const ASPECT_HINTS = {
   block_placing: 'Скорость и точность постройки под давлением: блок-клатчи, стены, отступ.',
@@ -65,7 +79,7 @@ const TIERS = [
 
     <section class="content-card">
       <h2>Тиры</h2>
-      <p>Тир определяется суммой пяти аспектов. В рейтинг идёт лучший результат из режимов.</p>
+      <p>Тир определяется суммой пяти аспектов. Тир в профиле — лучший результат из режимов.</p>
 
       <ul class="tiers">
         <li v-for="row in TIERS" :key="row.tier">
@@ -78,6 +92,58 @@ const TIERS = [
       </ul>
     </section>
 
+    <section id="rating" class="content-card">
+      <h2>Как считается общий рейтинг</h2>
+      <p>
+        Место в <RouterLink to="/players">общем рейтинге</RouterLink> зависит от очков.
+        Очки складываются из навыка и активности:
+      </p>
+
+      <ul class="formula">
+        <li>
+          <strong>Тиры</strong>
+          <span>
+            Проценты PvP, BedWars и бриджа складываются и делятся на три — даже если какой-то
+            режим не сдан, он считается нулём. Процент бриджа — среднее оценок стабильности,
+            скорости и сложности по подтверждённым видам.
+          </span>
+        </li>
+        <li>
+          <strong>+{{ weights.match_win }} за каждый выигранный матч турнира</strong>
+          <span>Считаются одиночные турниры.</span>
+        </li>
+        <li>
+          <strong>+ очки за победу в турнире</strong>
+          <span>У каждого турнира своя награда — она указана на его странице.</span>
+        </li>
+        <li>
+          <strong>+{{ weights.war_participation }} за участие в клановой войне</strong>
+          <span>Засчитывается, когда война завершена и ты был в составе.</span>
+        </li>
+        <li>
+          <strong>+{{ weights.war_win }} сверху за победу в клановой войне</strong>
+          <span>Итого за выигранную войну — {{ weights.war_participation + weights.war_win }}.</span>
+        </li>
+      </ul>
+
+      <p class="formula__example">
+        Пример: PvP 80%, BedWars 50%, бридж не сдан — (80 + 50 + 0) / 3 = 44 очка.
+        Плюс 3 выигранных матча и одна выигранная война —
+        {{ 44 + 3 * weights.match_win + weights.war_participation + weights.war_win }} очков.
+      </p>
+
+      <h3>Сила клана</h3>
+      <p>
+        Каждый участник клана, который есть в рейтинге, приносит клану половину своих очков.
+        Чем сильнее и активнее игроки — тем выше клан в
+        <RouterLink to="/clans">списке кланов</RouterLink>.
+      </p>
+
+      <p class="formula__note">
+        Разбивку своих очков можно посмотреть в <RouterLink to="/profile">профиле</RouterLink>.
+      </p>
+    </section>
+
     <section class="content-card">
       <h2>Честная игра</h2>
       <p>Тест проходит сам владелец аккаунта, со своего ника. Чужой аккаунт, читы и макросы — аннулирование результата и бан.</p>
@@ -88,6 +154,39 @@ const TIERS = [
 </template>
 
 <style scoped>
+.formula {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  margin: 12px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.formula li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  padding: 10px 12px;
+  border-left: 3px solid var(--accent);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.formula li span,
+.formula__note {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.formula__example {
+  padding: 10px 12px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
 .steps {
   display: flex;
   flex-direction: column;

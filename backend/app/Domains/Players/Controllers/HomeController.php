@@ -14,9 +14,9 @@ class HomeController extends Controller
     public function top(): JsonResponse
     {
         $players = User::query()
-            ->whereNotIn('role', ['admin', 'moderator', 'tester'])
+            ->excludeStaff()
             ->with('clanMember.clan:id,name,tag,banner_color')
-            ->orderByDesc('tier_score')
+            ->orderByDesc('rating_points')
             ->limit(10)
             ->get()
             ->map(function ($user) {
@@ -26,6 +26,7 @@ class HomeController extends Controller
                     'avatar_url' => $user->avatar_url,
                     'tier' => $user->tier,
                     'tier_score' => $user->tier_score,
+                    'rating_points' => $user->rating_points,
                     'clan_tag' => $user->clan_tag,
                     'clan_color' => $user->clan_color,
                 ];
@@ -75,7 +76,7 @@ class HomeController extends Controller
             \App\Domains\Users\Models\User::query()
                 ->excludeStaff()   // персонал в топ не попадает, медийка участвует
                 ->with('clanMember.clan:id,tag,banner_color')
-                ->orderByDesc('tier_score')
+                ->orderByDesc('rating_points')
                 ->limit(10)
                 ->get()
         )->resolve();

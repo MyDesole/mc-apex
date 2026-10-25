@@ -6,6 +6,7 @@ import TierTestHistory from '@/components/tiers/TierTestHistory.vue'
 import ClanBadge from '@/components/clan/ClanBadge.vue'
 import PlayerShowcase from '@/components/players/PlayerShowcase.vue'
 import PlayerSeasons from '@/components/players/profile/PlayerSeasons.vue'
+import PlayerRatingBreakdown from '@/components/players/profile/PlayerRatingBreakdown.vue'
 import RankBadge from '@/components/players/RankBadge.vue'
 import ProfileCustomizeModal from '@/components/players/ProfileCustomizeModal.vue'
 import TierTestForm from '@/components/tiers/TierTestForm.vue'
@@ -314,6 +315,8 @@ onMounted(async () => {
                 :total="isBridgeProfile ? bridge.rank.total : rank.total"
             />
           </section>
+
+          <PlayerRatingBreakdown :rating="auth.rating" title-class="fact__title" />
 
           <PlayerSeasons :user-id="user.id" title-class="fact__title" />
         </aside>

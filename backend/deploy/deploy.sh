@@ -43,6 +43,8 @@ log "Миграции и каталог"
 php artisan migrate --force
 php artisan db:seed --class=AchievementSeeder --force
 php artisan db:seed --class=ShopItemSeeder --force
+# Очки рейтинга и сила кланов — страховка, если формулу или данные меняли миграцией
+php artisan apex:rating-recalc
 
 log "Кеши"
 php artisan optimize:clear

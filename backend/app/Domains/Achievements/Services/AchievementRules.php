@@ -308,11 +308,11 @@ class AchievementRules
 
     private function groupTop(User $user): array
     {
-        if ($user->tier_score <= 0) {
+        if ($user->rating_points <= 0 || $user->isStaff()) {
             return [];
         }
 
-        $position = User::where('tier_score', '>', $user->tier_score)->count() + 1;
+        $position = User::query()->excludeStaff()->where('rating_points', '>', $user->rating_points)->count() + 1;
 
         $codes = [];
 

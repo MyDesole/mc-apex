@@ -123,6 +123,15 @@
   font-weight: 800;
 }
 
+.rating-head__how {
+  color: var(--accent-light);
+  text-decoration: none;
+}
+
+.rating-head__how:hover {
+  text-decoration: underline;
+}
+
 /* ============================================================
    MAIN TABS
    ============================================================ */

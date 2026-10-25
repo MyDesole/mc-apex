@@ -40,6 +40,8 @@ class SiteController extends Controller
         return response()->json([
             ...$data,
             'server_address' => config('services.minecraft.address') ?: config('services.minecraft.host'),
+            // Очки за турниры и войны — для страницы правил (настраиваются в админке)
+            'rating' => app(\App\Domains\Players\Services\RatingService::class)->weights(),
         ]);
     }
 

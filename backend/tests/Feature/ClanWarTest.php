@@ -355,9 +355,10 @@ class ClanWarTest extends TestCase
         $this->assertSame(0, $theirClan->fresh()->wins);
         $this->assertSame(1, $theirClan->fresh()->losses);
 
-        // power = contribution + wins*100 - losses*50
-        $this->assertSame(100, $myClan->fresh()->power);
-        $this->assertSame(-50, $theirClan->fresh()->power);
+        // Сила — из очков игроков; в войне никто не записался, поэтому 0.
+        // Очки за участие и победу проверяет RatingPointsTest.
+        $this->assertSame(0, $myClan->fresh()->power);
+        $this->assertSame(0, $theirClan->fresh()->power);
     }
 
     public function test_opponent_reports_result_and_opponent_wins(): void
@@ -378,8 +379,8 @@ class ClanWarTest extends TestCase
         $this->assertSame($theirClan->id, $war->fresh()->winner_clan_id);
         $this->assertSame(1, $theirClan->fresh()->wins);
         $this->assertSame(1, $myClan->fresh()->losses);
-        $this->assertSame(-50, $myClan->fresh()->power);
-        $this->assertSame(100, $theirClan->fresh()->power);
+        $this->assertSame(0, $myClan->fresh()->power);
+        $this->assertSame(0, $theirClan->fresh()->power);
     }
 
     /**

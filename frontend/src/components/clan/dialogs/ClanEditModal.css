@@ -1305,7 +1305,7 @@
   border: 1px solid rgba(255, 255, 255, 0.065);
   border-radius: 6px;
 
-  background: rgba(255, 255, 255, 0.016), var(--bg-card);
+  background: var(--bg-card);
 }
 
 .fee-card__top {

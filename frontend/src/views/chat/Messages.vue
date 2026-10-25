@@ -11,6 +11,7 @@ import { userLink } from '@/utils/links.js'
 import { usePresence } from '@/composables/chat/presence.js'
 import { useMessagePolling } from '@/composables/chat/useMessagePolling.js'
 import { mergeMessages } from '@/utils/chatMessages.js'
+import { dayLabel, startsNewDay } from '@/utils/chatDates.js'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -1745,9 +1746,19 @@ onUnmounted(() => {
               }}
             </button>
 
-            <div
-                v-for="m in visibleMessages"
+            <template
+                v-for="(m, index) in visibleMessages"
                 :key="m.id"
+            >
+            <!-- Разделитель по дням, как в Telegram -->
+            <div
+                v-if="startsNewDay(m, visibleMessages[index - 1])"
+                class="msg-day"
+            >
+              <span>{{ dayLabel(m.created_at) }}</span>
+            </div>
+
+            <div
                 :data-message-id="m.id"
                 class="msg"
                 :class="{
@@ -2121,6 +2132,7 @@ onUnmounted(() => {
                 </template>
               </div>
             </div>
+            </template>
           </template>
 
           <div

@@ -34,10 +34,10 @@ class SeasonService
 
             $players = User::query()
                 ->excludeStaff()
-                ->where('tier_score', '>', 0)
-                ->orderByDesc('tier_score')
-                ->orderBy('id')
-                ->get(['id', 'tier', 'tier_score']);
+                ->where('rating_points', '>', 0)
+                ->orderByDesc('rating_points')
+                ->orderByDesc('id')
+                ->get(['id', 'tier', 'tier_score', 'rating_points']);
 
             $now = now();
             $rows = $players->values()->map(fn (User $user, int $i) => [
@@ -46,6 +46,7 @@ class SeasonService
                 'rank' => $i + 1,
                 'tier' => $user->tier ?? 'E',
                 'tier_score' => (int) $user->tier_score,
+                'rating_points' => (int) $user->rating_points,
                 'created_at' => $now,
                 'updated_at' => $now,
             ]);

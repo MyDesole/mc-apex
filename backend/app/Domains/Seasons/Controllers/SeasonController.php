@@ -56,6 +56,7 @@ class SeasonController extends Controller
                 'rank' => $r->rank,
                 'tier' => $r->tier,
                 'tier_score' => $r->tier_score,
+                'rating_points' => $r->rating_points,
                 'players' => $r->season->results_count,
             ]);
 
@@ -85,6 +86,7 @@ class SeasonController extends Controller
                 'rank' => $r->rank,
                 'tier' => $r->tier,
                 'tier_score' => $r->tier_score,
+                'rating_points' => $r->rating_points,
                 'user' => $r->user ? ['id' => $r->user->id, 'username' => $r->user->username, 'avatar_url' => $r->user->avatar_url] : null,
             ])
             ->all();

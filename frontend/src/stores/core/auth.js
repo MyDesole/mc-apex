@@ -5,6 +5,8 @@ import { api, getCsrfCookie } from '@/services/core/api.js'
 export const useAuthStore = defineStore('auth', () => {
     const user = ref(null)
     const rank = ref({ position: null, total: 0 })
+    // Из чего сложились очки рейтинга (null у персонала)
+    const rating = ref(null)
     const loading = ref(false)
     const initialized = ref(false)
 
@@ -21,6 +23,7 @@ export const useAuthStore = defineStore('auth', () => {
             const response = await api.get('/auth/me')
             user.value = response.user
             rank.value = response.rank ?? { position: null, total: 0 }
+            rating.value = response.rating ?? null
         } catch (error) {
             if (error.status !== 401) {
                 console.error(error)
@@ -188,6 +191,7 @@ export const useAuthStore = defineStore('auth', () => {
     return {
         user,
         rank,
+        rating,
         loading,
         initialized,
         isAuthenticated,

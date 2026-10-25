@@ -87,12 +87,12 @@ class OgController extends Controller
 
     private function userCard(User $player): array
     {
-        $ranked = ! $player->isStaff() && $player->tier_score > 0;
+        $ranked = ! $player->isStaff() && $player->rating_points > 0;
         $tier = $ranked ? ($player->tier ?: 'E') : 'E';
         $score = (int) $player->tier_score;
 
         $position = $ranked
-            ? User::query()->excludeStaff()->where('tier_score', '>', $player->tier_score)->count() + 1
+            ? User::query()->excludeStaff()->where('rating_points', '>', $player->rating_points)->count() + 1
             : null;
 
         $clan = $player->clanMember?->clan;

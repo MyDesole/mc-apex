@@ -791,7 +791,8 @@ class ClanTest extends TestCase
         $leader = $this->user();
         $clan = $this->clan($leader, ['power' => 100]);
 
-        $this->member($clan, $this->user(), 'member');
+        $this->member($clan, $this->user(['rating_points' => 200]), 'member');
+        $this->assertSame(100, $clan->fresh()->power);
 
         $this->actingAs($leader)
             ->postJson("/api/clans/{$clan->id}/leave")

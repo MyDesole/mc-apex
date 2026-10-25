@@ -29,7 +29,8 @@ class AchievementGrantedNotification extends Notification
             'icon' => $this->achievement->icon,
             'color' => $this->achievement->color,
             'points' => $this->achievement->points,
-            'message' => "Вы получили ачивку {$this->achievement->icon} «{$this->achievement->name}»",
+            // Иконка — ключ пиксельной картинки (orb, emerald…), в тексте ей не место
+            'message' => "Вы получили ачивку «{$this->achievement->name}»",
         ];
     }
 }

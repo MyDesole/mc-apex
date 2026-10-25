@@ -18,6 +18,13 @@ import ForumView from '@/views/forum/ForumView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
+  // Якоря вида /rules#rating: ждём, пока ленивая страница отрисуется после перехода
+  scrollBehavior(to) {
+    if (!to.hash) return undefined
+    return new Promise((resolve) => {
+      setTimeout(() => resolve({ el: to.hash, top: 80, behavior: 'smooth' }), 350)
+    })
+  },
   routes: [
     { path: '/', name: 'home', component: HomeView, meta: { title: 'Главная' } },
     { path: '/login', name: 'login', component: LoginView, meta: { title: 'Вход', guest: true } },

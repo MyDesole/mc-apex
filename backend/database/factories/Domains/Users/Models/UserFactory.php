@@ -40,6 +40,13 @@ class UserFactory extends Factory
             'apex_coins' => 5000,
             'role' => 'user',
             'is_banned' => false,
+
+            /*
+             * Очки рейтинга в проде считает RatingService по тирам, турнирам
+             * и войнам. В тестах игрока «с местом в рейтинге» обычно задают
+             * через tier_score — по умолчанию берём очки оттуда же.
+             */
+            'rating_points' => fn (array $attributes) => (int) ($attributes['tier_score'] ?? 0),
         ];
     }
 

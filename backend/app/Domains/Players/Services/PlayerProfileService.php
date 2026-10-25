@@ -5,6 +5,7 @@ namespace App\Domains\Players\Services;
 use App\Domains\Friends\Models\Friendship;
 use App\Domains\Players\Models\PlayerAspectBedwars;
 use App\Domains\Players\Models\PlayerAspectPvp;
+use App\Domains\Players\Services\RatingService;
 use App\Domains\Players\Models\ProfileRecommendation;
 use App\Domains\Users\Models\User;
 use App\Support\Concerns\StoresUserFiles;
@@ -61,6 +62,8 @@ class PlayerProfileService
                 'position' => $position,
                 'total' => $total,
             ],
+            // Из чего сложились очки рейтинга — для блока в профиле
+            'rating' => $player->isStaff() ? null : app(RatingService::class)->breakdown($player),
             'bridge' => $this->bridgePayload($player),
             'recommendations' => $this->recommendations($player),
             'my_recommendation' => $me
@@ -85,7 +88,7 @@ class PlayerProfileService
      */
     public function rankOf(User $player): array
     {
-        if ((int) $player->tier_score <= 0 || $player->isStaff()) {
+        if ((int) $player->rating_points <= 0 || $player->isStaff()) {
             return [null, 0];
         }
 
@@ -93,15 +96,18 @@ class PlayerProfileService
             /*
              * Считаем только тех, кто есть в рейтинге: без персонала.
              * Иначе место смещалось бы на число персонала с большим счётом.
+             * При равных очках выше тот, у кого больше id — как в списке рейтинга.
              */
             User::query()
                 ->excludeStaff()
-                ->where('tier_score', '>', $player->tier_score)
+                ->where(fn ($q) => $q
+                    ->where('rating_points', '>', $player->rating_points)
+                    ->orWhere(fn ($q) => $q->where('rating_points', $player->rating_points)->where('id', '>', $player->id)))
                 ->count() + 1,
 
             User::query()
                 ->excludeStaff()
-                ->where('tier_score', '>', 0)
+                ->where('rating_points', '>', 0)
                 ->count(),
         ];
     }

@@ -186,6 +186,8 @@ function scorePercent(player) {
               {{ PVP_MODES.find(m => m.value === pvpMode)?.label }}
             </strong>
           </template>
+          ·
+          <RouterLink to="/rules#rating" class="rating-head__how">Как считается рейтинг</RouterLink>
         </p>
       </div>
 

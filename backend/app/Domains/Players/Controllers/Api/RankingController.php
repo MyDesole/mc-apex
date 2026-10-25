@@ -34,13 +34,12 @@ class RankingController extends Controller
             ['pvp', 'game_sense', 'bed_play', 'teamplay', 'building']
         );
 
-        // Общий рейтинг — сумма аспектов обоих режимов.
-        // Раньше делилось на 2, и игрок с 1 баллом давал 0.5 -> ROUND 1,
-        // а с 0.5 — 0, из-за чего он выпадал из рейтинга по условию score > 0.
+        // Общий рейтинг — очки RatingService: среднее трёх тиров,
+        // турниры и клановые войны. Режимные топы — по сумме аспектов.
         $score = match ($mode) {
             'pvp' => "ROUND($pvp)",
             'bedwars' => "ROUND($bedwars)",
-            default => "ROUND($pvp + $bedwars)",
+            default => 'users.rating_points',
         };
 
         $query = User::query()

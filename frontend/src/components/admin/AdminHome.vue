@@ -47,6 +47,7 @@ onMounted(load)
       <button :class="{ active: tab === 'hero' }" @click="tab = 'hero'">Hero</button>
       <button :class="{ active: tab === 'socials' }" @click="tab = 'socials'">Соцсети</button>
       <button :class="{ active: tab === 'footer' }" @click="tab = 'footer'">Футер</button>
+      <button :class="{ active: tab === 'rating' }" @click="tab = 'rating'">Очки рейтинга</button>
     </nav>
 
     <!-- HERO -->
@@ -122,9 +123,40 @@ onMounted(load)
         <input v-model="settings.footer.footer_text" type="text" />
       </div>
     </div>
+
+    <!-- ОЧКИ РЕЙТИНГА -->
+    <div v-else-if="tab === 'rating'" class="section">
+      <p class="hint">
+        Очки игрока = среднее тиров (PvP + BedWars + бридж) / 3 + очки ниже
+        + очки за выигранные турниры (задаются в каждом турнире).
+        Сила клана — половина очков каждого участника. После сохранения
+        очки всех игроков пересчитаются.
+      </p>
+      <div class="row">
+        <div class="field">
+          <label>Победа в матче турнира</label>
+          <input v-model.number="settings.rating.rating_match_win" type="number" min="0" max="1000" />
+        </div>
+        <div class="field">
+          <label>Участие в клан-варе</label>
+          <input v-model.number="settings.rating.rating_war_participation" type="number" min="0" max="1000" />
+        </div>
+        <div class="field">
+          <label>Победа в клан-варе (сверху)</label>
+          <input v-model.number="settings.rating.rating_war_win" type="number" min="0" max="1000" />
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
 @import "@/components/admin/AdminHome.css";
+
+.hint {
+  margin: 0 0 16px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
 </style>

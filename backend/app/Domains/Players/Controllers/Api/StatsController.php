@@ -39,7 +39,7 @@ class StatsController extends Controller
     {
         return [
             'players' => User::count(),
-            'ranked' => User::query()->excludeStaff()->where('tier_score', '>', 0)->count(),
+            'ranked' => User::query()->excludeStaff()->where('rating_points', '>', 0)->count(),
             'tests' => TierTest::where('status', 'completed')->count(),
             'clans' => Clan::where('is_banned', false)->count(),
             'clan_wars' => ClanWar::where('status', 'completed')->count(),

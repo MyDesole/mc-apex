@@ -22,6 +22,8 @@ const form = ref({
   min_tier: props.tournament?.min_tier ?? '',
   max_tier: props.tournament?.max_tier ?? '',
   max_participants: props.tournament?.max_participants ?? 16,
+  // Очки общего рейтинга победителю (только одиночные турниры)
+  win_points: props.tournament?.win_points ?? 50,
   registration_starts_at: props.tournament?.registration_starts_at
       ? props.tournament.registration_starts_at.slice(0, 16)
       : '',
@@ -191,6 +193,11 @@ const tiers = ['S', 'A', 'B', 'C', 'D', 'E']
           <div class="field">
             <label>Макс. участников *</label>
             <input v-model.number="form.max_participants" type="number" min="2" max="128" />
+          </div>
+
+          <div class="field">
+            <label>Очки рейтинга за победу</label>
+            <input v-model.number="form.win_points" type="number" min="0" max="10000" />
           </div>
         </div>
 

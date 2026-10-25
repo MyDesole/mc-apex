@@ -87,10 +87,6 @@ class RankingTest extends TestCase
             "/api/ranking?limit=5&cursor_score={$cursor['score']}&cursor_id={$cursor['id']}&offset={$cursor['offset']}"
         )->assertOk();
 
-        fwrite(STDERR, "first: " . json_encode(collect($first->json('data'))->map(fn($p) => [$p['position'], $p['id'], $p['rating_score']])->all()) . "\n");
-        fwrite(STDERR, "cursor: " . json_encode($cursor) . "\n");
-        fwrite(STDERR, "second: " . json_encode(collect($second->json('data'))->map(fn($p) => [$p['position'], $p['id'], $p['rating_score']])->all()) . "\n");
-
         $this->assertSame([6], collect($second->json('data'))->pluck('position')->all());
     }
 
@@ -108,11 +104,9 @@ class RankingTest extends TestCase
         $this->assertSame($bwKing->id, $bw->json('data.0.id'));
         $this->assertSame(100, $bw->json('data.0.rating_score'));
 
-        // В общем режиме баллы обоих режимов складываются.
-        // Раньше считалось среднее, но при делении на 2 слабые игроки
-        // обнулялись и выпадали из рейтинга.
+        // Общий режим — очки рейтинга: среднее трёх тиров, округлённое вверх
         $overall = $this->getJson('/api/ranking?mode=overall')->assertOk();
-        $this->assertSame(100, $overall->json('data.0.rating_score'));
+        $this->assertSame(34, $overall->json('data.0.rating_score'));
     }
 
     /**
@@ -133,7 +127,7 @@ class RankingTest extends TestCase
         $this->assertTrue($ids->contains($strong->id));
 
         $this->assertSame($strong->id, $overall->json('data.0.id'));
-        $this->assertSame(100, $overall->json('data.0.rating_score'));
+        $this->assertSame(34, $overall->json('data.0.rating_score'));
     }
 
     public function test_staff_is_excluded_from_ranking(): void

@@ -14,8 +14,13 @@ use App\Domains\Clan\Models\Clan;
 use App\Domains\Clan\Models\ClanApplication;
 use App\Domains\Clan\Models\ClanEvent;
 use App\Domains\Clan\Models\ClanResource;
+use App\Domains\Clan\Models\ClanMember;
 use App\Domains\Clan\Models\ClanWar;
+use App\Domains\Clan\Models\ClanWarParticipant;
 use App\Domains\Forum\Models\ForumAttachment;
+use App\Domains\Players\Models\PlayerAspectBedwars;
+use App\Domains\Players\Models\PlayerAspectPvp;
+use App\Domains\Players\Services\RatingService;
 use App\Domains\Forum\Models\ForumCategory;
 use App\Domains\Forum\Models\ForumReply;
 use App\Domains\Forum\Models\ForumTopic;
@@ -88,6 +93,58 @@ class AppServiceProvider extends ServiceProvider
 
         $this->registerActivityFeed();
         $this->registerAchievementTriggers();
+        $this->registerRatingTriggers();
+    }
+
+    /**
+     * Очки рейтинга хранятся в users.rating_points: пересчитываем игроков,
+     * чьи тиры, турниры или войны изменились, — и силу их кланов.
+     */
+    private function registerRatingTriggers(): void
+    {
+        $rating = fn () => app(RatingService::class);
+        $recalc = fn (...$ids) => $rating()->recalculate($ids);
+
+        foreach ([PlayerAspectPvp::class, PlayerAspectBedwars::class, UserBridgeTechnique::class] as $model) {
+            $model::saved(fn ($row) => $recalc($row->user_id));
+            $model::deleted(fn ($row) => $recalc($row->user_id));
+        }
+
+        // Матч: очки у победителя, прежнего победителя (если исправили) и финалиста
+        TournamentMatch::saved(function (TournamentMatch $match) use ($recalc) {
+            if (! $match->wasChanged(['winner_id', 'next_match_id']) && ! $match->wasRecentlyCreated) {
+                return;
+            }
+            $participantIds = array_filter([$match->winner_id, $match->getOriginal('winner_id')]);
+            $recalc(...TournamentParticipant::whereIn('id', $participantIds)->pluck('user_id')->all());
+        });
+
+        // Сменили очки за победу в турнире — пересчитать его участников
+        Tournament::updated(function (Tournament $tournament) use ($recalc) {
+            if ($tournament->wasChanged('win_points')) {
+                $recalc(...$tournament->participants()->pluck('user_id')->all());
+            }
+        });
+
+        ClanWarParticipant::created(fn (ClanWarParticipant $p) => $recalc($p->user_id));
+        ClanWarParticipant::deleted(fn (ClanWarParticipant $p) => $recalc($p->user_id));
+
+        ClanWar::updated(function (ClanWar $war) use ($recalc) {
+            if ($war->wasChanged(['status', 'winner_clan_id'])) {
+                $recalc(...$war->participants()->pluck('user_id')->all());
+            }
+        });
+
+        // Вступил или ушёл из клана — меняется сила клана
+        ClanMember::created(fn (ClanMember $m) => $rating()->recalculateClans([$m->clan_id]));
+        ClanMember::deleted(fn (ClanMember $m) => $rating()->recalculateClans([$m->clan_id]));
+
+        // Игрок стал персоналом или вернулся в игроки — сила клана меняется
+        User::updated(function (User $user) use ($rating) {
+            if ($user->wasChanged('role')) {
+                $rating()->recalculateClans(ClanMember::where('user_id', $user->id)->pluck('clan_id'));
+            }
+        });
     }
 
     /**
