@@ -122,7 +122,8 @@ class ClanService
     {
         $clan->load([
             'leader:id,username,avatar,tier',
-            'members.user:id,username,avatar,tier',
+            // rating_points и role — для вклада участника (ClanMember::contribution)
+            'members.user:id,username,avatar,tier,rating_points,role',
             'events.author:id,username,avatar',
         ]);
 
@@ -485,7 +486,7 @@ class ClanService
             'promoted_by' => $actor->id,
         ]);
 
-        return $member->fresh()->load('user:id,username,avatar');
+        return $member->fresh()->load('user:id,username,avatar,rating_points,role');
     }
 
     /**

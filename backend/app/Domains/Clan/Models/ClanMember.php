@@ -20,6 +20,22 @@ class ClanMember extends Model
         'permissions' => 'array',
     ];
 
+    /**
+     * Вклад участника в силу клана — та же доля очков рейтинга, что
+     * складывается в Clan::power (RatingService::CLAN_SHARE). Колонка
+     * contribution больше никем не пишется, поэтому считаем на лету.
+     */
+    public function getContributionAttribute(): int
+    {
+        $user = $this->user;
+
+        if (! $user || $user->isStaff()) {
+            return 0;
+        }
+
+        return (int) floor((int) $user->rating_points * \App\Domains\Players\Services\RatingService::CLAN_SHARE);
+    }
+
     public function promoter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'promoted_by');

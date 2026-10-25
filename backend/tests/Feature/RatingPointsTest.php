@@ -132,6 +132,25 @@ class RatingPointsTest extends TestCase
         $this->assertSame(1, $clanB->fresh()->power);
     }
 
+    public function test_member_contribution_is_half_of_rating_points(): void
+    {
+        $leader = User::factory()->create();
+        $clan = $this->clan($leader);
+        $player = User::factory()->create();
+        $this->member($clan, $player);
+        $this->member($clan, User::factory()->create(['role' => 'moderator', 'rating_points' => 80]));
+
+        $this->pvp($player, 20); // 100% → 34 очка → вклад 17
+
+        $members = collect($this->getJson("/api/clans/{$clan->id}")->assertOk()->json('clan.members'))
+            ->keyBy('user_id');
+
+        $this->assertSame(17, $members[$player->id]['contribution']);
+        $this->assertSame(0, $members[$leader->id]['contribution']);
+        // Сумма вкладов совпадает с силой клана, персонал не в счёт
+        $this->assertSame($members->sum('contribution'), $clan->fresh()->power);
+    }
+
     public function test_overall_ranking_and_profile_use_rating_points(): void
     {
         $first = User::factory()->create(['username' => 'First']);
