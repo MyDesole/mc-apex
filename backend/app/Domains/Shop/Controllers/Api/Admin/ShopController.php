@@ -36,6 +36,8 @@ class ShopController extends Controller
                 ShopItem::TYPE_PROFILE_EFFECT,
                 ShopItem::TYPE_ACCENT_COLOR,
                 ShopItem::TYPE_CARD_BACKGROUND,
+                ShopItem::TYPE_SKIN_BACKDROP,
+                ShopItem::TYPE_CARD_THEME,
                 ShopItem::TYPE_BADGE,
                 ShopItem::TYPE_TIER_PRIORITY,
                 ShopItem::TYPE_COIN_BUNDLE,

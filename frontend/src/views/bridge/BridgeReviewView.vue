@@ -181,9 +181,6 @@ onMounted(load)
   <main class="bridge-review">
     <header class="bridge-review__head">
       <div>
-        <div class="bridge-review__eyebrow">
-          BRIDGE REVIEW
-        </div>
 
         <h1>Проверка бриджа</h1>
 

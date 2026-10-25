@@ -648,7 +648,7 @@ function formatDate(value) {
   }
 
   .hero-copy p {
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .hero-stats {
@@ -721,7 +721,7 @@ function formatDate(value) {
 
   .modal {
     max-height: calc(100vh - 20px);
-    border-radius: 14px;
+    border-radius: 6px;
   }
 }
 
@@ -803,7 +803,7 @@ function formatDate(value) {
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 8px;
 
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.45;
 }
 
@@ -817,7 +817,7 @@ function formatDate(value) {
 
   border-radius: 8px;
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
 
   cursor: pointer;
@@ -862,7 +862,7 @@ function formatDate(value) {
 
   cursor: pointer;
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 
   transition:
@@ -891,7 +891,7 @@ function formatDate(value) {
 
   color: var(--text);
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -909,7 +909,7 @@ function formatDate(value) {
 
   border-radius: 8px;
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
 
   cursor: pointer;
@@ -936,7 +936,7 @@ function formatDate(value) {
 .active-action--result {
   color: #c4b5fd;
   background: rgba(124, 58, 237, 0.075);
-  border: 1px solid rgba(124, 58, 237, 0.18);
+  border: 1px solid var(--border);
 }
 
 .completed {
@@ -951,7 +951,7 @@ function formatDate(value) {
 
   border-top: 1px solid rgba(255, 255, 255, 0.045);
 
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 850;
   text-transform: uppercase;
   letter-spacing: 0.3px;

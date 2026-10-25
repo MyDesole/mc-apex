@@ -40,3 +40,6 @@ Thumbs.db
 
 # Плагин майнкрафт-сервера: держим вне репозитория
 /minecraft-plugin/
+/minecraft-tier-plugin/
+/minecraft-rod-plugin/
+/minecraft-tier-plugin-18/

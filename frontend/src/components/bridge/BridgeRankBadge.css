@@ -22,9 +22,9 @@
           transparent
   );
 
-  border-radius: 999px;
+  border-radius: 4px;
 
-  font-weight: 900;
+  font-weight: 800;
 
   white-space: nowrap;
 }
@@ -39,12 +39,7 @@
 
   background: var(--rank-color);
 
-  box-shadow:
-          0 0 8px color-mix(
-                  in srgb,
-                  var(--rank-color) 75%,
-                  transparent
-          );
+  box-shadow: none;
 }
 
 .bridge-rank__label {
@@ -56,7 +51,7 @@
 
   padding: 0 9px;
 
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .bridge-rank--sm .bridge-rank__dot {

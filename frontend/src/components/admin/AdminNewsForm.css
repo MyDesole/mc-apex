@@ -7,7 +7,6 @@
   justify-content: center;
   padding: 20px;
   background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(6px);
 }
 
 .modal {
@@ -18,7 +17,7 @@
   flex-direction: column;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 6px;
   overflow: hidden;
 }
 
@@ -116,7 +115,7 @@
   color: var(--text);
   background: #0d0d14;
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: 6px;
   font: inherit;
   outline: none;
   resize: vertical;
@@ -145,7 +144,7 @@
 /* COVER */
 
 .cover-upload {
-  border-radius: 12px;
+  border-radius: 6px;
   overflow: hidden;
 }
 
@@ -204,7 +203,7 @@
   padding: 30px;
   background: #0d0d14;
   border: 2px dashed var(--border);
-  border-radius: 12px;
+  border-radius: 6px;
   cursor: pointer;
   color: var(--text-muted);
   transition: all 0.2s;
@@ -247,7 +246,7 @@
   color: var(--text-dim);
   background: #0d0d14;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -288,7 +287,7 @@
   padding: 12px 14px;
   background: #0d0d14;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 6px;
   cursor: pointer;
   transition: border-color 0.15s;
 }
@@ -331,7 +330,7 @@
   padding: 12px;
   background: #0d0d14;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 6px;
 }
 
 .preview-block__title {
@@ -348,7 +347,7 @@
   flex-direction: column;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 6px;
   overflow: hidden;
   max-width: 320px;
 }
@@ -376,14 +375,13 @@
   top: 6px;
   left: 6px;
   padding: 2px 7px;
-  border-radius: 999px;
+  border-radius: 4px;
   font-size: 9px;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.4px;
   color: #fff;
   background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
 }
 
 .preview-card__body {
@@ -426,7 +424,7 @@
 .btn-save {
   min-height: 42px;
   padding: 0 22px;
-  border-radius: 10px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -448,7 +446,7 @@
 .btn-save {
   color: #fff;
   background: var(--accent);
-  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.25);
+  box-shadow: none;
 }
 
 .btn-save:hover:not(:disabled) {

@@ -119,6 +119,8 @@ class AchievementController extends Controller
 
         $user->notify(new \App\Domains\Achievements\Notifications\AchievementGrantedNotification($achievement));
 
+        \App\Domains\Achievements\Services\AchievementService::announce($user, $achievement);
+
         return response()->json(['ok' => true]);
     }
 

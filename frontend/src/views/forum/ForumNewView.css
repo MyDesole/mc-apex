@@ -43,8 +43,8 @@
 
   color: var(--accent-light, #a78bfa);
 
-  font-size: 9px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
   letter-spacing: 1.5px;
 }
 
@@ -53,9 +53,9 @@
   height: 2px;
 
   background: currentColor;
-  border-radius: 99px;
+  border-radius: 4px;
 
-  box-shadow: 0 0 12px currentColor;
+  box-shadow: none;
 }
 
 .page-title {
@@ -65,23 +65,12 @@
 
   font-size: clamp(30px, 5vw, 42px);
   line-height: 1;
-  font-weight: 950;
+  font-weight: 800;
   letter-spacing: -1.7px;
 }
 
 .page-title span {
-  color: transparent;
-
-  background:
-      linear-gradient(
-          135deg,
-          #c4b5fd,
-          var(--accent),
-          #7c3aed
-      );
-
-  -webkit-background-clip: text;
-  background-clip: text;
+  color: #7c3aed;
 }
 
 .page-subtitle {
@@ -111,7 +100,7 @@
 
   background: rgba(239, 68, 68, 0.07);
   border: 1px solid rgba(239, 68, 68, 0.25);
-  border-radius: 11px;
+  border-radius: 6px;
 }
 
 .alert__icon {
@@ -161,14 +150,14 @@
 
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 15px;
+  border-radius: 6px;
 }
 
 .loading-state__spinner {
   width: 22px;
   height: 22px;
 
-  border: 2px solid rgba(139, 92, 246, 0.15);
+  border: 2px solid var(--border);
   border-top-color: var(--accent);
 
   border-radius: 50%;
@@ -191,16 +180,10 @@
 
   text-align: center;
 
-  background:
-      radial-gradient(
-          circle at 50% 0,
-          rgba(139, 92, 246, 0.08),
-          transparent 45%
-      ),
-      var(--bg-card);
+  background: var(--bg-card);
 
   border: 1px solid var(--border);
-  border-radius: 15px;
+  border-radius: 6px;
 }
 
 .empty-state__icon {
@@ -215,8 +198,8 @@
   color: var(--accent-light, #a78bfa);
 
   background: rgba(139, 92, 246, 0.08);
-  border: 1px solid rgba(139, 92, 246, 0.15);
-  border-radius: 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 }
 
 .empty-state strong {
@@ -246,7 +229,7 @@
 
   color: #fff;
   background: rgba(139, 92, 246, 0.14);
-  border: 1px solid rgba(139, 92, 246, 0.28);
+  border: 1px solid var(--border);
   border-radius: 8px;
 
   font-size: 11px;
@@ -262,16 +245,10 @@
 
   overflow: hidden;
 
-  background:
-      linear-gradient(
-          135deg,
-          rgba(139, 92, 246, 0.025),
-          transparent 30%
-      ),
-      var(--bg-card);
+  background: var(--bg-card);
 
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 6px;
 }
 
 .editor::before {
@@ -319,11 +296,11 @@
   color: var(--accent-light, #a78bfa);
 
   background: rgba(139, 92, 246, 0.08);
-  border: 1px solid rgba(139, 92, 246, 0.16);
+  border: 1px solid var(--border);
   border-radius: 8px;
 
-  font-size: 9px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .section-heading > div:last-child {
@@ -335,8 +312,8 @@
 .section-heading span {
   color: var(--text-muted);
 
-  font-size: 8px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
   letter-spacing: 1px;
 }
 
@@ -369,7 +346,7 @@
 
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: 6px;
   outline: none;
 
   font-family: inherit;
@@ -417,7 +394,7 @@
       var(--border)
   );
 
-  border-radius: 10px;
+  border-radius: 6px;
 }
 
 .category-preview__icon {
@@ -461,7 +438,7 @@
 
   color: var(--text-muted);
 
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.4;
 
   text-overflow: ellipsis;
@@ -493,7 +470,7 @@
   background: var(--bg);
 
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: 6px;
   outline: none;
 
   font-family: inherit;
@@ -541,7 +518,7 @@
 
   color: var(--text-muted);
 
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .progress {
@@ -552,7 +529,7 @@
   overflow: hidden;
 
   background: rgba(255, 255, 255, 0.04);
-  border-radius: 99px;
+  border-radius: 4px;
 }
 
 .progress span {
@@ -580,7 +557,7 @@
 
   background: rgba(0, 0, 0, 0.12);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 6px;
 }
 
 .attachments__header {
@@ -620,7 +597,7 @@
 .attachments__header span {
   color: var(--text-muted);
 
-  font-size: 9px;
+  font-size: 12px;
 }
 
 /* =========================================================
@@ -639,7 +616,7 @@
 
   background: rgba(251, 191, 36, 0.06);
   border: 1px solid rgba(251, 191, 36, 0.18);
-  border-radius: 9px;
+  border-radius: 6px;
 }
 
 .validation__icon {
@@ -654,14 +631,14 @@
 }
 
 .validation strong {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 850;
 }
 
 .validation span {
   color: rgba(251, 191, 36, 0.75);
 
-  font-size: 9px;
+  font-size: 12px;
 }
 
 /* =========================================================
@@ -689,7 +666,7 @@
 
   background: transparent;
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: 6px;
 
   font-size: 11px;
   font-weight: 750;
@@ -726,7 +703,7 @@
       );
 
   border: 1px solid rgba(139, 92, 246, 0.38);
-  border-radius: 9px;
+  border-radius: 6px;
 
   cursor: pointer;
 
@@ -744,8 +721,7 @@
 
   border-color: rgba(167, 139, 250, 0.65);
 
-  box-shadow:
-      0 8px 25px rgba(124, 58, 237, 0.15);
+  box-shadow: none;
 }
 
 .publish-button:disabled {
@@ -782,8 +758,8 @@
 .publish-button small {
   color: var(--text-muted);
 
-  font-size: 7px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
   letter-spacing: 0.9px;
 }
 

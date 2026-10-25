@@ -1,4 +1,5 @@
 <script setup>
+import PageLoader from '@/components/core/PageLoader.vue'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { onMounted, ref, computed } from 'vue'
 import { RouterLink } from 'vue-router'
@@ -64,7 +65,7 @@ const currentList = computed(() => {
       </button>
     </div>
 
-    <div v-if="loading" class="empty">Загрузка...</div>
+    <PageLoader v-if="loading" />
     <div v-else-if="!currentList.length" class="empty">
       {{ tab === 'friends' ? 'Пока нет друзей' : 'Пусто' }}
     </div>

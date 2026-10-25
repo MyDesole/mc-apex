@@ -22,12 +22,11 @@
 
   color: var(--accent-light, #a78bfa);
 
-  font-size: 10px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
   line-height: 1;
 
-  letter-spacing: 1.8px;
-  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 .eyebrow::before {
@@ -44,7 +43,7 @@
 .eyebrow--small {
   margin-bottom: 7px;
 
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 1.5px;
 }
 
@@ -78,21 +77,11 @@ select {
   margin: 0;
 
   font-size: clamp(28px, 4vw, 42px);
-  font-weight: 900;
+  font-weight: 800;
   line-height: 1;
 
   letter-spacing: -1.8px;
-
-  background:
-      linear-gradient(
-          135deg,
-          var(--text) 20%,
-          var(--text-dim) 100%
-      );
-
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--accent-light);
 }
 
 .tester-head__subtitle {
@@ -116,11 +105,10 @@ select {
 
   background: var(--bg-card);
 
-  font-size: 9px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  letter-spacing: 0;
 
   white-space: nowrap;
 }
@@ -133,7 +121,7 @@ select {
 
   background: currentColor;
 
-  box-shadow: 0 0 9px currentColor;
+  box-shadow: none;
 }
 
 .role-badge--tester {
@@ -160,7 +148,7 @@ select {
   margin-bottom: 20px;
   padding: 13px 15px;
 
-  border-radius: 10px;
+  border-radius: 6px;
 }
 
 .alert--error {
@@ -223,7 +211,7 @@ select {
   background: var(--bg-card);
 
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 6px;
 
   transition:
       transform 0.2s ease,
@@ -292,8 +280,8 @@ select {
 .stat-card__eyebrow {
   color: var(--text-muted);
 
-  font-size: 8px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 
   letter-spacing: 1.3px;
 }
@@ -302,7 +290,7 @@ select {
   margin-top: 14px;
 
   font-size: 27px;
-  font-weight: 900;
+  font-weight: 800;
 
   line-height: 1;
 
@@ -316,7 +304,7 @@ select {
 
   color: var(--text-dim);
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 
   text-transform: uppercase;
@@ -382,8 +370,8 @@ select {
   border: 1px solid rgba(250, 204, 21, 0.2);
   border-radius: 5px;
 
-  font-size: 8px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 
   letter-spacing: 0.7px;
 }
@@ -415,7 +403,7 @@ select {
 
   cursor: pointer;
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
 
   transition:
@@ -480,7 +468,7 @@ select {
   border: 0;
   outline: none;
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 
   cursor: pointer;
@@ -504,11 +492,10 @@ select {
 
   color: var(--text-muted);
 
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
 
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 .tests__head-line {
@@ -523,7 +510,7 @@ select {
 
   color: #4ade80;
 
-  font-size: 8px;
+  font-size: 12px;
   letter-spacing: 1.2px;
 }
 
@@ -553,7 +540,7 @@ select {
   background: var(--bg-card);
 
   border: 1px solid var(--border);
-  border-radius: 11px;
+  border-radius: 6px;
 
   transition:
       transform 0.2s ease,
@@ -567,12 +554,7 @@ select {
 
   border-color: var(--border-hover);
 
-  background:
-      linear-gradient(
-          90deg,
-          var(--bg-card),
-          rgba(124, 58, 237, 0.025)
-      );
+  background: var(--bg-card);
 
   box-shadow:
       0 10px 28px rgba(0, 0, 0, 0.16);
@@ -615,14 +597,9 @@ select {
 }
 
 .test-card--mine {
-  border-color: rgba(124, 58, 237, 0.3);
+  border-color: var(--border);
 
-  background:
-      linear-gradient(
-          90deg,
-          rgba(124, 58, 237, 0.06),
-          var(--bg-card) 40%
-      );
+  background: var(--bg-card);
 }
 
 /* =========================================================
@@ -632,25 +609,15 @@ select {
 .test-card--priority {
   border-color: rgba(250, 204, 21, 0.28);
 
-  background:
-      linear-gradient(
-          90deg,
-          rgba(250, 204, 21, 0.065),
-          rgba(124, 58, 237, 0.025) 45%,
-          var(--bg-card) 85%
-      );
+  background: var(--bg-card);
 
-  box-shadow:
-      inset 3px 0 0 #facc15,
-      0 5px 25px rgba(250, 204, 21, 0.045);
+  box-shadow:inset 3px 0 0 #facc15;
 }
 
 .test-card--priority:hover {
   border-color: rgba(250, 204, 21, 0.5);
 
-  box-shadow:
-      inset 3px 0 0 #facc15,
-      0 12px 35px rgba(250, 204, 21, 0.09);
+  box-shadow:inset 3px 0 0 #facc15;
 }
 
 .test-card__priority-glow {
@@ -698,14 +665,13 @@ select {
           #5b21b6
       );
 
-  border: 1px solid rgba(167, 139, 250, 0.25);
-  border-radius: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 
   font-size: 15px;
-  font-weight: 900;
+  font-weight: 800;
 
-  box-shadow:
-      0 5px 18px rgba(124, 58, 237, 0.14);
+  box-shadow: none;
 }
 
 .test-avatar__img {
@@ -714,15 +680,13 @@ select {
 
   object-fit: cover;
 
-  border-radius: 9px;
+  border-radius: 6px;
 }
 
 .test-avatar--priority {
   border-color: rgba(250, 204, 21, 0.5);
 
-  box-shadow:
-      0 0 0 2px rgba(250, 204, 21, 0.05),
-      0 0 20px rgba(250, 204, 21, 0.15);
+  box-shadow:0 0 0 2px rgba(250, 204, 21, 0.05);
 }
 
 .test-avatar__priority {
@@ -745,8 +709,7 @@ select {
   border: 2px solid var(--bg-card);
   border-radius: 50%;
 
-  box-shadow:
-      0 0 10px rgba(250, 204, 21, 0.35);
+  box-shadow: none;
 }
 
 /* =========================================================
@@ -783,7 +746,7 @@ select {
   color: var(--accent-light, #a78bfa);
 
   font-size: 11px;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 /* =========================================================
@@ -801,18 +764,12 @@ select {
 
   color: #facc15;
 
-  background:
-      linear-gradient(
-          135deg,
-          rgba(250, 204, 21, 0.13),
-          rgba(250, 204, 21, 0.045)
-      );
+  background: var(--bg-card);
 
   border: 1px solid rgba(250, 204, 21, 0.25);
   border-radius: 5px;
 
-  box-shadow:
-      0 0 12px rgba(250, 204, 21, 0.06);
+  box-shadow: none;
 }
 
 .priority-badge__icon {
@@ -831,8 +788,8 @@ select {
 }
 
 .priority-badge__text {
-  font-size: 8px;
-  font-weight: 1000;
+  font-size: 12px;
+  font-weight: 800;
 
   letter-spacing: 0.8px;
 }
@@ -842,7 +799,7 @@ select {
 
   color: #fde68a;
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 800;
 }
 
@@ -858,7 +815,7 @@ select {
 
   color: var(--text-muted);
 
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .mode {
@@ -871,8 +828,8 @@ select {
   border: 1px solid transparent;
   border-radius: 5px;
 
-  font-size: 8px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -885,13 +842,13 @@ select {
   border-radius: 50%;
 
   background: currentColor;
-  box-shadow: 0 0 5px currentColor;
+  box-shadow: none;
 }
 
 .mode--pvp {
   color: #a78bfa;
   background: rgba(124, 58, 237, 0.08);
-  border-color: rgba(124, 58, 237, 0.16);
+  border-color: var(--border);
 }
 
 .mode--bedwars {
@@ -919,8 +876,8 @@ select {
 .meta-item__label {
   color: var(--text-muted);
 
-  font-size: 7px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 
   letter-spacing: 0.8px;
 }
@@ -963,8 +920,8 @@ select {
 .priority-info__label {
   color: #facc15;
 
-  font-size: 8px;
-  font-weight: 1000;
+  font-size: 12px;
+  font-weight: 800;
 
   letter-spacing: 1px;
 }
@@ -974,7 +931,7 @@ select {
 
   color: var(--text-muted);
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 700;
 
   white-space: nowrap;
@@ -1006,8 +963,8 @@ select {
   border: 1px solid transparent;
   border-radius: 5px;
 
-  font-size: 8px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -1047,13 +1004,13 @@ select {
   color: var(--accent-light, #a78bfa);
 
   font-size: 15px;
-  font-weight: 1000;
+  font-weight: 800;
 }
 
 .result__score {
   color: var(--text-dim);
 
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -1084,13 +1041,13 @@ select {
           #6d28d9
       );
 
-  border: 1px solid rgba(167, 139, 250, 0.2);
+  border: 1px solid var(--border);
   border-radius: 7px;
 
   cursor: pointer;
 
-  font-size: 9px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 
   transition:
       transform 0.2s ease,
@@ -1110,8 +1067,7 @@ select {
           var(--accent)
       );
 
-  box-shadow:
-      0 7px 20px rgba(124, 58, 237, 0.22);
+  box-shadow: none;
 }
 
 .btn-open--priority {
@@ -1126,8 +1082,7 @@ select {
 
   border-color: rgba(250, 204, 21, 0.4);
 
-  box-shadow:
-      0 5px 18px rgba(250, 204, 21, 0.1);
+  box-shadow: none;
 }
 
 .btn-open--priority:hover {
@@ -1138,8 +1093,7 @@ select {
           #facc15
       );
 
-  box-shadow:
-      0 8px 24px rgba(250, 204, 21, 0.2);
+  box-shadow: none;
 }
 
 /* =========================================================
@@ -1158,16 +1112,10 @@ select {
 
   text-align: center;
 
-  background:
-      radial-gradient(
-          circle at 50% 0%,
-          rgba(124, 58, 237, 0.055),
-          transparent 50%
-      ),
-      var(--bg-card);
+  background: var(--bg-card);
 
   border: 1px dashed var(--border);
-  border-radius: 13px;
+  border-radius: 6px;
 }
 
 .state-card strong {
@@ -1206,11 +1154,10 @@ select {
 
   background: rgba(124, 58, 237, 0.08);
 
-  border: 1px solid rgba(124, 58, 237, 0.2);
-  border-radius: 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 
-  box-shadow:
-      0 0 30px rgba(124, 58, 237, 0.08);
+  box-shadow: none;
 }
 
 .state-card__loader {
@@ -1344,10 +1291,9 @@ select {
   background: rgba(239, 68, 68, 0.07);
 
   border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 18px;
+  border-radius: 6px;
 
-  box-shadow:
-      0 0 35px rgba(239, 68, 68, 0.08);
+  box-shadow: none;
 }
 
 .denied .eyebrow {
@@ -1360,7 +1306,7 @@ select {
   margin: 0;
 
   font-size: clamp(72px, 12vw, 120px);
-  font-weight: 1000;
+  font-weight: 800;
   line-height: 0.9;
 
   letter-spacing: -7px;
@@ -1480,7 +1426,7 @@ select {
   }
 
   .stat-card__label {
-    font-size: 8px;
+    font-size: 12px;
   }
 
   .tabs {
@@ -1494,7 +1440,7 @@ select {
 
     justify-content: center;
 
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .tabs__item span {
@@ -1526,7 +1472,7 @@ select {
   }
 
   .priority-badge__text {
-    font-size: 7px;
+    font-size: 12px;
   }
 }
 

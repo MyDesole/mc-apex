@@ -21,6 +21,8 @@ export const TYPE_LABELS = {
     profile_effect: 'Эффект профиля',
     accent_color: 'Акцентный цвет',
     card_background: 'Фон карточки',
+    skin_backdrop: 'Фон 3D-скина',
+    card_theme: 'Тема карточки игрока',
     badge: 'Бейдж',
     tier_priority: 'Приоритет тир-теста',
     coin_bundle: 'Набор монет',
@@ -60,6 +62,14 @@ export function itemSubtitle(item) {
 
     if (item?.type === 'badge') {
         return 'Виден в профиле'
+    }
+
+    if (item?.type === 'skin_backdrop') {
+        return 'Сцена за 3D-скином в профиле'
+    }
+
+    if (item?.type === 'card_theme') {
+        return 'Оформление карточки для соцсетей'
     }
 
     return TYPE_LABELS[item?.type] || 'Предмет'

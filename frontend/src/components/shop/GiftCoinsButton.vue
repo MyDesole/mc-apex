@@ -195,9 +195,6 @@ async function send() {
           <div class="modal__header">
 
             <div class="modal__title-wrap">
-              <div class="modal__eyebrow">
-                APEX / GIFT
-              </div>
 
               <h3>
                 Подарок игроку

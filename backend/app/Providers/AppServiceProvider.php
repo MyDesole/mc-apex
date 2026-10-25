@@ -3,6 +3,10 @@
 namespace App\Providers;
 
 use App\Domains\Achievements\Models\Achievement;
+use App\Domains\Achievements\Services\AchievementService;
+use App\Domains\Activity\Observers\ActivityObserver;
+use App\Domains\Bridge\Models\UserBridgeTechnique;
+use App\Domains\Players\Models\ProfileRecommendation;
 use App\Domains\Achievements\Models\UserAchievement;
 use App\Domains\Chat\Models\Conversation;
 use App\Domains\Chat\Models\Message;
@@ -24,6 +28,7 @@ use App\Domains\Tiers\Models\TierTest;
 use App\Domains\Tournaments\Models\Tournament;
 use App\Domains\Tournaments\Models\TournamentMatch;
 use App\Domains\Tournaments\Models\TournamentParticipant;
+use App\Domains\Tournaments\Models\TournamentWin;
 use App\Domains\Users\Models\User;
 use App\Domains\Wallet\Models\CoinTransaction;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -80,5 +85,77 @@ class AppServiceProvider extends ServiceProvider
             'friendship' => Friendship::class,
             'coin_transaction' => CoinTransaction::class,
         ]);
+
+        $this->registerActivityFeed();
+        $this->registerAchievementTriggers();
+    }
+
+    /**
+     * Ачивки, условия которых меняются вне сервисов с явной проверкой:
+     * форум, чат, магазин, турниры, рекомендации, рефералы, бридж.
+     *
+     * Каждое событие проверяет только свою группу условий — сообщение
+     * в чате не должно пересчитывать клан и рейтинг.
+     */
+    private function registerAchievementTriggers(): void
+    {
+        $check = function (?int $userId, array $groups): void {
+            $user = $userId ? User::find($userId) : null;
+
+            if ($user) {
+                AchievementService::check($user, $groups);
+            }
+        };
+
+        ForumTopic::created(fn (ForumTopic $topic) => $check($topic->author_id, ['forum']));
+        ForumReply::created(fn (ForumReply $reply) => $check($reply->author_id, ['forum']));
+        Message::created(fn (Message $message) => $check($message->user_id, ['chat']));
+
+        UserInventory::created(function (UserInventory $item) use ($check) {
+            $check($item->user_id, ['shop']);
+            $check($item->gifted_by, ['shop']);
+        });
+
+        TournamentParticipant::created(fn (TournamentParticipant $p) => $check($p->user_id, ['tournaments']));
+        TournamentWin::created(fn (TournamentWin $win) => $check($win->user_id, ['tournaments']));
+        ProfileRecommendation::created(fn (ProfileRecommendation $r) => $check($r->target_id, ['social']));
+
+        UserBridgeTechnique::updated(function (UserBridgeTechnique $technique) use ($check) {
+            if ($technique->wasChanged('status')) {
+                $check($technique->user_id, ['bridge']);
+            }
+        });
+
+        User::created(fn (User $user) => $check($user->referred_by, ['social']));
+
+        User::updated(function (User $user) {
+            $groups = array_keys(array_filter([
+                'minecraft' => $user->wasChanged('minecraft_linked_at'),
+                'bridge' => $user->wasChanged('bridge_rank_id'),
+                'shop' => $user->wasChanged('apex_coins_spent'),
+            ]));
+
+            if ($groups) {
+                AchievementService::check($user, $groups);
+            }
+        });
+    }
+
+    /**
+     * Лента «Сейчас на APEX» слушает модели других доменов.
+     *
+     * Подписка собрана здесь, чтобы модели не знали о ленте: удалить
+     * ленту — значит удалить этот метод, а не править пять моделей.
+     */
+    private function registerActivityFeed(): void
+    {
+        $observer = fn () => $this->app->make(ActivityObserver::class);
+
+        TierTest::created(fn (TierTest $test) => $observer()->tierTestCreated($test));
+        TierTest::updated(fn (TierTest $test) => $observer()->tierTestUpdated($test));
+        Clan::created(fn (Clan $clan) => $observer()->clanCreated($clan));
+        ClanWar::updated(fn (ClanWar $war) => $observer()->clanWarUpdated($war));
+        TournamentWin::created(fn (TournamentWin $win) => $observer()->tournamentWinCreated($win));
+        User::updated(fn (User $user) => $observer()->userUpdated($user));
     }
 }

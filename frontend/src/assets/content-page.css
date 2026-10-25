@@ -1,0 +1,78 @@
+/* =========================================================
+   ТЕКСТОВЫЕ СТРАНИЦЫ: правила, о проекте, статус сервера
+   ========================================================= */
+
+.content-page {
+  width: min(880px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 40px 0 24px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.content-page__head h1 {
+  margin: 0;
+
+  color: #fff;
+
+  font-size: clamp(26px, 4vw, 36px);
+}
+
+.content-page__head p {
+  margin: 8px 0 0;
+
+  color: var(--text-dim);
+
+  font-size: 16px;
+}
+
+.content-card {
+  padding: 20px 22px;
+
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.content-card h2 {
+  margin: 0 0 12px;
+
+  color: #fff;
+
+  font-size: 19px;
+}
+
+.content-card p,
+.content-card li {
+  color: var(--text-dim);
+  font-size: 15px;
+}
+
+.content-card p {
+  margin: 0 0 10px;
+}
+
+.content-card p:last-child {
+  margin-bottom: 0;
+}
+
+.content-card strong {
+  color: var(--text);
+}
+
+.content-card a {
+  color: var(--accent-light);
+}
+
+@media (max-width: 640px) {
+  .content-page {
+    width: calc(100% - 32px);
+    padding-top: 28px;
+  }
+
+  .content-card {
+    padding: 16px;
+  }
+}

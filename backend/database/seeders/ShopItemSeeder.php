@@ -241,6 +241,40 @@ class ShopItemSeeder extends Seeder
                 'metadata' => ['icon' => 'crown', 'color' => '#facc15', 'kind' => 'effect'],
             ],
 
+            // === Рамки в стиле блоков Minecraft ===
+            ['slug' => 'frame-emerald', 'name' => 'Изумрудная рамка', 'type' => ShopItem::TYPE_AVATAR_FRAME, 'effect_value' => 'emerald', 'rarity' => 'rare', 'price' => 1200, 'sort_order' => 101, 'metadata' => ['icon' => 'gem', 'color' => '#10b981']],
+            ['slug' => 'frame-diamond', 'name' => 'Алмазная рамка', 'type' => ShopItem::TYPE_AVATAR_FRAME, 'effect_value' => 'diamond', 'rarity' => 'epic', 'price' => 2800, 'sort_order' => 102, 'metadata' => ['icon' => 'gem', 'color' => '#5eead4']],
+            ['slug' => 'frame-redstone', 'name' => 'Редстоун-рамка', 'type' => ShopItem::TYPE_AVATAR_FRAME, 'effect_value' => 'redstone', 'rarity' => 'rare', 'price' => 1200, 'sort_order' => 103, 'metadata' => ['icon' => 'bolt', 'color' => '#dc2626']],
+            ['slug' => 'frame-obsidian', 'name' => 'Обсидиановая рамка', 'type' => ShopItem::TYPE_AVATAR_FRAME, 'effect_value' => 'obsidian', 'rarity' => 'epic', 'price' => 3200, 'sort_order' => 104, 'metadata' => ['icon' => 'shield', 'color' => '#6d28d9']],
+            ['slug' => 'frame-ender', 'name' => 'Рамка Края', 'type' => ShopItem::TYPE_AVATAR_FRAME, 'effect_value' => 'ender', 'rarity' => 'epic', 'price' => 3600, 'sort_order' => 105, 'metadata' => ['icon' => 'sparkles', 'color' => '#14b8a6']],
+            ['slug' => 'frame-netherite', 'name' => 'Незеритовая рамка', 'type' => ShopItem::TYPE_AVATAR_FRAME, 'effect_value' => 'netherite', 'rarity' => 'legendary', 'price' => 9000, 'sort_order' => 106, 'metadata' => ['icon' => 'crown', 'color' => '#a8a29e']],
+
+            // === Акценты-руды ===
+            ['slug' => 'accent-emerald', 'name' => 'Изумрудный акцент', 'type' => ShopItem::TYPE_ACCENT_COLOR, 'effect_value' => '#10b981', 'rarity' => 'common', 'price' => 300, 'sort_order' => 201, 'metadata' => ['icon' => 'target', 'color' => '#10b981']],
+            ['slug' => 'accent-diamond', 'name' => 'Алмазный акцент', 'type' => ShopItem::TYPE_ACCENT_COLOR, 'effect_value' => '#22d3ee', 'rarity' => 'common', 'price' => 300, 'sort_order' => 202, 'metadata' => ['icon' => 'target', 'color' => '#22d3ee']],
+            ['slug' => 'accent-amethyst', 'name' => 'Аметистовый акцент', 'type' => ShopItem::TYPE_ACCENT_COLOR, 'effect_value' => '#c084fc', 'rarity' => 'rare', 'price' => 700, 'sort_order' => 203, 'metadata' => ['icon' => 'target', 'color' => '#c084fc']],
+            ['slug' => 'accent-copper', 'name' => 'Медный акцент', 'type' => ShopItem::TYPE_ACCENT_COLOR, 'effect_value' => '#f59e0b', 'rarity' => 'rare', 'price' => 700, 'sort_order' => 204, 'metadata' => ['icon' => 'target', 'color' => '#f59e0b']],
+
+            // === Бейджи ===
+            ['slug' => 'badge-duelist', 'name' => 'Бейдж «Дуэлянт»', 'type' => ShopItem::TYPE_BADGE, 'effect_value' => 'duelist', 'rarity' => 'rare', 'price' => 1800, 'sort_order' => 224, 'metadata' => ['icon' => 'sword', 'color' => '#ef4444']],
+            ['slug' => 'badge-builder', 'name' => 'Бейдж «Строитель»', 'type' => ShopItem::TYPE_BADGE, 'effect_value' => 'builder', 'rarity' => 'rare', 'price' => 1800, 'sort_order' => 225, 'metadata' => ['icon' => 'box', 'color' => '#a06b3c']],
+            ['slug' => 'badge-speedrun', 'name' => 'Бейдж «Спидраннер»', 'type' => ShopItem::TYPE_BADGE, 'effect_value' => 'speedrun', 'rarity' => 'epic', 'price' => 4200, 'sort_order' => 226, 'metadata' => ['icon' => 'bolt', 'color' => '#22d3ee']],
+            ['slug' => 'badge-guardian', 'name' => 'Бейдж «Страж»', 'type' => ShopItem::TYPE_BADGE, 'effect_value' => 'guardian', 'rarity' => 'epic', 'price' => 4200, 'sort_order' => 227, 'metadata' => ['icon' => 'shield', 'color' => '#4ade80']],
+            ['slug' => 'badge-dragon', 'name' => 'Бейдж «Убийца дракона»', 'type' => ShopItem::TYPE_BADGE, 'effect_value' => 'dragon', 'rarity' => 'legendary', 'price' => 12000, 'sort_order' => 228, 'metadata' => ['icon' => 'flame', 'color' => '#a855f7']],
+
+            // === Фон 3D-скина в профиле ===
+            ['slug' => 'backdrop-overworld', 'name' => 'Фон «Верхний мир»', 'description' => 'Трава, небо и облака за вашим 3D-скином в профиле.', 'type' => ShopItem::TYPE_SKIN_BACKDROP, 'effect_value' => 'overworld', 'rarity' => 'common', 'price' => 500, 'sort_order' => 400, 'metadata' => ['icon' => 'leaf', 'color' => '#4ade80']],
+            ['slug' => 'backdrop-ocean', 'name' => 'Фон «Океан»', 'description' => 'Глубина, призмарин и пузыри за 3D-скином.', 'type' => ShopItem::TYPE_SKIN_BACKDROP, 'effect_value' => 'ocean', 'rarity' => 'rare', 'price' => 1500, 'sort_order' => 401, 'metadata' => ['icon' => 'snow', 'color' => '#22d3ee']],
+            ['slug' => 'backdrop-nether', 'name' => 'Фон «Незер»', 'description' => 'Незерак и лава за 3D-скином.', 'type' => ShopItem::TYPE_SKIN_BACKDROP, 'effect_value' => 'nether', 'rarity' => 'epic', 'price' => 3000, 'sort_order' => 402, 'metadata' => ['icon' => 'flame', 'color' => '#ef4444']],
+            ['slug' => 'backdrop-end', 'name' => 'Фон «Край»', 'description' => 'Эндерняк и звёзды пустоты за 3D-скином.', 'type' => ShopItem::TYPE_SKIN_BACKDROP, 'effect_value' => 'end', 'rarity' => 'epic', 'price' => 3500, 'sort_order' => 403, 'metadata' => ['icon' => 'star', 'color' => '#e9e5a8']],
+            ['slug' => 'backdrop-deep-dark', 'name' => 'Фон «Глубокая тьма»', 'description' => 'Скалк, мерцающий в темноте, за 3D-скином.', 'type' => ShopItem::TYPE_SKIN_BACKDROP, 'effect_value' => 'deep_dark', 'rarity' => 'legendary', 'price' => 8000, 'sort_order' => 404, 'metadata' => ['icon' => 'sparkles', 'color' => '#2dd4bf']],
+
+            // === Тема карточки игрока ===
+            ['slug' => 'card-theme-emerald', 'name' => 'Карточка «Изумруд»', 'description' => 'Изумрудное оформление карточки игрока для соцсетей.', 'type' => ShopItem::TYPE_CARD_THEME, 'effect_value' => 'emerald', 'rarity' => 'rare', 'price' => 1200, 'sort_order' => 450, 'metadata' => ['icon' => 'frame', 'color' => '#10b981']],
+            ['slug' => 'card-theme-nether', 'name' => 'Карточка «Незер»', 'description' => 'Огненная карточка игрока.', 'type' => ShopItem::TYPE_CARD_THEME, 'effect_value' => 'nether', 'rarity' => 'epic', 'price' => 2500, 'sort_order' => 451, 'metadata' => ['icon' => 'frame', 'color' => '#ef4444']],
+            ['slug' => 'card-theme-end', 'name' => 'Карточка «Край»', 'description' => 'Карточка в цветах Края.', 'type' => ShopItem::TYPE_CARD_THEME, 'effect_value' => 'end', 'rarity' => 'epic', 'price' => 2500, 'sort_order' => 452, 'metadata' => ['icon' => 'frame', 'color' => '#c084fc']],
+            ['slug' => 'card-theme-gold', 'name' => 'Карточка «Золото»', 'description' => 'Золотая карточка — для тех, кому есть чем гордиться.', 'type' => ShopItem::TYPE_CARD_THEME, 'effect_value' => 'gold', 'rarity' => 'legendary', 'price' => 7000, 'sort_order' => 453, 'metadata' => ['icon' => 'crown', 'color' => '#facc15']],
+
             // === Наборы монет (для админа: выдача за ивенты/промокоды) ===
             [
                 'slug' => 'coin-pack-small',

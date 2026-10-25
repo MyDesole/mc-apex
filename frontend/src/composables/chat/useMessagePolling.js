@@ -14,6 +14,7 @@
  */
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { chatApi } from '@/services/chat/chat.js'
+import { mergeMessages } from '@/utils/chatMessages.js'
 
 /**
  * Как часто проверять новые сообщения.
@@ -43,10 +44,15 @@ export function useMessagePolling(conversationId, messages, options = {}) {
     return messages.value[messages.value.length - 1].id
   }
 
+  /** Идёт ли запрос: медленный ответ не должен накладываться на следующий круг. */
+  let inFlight = false
+
   async function tick() {
     const id = conversationId.value
 
-    if (!id) return
+    if (!id || inFlight) return
+
+    inFlight = true
 
     try {
       const afterId = newestId()
@@ -57,24 +63,28 @@ export function useMessagePolling(conversationId, messages, options = {}) {
         markRead: false,
       })
 
+      /*
+       * Пока шёл запрос, игрок мог открыть другой диалог: тогда ответ
+       * относится к старому, и дописывать его в новый нельзя.
+       */
+      if (conversationId.value !== id) return
+
       const fresh = data.messages ?? []
 
       if (!fresh.length) return
 
-      /*
-       * Добавляем только то, чего ещё нет: сообщение могло прийти и по
-       * websocket, и опросом.
-       */
-      const known = new Set(messages.value.map((m) => m.id))
-      const added = fresh.filter((m) => !known.has(m.id))
+      // Сообщение могло прийти и по сокету, и ответом на отправку
+      const { list, added } = mergeMessages(messages.value, fresh)
 
       if (!added.length) return
 
-      messages.value = [...messages.value, ...added]
+      messages.value = list
 
       options.onNew?.(added)
     } catch {
       /* Сеть недоступна — попробуем на следующем круге */
+    } finally {
+      inFlight = false
     }
   }
 

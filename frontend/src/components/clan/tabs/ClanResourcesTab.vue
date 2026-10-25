@@ -1,4 +1,5 @@
 <script setup>
+import PageLoader from '@/components/core/PageLoader.vue'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { computed, onMounted, ref } from 'vue'
 import { myClanApi } from '@/services/clan/myClan.js'
@@ -199,7 +200,7 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- Состояния -->
-    <div v-if="loading" class="empty">Загрузка...</div>
+    <PageLoader v-if="loading" compact />
     <div v-else-if="!resources.length" class="empty">Ресурсов нет</div>
 
     <!-- Галерея скриншотов -->

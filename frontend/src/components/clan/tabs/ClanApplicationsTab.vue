@@ -1,4 +1,5 @@
 <script setup>
+import PageLoader from '@/components/core/PageLoader.vue'
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { clansApi } from '@/services/clan/clans.js'
@@ -47,7 +48,7 @@ onMounted(load)
 
 <template>
   <div class="tab">
-    <div v-if="loading" class="empty">Загрузка...</div>
+    <PageLoader v-if="loading" compact />
     <div v-else-if="!applications.length" class="empty">
       <div class="empty__icon">📋</div>
       <div>Новых заявок нет</div>

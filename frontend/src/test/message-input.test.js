@@ -16,6 +16,8 @@ vi.mock('@/services/chat/chat.js', () => ({
     show: vi.fn(),
     unreadCount: vi.fn().mockResolvedValue({ count: 0 }),
     send: vi.fn(),
+    // Ввод текста сообщает собеседнику «печатает»
+    typing: vi.fn().mockResolvedValue({ ok: true }),
     markConversationRead: vi.fn(),
     search: vi.fn(),
     uploadMany: vi.fn(),

@@ -14,7 +14,7 @@
   background: rgba(239, 68, 68, 0.08);
 
   border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 9px;
+  border-radius: 6px;
 
   font-size: 12px;
 }
@@ -50,7 +50,7 @@
 
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-left-width: 3px;
-  border-radius: 11px;
+  border-radius: 6px;
 
   background: rgba(255, 255, 255, 0.02);
 }
@@ -192,10 +192,10 @@
   color: rgba(196, 181, 253, 0.85);
   background: rgba(139, 92, 246, 0.12);
 
-  border: 1px solid rgba(139, 92, 246, 0.25);
-  border-radius: 999px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
 
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 700;
 
   white-space: nowrap;

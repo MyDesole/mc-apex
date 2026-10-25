@@ -224,7 +224,7 @@ const profileStats = computed(() => [
     value: props.bridgeMode
         ? (props.bridgeRank?.label ?? 'Без звания')
         : (props.user.tier || '—'),
-    label: props.bridgeMode ? 'Bridge rank' : 'Current tier',
+    label: props.bridgeMode ? 'Звание бриджера' : 'Тир',
     icon: '◆',
     accent: true,
   },
@@ -232,21 +232,21 @@ const profileStats = computed(() => [
   {
     key: 'achievements',
     value: allAchievements.value.length,
-    label: 'Achievements',
+    label: 'Ачивки',
     icon: '✦',
   },
 
   {
     key: 'friends',
     value: allFriends.value.length,
-    label: 'Friends',
+    label: 'Друзья',
     icon: '♢',
   },
 
   {
     key: 'recommendations',
     value: props.recommendations.length,
-    label: 'Recommendations',
+    label: 'Рекомендации',
     icon: '↗',
   },
 ])
@@ -323,8 +323,6 @@ const profileCompleteness = computed(() => {
         class="player-card"
         :style="cardStyle"
     >
-      <div class="player-card__grid"></div>
-
       <!-- Header -->
       <PlayerProfileHeader
           :user="user"
@@ -379,11 +377,8 @@ const profileCompleteness = computed(() => {
       >
         <div class="section-heading">
           <div>
-            <span class="section-heading__eyebrow">
-              CONNECT
-            </span>
 
-            <h3>Socials</h3>
+            <h3>Соцсети</h3>
           </div>
         </div>
 
@@ -402,7 +397,7 @@ const profileCompleteness = computed(() => {
         </div>
 
         <div class="profile-empty__content">
-          <strong>Add your socials</strong>
+          <strong>Добавь соцсети</strong>
           <span>
             Добавь ссылки на свои социальные сети, чтобы друзья могли тебя найти.
           </span>
@@ -413,7 +408,7 @@ const profileCompleteness = computed(() => {
             type="button"
             @click="emit('edit')"
         >
-          Add
+          Добавить
         </button>
       </section>
 
@@ -427,9 +422,6 @@ const profileCompleteness = computed(() => {
       >
         <div class="section-heading">
           <div>
-            <span class="section-heading__eyebrow">
-              BRIDGE MASTERY
-            </span>
 
             <h3>Виды бриджа</h3>
           </div>
@@ -511,18 +503,15 @@ const profileCompleteness = computed(() => {
       >
         <div class="section-heading">
           <div>
-            <span class="section-heading__eyebrow">
-              PROGRESSION
-            </span>
 
-            <h3>Tier history</h3>
+            <h3>История тиров</h3>
           </div>
 
           <span
               v-if="history.length"
               class="section-heading__count"
           >
-            {{ history.length }} changes
+            {{ history.length }} тестов
           </span>
         </div>
 
@@ -544,7 +533,7 @@ const profileCompleteness = computed(() => {
           </div>
 
           <div class="profile-empty__content">
-            <strong>No tier history yet</strong>
+            <strong>Истории тиров пока нет</strong>
 
             <span>
               Здесь появится история изменения рейтинга игрока.
@@ -563,11 +552,8 @@ const profileCompleteness = computed(() => {
       >
         <div class="section-heading">
           <div>
-            <span class="section-heading__eyebrow">
-              CHARACTER
-            </span>
 
-            <h3>Aspects</h3>
+            <h3>Аспекты</h3>
           </div>
         </div>
 
@@ -592,13 +578,13 @@ const profileCompleteness = computed(() => {
 
         <div class="profile-empty__content">
           <strong>
-            {{ editable ? 'Make this profile yours' : 'New player profile' }}
+            {{ editable ? 'Сделай профиль своим' : 'Новый игрок' }}
           </strong>
 
           <span>
             {{
               editable
-                  ? 'Добавь описание, socials и aspects — так профиль будет выглядеть намного живее.'
+                  ? 'Добавь описание, соцсети и пройди тир-тест — так профиль будет выглядеть намного живее.'
                   : 'У этого игрока пока недостаточно информации для заполненного профиля.'
             }}
           </span>
@@ -610,18 +596,10 @@ const profileCompleteness = computed(() => {
             type="button"
             @click="emit('edit')"
         >
-          Edit profile
+          Настроить профиль
         </button>
       </section>
 
-      <!-- Bottom decorative footer -->
-      <div class="profile-card__footer">
-        <span></span>
-        <small>
-          PLAYER / {{ user.username || user.id || 'PROFILE' }}
-        </small>
-        <span></span>
-      </div>
     </main>
 
     <!-- =====================================================
@@ -631,18 +609,6 @@ const profileCompleteness = computed(() => {
     <aside class="side-column">
       <!-- Achievements -->
       <section class="side-panel">
-        <div class="side-panel__accent"></div>
-
-        <div class="side-panel__heading">
-          <div>
-            <span class="side-panel__eyebrow">
-              COLLECTION
-            </span>
-
-          </div>
-
-        </div>
-
         <PlayerProfileShowcase
             v-if="allAchievements.length"
             :achievements="allAchievements"
@@ -657,7 +623,7 @@ const profileCompleteness = computed(() => {
             ✦
           </div>
 
-          <strong>No achievements yet</strong>
+          <strong>Ачивок пока нет</strong>
 
           <span>
             Новые достижения появятся здесь.
@@ -667,16 +633,6 @@ const profileCompleteness = computed(() => {
 
       <!-- Friends -->
       <section class="side-panel">
-        <div class="side-panel__heading">
-          <div>
-            <span class="side-panel__eyebrow">
-              SOCIAL
-            </span>
-
-          </div>
-
-        </div>
-
         <PlayerProfileFriends
             v-if="allFriends.length"
             :friends="allFriends"
@@ -692,7 +648,7 @@ const profileCompleteness = computed(() => {
             ♢
           </div>
 
-          <strong>No friends yet</strong>
+          <strong>Друзей пока нет</strong>
 
           <span>
             Когда появятся друзья, они будут отображаться здесь.
@@ -707,9 +663,6 @@ const profileCompleteness = computed(() => {
       >
         <div class="side-panel__heading">
           <div>
-            <span class="side-panel__eyebrow">
-              COMMUNITY
-            </span>
           </div>
 
 

@@ -161,9 +161,6 @@ onMounted(load)
   <main class="curator">
     <header class="curator__head">
       <div>
-        <div class="curator__eyebrow">
-          BRIDGE CATALOG
-        </div>
 
         <h1>Виды бриджа</h1>
 

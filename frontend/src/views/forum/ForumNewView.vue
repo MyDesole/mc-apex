@@ -176,10 +176,6 @@ onMounted(load)
         <span>Вернуться к форуму</span>
       </RouterLink>
 
-      <div class="eyebrow">
-        <span class="eyebrow__line"></span>
-        COMMUNITY / NEW TOPIC
-      </div>
 
       <h1 class="page-title">
         Новая <span>тема</span>
@@ -483,7 +479,6 @@ onMounted(load)
           </span>
 
           <span>
-            <small>APEX COMMUNITY</small>
             {{ sending ? 'Публикуем...' : 'Опубликовать тему' }}
           </span>
 

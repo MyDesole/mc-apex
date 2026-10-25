@@ -171,10 +171,6 @@ onMounted(load)
 
             <!-- Identity -->
             <div class="identity-content">
-              <div class="identity-eyebrow">
-                <span class="status-dot"></span>
-                MY CLAN
-              </div>
 
               <h1 class="clan-name">
                 <span class="clan-tag">[{{ clan.tag }}]</span>
@@ -548,7 +544,6 @@ onMounted(load)
       <main class="clan-content">
         <div class="content-header">
           <div>
-            <div class="content-kicker">CLAN SPACE</div>
             <h2>
               {{
                 tabs.find((item) => item.id === tab)?.label || 'Клан'

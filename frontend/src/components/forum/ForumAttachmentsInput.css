@@ -17,7 +17,7 @@
   color: var(--text);
   background: var(--bg-card);
   border: 1px dashed var(--border-hover, #343443);
-  border-radius: 9px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -63,7 +63,7 @@
   padding: 7px 10px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: 6px;
 }
 
 .attach__thumb {

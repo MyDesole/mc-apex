@@ -4,6 +4,8 @@ import { computed, onMounted, ref, watch } from 'vue'
 import PlayerCard from '@/components/players/PlayerCard.vue'
 import TierTestHistory from '@/components/tiers/TierTestHistory.vue'
 import ClanBadge from '@/components/clan/ClanBadge.vue'
+import PlayerShowcase from '@/components/players/PlayerShowcase.vue'
+import PlayerSeasons from '@/components/players/profile/PlayerSeasons.vue'
 import RankBadge from '@/components/players/RankBadge.vue'
 import ProfileCustomizeModal from '@/components/players/ProfileCustomizeModal.vue'
 import TierTestForm from '@/components/tiers/TierTestForm.vue'
@@ -262,34 +264,15 @@ onMounted(async () => {
       </div>
 
       <header class="profile-header">
-        <div class="profile-header__eyebrow">
-          <span class="profile-header__dot" />
-
-          PLAYER PROFILE
-
-          <span class="profile-header__line" />
-
-          <span>
-            ID // {{ user.id }}
-          </span>
-        </div>
-
         <div class="profile-header__main">
           <div>
-            <h1>
-              Профиль игрока
-            </h1>
-
-            <p>
-              Статистика · прогресс · достижения
-            </p>
+            <h1>Мой профиль</h1>
+            <p>Тир, аспекты, ачивки и настройка оформления</p>
           </div>
 
-          <div class="profile-header__status">
-            <span class="profile-header__status-dot" />
-
-            ONLINE PROFILE
-          </div>
+          <RouterLink :to="`/user/${encodeURIComponent(user.username)}`" class="btn btn-secondary">
+            Как видят другие
+          </RouterLink>
         </div>
       </header>
 
@@ -309,94 +292,32 @@ onMounted(async () => {
         />
       </section>
 
-      <!--
-        В bridge-профиле PvP остаётся доступным,
-        но визуально вторичен.
-      -->
-      <section
-          class="competitive-section"
-          :class="{
-            'competitive-section--demoted': isBridgeProfile,
-          }"
-      >
-        <header class="section-header">
-          <div>
-            <span>
-              COMPETITIVE STATUS
-            </span>
+      <!-- Minecraft-витрина и факты одним рядом, как на странице игрока -->
+      <div class="profile-row">
+        <PlayerShowcase
+            :user="user"
+            :rank="rank"
+            is-me
+            @link-minecraft="showCustomize = true"
+        />
 
-            <h2>
-              Клан и рейтинг
-            </h2>
-          </div>
+        <aside class="profile-facts">
+          <section class="fact">
+            <h3 class="fact__title">Клан</h3>
+            <ClanBadge :clan-member="clanMember" />
+          </section>
 
-          <div class="section-header__mark">
-            <i />
-            STATUS
-          </div>
-        </header>
-
-        <div class="competitive-grid">
-          <article class="competitive-card">
-            <div class="competitive-card__top">
-              <div>
-                <span>
-                  01 / ALLIANCE
-                </span>
-
-                <h3>
-                  Клан
-                </h3>
-              </div>
-
-              <b>
-                CLAN
-              </b>
-            </div>
-
-            <ClanBadge
-                :clan-member="clanMember"
-            />
-          </article>
-
-          <article class="competitive-card">
-            <div class="competitive-card__top">
-              <div>
-                <span>
-                  02 / LEADERBOARD
-                </span>
-
-                <h3>
-                  {{ isBridgeProfile
-                    ? 'Место в бридже'
-                    : 'Рейтинг'
-                  }}
-                </h3>
-              </div>
-
-              <b>
-                {{ isBridgeProfile
-                  ? 'BRIDGE'
-                  : 'RANK'
-                }}
-              </b>
-            </div>
-
+          <section class="fact">
+            <h3 class="fact__title">{{ isBridgeProfile ? 'Место в бридже' : 'Место в топе' }}</h3>
             <RankBadge
-                :position="
-                  isBridgeProfile
-                    ? bridge.rank.position
-                    : rank.position
-                "
-                :total="
-                  isBridgeProfile
-                    ? bridge.rank.total
-                    : rank.total
-                "
+                :position="isBridgeProfile ? bridge.rank.position : rank.position"
+                :total="isBridgeProfile ? bridge.rank.total : rank.total"
             />
-          </article>
-        </div>
-      </section>
+          </section>
+
+          <PlayerSeasons :user-id="user.id" title-class="fact__title" />
+        </aside>
+      </div>
 
       <!--
         Виды бриджа. Стоят там же, где раньше была запись на тир-тест:
@@ -413,9 +334,6 @@ onMounted(async () => {
 
         <header class="tests-section__header">
           <div>
-            <span class="tests-section__eyebrow">
-              BRIDGE MASTERY
-            </span>
 
             <h2>
               Виды бриджа
@@ -480,9 +398,6 @@ onMounted(async () => {
 
         <header class="tests-section__header">
           <div>
-            <span class="tests-section__eyebrow">
-              NEXT ASCENT
-            </span>
 
             <h2>
               Тир-тесты
@@ -540,11 +455,6 @@ onMounted(async () => {
       <footer class="profile-footer">
         <span />
 
-        <div>
-          <i />
-          KEEP CLIMBING
-          <i />
-        </div>
 
         <span />
       </footer>
@@ -671,7 +581,7 @@ onMounted(async () => {
       </div>
 
       <span>
-        ASCENDING...
+        Загрузка…
       </span>
 
       <small>

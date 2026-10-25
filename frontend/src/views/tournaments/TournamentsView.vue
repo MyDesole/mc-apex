@@ -1,4 +1,5 @@
 <script setup>
+import PageLoader from '@/components/core/PageLoader.vue'
 import { onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { tournamentsApi } from '@/services/tournaments/tournaments.js'
@@ -76,7 +77,7 @@ onMounted(load)
       </select>
     </div>
 
-    <div v-if="loading" class="empty">Загрузка...</div>
+    <PageLoader v-if="loading" />
     <div v-else-if="!tournaments.length" class="empty">Турниров нет</div>
 
     <div v-else class="grid">

@@ -276,7 +276,6 @@ onMounted(load)
         </div>
 
         <div class="hero-copy">
-          <div class="hero-eyebrow">CLAN WARFARE</div>
           <h2>Клановые войны</h2>
           <p>
             Вызывай соперников, собирай бойцов и фиксируй результаты матчей.
@@ -431,7 +430,6 @@ onMounted(load)
       <div class="modal">
         <header class="modal-head">
           <div>
-            <span class="modal-eyebrow">NEW MATCH</span>
             <h3>Вызвать клан</h3>
             <p>Выбери соперника и отправь ему вызов.</p>
           </div>
@@ -610,7 +608,6 @@ onMounted(load)
       <div class="modal modal--result">
         <header class="modal-head">
           <div>
-            <span class="modal-eyebrow">MATCH RESULT</span>
             <h3>Результат войны</h3>
             <p>Зафиксируй итог матча.</p>
           </div>

@@ -17,24 +17,17 @@
 
   color: #f7d774;
 
-  background:
-      linear-gradient(
-          135deg,
-          rgba(250, 204, 21, 0.12),
-          rgba(250, 204, 21, 0.035)
-      );
+  background: var(--bg-card);
 
   border: 1px solid rgba(250, 204, 21, 0.24);
-  border-radius: 10px;
+  border-radius: 6px;
 
   font-size: 12px;
   font-weight: 800;
 
   cursor: pointer;
 
-  box-shadow:
-      inset 0 1px rgba(255, 255, 255, 0.05),
-      0 5px 18px rgba(250, 204, 21, 0.04);
+  box-shadow:inset 0 1px rgba(255, 255, 255, 0.05);
 
   transition:
       color 0.2s ease,
@@ -58,9 +51,7 @@
 
   transform: translateY(-1px);
 
-  box-shadow:
-      inset 0 1px rgba(255, 255, 255, 0.07),
-      0 8px 25px rgba(250, 204, 21, 0.10);
+  box-shadow:inset 0 1px rgba(255, 255, 255, 0.07);
 }
 
 .gift-btn__icon {
@@ -135,16 +126,7 @@
 
   overflow-y: auto;
 
-  background:
-      radial-gradient(
-          circle at 50% 35%,
-          rgba(124, 58, 237, 0.08),
-          transparent 38%
-      ),
-      rgba(4, 3, 8, 0.78);
-
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(4, 3, 8, 0.78);
 }
 
 .modal__backdrop-glow {
@@ -158,11 +140,7 @@
 
   transform: translate(-50%, -50%);
 
-  background: radial-gradient(
-      circle,
-      rgba(250, 204, 21, 0.055),
-      transparent 68%
-  );
+  background: transparent;
 
   pointer-events: none;
 }
@@ -180,25 +158,13 @@
 
   padding: 22px;
 
-  background:
-      radial-gradient(
-          circle at 100% 0%,
-          rgba(124, 58, 237, 0.075),
-          transparent 32%
-      ),
-      linear-gradient(
-          145deg,
-          rgba(26, 24, 36, 0.99),
-          rgba(13, 12, 19, 0.99)
-      );
+  background: var(--bg-card);
 
   border: 1px solid rgba(255, 255, 255, 0.085);
-  border-radius: 16px;
+  border-radius: 6px;
 
-  box-shadow:
-      0 35px 100px rgba(0, 0, 0, 0.62),
-      0 0 0 1px rgba(124, 58, 237, 0.025),
-      0 0 55px rgba(250, 204, 21, 0.035);
+  box-shadow:0 35px 100px rgba(0, 0, 0, 0.62),
+      0 0 0 1px rgba(124, 58, 237, 0.025);
 
   overflow: hidden;
 }
@@ -247,11 +213,10 @@
 
   color: rgba(250, 204, 21, 0.62);
 
-  font-size: 8px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 
-  letter-spacing: 1.7px;
-  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 .modal__header h3 {
@@ -262,7 +227,7 @@
   font-size: 20px;
   line-height: 1.15;
 
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: -0.45px;
 }
 
@@ -325,15 +290,10 @@
 
   margin-bottom: 10px;
 
-  background:
-      linear-gradient(
-          135deg,
-          rgba(124, 58, 237, 0.08),
-          rgba(255, 255, 255, 0.018)
-      );
+  background: var(--bg-card);
 
-  border: 1px solid rgba(139, 92, 246, 0.11);
-  border-radius: 11px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 }
 
 .recipient__avatar {
@@ -357,14 +317,13 @@
           #4c1d95
       );
 
-  border: 1px solid rgba(196, 181, 253, 0.18);
-  border-radius: 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 800;
 
-  box-shadow:
-      0 5px 16px rgba(124, 58, 237, 0.17);
+  box-shadow: none;
 }
 
 .recipient__avatar img {
@@ -386,11 +345,10 @@
 .recipient__label {
   color: #656071;
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 800;
 
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0;
 }
 
 .recipient__info strong {
@@ -438,15 +396,10 @@
 
   margin-bottom: 18px;
 
-  background:
-      linear-gradient(
-          135deg,
-          rgba(250, 204, 21, 0.075),
-          rgba(250, 204, 21, 0.025)
-      );
+  background: var(--bg-card);
 
   border: 1px solid rgba(250, 204, 21, 0.13);
-  border-radius: 10px;
+  border-radius: 6px;
 }
 
 .balance-card__icon {
@@ -474,11 +427,10 @@
 .balance-card__info span {
   color: rgba(250, 204, 21, 0.48);
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 800;
 
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0;
 }
 
 .balance-card__info strong {
@@ -502,11 +454,10 @@
   border: 1px solid rgba(34, 197, 94, 0.12);
   border-radius: 6px;
 
-  font-size: 7px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 0;
 }
 
 /* =========================================================
@@ -522,7 +473,7 @@
 
   padding: 10px 12px;
 
-  border-radius: 9px;
+  border-radius: 6px;
 
   font-size: 11px;
   line-height: 1.45;
@@ -569,14 +520,14 @@
 
   color: #a8a3b3;
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
 }
 
 .section-label__hint {
   color: #5f5a6b;
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 650;
 
   font-variant-numeric: tabular-nums;
@@ -590,15 +541,10 @@
 
   padding: 0 13px;
 
-  background:
-      linear-gradient(
-          135deg,
-          rgba(255, 255, 255, 0.035),
-          rgba(255, 255, 255, 0.012)
-      );
+  background: var(--bg-card);
 
   border: 1px solid rgba(255, 255, 255, 0.085);
-  border-radius: 11px;
+  border-radius: 6px;
 
   transition:
       border-color 0.2s ease,
@@ -616,7 +562,7 @@
   color: #facc15;
 
   font-size: 18px;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .amount-input input {
@@ -651,8 +597,8 @@
 .amount-input__currency {
   color: #595566;
 
-  font-size: 8px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 
   letter-spacing: 1px;
 }
@@ -685,7 +631,7 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 7px;
 
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 750;
 
   cursor: pointer;
@@ -699,7 +645,7 @@
 
 .quick__btn span {
   color: #8f8260;
-  font-size: 8px;
+  font-size: 12px;
 }
 
 .quick__btn:hover {
@@ -747,7 +693,7 @@
 
   border-radius: 8px;
 
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.4;
 }
 
@@ -783,7 +729,7 @@
   background: rgba(0, 0, 0, 0.13);
 
   border: 1px solid rgba(255, 255, 255, 0.045);
-  border-radius: 10px;
+  border-radius: 6px;
 }
 
 .calculation__row {
@@ -795,13 +741,13 @@
 
   color: #777283;
 
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .calculation__row strong {
   color: #b8b2c3;
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
 
   font-variant-numeric: tabular-nums;
@@ -822,7 +768,7 @@
 
   color: #56515f;
 
-  font-size: 8px;
+  font-size: 12px;
 }
 
 .calculation__divider {
@@ -842,8 +788,7 @@
 
   font-size: 13px;
 
-  text-shadow:
-      0 0 15px rgba(250, 204, 21, 0.08);
+  text-shadow: none;
 }
 
 /* =========================================================
@@ -859,7 +804,7 @@
 
   color: #625e6d;
 
-  font-size: 8px;
+  font-size: 12px;
 }
 
 .limits__icon {
@@ -887,7 +832,7 @@
 .limits strong {
   color: #817b8c;
 
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
 
   font-variant-numeric: tabular-nums;
@@ -914,9 +859,9 @@
 
   padding: 0 14px;
 
-  border-radius: 9px;
+  border-radius: 6px;
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
 
   cursor: pointer;
@@ -960,7 +905,6 @@
   border: 1px solid rgba(253, 224, 71, 0.45);
 
   box-shadow:
-      0 7px 22px rgba(250, 204, 21, 0.12),
       inset 0 1px rgba(255, 255, 255, 0.28);
 }
 
@@ -975,7 +919,6 @@
       );
 
   box-shadow:
-      0 10px 28px rgba(250, 204, 21, 0.19),
       inset 0 1px rgba(255, 255, 255, 0.32);
 }
 
@@ -1061,7 +1004,7 @@
 
     padding: 18px;
 
-    border-radius: 14px;
+    border-radius: 6px;
   }
 
   .modal__header h3 {

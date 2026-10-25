@@ -34,11 +34,11 @@
   color: #fff;
   background: var(--accent);
   border: 0;
-  border-radius: 10px;
+  border-radius: 6px;
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.25);
+  box-shadow: none;
   transition: all 0.2s;
   white-space: nowrap;
 }
@@ -46,7 +46,7 @@
 .btn-create:hover {
   background: var(--accent-light);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
+  box-shadow: none;
 }
 
 .btn-create.mt {
@@ -64,7 +64,7 @@
   text-align: center;
   background: var(--bg-card);
   border: 1px dashed var(--border);
-  border-radius: 14px;
+  border-radius: 6px;
   color: var(--text-dim);
   font-size: 13px;
 }
@@ -117,7 +117,7 @@
   padding: 12px 16px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 6px;
   transition: all 0.2s;
 }
 
@@ -140,7 +140,7 @@
 .row__cover {
   position: relative;
   height: 72px;
-  border-radius: 10px;
+  border-radius: 6px;
   background: linear-gradient(135deg, #7c3aed, #06b6d4);
   background-size: cover;
   background-position: center;
@@ -169,14 +169,13 @@
 
 .badge {
   padding: 2px 7px;
-  border-radius: 999px;
+  border-radius: 4px;
   font-size: 9px;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.4px;
   color: #fff;
   background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
 }
 
 .badge.type-news { color: #a78bfa; }
@@ -252,7 +251,7 @@
   color: #fbbf24;
   background: rgba(251, 191, 36, 0.1);
   border: 1px solid rgba(251, 191, 36, 0.25);
-  border-radius: 999px;
+  border-radius: 4px;
   font-weight: 800;
   letter-spacing: 0.4px;
 }
@@ -262,7 +261,7 @@
   height: 5px;
   background: #fbbf24;
   border-radius: 50%;
-  box-shadow: 0 0 6px #fbbf24;
+  box-shadow: none;
 }
 
 /* Действия */
@@ -282,7 +281,7 @@
   color: var(--text-dim);
   background: transparent;
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s;
 }

@@ -33,6 +33,9 @@ const router = createRouter({
     { path: '/players/:id', name: 'player', component: PlayerView, meta: { title: 'Профиль игрока', auth: true } },
     // Каноничная красивая ссылка на профиль: /user/Ник (или /user/3)
     { path: '/user/:id', name: 'user', component: PlayerView, meta: { title: 'Профиль игрока', auth: true } },
+    { path: '/achievements', name: 'achievements', component: () => import('@/views/achievements/AchievementsView.vue'), meta: { title: 'Ачивки', auth: true } },
+    // Сравнение двух игроков: /compare?a=Ник&b=Ник
+    { path: '/compare', name: 'compare', component: () => import('@/views/players/CompareView.vue'), meta: { title: 'Сравнение игроков', auth: true } },
     { path: '/friends', name: 'friends', component: FriendsView, meta: { title: 'Друзья', auth: true } },
     { path: '/notifications', name: 'notifications', component: NotificationsView, meta: { title: 'Уведомления', auth: true } },
     { path: '/clans', name: 'clans', component: ClansView, meta: { title: 'Кланы' } },
@@ -60,6 +63,12 @@ const router = createRouter({
     { path: '/bridge-review', name: 'bridge-review', component: () => import('@/views/bridge/BridgeReviewView.vue'), meta: { title: 'Проверка бриджа', auth: true, role: ['bridge_tester', 'admin'] } },
     { path: '/bridge-curator', name: 'bridge-curator', component: () => import('@/views/bridge/BridgeCuratorView.vue'), meta: { title: 'Виды бриджа', auth: true, role: ['bridge_curator', 'admin'] } },
     { path: '/tournaments/:id', name: 'tournament', component: () => import('@/views/tournaments/TournamentView.vue'), meta: { title: 'Турнир', auth: true } },
+    { path: '/rules', name: 'rules', component: () => import('@/views/info/RulesView.vue'), meta: { title: 'Правила тир-тестов' } },
+    { path: '/about', name: 'about', component: () => import('@/views/info/AboutView.vue'), meta: { title: 'О проекте' } },
+    { path: '/stats', name: 'stats', component: () => import('@/views/info/StatsView.vue'), meta: { title: 'Статистика' } },
+    { path: '/status', name: 'status', component: () => import('@/views/info/StatusView.vue'), meta: { title: 'Статус сервера' } },
+    // Последним: всё, что не совпало с маршрутами выше
+    { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/views/NotFoundView.vue'), meta: { title: 'Страница не найдена' } },
   ],
 })
 

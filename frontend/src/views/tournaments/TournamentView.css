@@ -8,7 +8,7 @@
 }
 
 .tour-header {
-  border-radius: 18px;
+  border-radius: 6px;
   overflow: hidden;
   border: 1px solid var(--border);
 }
@@ -38,7 +38,7 @@
 .tour-banner h1 {
   margin: 12px 0 14px;
   font-size: 32px;
-  font-weight: 900;
+  font-weight: 800;
   color: #fff;
   letter-spacing: -0.5px;
   text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
@@ -51,12 +51,11 @@
 
 .badge {
   padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 10px;
+  border-radius: 4px;
+  font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.4px;
-  backdrop-filter: blur(8px);
 }
 
 .badge--type {
@@ -101,7 +100,7 @@
   padding: 20px 24px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 6px;
 }
 
 .block h2 {
@@ -129,7 +128,7 @@
   color: #fff;
   background: var(--accent);
   border: 0;
-  border-radius: 10px;
+  border-radius: 6px;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
@@ -167,7 +166,7 @@
   color: var(--text-dim);
   background: rgba(255, 255, 255, 0.03);
   border: 1px dashed var(--border);
-  border-radius: 10px;
+  border-radius: 6px;
   text-align: center;
   font-size: 13px;
 }
@@ -213,7 +212,7 @@
   padding: 10px 12px;
   background: #0d0d14;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 6px;
 }
 
 .participant--pending {
@@ -227,7 +226,7 @@
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-  border-radius: 9px;
+  border-radius: 6px;
   color: #fff;
   font-size: 14px;
   font-weight: 800;
@@ -252,7 +251,7 @@
   font-size: 13px;
   background: #0d0d14;
   border: 1px dashed var(--border);
-  border-radius: 10px;
+  border-radius: 6px;
 }
 
 .loading {

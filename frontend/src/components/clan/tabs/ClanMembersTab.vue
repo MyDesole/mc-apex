@@ -1,4 +1,5 @@
 <script setup>
+import PageLoader from '@/components/core/PageLoader.vue'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
@@ -105,7 +106,7 @@ onMounted(load)
 
 <template>
   <div class="tab">
-    <div v-if="loading" class="empty">Загрузка...</div>
+    <PageLoader v-if="loading" compact />
 
     <div v-else class="members-list">
       <div

@@ -111,7 +111,7 @@
   overflow: hidden;
 
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 6px;
 
   color: var(--text);
   background:
@@ -195,13 +195,7 @@
   color: #fff;
   background: var(--accent);
 
-  box-shadow:
-      0 0 10px
-      color-mix(
-          in srgb,
-          var(--accent) 22%,
-          transparent
-      );
+  box-shadow: none;
 }
 
 .forum-reply__media,
@@ -219,7 +213,7 @@
   color: var(--text-muted);
   background: var(--bg-card);
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
 }
@@ -246,7 +240,7 @@
   margin-top: 3px;
 
   color: var(--text-muted);
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1;
 }
 
@@ -257,7 +251,7 @@
   color: var(--text-muted);
   background: transparent;
 
-  font-size: 8px;
+  font-size: 12px;
 }
 
 .forum-reply__header-actions {
@@ -280,7 +274,7 @@
   color: var(--text-muted);
   background: transparent;
 
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
 
   cursor: pointer;
@@ -362,7 +356,7 @@
 
 .forum-reply__deleted div > span {
   margin-top: 2px;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 /* ─────────────────────────
@@ -483,7 +477,7 @@
   white-space: nowrap;
 
   color: var(--text);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -491,7 +485,7 @@
   margin-top: 2px;
 
   color: var(--text-muted);
-  font-size: 8px;
+  font-size: 12px;
 }
 
 /* ─────────────────────────
@@ -529,7 +523,7 @@
   color: var(--text-muted);
   background: transparent;
 
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
 
   cursor: pointer;
@@ -576,7 +570,7 @@
   gap: 5px;
 
   color: var(--text-muted);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -585,13 +579,7 @@
   height: 4px;
   border-radius: 50%;
   background: var(--accent);
-  box-shadow:
-      0 0 8px
-      color-mix(
-          in srgb,
-          var(--accent) 35%,
-          transparent
-      );
+  box-shadow: none;
 }
 
 /* ─────────────────────────
@@ -634,7 +622,7 @@
   color: var(--text-muted);
   background: transparent;
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   text-align: left;
 

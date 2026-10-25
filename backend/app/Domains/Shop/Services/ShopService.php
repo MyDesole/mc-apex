@@ -712,6 +712,8 @@ class ShopService
             ShopItem::TYPE_PROFILE_EFFECT => 'profile_effect',
             ShopItem::TYPE_ACCENT_COLOR => 'accent_color',
             ShopItem::TYPE_CARD_BACKGROUND => 'card_background',
+            ShopItem::TYPE_SKIN_BACKDROP => 'skin_backdrop',
+            ShopItem::TYPE_CARD_THEME => 'card_theme',
             default => null,
         };
     }

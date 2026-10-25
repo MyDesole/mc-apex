@@ -6,7 +6,6 @@
 
     <div class="page-head">
       <div>
-        <div class="eyebrow">COMMUNITY</div>
 
         <h1>Кланы</h1>
 
@@ -176,7 +175,7 @@
           </strong>
 
           <span>
-            Power
+            Сила
           </span>
         </div>
 
@@ -198,7 +197,7 @@
           </strong>
 
           <span>
-            W / L
+            Победы / поражения
           </span>
         </div>
 

@@ -15,18 +15,11 @@
   overflow: hidden;
   isolation: isolate;
 
-  background:
-      radial-gradient(
+  background: radial-gradient(
           circle at 76% 22%,
           color-mix(in srgb, var(--player-accent) 26%, transparent),
           transparent 34%
-      ),
-      linear-gradient(
-          135deg,
-          #090912 0%,
-          #0d0e1e 48%,
-          #07070f 100%
-      );
+      ), var(--bg-card);
 
   border-bottom: 1px solid
   color-mix(
@@ -77,18 +70,12 @@
   position: absolute;
   inset: 0;
 
-  background:
-      linear-gradient(
+  background: linear-gradient(
           90deg,
           rgba(5, 5, 13, 0.98) 0%,
           rgba(5, 5, 13, 0.82) 42%,
           rgba(5, 5, 13, 0.3) 100%
-      ),
-      linear-gradient(
-          0deg,
-          rgba(5, 5, 13, 0.98) 0%,
-          transparent 70%
-      );
+      ), var(--bg-card);
 }
 
 /* =========================================================
@@ -123,16 +110,7 @@
   inset: 0;
   z-index: 2;
 
-  background-image:
-      linear-gradient(
-          rgba(255, 255, 255, 0.032) 1px,
-          transparent 1px
-      ),
-      linear-gradient(
-          90deg,
-          rgba(255, 255, 255, 0.032) 1px,
-          transparent 1px
-      );
+  background-image: var(--bg-card);
 
   background-size: 42px 42px;
 
@@ -153,11 +131,7 @@
   inset: 0;
   z-index: 3;
 
-  background-image:
-      radial-gradient(
-          rgba(255, 255, 255, 0.07) 0.6px,
-          transparent 0.6px
-      );
+  background-image: transparent;
 
   background-size: 5px 5px;
   opacity: 0.055;
@@ -278,22 +252,15 @@
 }
 
 .profile-header--effect-ice .profile-header__effect {
-  background:
-      radial-gradient(
+  background: radial-gradient(
           ellipse at 75% 20%,
           rgba(165, 243, 252, 0.5),
           transparent 30%
-      ),
-      radial-gradient(
+      ), radial-gradient(
           ellipse at 25% 70%,
           rgba(6, 182, 212, 0.34),
           transparent 45%
-      ),
-      linear-gradient(
-          135deg,
-          rgba(6, 182, 212, 0.1),
-          rgba(165, 243, 252, 0.08)
-      );
+      ), var(--bg-card);
 
   filter: blur(25px);
   opacity: 0.72;
@@ -359,9 +326,7 @@
 
   background: #facc15;
 
-  box-shadow:
-      0 0 8px #facc15,
-      0 0 18px rgba(249, 115, 22, 0.65);
+  box-shadow: none;
 
   animation: legendaryParticle 4s ease-in-out infinite;
 }
@@ -434,7 +399,7 @@
       );
 
   font-size: clamp(180px, 23vw, 330px);
-  font-weight: 1000;
+  font-weight: 800;
   line-height: 0.8;
 
   letter-spacing: -0.08em;
@@ -450,13 +415,7 @@
           transparent
       );
 
-  text-shadow:
-      0 0 70px
-      color-mix(
-          in srgb,
-          var(--player-accent) 18%,
-          transparent
-      );
+  text-shadow: none;
 
   opacity: 0.62;
 }
@@ -483,11 +442,10 @@
 
   color: rgba(255, 255, 255, 0.42);
 
-  font-size: 10px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 
-  letter-spacing: 1.8px;
-  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 .profile-header__eyebrow-dot {
@@ -498,13 +456,7 @@
 
   background: var(--player-accent);
 
-  box-shadow:
-      0 0 12px
-      color-mix(
-          in srgb,
-          var(--player-accent) 85%,
-          transparent
-      );
+  box-shadow: none;
 
   animation: pulse 2s ease-in-out infinite;
 }
@@ -521,12 +473,7 @@
 
   color: rgba(255, 255, 255, 0.68);
 
-  background:
-      linear-gradient(
-          135deg,
-          rgba(255, 255, 255, 0.045),
-          rgba(255, 255, 255, 0.018)
-      );
+  background: var(--bg-card);
 
   border: 1px solid rgba(255, 255, 255, 0.085);
   border-radius: 8px;
@@ -535,8 +482,6 @@
   font-weight: 800;
 
   cursor: pointer;
-
-  backdrop-filter: blur(14px);
 
   transition:
       color 0.18s ease,
@@ -565,13 +510,7 @@
 
   transform: translateY(-1px);
 
-  box-shadow:
-      0 8px 22px
-      color-mix(
-          in srgb,
-          var(--player-accent) 10%,
-          transparent
-      );
+  box-shadow: none;
 }
 
 /* =========================================================
@@ -661,8 +600,7 @@
 }
 
 .profile-header__avatar-frame--glow {
-  filter:
-      drop-shadow(
+  filter: drop-shadow(
           0 0 10px
           color-mix(
               in srgb,
@@ -720,7 +658,7 @@
   color: #fff;
 
   font-size: 40px;
-  font-weight: 950;
+  font-weight: 800;
 }
 
 .profile-header__avatar img {
@@ -768,7 +706,7 @@
       rgba(255, 255, 255, 0.08)
   );
 
-  border-radius: 10px;
+  border-radius: 6px;
 
   background:
       linear-gradient(
@@ -782,15 +720,7 @@
       );
 
   box-shadow:
-      0 8px 30px
-      color-mix(
-          in srgb,
-          var(--player-accent) 10%,
-          transparent
-      ),
       inset 0 1px 0 rgba(255, 255, 255, 0.055);
-
-  backdrop-filter: blur(14px);
 }
 
 .tier-display__icon {
@@ -824,8 +754,7 @@
       12% 20%
   );
 
-  filter:
-      drop-shadow(
+  filter: drop-shadow(
           0 0 12px
           color-mix(
               in srgb,
@@ -858,17 +787,11 @@
   color: #fff;
 
   font-size: 15px;
-  font-weight: 1000;
+  font-weight: 800;
 
   letter-spacing: -0.5px;
 
-  text-shadow:
-      0 0 12px
-      color-mix(
-          in srgb,
-          var(--player-accent) 75%,
-          transparent
-      );
+  text-shadow: none;
 }
 
 .tier-display__info {
@@ -880,8 +803,8 @@
 
   color: rgba(255, 255, 255, 0.34);
 
-  font-size: 7px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 
   letter-spacing: 1.6px;
 }
@@ -892,17 +815,11 @@
   font-size: 17px;
   line-height: 1.05;
 
-  font-weight: 950;
+  font-weight: 800;
 
   letter-spacing: 0.5px;
 
-  text-shadow:
-      0 0 20px
-      color-mix(
-          in srgb,
-          var(--player-accent) 25%,
-          transparent
-      );
+  text-shadow: none;
 }
 
 .tier-display__subtitle {
@@ -915,8 +832,8 @@
           white
       );
 
-  font-size: 7px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 
   letter-spacing: 1.1px;
 }
@@ -976,7 +893,7 @@
             rgba(255, 255, 255, 0.08)
     );
 
-    border-radius: 10px;
+    border-radius: 6px;
 
     background:
             linear-gradient(
@@ -990,15 +907,7 @@
             );
 
     box-shadow:
-            0 8px 30px
-            color-mix(
-                    in srgb,
-                    var(--player-accent) 10%,
-                    transparent
-            ),
             inset 0 1px 0 rgba(255, 255, 255, 0.055);
-
-    backdrop-filter: blur(14px);
 }
 
 .bridge-display__icon {
@@ -1032,8 +941,7 @@
             12% 20%
     );
 
-    filter:
-            drop-shadow(
+    filter: drop-shadow(
                     0 0 12px
                     color-mix(
                             in srgb,
@@ -1066,19 +974,13 @@
     color: #fff;
 
     font-size: 11px;
-    font-weight: 1000;
+    font-weight: 800;
 
     letter-spacing: 0.5px;
 
     text-align: center;
 
-    text-shadow:
-            0 0 12px
-            color-mix(
-                    in srgb,
-                    var(--player-accent) 75%,
-                    transparent
-            );
+    text-shadow: none;
 }
 
 .bridge-display__info {
@@ -1090,8 +992,8 @@
 
     color: rgba(255, 255, 255, 0.34);
 
-    font-size: 7px;
-    font-weight: 900;
+    font-size: 12px;
+    font-weight: 800;
 
     letter-spacing: 1.6px;
 }
@@ -1102,17 +1004,11 @@
     font-size: 17px;
     line-height: 1.05;
 
-    font-weight: 950;
+    font-weight: 800;
 
     letter-spacing: 0.5px;
 
-    text-shadow:
-            0 0 20px
-            color-mix(
-                    in srgb,
-                    var(--player-accent) 25%,
-                    transparent
-            );
+    text-shadow: none;
 }
 
 .bridge-display__subtitle {
@@ -1125,8 +1021,8 @@
                     white
             );
 
-    font-size: 7px;
-    font-weight: 900;
+    font-size: 12px;
+    font-weight: 800;
 
     letter-spacing: 1.1px;
 }
@@ -1181,18 +1077,11 @@
 
   line-height: 0.95;
 
-  font-weight: 1000;
+  font-weight: 800;
 
   letter-spacing: -2px;
 
-  text-shadow:
-      0 3px 25px rgba(0, 0, 0, 0.5),
-      0 0 40px
-      color-mix(
-          in srgb,
-          var(--player-accent) 14%,
-          transparent
-      );
+  text-shadow:0 3px 25px rgba(0, 0, 0, 0.5);
 }
 
 /* Instagram-like verification */
@@ -1221,9 +1110,7 @@
 
   border-radius: 50%;
 
-  box-shadow:
-      0 0 0 2px rgba(59, 130, 246, 0.08),
-      0 3px 12px rgba(37, 99, 235, 0.28);
+  box-shadow:0 0 0 2px rgba(59, 130, 246, 0.08);
 
   transform: translateY(1px);
 
@@ -1306,7 +1193,7 @@
 
   border-radius: 7px;
 
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
 
   line-height: 1;
@@ -1345,12 +1232,6 @@
       );
 
   box-shadow:
-      0 5px 16px
-      color-mix(
-          in srgb,
-          var(--badge-color) 11%,
-          transparent
-      ),
       inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
@@ -1417,8 +1298,8 @@
 
   border-radius: 6px;
 
-  font-size: 8px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 
   line-height: 1;
 
@@ -1427,8 +1308,6 @@
   text-transform: uppercase;
 
   white-space: nowrap;
-
-  backdrop-filter: blur(10px);
 }
 
 .profile-header__role--admin {
@@ -1438,8 +1317,7 @@
 
   border-color: rgba(250, 204, 21, 0.18);
 
-  box-shadow:
-      0 0 14px rgba(250, 204, 21, 0.08);
+  box-shadow: none;
 }
 
 .profile-header__role--tester {
@@ -1449,8 +1327,7 @@
 
   border-color: rgba(6, 182, 212, 0.18);
 
-  box-shadow:
-      0 0 14px rgba(6, 182, 212, 0.08);
+  box-shadow: none;
 }
 
 .profile-header__role--moderator {
@@ -1460,8 +1337,7 @@
 
   border-color: rgba(168, 85, 247, 0.18);
 
-  box-shadow:
-      0 0 14px rgba(168, 85, 247, 0.08);
+  box-shadow: none;
 }
 
 /* =========================================================
@@ -1482,17 +1358,7 @@
 
   pointer-events: none;
 
-  background:
-      radial-gradient(
-          circle at 8% 5%,
-          rgba(244, 114, 182, 0.08),
-          transparent 34%
-      ),
-      radial-gradient(
-          circle at 94% 92%,
-          rgba(168, 85, 247, 0.07),
-          transparent 38%
-      );
+  background: transparent;
 }
 
 .profile-header__role--media {
@@ -1504,18 +1370,11 @@
 
   color: #fce7f3;
 
-  background:
-      linear-gradient(
-          135deg,
-          rgba(236, 72, 153, 0.13),
-          rgba(168, 85, 247, 0.11)
-      );
+  background: var(--bg-card);
 
   border: 1px solid rgba(236, 72, 153, 0.28);
 
-  box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.055),
-      0 4px 15px rgba(236, 72, 153, 0.08);
+  box-shadow:inset 0 1px 0 rgba(255, 255, 255, 0.055);
 }
 
 .profile-header__role--media::before {
@@ -1532,8 +1391,7 @@
 
   border-radius: 50%;
 
-  box-shadow:
-      0 0 8px rgba(244, 114, 182, 0.8);
+  box-shadow: none;
 }
 
 .profile-header__role--media::after {
@@ -1573,8 +1431,7 @@
           transparent
       );
 
-  box-shadow:
-      0 0 18px rgba(236, 72, 153, 0.22);
+  box-shadow: none;
 }
 
 /* =========================================================
@@ -1622,13 +1479,7 @@
 
   background: var(--player-accent);
 
-  box-shadow:
-      0 0 9px
-      color-mix(
-          in srgb,
-          var(--player-accent) 80%,
-          transparent
-      );
+  box-shadow: none;
 }
 
 /* =========================================================
@@ -1676,8 +1527,6 @@
   );
 
   border-radius: 0 7px 7px 0;
-
-  backdrop-filter: blur(8px);
 }
 
 .profile-header__quote-mark {
@@ -1708,7 +1557,7 @@
 }
 
 .profile-header__quote-text {
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.5;
 
   font-weight: 600;
@@ -1743,15 +1592,13 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
 
   border-radius: 7px;
-
-  backdrop-filter: blur(8px);
 }
 
 .profile-header__stat-label {
   color: rgba(255, 255, 255, 0.28);
 
-  font-size: 8px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 
   letter-spacing: 1px;
 }
@@ -1760,7 +1607,7 @@
   color: rgba(255, 255, 255, 0.84);
 
   font-size: 11px;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .profile-header__stat--clan strong {
@@ -1786,14 +1633,10 @@
   margin-top: 14px;
   padding: 14px 16px;
 
-  border: 1px solid rgba(139, 92, 246, 0.28);
-  border-radius: 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 
-  background: linear-gradient(
-      135deg,
-      rgba(139, 92, 246, 0.14),
-      rgba(255, 255, 255, 0.02)
-  );
+  background: var(--bg-card);
 }
 
 .bridge-rank-block__label {
@@ -1803,15 +1646,14 @@
 
   color: rgba(255, 255, 255, 0.4);
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 .bridge-rank-block__value {
   font-size: 20px;
-  font-weight: 950;
+  font-weight: 800;
   letter-spacing: 0.3px;
 }
 
@@ -1832,7 +1674,7 @@
   background: rgba(139, 92, 246, 0.18);
 
   border: 1px solid rgba(139, 92, 246, 0.35);
-  border-radius: 999px;
+  border-radius: 4px;
 
   font-size: 11.5px;
   font-weight: 700;
@@ -1843,8 +1685,8 @@
 .bridge-rank-pill b {
   color: #fbbf24;
 
-  font-size: 10.5px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .bridge-rank-block__empty {
@@ -1867,8 +1709,8 @@
 
   color: rgba(255, 255, 255, 0.26);
 
-  font-size: 7px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 
   letter-spacing: 1px;
 }
@@ -1889,7 +1731,7 @@
 
   overflow: hidden;
 
-  border-radius: 999px;
+  border-radius: 4px;
 
   background: rgba(255, 255, 255, 0.065);
 }
@@ -1913,13 +1755,7 @@
           rgba(255, 255, 255, 0.85)
       );
 
-  box-shadow:
-      0 0 12px
-      color-mix(
-          in srgb,
-          var(--player-accent) 62%,
-          transparent
-      );
+  box-shadow: none;
 }
 
 .tier-progress__value::after {
@@ -1937,8 +1773,7 @@
 
   background: #fff;
 
-  box-shadow:
-      0 0 12px var(--player-accent);
+  box-shadow: none;
 }
 
 /* =========================================================
@@ -2002,8 +1837,7 @@
       9% 18%
   );
 
-  filter:
-      drop-shadow(
+  filter: drop-shadow(
           0 0 22px
           color-mix(
               in srgb,
@@ -2057,17 +1891,11 @@
   color: #fff;
 
   font-size: 39px;
-  font-weight: 1000;
+  font-weight: 800;
 
   letter-spacing: -2px;
 
   text-shadow:
-      0 0 20px
-      color-mix(
-          in srgb,
-          var(--player-accent) 88%,
-          transparent
-      ),
       0 3px 15px rgba(0, 0, 0, 0.8);
 }
 
@@ -2092,12 +1920,10 @@
 
   border-radius: 5px;
 
-  font-size: 8px;
-  font-weight: 950;
+  font-size: 12px;
+  font-weight: 800;
 
   letter-spacing: 1.4px;
-
-  backdrop-filter: blur(8px);
 }
 
 /* =========================================================
@@ -2203,13 +2029,7 @@
           transparent
       );
 
-  box-shadow:
-      0 0 18px
-      color-mix(
-          in srgb,
-          var(--player-accent) 42%,
-          transparent
-      );
+  box-shadow: none;
 }
 
 /* =========================================================
@@ -2340,14 +2160,12 @@
 
   color: #fff;
 
-  font-size: 8px;
-  font-weight: 1000;
+  font-size: 12px;
+  font-weight: 800;
 
-  text-shadow:
-      0 0 8px var(--player-accent);
+  text-shadow: none;
 
-  filter:
-      drop-shadow(
+  filter: drop-shadow(
           0 0 7px
           color-mix(
               in srgb,
@@ -2367,10 +2185,10 @@
 .profile-header__compact-tier-name {
   color: rgba(255, 255, 255, 0.8);
 
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1;
 
-  font-weight: 950;
+  font-weight: 800;
 
   letter-spacing: 0.8px;
 }
@@ -2385,8 +2203,8 @@
           white
       );
 
-  font-size: 6px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 
   letter-spacing: 1px;
 }
@@ -2419,7 +2237,7 @@
 
   line-height: 1;
 
-  font-weight: 1000;
+  font-weight: 800;
 
   letter-spacing: -0.8px;
 
@@ -2427,14 +2245,7 @@
 
   text-overflow: ellipsis;
 
-  text-shadow:
-      0 2px 15px rgba(0, 0, 0, 0.5),
-      0 0 25px
-      color-mix(
-          in srgb,
-          var(--player-accent) 11%,
-          transparent
-      );
+  text-shadow:0 2px 15px rgba(0, 0, 0, 0.5);
 }
 
 .profile-header__compact-name-row
@@ -2459,7 +2270,7 @@
 
   padding: 0 6px;
 
-  font-size: 6px;
+  font-size: 12px;
 
   letter-spacing: 0.55px;
 
@@ -2473,7 +2284,7 @@
 .profile-header__compact-username {
   color: rgba(255, 255, 255, 0.27);
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 700;
 
   line-height: 1;
@@ -2509,7 +2320,7 @@
 
   color: rgba(255, 255, 255, 0.4);
 
-  font-size: 7px;
+  font-size: 12px;
   font-weight: 700;
 
   font-style: italic;
@@ -2528,13 +2339,7 @@
 
   background: var(--player-accent);
 
-  box-shadow:
-      0 0 7px
-      color-mix(
-          in srgb,
-          var(--player-accent) 80%,
-          transparent
-      );
+  box-shadow: none;
 }
 
 .profile-header__compact-chip {
@@ -2550,8 +2355,8 @@
 
   border-radius: 4px;
 
-  font-size: 6px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 
   letter-spacing: 0.5px;
 }
@@ -2570,7 +2375,7 @@
 
   overflow: hidden;
 
-  border-radius: 999px;
+  border-radius: 4px;
 
   background: rgba(255, 255, 255, 0.065);
 
@@ -2599,13 +2404,7 @@
           rgba(255, 255, 255, 0.88)
       );
 
-  box-shadow:
-      0 0 12px
-      color-mix(
-          in srgb,
-          var(--player-accent) 65%,
-          transparent
-      );
+  box-shadow: none;
 }
 
 .profile-header__compact-progress span {
@@ -2623,8 +2422,8 @@
           white
       );
 
-  font-size: 6px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 /* =========================================================
@@ -2911,7 +2710,7 @@
   .profile-badge {
     min-height: 24px;
     padding-right: 7px;
-    font-size: 8px;
+    font-size: 12px;
   }
 
   .profile-badge__icon {
@@ -2971,7 +2770,7 @@
   }
 
   .profile-header__compact-tier-name {
-    font-size: 8px;
+    font-size: 12px;
   }
 
   .profile-header__compact-status {
@@ -3005,7 +2804,7 @@
 
   .profile-header--compact
   .profile-header__eyebrow {
-    font-size: 8px;
+    font-size: 12px;
   }
 
   .profile-header__compact-content {
@@ -3031,15 +2830,15 @@
   .profile-header__compact-tier-icon {
     width: 23px;
     height: 23px;
-    font-size: 7px;
+    font-size: 12px;
   }
 
   .profile-header__compact-tier-name {
-    font-size: 7px;
+    font-size: 12px;
   }
 
   .profile-header__compact-tier-subtitle {
-    font-size: 5px;
+    font-size: 12px;
   }
 
   .profile-header__compact-meta {
@@ -3048,12 +2847,12 @@
 
   .profile-header__compact-status {
     max-width: 80px;
-    font-size: 6px;
+    font-size: 12px;
   }
 
   .profile-header__compact-chip {
     padding: 2px 4px;
-    font-size: 5px;
+    font-size: 12px;
   }
 
   .profile-header__compact-progress {
@@ -3069,7 +2868,7 @@
   .profile-header__edit {
     min-height: 28px;
     padding: 0 8px;
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .profile-header--compact
@@ -3085,6 +2884,6 @@
   .profile-header__role {
     min-height: 18px;
     padding: 0 5px;
-    font-size: 5px;
+    font-size: 12px;
   }
 }

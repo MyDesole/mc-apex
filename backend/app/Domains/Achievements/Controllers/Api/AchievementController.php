@@ -7,6 +7,7 @@ use App\Domains\Achievements\Models\Achievement;
 use App\Domains\Users\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AchievementController extends Controller
 {
@@ -23,7 +24,18 @@ class AchievementController extends Controller
             ->get()
             ->keyBy('id');
 
-        $achievements = $all->map(function ($a) use ($earned) {
+        /*
+         * Доля игроков с ачивкой — «редкость по факту». Считаем одним
+         * сгруппированным запросом, а не отдельным на каждую ачивку.
+         */
+        $players = max(1, User::count());
+
+        $holders = DB::table('user_achievements')
+            ->select('achievement_id', DB::raw('COUNT(*) as holders'))
+            ->groupBy('achievement_id')
+            ->pluck('holders', 'achievement_id');
+
+        $achievements = $all->map(function ($a) use ($earned, $holders, $players) {
             $isEarned = $earned->has($a->id);
 
             return [
@@ -37,6 +49,7 @@ class AchievementController extends Controller
                 'points' => $a->points,
                 'earned' => $isEarned,
                 'earned_at' => $isEarned ? $earned[$a->id]->pivot->earned_at : null,
+                'holders_percent' => round(((int) ($holders[$a->id] ?? 0)) / $players * 100, 1),
             ];
         });
 

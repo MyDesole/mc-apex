@@ -10,7 +10,21 @@ export const AVATAR_FRAMES = [
     { id: 'rainbow', name: 'Радужная', gradient: 'linear-gradient(135deg, #ef4444, #facc15, #22c55e, #06b6d4, #7c3aed)', rarity: 'epic' },
     { id: 'legendary', name: 'Легендарная', gradient: 'linear-gradient(135deg, #facc15, #f97316, #ef4444)', rarity: 'legendary', glow: true },
     { id: 'season1', name: 'Сезон 1', gradient: 'linear-gradient(135deg, #7c3aed, #06b6d4)', rarity: 'epic' },
+
+    // Рамки в стиле блоков Minecraft
+    { id: 'emerald', name: 'Изумрудная', color: '#10b981', rarity: 'rare' },
+    { id: 'redstone', name: 'Редстоун', color: '#dc2626', rarity: 'rare' },
+    // color у градиентных рамок — базовый цвет для подсветки аватара
+    { id: 'diamond', name: 'Алмазная', color: '#22d3ee', gradient: 'linear-gradient(135deg, #a5f3fc, #22d3ee, #0e7490)', rarity: 'epic' },
+    { id: 'obsidian', name: 'Обсидиановая', color: '#6d28d9', gradient: 'linear-gradient(135deg, #1e1b2e, #6d28d9, #1e1b2e)', rarity: 'epic' },
+    { id: 'ender', name: 'Края', color: '#14b8a6', gradient: 'linear-gradient(135deg, #14b8a6, #0f172a, #a855f7)', rarity: 'epic' },
+    { id: 'netherite', name: 'Незеритовая', color: '#a8a29e', gradient: 'linear-gradient(135deg, #57534e, #a8a29e, #44403c, #78716c)', rarity: 'legendary', glow: true },
 ]
+
+/** Рамка по id: цвет или градиент. */
+export function frameById(id) {
+    return AVATAR_FRAMES.find((frame) => frame.id === id) ?? null
+}
 
 export const PROFILE_EFFECTS = [
     { id: null, name: 'Без эффекта', rarity: 'common' },

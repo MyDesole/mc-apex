@@ -30,7 +30,7 @@ const balance = computed(() => auth.user?.apex_coins ?? 0)
 
     <span class="coin-badge__content">
       <span class="coin-badge__label">
-        APEXCOIN
+        ApexCoin
       </span>
 
       <span class="coin-badge__value">

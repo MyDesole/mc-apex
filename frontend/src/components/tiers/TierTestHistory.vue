@@ -2,7 +2,7 @@
 
 import { tierTestsApi } from '@/services/tiers/tierTests.js'
 import { userLink } from '@/utils/links.js'
-import { confirm } from '@/utils/dialog.js'
+import { alert, confirm, confirmWithReason } from '@/utils/dialog.js'
 import { onMounted, ref } from 'vue'
 import {
   myTierTests,
@@ -47,6 +47,42 @@ async function cancelTest(test) {
   }
 }
 
+/** Апелляция на результат: свой последний тест, в течение 14 дней. */
+const appealingId = ref(null)
+
+const appealLabels = {
+  pending: 'Апелляция на рассмотрении',
+  approved: 'Апелляция принята',
+  rejected: 'Апелляция отклонена',
+}
+
+async function appealTest(test) {
+  if (appealingId.value) return
+
+  const answer = await confirmWithReason(
+      `Оспорить результат ${test.result_tier} (${test.result_score}%)? Тест пересмотрит другой модератор — опиши, с чем не согласен.`,
+      {
+        title: 'Апелляция',
+        confirmText: 'Отправить',
+        reasonLabel: 'Причина',
+        reasonPlaceholder: 'Например: на записи видно, что мувмент выполнен чисто…',
+      },
+  )
+
+  if (!answer) return
+
+  appealingId.value = test.id
+
+  try {
+    await tierTestsApi.appeal(test.id, answer.reason.trim())
+    await load()
+  } catch (e) {
+    await alert(e.message || 'Не удалось отправить апелляцию', { title: 'Апелляция' })
+  } finally {
+    appealingId.value = null
+  }
+}
+
 const statusLabels = {
   pending: 'Ожидает',
   in_progress: 'В процессе',
@@ -64,10 +100,6 @@ onMounted(load)
     <!-- HEADER -->
     <header class="head">
       <div class="head__identity">
-        <div class="head__eyebrow">
-          <span></span>
-          COMPETITIVE RECORD
-        </div>
 
         <div class="head__title-row">
           <h2>Тир-тесты</h2>
@@ -246,6 +278,25 @@ onMounted(load)
           >
             {{ cancellingId === t.id ? 'Отмена…' : 'Отменить' }}
           </button>
+
+          <button
+              v-else-if="t.can_appeal"
+              type="button"
+              class="test-appeal"
+              :disabled="appealingId === t.id"
+              @click="appealTest(t)"
+          >
+            {{ appealingId === t.id ? 'Отправка…' : 'Оспорить' }}
+          </button>
+
+          <span
+              v-else-if="t.appeal_status"
+              class="test-appeal-status"
+              :class="`test-appeal-status--${t.appeal_status}`"
+              :title="appealLabels[t.appeal_status]"
+          >
+            {{ appealLabels[t.appeal_status] }}
+          </span>
         </div>
       </div>
     </template>

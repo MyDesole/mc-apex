@@ -1,4 +1,5 @@
 import { TIER_COLORS } from '@/composables/players/useTier.js'
+import { frameById } from '@/data/players/profileCustomization.js'
 
 /**
  * Общие хелперы оформления игрока.
@@ -35,6 +36,13 @@ export const AVATAR_FRAMES = {
   red: '#ef4444',
   legendary: '#facc15',
   season1: '#06b6d4',
+  rainbow: '#7c3aed',
+  emerald: '#10b981',
+  redstone: '#dc2626',
+  diamond: '#22d3ee',
+  obsidian: '#6d28d9',
+  ender: '#14b8a6',
+  netherite: '#a8a29e',
 }
 
 /** Акцент по тиру игрока. */
@@ -71,43 +79,23 @@ export function avatarLetter(username) {
 /**
  * CSS-переменные для рамки аватара.
  *
- * У rainbow, legendary и season1 рамка градиентная, у остальных —
- * сплошной цвет.
+ * Цвета и градиенты берутся из общего списка рамок: раньше градиентные
+ * рамки были вписаны сюда вручную, и новая рамка из магазина требовала
+ * правки в двух местах.
  */
 export function avatarFrame(player) {
-  const frame = player?.avatar_frame
+  const id = player?.avatar_frame
 
-  if (!frame || frame === 'default') {
+  if (!id || id === 'default') {
     return {}
   }
 
-  if (frame === 'rainbow') {
-    return {
-      '--frame-color': '#7c3aed',
-      '--frame-gradient':
-          'linear-gradient(135deg, #ef4444, #facc15, #22c55e, #06b6d4, #7c3aed)',
-    }
-  }
+  const frame = frameById(id)
+  const color = frame?.color || AVATAR_FRAMES[id] || accent(player)
 
-  if (frame === 'legendary') {
-    return {
-      '--frame-color': '#facc15',
-      '--frame-gradient':
-          'linear-gradient(135deg, #facc15, #f97316, #ef4444)',
-    }
-  }
-
-  if (frame === 'season1') {
-    return {
-      '--frame-color': '#06b6d4',
-      '--frame-gradient':
-          'linear-gradient(135deg, #7c3aed, #06b6d4)',
-    }
-  }
-
-  return {
-    '--frame-color': AVATAR_FRAMES[frame] || accent(player),
-  }
+  return frame?.gradient
+      ? { '--frame-color': color, '--frame-gradient': frame.gradient }
+      : { '--frame-color': color }
 }
 
 /** CSS-переменные для эффекта профиля. */

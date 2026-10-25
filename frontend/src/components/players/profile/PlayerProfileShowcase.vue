@@ -1,5 +1,7 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { RouterLink } from 'vue-router'
+import AchievementBadge from '@/components/achievements/AchievementBadge.vue'
 
 const props = defineProps({
   achievements: {
@@ -11,6 +13,15 @@ const props = defineProps({
 const emit = defineEmits(['open'])
 
 const achievements = computed(() => props.achievements ?? [])
+
+/** Сколько ачивок видно сразу: при десятках ачивок профиль становился бесконечным. */
+const LIMIT = 6
+
+const expanded = ref(false)
+
+const visible = computed(() =>
+    expanded.value ? achievements.value : achievements.value.slice(0, LIMIT)
+)
 
 function achievementColor(achievement) {
   return achievement?.color || '#8b5cf6'
@@ -35,21 +46,19 @@ function openAchievement(achievement) {
         </div>
       </div>
 
-      <div class="showcase__symbol">✦</div>
+      <RouterLink to="/achievements" class="showcase__all">Все ачивки →</RouterLink>
     </div>
 
     <div v-if="achievements.length" class="achievement-grid">
       <button
-          v-for="achievement in achievements"
+          v-for="achievement in visible"
           :key="achievement.id"
           type="button"
           class="achievement"
           :style="{ '--achievement-color': achievementColor(achievement) }"
           @click="openAchievement(achievement)"
       >
-        <span class="achievement__icon">
-          {{ achievement.icon || '✦' }}
-        </span>
+        <AchievementBadge :achievement="achievement" :size="40" />
 
         <span class="achievement__content">
           <span class="achievement__name">
@@ -68,8 +77,17 @@ function openAchievement(achievement) {
       </button>
     </div>
 
+    <button
+        v-if="achievements.length > LIMIT"
+        type="button"
+        class="showcase__more"
+        @click="expanded = !expanded"
+    >
+      {{ expanded ? 'Свернуть' : `Показать все (${achievements.length})` }}
+    </button>
+
     <div v-else class="showcase-empty">
-      <div class="showcase-empty__icon">✦</div>
+      <AchievementBadge :achievement="{ icon: 'trophy', rarity: 'common' }" :size="40" locked />
 
       <div>
         <strong>Пока нет достижений</strong>

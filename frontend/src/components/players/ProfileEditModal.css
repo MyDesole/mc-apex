@@ -7,7 +7,6 @@
   justify-content: center;
   padding: 20px;
   background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(6px);
 }
 
 .modal {
@@ -18,7 +17,7 @@
   flex-direction: column;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 18px;
+  border-radius: 6px;
   overflow: hidden;
 }
 
@@ -84,7 +83,7 @@
   color: var(--text);
   background: #0d0d14;
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: 6px;
   font: inherit;
   outline: none;
   resize: vertical;
@@ -103,7 +102,7 @@
 }
 
 /* Cover */
-.cover-drop { border-radius: 12px; overflow: hidden; }
+.cover-drop { border-radius: 6px; overflow: hidden; }
 
 .cover-preview {
   position: relative;
@@ -155,7 +154,7 @@
   padding: 30px;
   background: #0d0d14;
   border: 2px dashed var(--border);
-  border-radius: 12px;
+  border-radius: 6px;
   cursor: pointer;
   color: var(--text-dim);
   transition: all 0.2s;
@@ -186,7 +185,7 @@
 .avatar-preview {
   width: 84px;
   height: 84px;
-  border-radius: 14px;
+  border-radius: 6px;
   background-size: cover;
   background-position: center;
   box-shadow: 0 4px 20px rgba(0,0,0,0.3);
@@ -198,7 +197,7 @@
   justify-content: center;
   color: #fff;
   font-size: 32px;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .avatar-actions {
@@ -244,7 +243,7 @@
 .color-swatch {
   width: 34px;
   height: 34px;
-  border-radius: 9px;
+  border-radius: 6px;
   cursor: pointer;
   border: 2px solid transparent;
   transition: transform 0.15s, border-color 0.15s;
@@ -262,7 +261,7 @@
   height: 34px;
   padding: 0;
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: 6px;
   background: transparent;
   cursor: pointer;
 }
@@ -282,9 +281,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 9px;
+  border-radius: 6px;
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 800;
   color: #fff;
   flex-shrink: 0;
 }
@@ -301,7 +300,7 @@
   color: var(--text);
   background: #0d0d14;
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: 6px;
   font: inherit;
   outline: none;
 }
@@ -320,7 +319,7 @@
 .btn-cancel, .btn-save {
   min-height: 42px;
   padding: 0 22px;
-  border-radius: 10px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -336,7 +335,7 @@
 .btn-save {
   color: #fff;
   background: var(--accent);
-  box-shadow: 0 5px 20px rgba(124,58,237,0.25);
+  box-shadow: none;
 }
 
 .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }

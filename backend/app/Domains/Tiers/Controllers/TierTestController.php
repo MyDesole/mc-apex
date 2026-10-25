@@ -5,7 +5,9 @@ namespace App\Domains\Tiers\Controllers;
 use App\Domains\Tiers\Requests\TierTest\CreateTierTestRequest;
 use App\Domains\Tiers\Requests\TierTest\UpdateTierTestRequest;
 use App\Domains\Tiers\Models\TierTest;
+use App\Domains\Tiers\Models\TierTestAppeal;
 use App\Domains\Users\Models\User;
+use App\Domains\Tiers\Services\TierTestAppealService;
 use App\Domains\Tiers\Services\TierTestService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,6 +29,8 @@ class TierTestController extends Controller
             ->with(['tester:id,username,avatar,tier'])
             ->latest()
             ->get();
+
+        $this->attachAppealFlags($myTests);
 
         // Заявки, где я тестер
         $asTester = TierTest::where('tester_id', $userId)
@@ -93,10 +97,34 @@ class TierTestController extends Controller
             ->orderBy('completed_at')
             ->get([
                 'id', 'mode', 'result_tier', 'result_score', 'completed_at',
-                'aspects', 'tester_id',
+                'aspects', 'tester_id', 'user_id', 'status',
             ]);
 
+        // Владельцу — статус апелляции и можно ли оспорить тест
+        if ($request->user()?->id === $user->id) {
+            $this->attachAppealFlags($tests);
+        }
+
         return response()->json(['history' => $tests]);
+    }
+
+    /**
+     * Статус апелляции и можно ли оспорить — только для своих тестов.
+     *
+     * @param  \Illuminate\Support\Collection<int, TierTest>  $tests
+     */
+    private function attachAppealFlags($tests): void
+    {
+        $appeals = TierTestAppeal::whereIn('tier_test_id', $tests->pluck('id'))->pluck('status', 'tier_test_id');
+        $service = app(TierTestAppealService::class);
+
+        $tests->each(function (TierTest $test) use ($appeals, $service) {
+            $test->setAttribute('appeal_status', $appeals[$test->id] ?? null);
+            $test->setAttribute(
+                'can_appeal',
+                ! isset($appeals[$test->id]) && $test->status === 'completed' && $service->appealable($test),
+            );
+        });
     }
     public function show(Request $request, TierTest $tierTest): JsonResponse
     {

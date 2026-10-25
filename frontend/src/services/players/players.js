@@ -45,6 +45,14 @@ function buildFormData(payload) {
             continue
         }
 
+        // Вложенный объект (соцсети): key[sub] — так его читает Laravel
+        if (typeof value === 'object') {
+            for (const [sub, inner] of Object.entries(value)) {
+                fd.append(`${key}[${sub}]`, inner ?? '')
+            }
+            continue
+        }
+
         fd.append(key, value)
     }
 

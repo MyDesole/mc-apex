@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { adminApi } from '@/services/core/admin.js'
+import AchievementBadge from '@/components/achievements/AchievementBadge.vue'
 
 const props = defineProps({
   user: { type: Object, required: true },
@@ -153,7 +154,7 @@ onMounted(load)
               :title="a.description || a.name"
               @click="toggle(a)"
           >
-            <span class="ach__icon">{{ a.icon }}</span>
+            <AchievementBadge :achievement="a" :size="36" />
 
             <span class="ach__text">
               <span class="ach__name">{{ a.name }}</span>

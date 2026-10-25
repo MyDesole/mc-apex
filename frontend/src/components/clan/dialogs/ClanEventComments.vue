@@ -1,4 +1,5 @@
 <script setup>
+import PageLoader from '@/components/core/PageLoader.vue'
 import { alert as alertDialog, confirm as confirmDialog } from '@/utils/dialog.js'
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
@@ -130,7 +131,7 @@ onMounted(load)
     </div>
 
     <!-- Список -->
-    <div v-if="loading" class="empty">Загрузка...</div>
+    <PageLoader v-if="loading" compact />
     <div v-else-if="!comments.length" class="empty">
       Комментариев пока нет — будь первым
     </div>

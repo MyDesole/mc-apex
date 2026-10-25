@@ -18,7 +18,7 @@
   padding: 28px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 18px;
+  border-radius: 6px;
   margin-bottom: 28px;
 }
 
@@ -29,10 +29,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 16px;
+  border-radius: 6px;
   color: #fff;
   font-size: 36px;
-  font-weight: 900;
+  font-weight: 800;
   flex-shrink: 0;
   overflow: hidden;
   transition: box-shadow 0.3s ease;
@@ -55,7 +55,7 @@
 .clan-title h1 {
   margin: 0 0 8px;
   font-size: 26px;
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: -0.5px;
 }
 
@@ -83,7 +83,7 @@
 
 .stat b {
   font-size: 18px;
-  font-weight: 900;
+  font-weight: 800;
   color: var(--text);
   letter-spacing: -0.5px;
 }
@@ -102,7 +102,7 @@
   color: var(--text-dim);
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 4px;
   font-size: 12px;
   font-weight: 700;
   text-decoration: none;
@@ -118,31 +118,31 @@
 .social-link.discord:hover {
   background: #5865f2;
   border-color: #5865f2;
-  box-shadow: 0 4px 15px rgba(88, 101, 242, 0.35);
+  box-shadow: none;
 }
 
 .social-link.telegram:hover {
   background: #229ed9;
   border-color: #229ed9;
-  box-shadow: 0 4px 15px rgba(34, 158, 217, 0.35);
+  box-shadow: none;
 }
 
 .social-link.youtube:hover {
   background: #ff0000;
   border-color: #ff0000;
-  box-shadow: 0 4px 15px rgba(255, 0, 0, 0.35);
+  box-shadow: none;
 }
 
 .social-link.vk:hover {
   background: #0077ff;
   border-color: #0077ff;
-  box-shadow: 0 4px 15px rgba(0, 119, 255, 0.35);
+  box-shadow: none;
 }
 
 .social-link.website:hover {
   background: var(--accent);
   border-color: var(--accent);
-  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.35);
+  box-shadow: none;
 }
 
 .social-label {
@@ -153,7 +153,7 @@
 .stat b.loss { color: #f87171; }
 
 .stat span {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--text-muted);
   text-transform: uppercase;
   font-weight: 700;
@@ -172,7 +172,7 @@
 .btn-apply,
 .btn-leave {
   padding: 11px 20px;
-  border-radius: 10px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -185,7 +185,7 @@
   color: var(--text);
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -199,13 +199,13 @@
 .btn-apply {
   color: #fff;
   background: var(--accent);
-  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.25);
+  box-shadow: none;
 }
 
 .btn-apply:hover {
   background: var(--accent-light);
   transform: translateY(-1px);
-  box-shadow: 0 7px 25px rgba(124, 58, 237, 0.35);
+  box-shadow: none;
 }
 
 .btn-leave {
@@ -228,7 +228,7 @@
   color: #fbbf24;
   background: rgba(251, 191, 36, 0.1);
   border: 1px solid rgba(251, 191, 36, 0.2);
-  border-radius: 10px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
@@ -284,11 +284,11 @@
   padding: 0 5px;
   background: #ef4444;
   color: #fff;
-  border-radius: 999px;
-  font-size: 10px;
+  border-radius: 4px;
+  font-size: 12px;
   font-weight: 800;
   line-height: 1;
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+  box-shadow: none;
 }
 
 /* === АДАПТИВ === */
@@ -305,7 +305,7 @@
     width: 64px;
     height: 64px;
     font-size: 28px;
-    border-radius: 14px;
+    border-radius: 6px;
   }
 
   .clan-title h1 {

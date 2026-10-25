@@ -335,7 +335,7 @@ function onDelete() {
                   v-if="isAuthorMedia"
                   class="forum-reply__media"
               >
-                MEDIA
+                Вложения
               </span>
 
               <span

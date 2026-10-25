@@ -19,7 +19,7 @@
   color: var(--text);
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 6px;
   cursor: pointer;
 }
 
@@ -37,11 +37,11 @@
   color: #fff;
   background: var(--accent);
   border: 0;
-  border-radius: 10px;
+  border-radius: 6px;
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.25);
+  box-shadow: none;
 }
 
 .btn-create:hover {
@@ -62,7 +62,7 @@
   padding: 14px 18px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 6px;
 }
 
 .row__main {
@@ -81,7 +81,7 @@
 
 .badge {
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: 4px;
   font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;

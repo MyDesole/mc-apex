@@ -6,6 +6,8 @@ import ClanBadge from '@/components/clan/ClanBadge.vue'
 import RankBadge from '@/components/players/RankBadge.vue'
 import BridgeTechniques from '@/components/bridge/BridgeTechniques.vue'
 import FriendButton from '@/components/friends/FriendButton.vue'
+import PlayerShowcase from '@/components/players/PlayerShowcase.vue'
+import PlayerSeasons from '@/components/players/profile/PlayerSeasons.vue'
 import { api } from '@/services/core/api.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 
@@ -118,32 +120,46 @@ watch(
     />
 
     <!--
-      Бридж-профиль: техники первыми, звание бриджера — главный ранг
+      Minecraft-витрина и факты об игроке одним рядом: раньше клан, место
+      и дружба шли отдельными блоками друг под другом.
     -->
-    <section
-        class="blocks"
-        :class="{ 'blocks--demoted': isBridgeProfile }"
-    >
-      <div class="block-col">
-        <h3 class="block-title">Клан</h3>
-        <ClanBadge :clan-member="clanMember" />
-      </div>
+    <div class="profile-row">
+      <PlayerShowcase
+          :user="user"
+          :rank="rank"
+          :is-me="isMe"
+      />
 
-      <div
-          v-if="!isStaff"
-          class="block-col"
-      >
-        <h3 class="block-title">
-          {{ isBridgeProfile ? 'Место в бридже' : 'Место в топе' }}
-        </h3>
+      <aside class="profile-facts">
+        <section class="fact">
+          <h3 class="block-title">Клан</h3>
+          <ClanBadge :clan-member="clanMember" />
+        </section>
 
-        <!-- В бридж-профиле показываем место среди бриджеров -->
-        <RankBadge
-            :position="isBridgeProfile ? bridge.rank.position : rank.position"
-            :total="isBridgeProfile ? bridge.rank.total : rank.total"
-        />
-      </div>
-    </section>
+        <section v-if="!isStaff" class="fact">
+          <h3 class="block-title">
+            {{ isBridgeProfile ? 'Место в бридже' : 'Место в топе' }}
+          </h3>
+
+          <!-- В бридж-профиле показываем место среди бриджеров -->
+          <RankBadge
+              :position="isBridgeProfile ? bridge.rank.position : rank.position"
+              :total="isBridgeProfile ? bridge.rank.total : rank.total"
+          />
+        </section>
+
+        <PlayerSeasons v-if="!isStaff" :user-id="user.id" />
+
+        <section v-if="!isMe" class="fact">
+          <h3 class="block-title">Дружба</h3>
+          <FriendButton
+              :user-id="user.id"
+              :friendship="friendship"
+              @update="onFriendshipUpdate"
+          />
+        </section>
+      </aside>
+    </div>
 
     <div
         v-if="!isBridgeProfile && bridge.techniques.length"
@@ -153,15 +169,6 @@ watch(
           :techniques="bridge.techniques"
           :summary="bridge.summary"
           :rank="bridge.rank"
-      />
-    </div>
-
-    <div v-if="!isMe" class="friend-block">
-      <h3 class="block-title">Дружба</h3>
-      <FriendButton
-          :user-id="user.id"
-          :friendship="friendship"
-          @update="onFriendshipUpdate"
       />
     </div>
   </div>

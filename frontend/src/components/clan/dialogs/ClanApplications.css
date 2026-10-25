@@ -32,8 +32,8 @@
   padding: 0 9px;
   color: #fff;
   background: rgba(124, 58, 237, .18);
-  border: 1px solid rgba(139, 92, 246, .28);
-  border-radius: 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
   font-size: 12px;
   font-weight: 800;
 }
@@ -48,11 +48,9 @@
   position: relative;
   padding: 16px;
   overflow: hidden;
-  background:
-      linear-gradient(135deg, rgba(124, 58, 237, .035), transparent 45%),
-      var(--bg-card);
+  background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 6px;
   transition: .2s ease;
 }
 
@@ -66,7 +64,7 @@
 }
 
 .app-card:hover {
-  border-color: rgba(139, 92, 246, .3);
+  border-color: var(--border);
   transform: translateY(-1px);
 }
 
@@ -88,10 +86,10 @@
   overflow: hidden;
   color: #fff;
   background: linear-gradient(135deg, #8b5cf6, #5b21b6);
-  border-radius: 12px;
+  border-radius: 6px;
   font-size: 16px;
   font-weight: 850;
-  box-shadow: 0 8px 24px rgba(124, 58, 237, .16);
+  box-shadow: none;
 }
 
 .avatar img {
@@ -134,8 +132,8 @@
   padding: 10px 12px;
   color: var(--text-dim);
   background: rgba(124, 58, 237, .055);
-  border: 1px solid rgba(124, 58, 237, .1);
-  border-radius: 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
   font-size: 12px;
   line-height: 1.55;
 }
@@ -204,7 +202,7 @@
   color: var(--text-muted);
   background: var(--bg-card);
   border: 1px dashed var(--border);
-  border-radius: 14px;
+  border-radius: 6px;
   font-size: 12px;
 }
 
@@ -222,14 +220,14 @@
   color: #22c55e;
   background: rgba(34,197,94,.08);
   border: 1px solid rgba(34,197,94,.15);
-  border-radius: 11px;
-  font-weight: 900;
+  border-radius: 6px;
+  font-weight: 800;
 }
 
 .loader {
   width: 20px;
   height: 20px;
-  border: 2px solid rgba(139,92,246,.18);
+  border: 2px solid var(--border);
   border-top-color: var(--accent-light);
   border-radius: 50%;
   animation: spin .7s linear infinite;

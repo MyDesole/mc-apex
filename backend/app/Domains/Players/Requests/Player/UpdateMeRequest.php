@@ -20,6 +20,8 @@ class UpdateMeRequest extends BaseFormRequest
             'socials.telegram' => ['nullable', 'string', 'max:255'],
             'socials.youtube' => ['nullable', 'string', 'max:255'],
             'socials.vk' => ['nullable', 'string', 'max:255'],
+            'socials.twitch' => ['nullable', 'string', 'max:255'],
+            'socials.steam' => ['nullable', 'string', 'max:255'],
             // Без правила 'url': ссылки часто пишут без схемы
             'socials.website' => ['nullable', 'string', 'max:255'],
         ];

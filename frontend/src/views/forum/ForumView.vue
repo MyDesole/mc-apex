@@ -215,10 +215,6 @@ onMounted(load)
 
       <div class="forum-hero__inner">
         <div class="hero-copy">
-          <div class="hero-kicker">
-            <span></span>
-            APEX COMMUNITY
-          </div>
 
           <h1>
             Место, где

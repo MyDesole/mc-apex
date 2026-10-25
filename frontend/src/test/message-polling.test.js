@@ -144,6 +144,45 @@ describe('Запасной опрос сообщений', () => {
     expect(onNew.mock.calls[0][0][0].id).toBe(4)
   })
 
+  it('ответ для старого диалога не попадает в новый', async () => {
+    const conversationId = ref(3)
+    const messages = ref([{ id: 1, body: 'первое' }])
+
+    let resolve
+    show.mockReturnValue(new Promise((r) => { resolve = r }))
+
+    const { refresh } = useMessagePolling(conversationId, messages)
+
+    const pending = refresh()
+
+    // Игрок открыл другой диалог, пока шёл запрос
+    conversationId.value = 4
+    messages.value = [{ id: 50, body: 'другой диалог' }]
+
+    resolve({ messages: [{ id: 2, body: 'из старого' }] })
+    await pending
+
+    expect(messages.value.map((m) => m.id)).toEqual([50])
+  })
+
+  it('не запускает второй запрос, пока не вернулся первый', async () => {
+    const conversationId = ref(3)
+    const messages = ref([])
+
+    let resolve
+    show.mockReturnValue(new Promise((r) => { resolve = r }))
+
+    const { refresh } = useMessagePolling(conversationId, messages)
+
+    const first = refresh()
+    await refresh()
+
+    expect(show).toHaveBeenCalledTimes(1)
+
+    resolve({ messages: [] })
+    await first
+  })
+
   it('останавливается при размонтировании', () => {
     const conversationId = ref(1)
     const messages = ref([])

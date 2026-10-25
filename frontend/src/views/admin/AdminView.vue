@@ -14,6 +14,7 @@ import AdminNews from '@/components/admin/AdminNews.vue'
 import AdminShop from '@/components/admin/AdminShop.vue'
 import AdminForum from '@/components/admin/AdminForum.vue'
 import AdminVerification from '@/components/admin/AdminVerification.vue'
+import AdminAppeals from '@/components/admin/AdminAppeals.vue'
 import TabTransition from '@/components/core/TabTransition.vue'
 
 const auth = useAuthStore()
@@ -94,6 +95,17 @@ onMounted(() => {
           <path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
         Верификация
+      </button>
+
+      <!-- АПЕЛЛЯЦИИ НА ТИР-ТЕСТЫ -->
+      <button
+          :class="{ active: tab === 'appeals' }"
+          @click="tab = 'appeals'"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 3v18M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0zM8 21h8" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Апелляции
       </button>
 
       <!-- ТУРНИРЫ -->
@@ -205,6 +217,7 @@ onMounted(() => {
       <AdminShop v-else-if="tab === 'shop'" />
       <AdminForum v-else-if="tab === 'forum'" />
         <AdminVerification v-else-if="tab === 'verification' && isAdmin" />
+        <AdminAppeals v-else-if="tab === 'appeals'" />
       </TabTransition>
     </div>
   </div>

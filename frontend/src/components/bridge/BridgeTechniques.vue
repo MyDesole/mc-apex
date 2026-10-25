@@ -99,9 +99,6 @@ defineExpose({ load: loadCatalog })
   <section class="bridge-block">
     <header class="bridge-block__head">
       <div>
-        <div class="bridge-block__eyebrow">
-          BRIDGE MASTERY
-        </div>
 
         <h3 class="bridge-block__title">
           {{ editable ? 'Мои виды бриджа' : 'Виды бриджа' }}

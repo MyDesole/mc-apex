@@ -28,16 +28,7 @@
   position: absolute;
   inset: 0;
 
-  background:
-      radial-gradient(
-          circle at 50% 0%,
-          rgba(124, 58, 237, 0.1),
-          transparent 42%
-      ),
-      rgba(3, 3, 8, 0.82);
-
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: rgba(3, 3, 8, 0.82);
 }
 
 .clan-modal__window {
@@ -53,15 +44,9 @@
   overflow: hidden;
 
   border: 1px solid rgba(255, 255, 255, 0.085);
-  border-radius: 24px;
+  border-radius: 6px;
 
-  background:
-      radial-gradient(
-          circle at 0% 0%,
-          rgba(139, 92, 246, 0.055),
-          transparent 35%
-      ),
-      var(--modal-bg);
+  background: var(--modal-bg);
 
   box-shadow:
       0 40px 120px rgba(0, 0, 0, 0.55),
@@ -113,12 +98,7 @@
 
   border-bottom: 1px solid rgba(255, 255, 255, 0.055);
 
-  background:
-      linear-gradient(
-          135deg,
-          rgba(139, 92, 246, 0.04),
-          transparent 50%
-      );
+  background: var(--bg-card);
 }
 
 .clan-modal__title-group {
@@ -134,7 +114,7 @@
 
   color: var(--modal-accent-light);
 
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1;
   font-weight: 850;
   letter-spacing: 0.17em;
@@ -148,9 +128,7 @@
 
   background: var(--modal-accent);
 
-  box-shadow:
-      0 0 0 3px rgba(139, 92, 246, 0.08),
-      0 0 14px rgba(139, 92, 246, 0.55);
+  box-shadow:0 0 0 3px rgba(139, 92, 246, 0.08);
 }
 
 .clan-modal__header h2 {
@@ -183,7 +161,7 @@
   place-items: center;
 
   border: 1px solid rgba(255, 255, 255, 0.075);
-  border-radius: 11px;
+  border-radius: 6px;
 
   background: rgba(255, 255, 255, 0.035);
 
@@ -225,7 +203,7 @@
   padding: 11px 13px;
 
   border: 1px solid rgba(248, 113, 113, 0.16);
-  border-radius: 12px;
+  border-radius: 6px;
 
   background: rgba(248, 113, 113, 0.055);
 }
@@ -246,7 +224,7 @@
   color: #fca5a5;
 
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .clan-modal__error div:last-child {
@@ -269,7 +247,7 @@
 
   color: #a1a1aa;
 
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.4;
 
   overflow-wrap: anywhere;
@@ -300,7 +278,7 @@
 
 .clan-modal__body::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 99px;
+  border-radius: 4px;
 }
 
 /* =========================================================
@@ -334,7 +312,7 @@
   display: grid;
   place-items: center;
 
-  border-radius: 10px;
+  border-radius: 6px;
 }
 
 .settings-heading__icon svg {
@@ -382,7 +360,7 @@
 
   color: var(--modal-muted);
 
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.4;
 }
 
@@ -401,14 +379,14 @@
 .cover-editor__label span {
   color: var(--modal-dim);
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
 }
 
 .cover-editor__label small {
   color: var(--modal-muted);
 
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .cover {
@@ -419,7 +397,7 @@
   overflow: hidden;
 
   border: 1px solid rgba(255, 255, 255, 0.075);
-  border-radius: 15px;
+  border-radius: 6px;
 
   background-position: center;
   background-size: cover;
@@ -432,12 +410,7 @@
   position: absolute;
   inset: 0;
 
-  background:
-      linear-gradient(
-          180deg,
-          rgba(5, 5, 10, 0.12),
-          rgba(5, 5, 10, 0.72)
-      );
+  background: var(--bg-card);
 }
 
 .cover__grid {
@@ -446,16 +419,7 @@
 
   opacity: 0.15;
 
-  background-image:
-      linear-gradient(
-          rgba(255, 255, 255, 0.08) 1px,
-          transparent 1px
-      ),
-      linear-gradient(
-          90deg,
-          rgba(255, 255, 255, 0.08) 1px,
-          transparent 1px
-      );
+  background-image: var(--bg-card);
 
   background-size: 35px 35px;
 
@@ -493,7 +457,7 @@
   overflow: hidden;
 
   border: 2px solid rgba(255, 255, 255, 0.65);
-  border-radius: 13px;
+  border-radius: 6px;
 
   box-shadow:
       0 8px 25px rgba(0, 0, 0, 0.3);
@@ -509,7 +473,7 @@
   color: #fff;
 
   font-size: 18px;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .cover__tag {
@@ -517,7 +481,7 @@
 
   color: rgba(255, 255, 255, 0.65);
 
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
 }
@@ -555,12 +519,10 @@
   color: #fff;
 
   font-family: inherit;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
 
   cursor: pointer;
-
-  backdrop-filter: blur(8px);
 
   transition: 0.18s;
 }
@@ -591,15 +553,9 @@
   justify-content: center;
 
   border: 1px dashed rgba(255, 255, 255, 0.1);
-  border-radius: 15px;
+  border-radius: 6px;
 
-  background:
-      radial-gradient(
-          circle at 50% 20%,
-          rgba(139, 92, 246, 0.06),
-          transparent 45%
-      ),
-      rgba(255, 255, 255, 0.015);
+  background: rgba(255, 255, 255, 0.015);
 
   cursor: pointer;
 
@@ -624,8 +580,8 @@
 
   margin-bottom: 9px;
 
-  border: 1px solid rgba(139, 92, 246, 0.15);
-  border-radius: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 
   background: rgba(139, 92, 246, 0.08);
 
@@ -649,7 +605,7 @@
 
   color: var(--modal-muted);
 
-  font-size: 9px;
+  font-size: 12px;
 }
 
 /* =========================================================
@@ -669,7 +625,7 @@
 
   color: var(--modal-dim);
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
 }
 
@@ -685,7 +641,7 @@
   overflow: hidden;
 
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
+  border-radius: 6px;
 
   background-position: center;
   background-size: cover;
@@ -728,7 +684,7 @@
   color: #fff;
 
   font-size: 30px;
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: -0.06em;
 }
 
@@ -753,7 +709,7 @@
   border-radius: 6px;
 
   font-family: inherit;
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 800;
 
   cursor: pointer;
@@ -775,7 +731,7 @@
 .small-action--primary {
   color: #c4b5fd;
   background: rgba(139, 92, 246, 0.08);
-  border-color: rgba(139, 92, 246, 0.15);
+  border-color: var(--border);
 }
 
 .small-action--primary:hover {
@@ -814,7 +770,7 @@
 
   color: var(--modal-dim);
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
 }
 
@@ -828,7 +784,7 @@
   background: rgba(5, 5, 10, 0.55);
 
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
+  border-radius: 6px;
 
   outline: none;
 
@@ -890,7 +846,7 @@
 
   color: #52525b;
 
-  font-size: 8px;
+  font-size: 12px;
 }
 
 .field-label-row {
@@ -900,7 +856,7 @@
 .field-label-row > span {
   color: #52525b;
 
-  font-size: 8px;
+  font-size: 12px;
 }
 
 .tag-input {
@@ -913,7 +869,7 @@
   padding: 0 10px;
 
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
+  border-radius: 6px;
 
   background: rgba(5, 5, 10, 0.55);
 
@@ -942,8 +898,7 @@
   font-family: inherit;
   font-size: 11px;
   font-weight: 850;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 /* =========================================================
@@ -960,7 +915,7 @@
   padding: 13px;
 
   border: 1px solid rgba(255, 255, 255, 0.065);
-  border-radius: 13px;
+  border-radius: 6px;
 
   background: rgba(255, 255, 255, 0.018);
 }
@@ -975,7 +930,7 @@
   width: 35px;
   height: 35px;
 
-  border-radius: 10px;
+  border-radius: 6px;
 
   box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.25),
@@ -990,7 +945,7 @@
 .color-current strong {
   color: #e4e4e7;
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.04em;
 }
@@ -1000,7 +955,7 @@
 
   color: var(--modal-muted);
 
-  font-size: 8px;
+  font-size: 12px;
 }
 
 .color-presets {
@@ -1114,7 +1069,7 @@
   padding: 9px;
 
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 11px;
+  border-radius: 6px;
 
   background: rgba(255, 255, 255, 0.016);
 }
@@ -1136,8 +1091,8 @@
 
   color: #fff;
 
-  font-size: 9px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .social-field__icon--discord {
@@ -1171,7 +1126,7 @@
 
   color: #a1a1aa;
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 750;
 }
 
@@ -1185,7 +1140,7 @@
 
   background: transparent;
 
-  font-size: 10px;
+  font-size: 12px;
 
   box-shadow: none;
 }
@@ -1210,7 +1165,7 @@
   padding: 13px;
 
   border: 1px solid rgba(255, 255, 255, 0.065);
-  border-radius: 13px;
+  border-radius: 6px;
 
   background: rgba(255, 255, 255, 0.018);
 
@@ -1270,7 +1225,7 @@
   background: var(--modal-accent);
   color: #fff;
 
-  box-shadow: 0 0 16px rgba(139, 92, 246, 0.2);
+  box-shadow: none;
 }
 
 .access-card__icon {
@@ -1280,7 +1235,7 @@
   display: grid;
   place-items: center;
 
-  border-radius: 9px;
+  border-radius: 6px;
 }
 
 .access-card__icon svg {
@@ -1315,20 +1270,20 @@
 
   color: var(--modal-muted);
 
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.4;
 }
 
 .access-card__status {
   padding: 5px 8px;
 
-  border-radius: 999px;
+  border-radius: 4px;
 
   background: rgba(34, 197, 94, 0.08);
 
   color: #86efac;
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.04em;
 }
@@ -1348,15 +1303,9 @@
   padding: 14px;
 
   border: 1px solid rgba(255, 255, 255, 0.065);
-  border-radius: 13px;
+  border-radius: 6px;
 
-  background:
-      linear-gradient(
-          135deg,
-          rgba(250, 204, 21, 0.025),
-          transparent 55%
-      ),
-      rgba(255, 255, 255, 0.016);
+  background: rgba(255, 255, 255, 0.016), var(--bg-card);
 }
 
 .fee-card__top {
@@ -1374,7 +1323,7 @@
   display: grid;
   place-items: center;
 
-  border-radius: 9px;
+  border-radius: 6px;
 
   background: rgba(250, 204, 21, 0.08);
 
@@ -1403,7 +1352,7 @@
 
   color: var(--modal-muted);
 
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .fee-card__input {
@@ -1427,7 +1376,7 @@
   background: rgba(5, 5, 10, 0.6);
 
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 9px;
+  border-radius: 6px;
 
   outline: none;
 
@@ -1446,7 +1395,7 @@
 .fee-card__input span {
   color: #facc15;
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
 }
 
@@ -1455,7 +1404,7 @@
 
   color: #52525b;
 
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.5;
 }
 
@@ -1477,15 +1426,9 @@
   overflow: hidden;
 
   border: 1px solid rgba(250, 204, 21, 0.12);
-  border-radius: 13px;
+  border-radius: 6px;
 
-  background:
-      radial-gradient(
-          circle at 0% 50%,
-          rgba(250, 204, 21, 0.075),
-          transparent 35%
-      ),
-      rgba(250, 204, 21, 0.018);
+  background: rgba(250, 204, 21, 0.018);
 
   color: inherit;
 
@@ -1500,13 +1443,7 @@
 .highlight-card:hover {
   border-color: rgba(250, 204, 21, 0.28);
 
-  background:
-      radial-gradient(
-          circle at 0% 50%,
-          rgba(250, 204, 21, 0.11),
-          transparent 40%
-      ),
-      rgba(250, 204, 21, 0.025);
+  background: rgba(250, 204, 21, 0.025);
 
   transform: translateY(-1px);
 }
@@ -1524,7 +1461,7 @@
 
   overflow: hidden;
 
-  border-radius: 11px;
+  border-radius: 6px;
 
   background:
       linear-gradient(
@@ -1542,8 +1479,7 @@
 
   font-size: 19px;
 
-  text-shadow:
-      0 0 15px rgba(250, 204, 21, 0.65);
+  text-shadow: none;
 }
 
 .highlight-card__orb {
@@ -1586,7 +1522,7 @@
 
   color: #a1a1aa;
 
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.4;
 }
 
@@ -1597,7 +1533,7 @@
 
   color: #71717a;
 
-  font-size: 8px;
+  font-size: 12px;
 }
 
 .highlight-active {
@@ -1609,7 +1545,7 @@
 
   color: #86efac;
 
-  font-size: 7px;
+  font-size: 12px;
   font-weight: 850;
   letter-spacing: 0.06em;
 }
@@ -1650,12 +1586,7 @@
 
   border-top: 1px solid rgba(255, 255, 255, 0.055);
 
-  background:
-      linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0.012),
-          rgba(0, 0, 0, 0.08)
-      );
+  background: var(--bg-card);
 }
 
 .save-hint {
@@ -1665,7 +1596,7 @@
 
   color: #52525b;
 
-  font-size: 8px;
+  font-size: 12px;
 }
 
 .save-hint svg {
@@ -1689,11 +1620,11 @@
 
   padding: 0 14px;
 
-  border-radius: 9px;
+  border-radius: 6px;
 
   font-family: inherit;
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
 
   cursor: pointer;
@@ -1728,7 +1659,7 @@
 }
 
 .footer-button--save {
-  border: 1px solid rgba(139, 92, 246, 0.3);
+  border: 1px solid var(--border);
 
   background:
       linear-gradient(
@@ -1739,13 +1670,11 @@
 
   color: #fff;
 
-  box-shadow:
-      0 8px 22px rgba(109, 40, 217, 0.2);
+  box-shadow: none;
 }
 
 .footer-button--save:hover:not(:disabled) {
-  box-shadow:
-      0 10px 28px rgba(109, 40, 217, 0.3);
+  box-shadow: none;
 }
 
 .footer-button:disabled {
@@ -1799,7 +1728,7 @@
 
   .clan-modal__window {
     max-height: calc(100vh - 24px);
-    border-radius: 19px;
+    border-radius: 6px;
   }
 
   .clan-modal__header {
@@ -1837,7 +1766,7 @@
     width: 100%;
     max-height: 94vh;
 
-    border-radius: 20px 20px 0 0;
+    border-radius: 6px 6px 0 0;
   }
 
   .clan-modal__header {

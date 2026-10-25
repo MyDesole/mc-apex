@@ -1,7 +1,9 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { adminApi } from '@/services/core/admin.js'
-import AppIcon from '@/components/core/AppIcon.vue'
+import AchievementBadge from '@/components/achievements/AchievementBadge.vue'
+import PixelIcon from '@/components/achievements/PixelIcon.vue'
+import { PIXEL_ICON_KEYS } from '@/data/achievements/pixelIcons.js'
 
 const props = defineProps({
   achievement: { type: Object, default: null },
@@ -14,7 +16,7 @@ const isEdit = !!props.achievement
 const form = ref({
   name: props.achievement?.name ?? '',
   description: props.achievement?.description ?? '',
-  icon: props.achievement?.icon ?? '🏆',
+  icon: props.achievement?.icon ?? 'trophy',
   color: props.achievement?.color ?? '#7c3aed',
   rarity: props.achievement?.rarity ?? 'common',
   points: props.achievement?.points ?? 10,
@@ -66,11 +68,6 @@ const rarityLabels = {
   legendary: 'Легендарная',
 }
 
-const iconPresets = [
-  'trophy', 'crown', 'sword', 'shield', 'flame', 'bolt', 'gem', 'star',
-  'target', 'chart', 'handshake', 'globe', 'sparkles', 'rocket', 'palette', 'medal',
-  'leaf', 'snow', 'heart', 'send', 'coin', 'gift', 'doc', 'frame',
-]
 </script>
 
 <template>
@@ -86,7 +83,7 @@ const iconPresets = [
 
         <!-- Превью -->
         <div class="preview" :style="{ '--color': previewColor }">
-          <AppIcon class="preview__icon" :icon="form.icon" :size="30" />
+          <AchievementBadge :achievement="form" :size="56" />
           <div class="preview__info">
             <div class="preview__name">{{ form.name || 'Название ачивки' }}</div>
             <div class="preview__desc">
@@ -123,22 +120,16 @@ const iconPresets = [
           <label>Иконка *</label>
           <div class="icon-picker">
             <button
-                v-for="icon in iconPresets"
+                v-for="icon in PIXEL_ICON_KEYS"
                 :key="icon"
                 type="button"
                 class="icon-btn"
                 :class="{ active: form.icon === icon }"
+                :title="icon"
                 @click="form.icon = icon"
             >
-              <AppIcon :icon="icon" :size="20" />
+              <PixelIcon :icon="icon" :color="form.color" :size="24" />
             </button>
-            <input
-                v-model="form.icon"
-                type="text"
-                maxlength="20"
-                class="icon-input"
-                placeholder="Или имя иконки"
-            />
           </div>
         </div>
 

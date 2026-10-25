@@ -27,6 +27,9 @@ use App\Domains\Bridge\Controllers\Api\Curator\BridgeTechniqueController as Cura
 use App\Domains\Bridge\Controllers\Api\BridgeVideoController;
 use App\Domains\Minecraft\Controllers\Api\MinecraftServerController;
 use App\Domains\Minecraft\Controllers\Api\MinecraftLinkController;
+use App\Domains\Minecraft\Controllers\Api\MinecraftSkinController;
+use App\Domains\Search\Controllers\Api\SearchController;
+use App\Domains\Activity\Controllers\Api\ActivityController;
 
 // === Admin ===
 use App\Domains\Users\Controllers\Api\Admin\UserController as AdminUserController;
@@ -125,6 +128,31 @@ Route::get('/ranking', [\App\Domains\Players\Controllers\Api\RankingController::
 
 // Профиль открывается и по id, и по нику: /api/users/Ник
 Route::get('/players/{user}', [PlayerController::class, 'show']);
+
+// Скин из Minecraft по привязанному нику — для 3D-модели и карточки игрока
+Route::get('/players/{user}/skin', [MinecraftSkinController::class, 'show'])
+    ->middleware('throttle:60,1');
+
+// Командная палитра (Ctrl+K): поиск по игрокам, кланам, форуму и новостям
+Route::get('/search', [SearchController::class, 'index'])
+    ->middleware('throttle:90,1');
+
+// Лента «Сейчас на APEX»: новые события приходят по публичному каналу activity
+Route::get('/activity', [ActivityController::class, 'index']);
+
+// Публичная статистика проекта
+Route::get('/stats', [\App\Domains\Players\Controllers\Api\StatsController::class, 'index']);
+
+// Сезоны рейтинга
+Route::get('/seasons', [\App\Domains\Seasons\Controllers\SeasonController::class, 'index']);
+Route::get('/seasons/{season}', [\App\Domains\Seasons\Controllers\SeasonController::class, 'show'])->whereNumber('season');
+Route::get('/players/{user}/seasons', [\App\Domains\Seasons\Controllers\SeasonController::class, 'player'])->whereNumber('user');
+
+// Подвал, статус Minecraft-сервера и команда проекта
+Route::get('/site', [\App\Domains\Core\Controllers\Api\SiteController::class, 'index']);
+Route::get('/site/server-status', [\App\Domains\Core\Controllers\Api\SiteController::class, 'serverStatus'])
+    ->middleware('throttle:60,1');
+Route::get('/site/team', [\App\Domains\Core\Controllers\Api\SiteController::class, 'team']);
 
 /*
 |--------------------------------------------------------------------------
@@ -356,6 +384,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [TierTestController::class, 'store']);
         Route::get('/{tierTest}', [TierTestController::class, 'show'])->whereNumber('tierTest');
         Route::post('/{tierTest}/cancel', [TierTestController::class, 'cancel'])->whereNumber('tierTest');
+        Route::post('/{tierTest}/appeal', [\App\Domains\Tiers\Controllers\TierTestAppealController::class, 'store'])
+            ->whereNumber('tierTest')
+            ->middleware('throttle:5,1');
         Route::put('/{tierTest}', [TierTestController::class, 'update'])->whereNumber('tierTest');
     });
 
@@ -547,7 +578,13 @@ Route::middleware('auth:sanctum')->group(function () {
     | АДМИНКА — МОДЕРАТОР + АДМИН (role: moderator, admin)
     |----------------------------------------------------------------------
     */
+    Route::get('/tier-test-appeals', [\App\Domains\Tiers\Controllers\TierTestAppealController::class, 'mine']);
+
     Route::middleware('role:moderator,admin')->prefix('admin')->group(function () {
+        // Апелляции на результаты тир-тестов
+        Route::get('/tier-test-appeals', [\App\Domains\Tiers\Controllers\TierTestAppealController::class, 'index']);
+        Route::post('/tier-test-appeals/{appeal}/resolve', [\App\Domains\Tiers\Controllers\TierTestAppealController::class, 'resolve'])
+            ->whereNumber('appeal');
 
         // --- КЛАНЫ ---
 

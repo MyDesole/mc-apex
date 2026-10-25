@@ -70,10 +70,6 @@ function pluralPower(n) {
     </div>
 
     <div class="no-clan__content">
-      <div class="no-clan__eyebrow">
-        <span></span>
-        CLAN STATUS
-      </div>
 
       <div class="no-clan__title">
         Не в клане
@@ -97,13 +93,10 @@ function pluralPower(n) {
     <div class="clan-badge__glow"></div>
 
     <div class="clan-badge__topline">
-      <span class="clan-badge__label">
-        CLAN IDENTITY
-      </span>
 
       <span class="clan-badge__status">
         <i></i>
-        ACTIVE
+        Активен
       </span>
     </div>
 

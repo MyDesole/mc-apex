@@ -89,6 +89,7 @@ if (!URL.revokeObjectURL) URL.revokeObjectURL = () => {}
  */
 if (!window.Echo) {
   window.Echo = {
+    channel: () => ({ listen: () => {} }),
     private: () => ({ listen: () => {} }),
     join: () => ({ here: () => {}, joining: () => {}, leaving: () => {} }),
     leave: () => {},

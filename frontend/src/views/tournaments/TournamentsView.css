@@ -34,7 +34,7 @@
   color: var(--text);
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 6px;
   outline: none;
 }
 
@@ -48,7 +48,7 @@
   color: var(--text);
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 6px;
   cursor: pointer;
 }
 
@@ -61,7 +61,7 @@
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 6px;
   overflow: hidden;
   transition: all 0.25s;
 }
@@ -85,7 +85,7 @@
 
 .card__banner-placeholder {
   font-size: 48px;
-  font-weight: 900;
+  font-weight: 800;
   color: #fff;
   opacity: 0.35;
 }
@@ -102,12 +102,11 @@
 
 .badge {
   padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 10px;
+  border-radius: 4px;
+  font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.4px;
-  backdrop-filter: blur(8px);
 }
 
 .badge--type {
@@ -157,7 +156,7 @@
 
 .stat__value {
   font-size: 15px;
-  font-weight: 900;
+  font-weight: 800;
   color: var(--text);
 }
 
@@ -166,7 +165,7 @@
 }
 
 .stat__label {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.4px;

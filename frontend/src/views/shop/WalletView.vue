@@ -164,10 +164,6 @@ onMounted(load)
 
     <header class="wallet__head">
       <div class="wallet__heading">
-        <div class="wallet__eyebrow">
-          <span class="wallet__eyebrow-line" />
-          ECONOMY SYSTEM
-        </div>
 
         <h1 class="wallet__title">
           Кошелёк
@@ -312,7 +308,7 @@ onMounted(load)
 
             <span class="balance-card__status">
               <span />
-              ACTIVE
+              Активен
             </span>
           </div>
 
@@ -501,7 +497,7 @@ onMounted(load)
             </div>
 
             <div class="gift-progress__labels">
-              <span>DAILY LIMIT</span>
+              <span>Дневной лимит</span>
               <span>{{ Math.round(balanceProgress) }}%</span>
             </div>
           </div>
@@ -525,9 +521,6 @@ onMounted(load)
       >
         <header class="panel__head">
           <div>
-            <span class="panel__eyebrow">
-              EARNINGS BREAKDOWN
-            </span>
 
             <h2 class="panel__title">
               Откуда монеты
@@ -594,9 +587,6 @@ onMounted(load)
       >
         <header class="panel__head">
           <div>
-            <span class="panel__eyebrow">
-              INVITE FRIENDS
-            </span>
 
             <h2 class="panel__title">
               Пригласительные ссылки
@@ -661,9 +651,6 @@ onMounted(load)
 
         <header class="panel__head">
           <div>
-            <span class="panel__eyebrow">
-              TRANSACTION LOG
-            </span>
 
             <h2 class="panel__title">
               История операций
@@ -672,7 +659,7 @@ onMounted(load)
 
           <span class="history__live">
             <span />
-            LIVE
+            Обновляется
           </span>
         </header>
 
@@ -832,7 +819,7 @@ onMounted(load)
 
           <div class="pager__current">
             <span>
-              PAGE
+              Стр.
             </span>
 
             {{ page }}

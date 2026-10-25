@@ -1,301 +1,295 @@
-import { onMounted, onUnmounted, ref, watch, computed } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { chatApi } from '@/services/chat/chat.js'
-import { useAuthStore } from '@/stores/core/auth.js'
-import { echoGeneration, onEchoReset } from '@/echo.js'
+import { onEchoReset } from '@/echo.js'
 
 /**
  * Кто сейчас на сайте.
  *
- * Источников несколько, и они дополняют друг друга:
+ * Раньше в канал присутствия входили только те, кто открыл страницу
+ * чата, поэтому собеседник, сидящий на главной, для канала не
+ * существовал, и статус узнавался опросом с задержкой до минуты.
+ * Теперь в канал входит всё приложение, пока игрок авторизован
+ * (startSitePresence в AppLayout), — вход и выход видны мгновенно.
  *
- *   1. Присутствие собеседников открытого диалога опрашивается часто.
- *      Это главный источник: presence-канал знает только тех, кто сам
- *      открыл страницу чата, а собеседник может быть где угодно на сайте.
+ * Источники:
+ *   1. Канал присутствия Reverb — главный. Мгновенные вход и выход.
+ *   2. Сервер — запасной: для тех, у кого сокет не поднялся. Сервер
+ *      считает онлайн по пульсу (раз в HEARTBEAT_MS) и по активности.
  *
- *   2. Presence-канал Reverb — мгновенные события входа и выхода. Он даёт
- *      зелёную точку сразу, как только собеседник заходит в чат.
- *
- *   3. Полный список с сервера — редко, как общая картина.
- *
- * Сервер считает онлайн по времени последней активности, поэтому статус
- * остаётся верным даже для тех, кто не открывал чат.
+ * Если игрок вышел из канала, сервер ещё какое-то время считает его
+ * онлайн. Чтобы точка гасла сразу, ушедших из канала не берём из
+ * серверного списка, пока он не обновится после их ухода.
  */
 
-/** Как часто обновлять присутствие собеседников открытого диалога. */
+/** Как часто сообщать серверу, что вкладка открыта. */
+const HEARTBEAT_MS = 30_000
+
+/** Как часто обновлять полный список с сервера. */
+const SERVER_REFRESH_MS = 60_000
+
+/** Как часто спрашивать о собеседниках открытого диалога. */
 const PEERS_INTERVAL_MS = 15_000
 
-/** Как часто обновлять полный список. */
-const FALLBACK_INTERVAL_MS = 60_000
-
-/** Общий набор на всё приложение: страница одна, состояние одно. */
-const onlineIds = ref(new Set())
-
 /**
- * Загружено ли присутствие хотя бы раз.
- *
- * Пока нет, страница может опираться на признак из данных диалога. После
- * загрузки источник один — данные присутствия: сервер считает онлайн по
- * времени последней активности, и после выхода игрока он остаётся
- * истинным ещё пару минут.
+ * Сколько не верить серверу о том, кто вышел из канала: столько сервер
+ * в худшем случае держит отметку присутствия (PresenceService).
  */
-const presenceReady = ref(false)
+const LEFT_SUPPRESS_MS = 90_000
 
+/* ------------------------------ Состояние на модуль ------------------------------ */
+
+const channelMembers = ref(new Set())
+const channelReady = ref(false)
+
+const serverOnline = ref(new Set())
+const serverReady = ref(false)
+
+/** Кто и когда вышел из канала. */
+const leftAt = ref(new Map())
+
+const onlineIds = computed(() => {
+  const ids = new Set(channelMembers.value)
+  const now = Date.now()
+
+  serverOnline.value.forEach((id) => {
+    const left = leftAt.value.get(id)
+
+    if (!left || now - left > LEFT_SUPPRESS_MS) ids.add(id)
+  })
+
+  return ids
+})
+
+const presenceReady = computed(() => channelReady.value || serverReady.value)
+
+let sessionUserId = null
 let channel = null
-let peersTimer = null
-let fullTimer = null
-let subscribers = 0
+let heartbeatTimer = null
+let refreshTimer = null
+let stopEchoReset = null
 
-/** Кого сейчас показываем: собеседники открытого диалога. */
-const watchedIds = ref([])
+/* ------------------------------ Помощники ------------------------------ */
 
-/** Кто отметил вход: нужен, чтобы снять отметку при выходе. */
-let markedOnlineUserId = null
-
-/**
- * Безопасно зовёт метод сервиса.
- *
- * Отсутствие метода не должно ломать страницу: присутствие — вещь
- * дополнительная, при сбое просто не будет отметки.
- */
-function callService(method, ...args) {
-  try {
-    const fn = chatApi[method]
-
-    if (typeof fn !== 'function') return
-
-    const result = fn.apply(chatApi, args)
-
-    if (result && typeof result.catch === 'function') {
-      result.catch(() => {})
-    }
-  } catch {
-    /* Сервис недоступен — молча продолжаем */
-  }
+function toSet(ids) {
+  return new Set((Array.isArray(ids) ? ids : []).map(Number).filter(Boolean))
 }
 
-/** Разбирает ответ сервера в набор идентификаторов. */
-function toSet(ids) {
-  return new Set((Array.isArray(ids) ? ids : []).map(Number))
+function withLeft(mutate) {
+  const next = new Map(leftAt.value)
+  mutate(next)
+  leftAt.value = next
+}
+
+/** Безопасный вызов сервиса: присутствие не должно ронять страницу. */
+async function call(method, ...args) {
+  try {
+    return await chatApi[method]?.(...args)
+  } catch {
+    return null
+  }
 }
 
 /** Полный список с сервера. */
 async function fetchAll() {
-  try {
-    const data = await chatApi.presence()
+  const data = await call('presence')
 
-    onlineIds.value = toSet(data.online)
-    presenceReady.value = true
-  } catch {
-    /* Сеть недоступна — оставляем прежнее состояние, не гасим точки */
+  if (!data) return
+
+  serverOnline.value = toSet(data.online)
+  serverReady.value = true
+}
+
+/** Пульс: сервер продлевает отметку и заодно отдаёт свежий список. */
+async function heartbeat() {
+  if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return
+
+  const data = await call('presenceOnline')
+
+  if (data?.online) {
+    serverOnline.value = toSet(data.online)
+    serverReady.value = true
   }
 }
 
-/**
- * Спрашивает сервер о конкретных игроках.
- *
- * Запрос узкий: сервер проверяет только переданные идентификаторы.
- */
-async function fetchWatched() {
-  const ids = watchedIds.value
+/* ------------------------------ Канал ------------------------------ */
 
-  if (!ids.length) return
-
-  try {
-    const data = await chatApi.presence(ids)
-    const fresh = toSet(data.online)
-
-    /*
-     * Обновляем только тех, кого спрашивали: остальных не трогаем,
-     * чтобы точки в списке диалогов не гасли из-за узкого запроса.
-     */
-    const next = new Set(onlineIds.value)
-
-    ids.forEach((id) => {
-      const key = Number(id)
-
-      if (fresh.has(key)) next.add(key)
-      else next.delete(key)
-    })
-
-    onlineIds.value = next
-  } catch {
-    /* Сеть недоступна — оставляем прежнее состояние */
-  }
-}
-
-/** Подписка на presence-канал Reverb. */
-function subscribeChannel() {
+function joinChannel() {
   if (!window.Echo || channel) return
 
   try {
     channel = window.Echo.join('online')
 
     channel.here((members) => {
-      onlineIds.value = toSet(members.map((m) => m.id))
+      const ids = toSet(members.map((member) => member.id))
+
+      channelMembers.value = ids
+      channelReady.value = true
+
+      withLeft((left) => ids.forEach((id) => left.delete(id)))
     })
 
     channel.joining((member) => {
-      const next = new Set(onlineIds.value)
+      const id = Number(member.id)
 
-      next.add(Number(member.id))
-      onlineIds.value = next
-
-      /* Сервер тоже должен знать: он отдаёт статус другим */
-      callService('presenceOnline')
+      channelMembers.value = new Set([...channelMembers.value, id])
+      withLeft((left) => left.delete(id))
     })
 
     channel.leaving((member) => {
-      const next = new Set(onlineIds.value)
+      const id = Number(member.id)
+      const next = new Set(channelMembers.value)
 
-      next.delete(Number(member.id))
-      onlineIds.value = next
+      next.delete(id)
+      channelMembers.value = next
+
+      withLeft((left) => left.set(id, Date.now()))
     })
   } catch {
-    /* Канал недоступен — останется опрос */
+    // Канал недоступен — останется сервер
     channel = null
   }
 }
 
-/** Отписка от канала. */
-function unsubscribeChannel() {
-  if (!channel || !window.Echo) return
-
-  try {
-    window.Echo.leave('online')
-  } catch {
-    /* уже отключён */
+function leaveChannel() {
+  if (channel) {
+    try {
+      window.Echo?.leave('online')
+    } catch {
+      /* уже отключено */
+    }
   }
 
   channel = null
+  channelReady.value = false
+  channelMembers.value = new Set()
 }
 
-/** Запускает опрос собеседников. */
-function startPeersPolling() {
-  if (peersTimer) return
-
-  peersTimer = setInterval(fetchWatched, PEERS_INTERVAL_MS)
+function onVisibility() {
+  if (document.visibilityState === 'visible') {
+    heartbeat()
+  }
 }
 
-/** Останавливает опрос собеседников. */
-function stopPeersPolling() {
-  if (!peersTimer) return
-
-  clearInterval(peersTimer)
-  peersTimer = null
-}
-
-/** Запускает общий опрос. */
-function startFallback() {
-  if (fullTimer) return
-
-  fullTimer = setInterval(() => {
-    /*
-     * Если Reverb отдаёт данные, опрос всё равно полезен: он ловит тех,
-     * кто закрыл вкладку, не дождавшись события выхода.
-     */
-    fetchAll()
-  }, FALLBACK_INTERVAL_MS)
-}
-
-/** Останавливает общий опрос. */
-function stopFallback() {
-  if (!fullTimer) return
-
-  clearInterval(fullTimer)
-  fullTimer = null
-}
-
-/*
- * Пересоздание соединения: канал присутствия теряется, поэтому
- * подписываемся заново и обновляем список онлайна.
- */
-onEchoReset(() => {
-  // Если страница уже ушла с чата, подписываться заново не нужно
-  if (subscribers <= 0) return
-
-  channel = null
-  subscribeChannel()
-  fetchAll()
-})
+/* ------------------------------ Сеанс на всё приложение ------------------------------ */
 
 /**
- * Присутствие.
+ * Начать присутствие: вызывается, когда игрок авторизован.
+ * Повторный вызов для того же игрока ничего не делает.
+ */
+export function startSitePresence(userId) {
+  if (!userId) return
+
+  if (sessionUserId === userId) return
+
+  stopSitePresence({ silent: true })
+
+  sessionUserId = userId
+
+  joinChannel()
+  heartbeat()
+  fetchAll()
+
+  heartbeatTimer = setInterval(heartbeat, HEARTBEAT_MS)
+  refreshTimer = setInterval(fetchAll, SERVER_REFRESH_MS)
+
+  document.addEventListener('visibilitychange', onVisibility)
+
+  // Соединение пересоздано — канал потерян, входим заново
+  stopEchoReset = onEchoReset(() => {
+    channel = null
+    channelReady.value = false
+    joinChannel()
+    fetchAll()
+  })
+}
+
+/**
+ * Закончить присутствие: выход из аккаунта.
+ * silent — без сообщения серверу (смена пользователя, сессия уже другая).
+ */
+export function stopSitePresence({ silent = false } = {}) {
+  if (!sessionUserId) return
+
+  if (!silent) call('presenceOffline')
+
+  sessionUserId = null
+
+  clearInterval(heartbeatTimer)
+  clearInterval(refreshTimer)
+  heartbeatTimer = null
+  refreshTimer = null
+
+  document.removeEventListener('visibilitychange', onVisibility)
+  stopEchoReset?.()
+  stopEchoReset = null
+
+  leaveChannel()
+
+  serverOnline.value = new Set()
+  serverReady.value = false
+  leftAt.value = new Map()
+}
+
+/* ------------------------------ Для страниц ------------------------------ */
+
+/**
+ * Присутствие на странице.
  *
  * @param {Function|import('vue').Ref<Array<number>>} [peers]
- *        за кем следить: список идентификаторов собеседников
+ *        собеседники открытого диалога: о них спрашиваем сервер чаще —
+ *        на случай, если у кого-то из них не поднялся сокет
  */
 export function usePresence(peers = null) {
-  /** Приводит вход к computed-ссылке. */
   const peerIds = peers
       ? (typeof peers === 'function' ? computed(peers) : peers)
       : null
 
-  onMounted(async () => {
-    /*
-     * Хранилище берём внутри onMounted: к этому моменту Pinia уже
-     * активна, и обращение не падает при монтировании в тестах.
-     */
-    const auth = useAuthStore()
+  let peersTimer = null
+  let stopWatch = null
 
-    subscribers++
+  async function fetchPeers() {
+    const ids = (peerIds?.value ?? []).map(Number).filter(Boolean)
 
-    if (subscribers === 1) {
-      markedOnlineUserId = auth.user?.id ?? null
-      subscribeChannel()
-      startFallback()
+    if (!ids.length) return
 
-      await fetchAll()
+    const data = await call('presence', ids)
 
-      /* Сервер отмечает вход: это запасной источник статуса */
-      callService('presenceOnline')
-    }
+    if (!data) return
 
-    /* Следим за собеседниками текущего диалога */
-    if (peerIds) {
-      watch(
-          peerIds,
-          (ids) => {
-            watchedIds.value = (ids ?? []).map(Number).filter(Boolean)
+    const fresh = toSet(data.online)
+    const next = new Set(serverOnline.value)
 
-            if (watchedIds.value.length) {
-              startPeersPolling()
+    // Обновляем только спрошенных: остальных узкий запрос не касается
+    ids.forEach((id) => (fresh.has(id) ? next.add(id) : next.delete(id)))
 
-              // Спрашиваем сразу: статус мог устареть с прошлого круга
-              fetchWatched()
-            } else {
-              stopPeersPolling()
-            }
-          },
-          { immediate: true },
-      )
-    }
+    serverOnline.value = next
+    serverReady.value = true
+  }
+
+  onMounted(() => {
+    // Страница могла открыться раньше, чем сработал сеанс — список нужен сразу
+    if (!serverReady.value) fetchAll()
+
+    if (!peerIds) return
+
+    stopWatch = watch(
+        peerIds,
+        (ids) => {
+          clearInterval(peersTimer)
+          peersTimer = null
+
+          if (ids?.length) {
+            fetchPeers()
+            peersTimer = setInterval(fetchPeers, PEERS_INTERVAL_MS)
+          }
+        },
+        { immediate: true },
+    )
   })
 
   onUnmounted(() => {
-    subscribers--
-
-    if (subscribers <= 0) {
-      subscribers = 0
-
-      unsubscribeChannel()
-      stopFallback()
-      stopPeersPolling()
-
-      watchedIds.value = []
-      onlineIds.value = new Set()
-
-      /*
-       * Признак готовности снимаем: состояние общее на модуль, и без
-       * сброса следующая страница сочтёт присутствие уже загруженным.
-       */
-      presenceReady.value = false
-
-      if (markedOnlineUserId) {
-        callService('presenceOffline')
-
-        markedOnlineUserId = null
-      }
-    }
+    clearInterval(peersTimer)
+    stopWatch?.()
   })
 
   return {
@@ -303,6 +297,6 @@ export function usePresence(peers = null) {
     presenceReady,
     isOnline: (userId) => onlineIds.value.has(Number(userId)),
     refresh: fetchAll,
-    refreshPeers: fetchWatched,
+    refreshPeers: fetchPeers,
   }
 }

@@ -1,10 +1,12 @@
 <script setup>
+import PageLoader from '@/components/core/PageLoader.vue'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { onMounted, ref, computed } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { tournamentsApi } from '@/services/tournaments/tournaments.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import AdminTournamentBracket from "@/components/admin/AdminTournamentBracket.vue";
+import PageState from '@/components/core/PageState.vue'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -26,10 +28,16 @@ const statusLabels = {
   cancelled: 'Отменён',
 }
 
+/** Ошибка загрузки: 404 или прочая — без неё страница оставалась пустой. */
+const loadError = ref(null)
+
 async function load() {
   loading.value = true
+  loadError.value = null
   try {
     data.value = await tournamentsApi.show(route.params.id)
+  } catch (e) {
+    loadError.value = e?.status === 404 ? 'notFound' : 'error'
   } finally {
     loading.value = false
   }
@@ -58,7 +66,7 @@ onMounted(load)
 </script>
 
 <template>
-  <div v-if="loading" class="loading">Загрузка...</div>
+  <PageLoader v-if="loading" />
 
   <div v-else-if="tournament" class="tournament-page">
     <!-- HEADER -->
@@ -185,6 +193,13 @@ onMounted(load)
       />
     </section>
   </div>
+
+  <PageState
+      v-else
+      :kind="loadError || 'notFound'"
+      :title="loadError === 'error' ? null : 'Турнир не найден'"
+      :action="{ to: '/tournaments', label: 'Все турниры' }"
+  />
 </template>
 
 <style scoped>

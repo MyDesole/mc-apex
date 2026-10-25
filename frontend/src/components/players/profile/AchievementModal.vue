@@ -1,4 +1,6 @@
 <script setup>
+import AchievementBadge from '@/components/achievements/AchievementBadge.vue'
+
 const props = defineProps({
   achievement: { type: Object, required: true },
 })
@@ -59,9 +61,7 @@ function formatEarnedAt(a) {
         </svg>
       </button>
 
-      <div class="modal__glow" />
-
-      <div class="modal__icon">{{ achievement.icon }}</div>
+      <AchievementBadge class="modal__badge" :achievement="achievement" :size="88" />
 
       <h3 class="modal__name">{{ achievement.name }}</h3>
 

@@ -7,15 +7,10 @@
 
   overflow: hidden;
 
-  background:
-      linear-gradient(
-          105deg,
-          rgba(255, 255, 255, 0.038),
-          rgba(255, 255, 255, 0.016)
-      );
+  background: var(--bg-card);
 
   border: 1px solid rgba(255, 255, 255, 0.065);
-  border-radius: 14px;
+  border-radius: 6px;
 
   box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.025);
@@ -29,12 +24,7 @@
 .war-card:hover {
   border-color: rgba(255, 255, 255, 0.105);
 
-  background:
-      linear-gradient(
-          105deg,
-          rgba(255, 255, 255, 0.05),
-          rgba(255, 255, 255, 0.021)
-      );
+  background: var(--bg-card);
 
   box-shadow:
       0 12px 32px rgba(0, 0, 0, 0.16),
@@ -76,7 +66,7 @@
 
   color: var(--text-muted);
 
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.35px;
   text-transform: uppercase;
@@ -91,12 +81,12 @@
 
 .direction__dot--incoming {
   background: #60a5fa;
-  box-shadow: 0 0 9px rgba(96, 165, 250, 0.55);
+  box-shadow: none;
 }
 
 .direction__dot--outgoing {
   background: #a78bfa;
-  box-shadow: 0 0 9px rgba(167, 139, 250, 0.55);
+  box-shadow: none;
 }
 
 .status {
@@ -106,10 +96,10 @@
 
   padding: 4px 7px;
 
-  border-radius: 999px;
+  border-radius: 4px;
 
-  font-size: 8px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
   letter-spacing: 0.25px;
   text-transform: uppercase;
 }
@@ -136,7 +126,7 @@
 
 .status--accepted .status__dot {
   background: #60a5fa;
-  box-shadow: 0 0 7px rgba(96, 165, 250, 0.5);
+  box-shadow: none;
 }
 
 .status--completed {
@@ -216,10 +206,10 @@
       );
 
   border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 11px;
+  border-radius: 6px;
 
   font-size: 14px;
-  font-weight: 900;
+  font-weight: 800;
 
   box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -233,7 +223,7 @@
           #5b21b6
       );
 
-  border-color: rgba(167, 139, 250, 0.25);
+  border-color: var(--border);
 }
 
 .team__copy {
@@ -246,7 +236,7 @@
 
   color: var(--text-muted);
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.4px;
   text-transform: uppercase;
@@ -282,7 +272,7 @@
   color: var(--text);
 
   font-size: 25px;
-  font-weight: 950;
+  font-weight: 800;
   line-height: 1;
 }
 
@@ -309,8 +299,8 @@
 
 .match-vs span {
   color: var(--text-muted);
-  font-size: 8px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
   letter-spacing: 0.6px;
 }
 
@@ -336,7 +326,7 @@
 
   color: var(--text-muted);
 
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .war-meta__separator {
@@ -347,7 +337,7 @@
 .war-meta__result {
   margin-left: auto;
 
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 850;
   text-transform: uppercase;
 }

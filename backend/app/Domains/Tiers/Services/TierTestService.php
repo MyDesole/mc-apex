@@ -192,16 +192,21 @@ class TierTestService
         string $mode,
         array $aspects,
         ?string $notes = null,
+        bool $notify = true,
+        bool $cancelActive = true,
     ): TierTest {
         /*
          * Тест провели вручную — активная заявка больше не нужна.
          * Отменяем, а не завершаем: результата в ней нет, и статус
          * completed с пустым тиром испортил бы историю.
+         * При пересмотре по апелляции заявку на новый тест не трогаем.
          */
-        $this->activeTierTestFor($player->id)?->update([
-            'status' => 'cancelled',
-            'notes' => 'Тест проведён вручную администратором.',
-        ]);
+        if ($cancelActive) {
+            $this->activeTierTestFor($player->id)?->update([
+                'status' => 'cancelled',
+                'notes' => 'Тест проведён вручную администратором.',
+            ]);
+        }
 
         $score = $this->scoreFrom($mode, $aspects);
         $tier = $this->tierFor($score);
@@ -229,7 +234,9 @@ class TierTestService
             return $test;
         });
 
-        $player->notify(new \App\Domains\Tiers\Notifications\TierTestCompletedNotification($test));
+        if ($notify) {
+            $player->notify(new \App\Domains\Tiers\Notifications\TierTestCompletedNotification($test));
+        }
 
         return $test;
     }

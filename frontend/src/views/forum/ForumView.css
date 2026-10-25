@@ -9,19 +9,13 @@
   position: relative;
   min-height: 300px;
   overflow: hidden;
-  background:
-      radial-gradient(
+  background: radial-gradient(
           circle at 75% 20%,
           rgba(124, 58, 237, 0.2),
           transparent 35%
-      ),
-      linear-gradient(
-          135deg,
-          var(--bg-card),
-          var(--bg)
-      );
+      ), var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 24px;
+  border-radius: 6px;
 }
 
 .forum-hero::after {
@@ -29,13 +23,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-      linear-gradient(
-          120deg,
-          transparent 0%,
-          rgba(255, 255, 255, 0.025) 50%,
-          transparent 100%
-      );
+  background: var(--bg-card);
 }
 
 .forum-hero__noise {
@@ -90,8 +78,8 @@
   gap: 8px;
   align-items: center;
   color: var(--accent-light);
-  font-size: 10px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
   letter-spacing: 1.6px;
 }
 
@@ -107,19 +95,12 @@
   font-size: clamp(34px, 5vw, 58px);
   line-height: 0.98;
   letter-spacing: -2.5px;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .hero-copy h1 strong {
   display: block;
-  color: transparent;
-  background: linear-gradient(
-      100deg,
-      #fff,
-      var(--accent-light)
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
+  color: var(--accent-light);
 }
 
 .hero-copy p {
@@ -145,14 +126,13 @@
 .hero-stat strong {
   color: var(--text);
   font-size: 22px;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .hero-stat span {
   color: var(--text-muted);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
+  font-size: 12px;
+  letter-spacing: 0;
 }
 
 /* ───────────────────────── TOOLBAR ───────────────────────── */
@@ -174,7 +154,7 @@
   color: var(--text-muted);
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 6px;
   transition: border-color 0.2s ease;
 }
 
@@ -203,7 +183,7 @@
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 5px;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .create-topic {
@@ -215,7 +195,7 @@
   color: #fff;
   background: var(--accent);
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 800;
   cursor: pointer;
@@ -226,7 +206,7 @@
 
 .create-topic:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(124, 58, 237, 0.25);
+  box-shadow: none;
 }
 
 /* ───────────────────────── SECTIONS ───────────────────────── */
@@ -252,7 +232,7 @@
   margin: 0;
   color: var(--text);
   font-size: 21px;
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: -0.5px;
 }
 
@@ -265,7 +245,7 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 6px;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .section-count {
@@ -297,7 +277,7 @@
   text-align: left;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 13px;
+  border-radius: 6px;
   cursor: pointer;
   transition:
       border-color 0.2s ease,
@@ -335,7 +315,7 @@
       var(--category-color) 22%,
       transparent
   );
-  border-radius: 11px;
+  border-radius: 6px;
 }
 
 .category-card__main {
@@ -374,7 +354,7 @@
 
 .category-card__count small {
   color: var(--text-muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .category-card__arrow {
@@ -422,7 +402,7 @@
   padding: 3px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: 6px;
 }
 
 .sort-tabs button {
@@ -459,7 +439,7 @@
   height: 6px;
   background: var(--category-color);
   border-radius: 50%;
-  box-shadow: 0 0 8px var(--category-color);
+  box-shadow: none;
 }
 
 /* ───────────────────────── TOPIC ROW ───────────────────────── */
@@ -468,7 +448,7 @@
   overflow: hidden;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 15px;
+  border-radius: 6px;
 }
 
 .topic {
@@ -495,7 +475,7 @@
 .topic__index {
   color: var(--text-muted);
   font-family: ui-monospace, monospace;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .topic__main {
@@ -512,8 +492,8 @@
 
 .topic__category {
   color: var(--category-color, var(--accent-light));
-  font-size: 9px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
@@ -522,9 +502,9 @@
   padding: 2px 6px;
   color: var(--accent-light);
   background: rgba(124, 58, 237, 0.1);
-  border: 1px solid rgba(124, 58, 237, 0.2);
+  border: 1px solid var(--border);
   border-radius: 4px;
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -550,7 +530,7 @@
   gap: 6px;
   align-items: center;
   color: var(--text-muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .topic__author i {
@@ -568,8 +548,8 @@
   color: #fff;
   background: linear-gradient(135deg, var(--accent-light), var(--accent));
   border-radius: 6px;
-  font-size: 8px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .topic-avatar img {
@@ -592,7 +572,7 @@
 
 .topic__activity span {
   color: var(--text-muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .topic__last {
@@ -606,21 +586,21 @@
 
 .topic__last span {
   color: var(--text-muted);
-  font-size: 8px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
 
 .topic__last strong {
   color: var(--text-dim);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 
 .topic__last small {
   overflow: hidden;
   color: var(--text-muted);
-  font-size: 9px;
+  font-size: 12px;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -645,7 +625,7 @@
   text-align: center;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 15px;
+  border-radius: 6px;
 }
 
 .empty__icon {
@@ -658,7 +638,7 @@
   color: var(--text-muted);
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 13px;
+  border-radius: 6px;
 }
 
 .empty h3 {
@@ -749,7 +729,7 @@
   color: #fca5a5;
   background: rgba(239, 68, 68, 0.08);
   border: 1px solid rgba(239, 68, 68, 0.25);
-  border-radius: 10px;
+  border-radius: 6px;
   font-size: 12px;
 }
 
@@ -770,7 +750,7 @@
   color: var(--text-dim);
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: 6px;
   cursor: pointer;
 }
 
@@ -805,7 +785,7 @@
 
   .forum-hero {
     min-height: 0;
-    border-radius: 18px;
+    border-radius: 6px;
   }
 
   .forum-hero__inner {

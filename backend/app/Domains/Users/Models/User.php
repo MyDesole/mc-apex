@@ -36,6 +36,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'favorite_modes', 'discord_tag',
         'profile_mode', 'bridge_rank_id', 'bridge_rank_by', 'bridge_rank_at',
         'minecraft_uuid', 'minecraft_username', 'minecraft_linked_at',
+        'skin_backdrop', 'card_theme',
         'apex_coins', 'apex_coins_spent', 'equipped_badges',
         'referral_code', 'referred_by',
         'is_verified', 'verified_reason', 'clan_joined_at',

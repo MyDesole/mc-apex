@@ -7,7 +7,6 @@
   justify-content: center;
   padding: 20px;
   background: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(6px);
 }
 
 .dlg {
@@ -16,7 +15,7 @@
   padding: 22px 22px 18px;
   background: var(--bg-card, #12121a);
   border: 1px solid var(--border, #22222e);
-  border-radius: 16px;
+  border-radius: 6px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
@@ -51,7 +50,7 @@
   color: var(--text, #e2e2e8);
   background: var(--bg, #0a0a0f);
   border: 1px solid var(--border, #22222e);
-  border-radius: 10px;
+  border-radius: 6px;
   font-size: 13px;
   font-family: inherit;
   outline: none;
@@ -76,7 +75,7 @@
 .dlg__btn {
   padding: 9px 17px;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 700;
   font-family: inherit;

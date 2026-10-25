@@ -300,7 +300,6 @@ onMounted(load)
           </span>
 
           <span>
-            <small>APEX COMMUNITY</small>
             Назад к форуму
           </span>
         </RouterLink>
@@ -495,9 +494,7 @@ onMounted(load)
 
           <template v-else>
             <div class="topic-card__eyebrow">
-              <span>DISCUSSION</span>
               <i />
-              <span>COMMUNITY</span>
             </div>
 
             <h1 class="topic-card__title">
@@ -621,9 +618,6 @@ onMounted(load)
         <!-- Replies heading -->
         <div class="replies-header">
           <div>
-            <div class="section-eyebrow">
-              APEX / COMMUNITY
-            </div>
 
             <h2>
               Ответы
@@ -679,7 +673,7 @@ onMounted(load)
             </div>
 
             <div>
-              <small>EDIT MESSAGE</small>
+              <small>Редактирование</small>
               <strong>
                 Правка сообщения
                 {{ editingReply.author?.username }}
@@ -728,9 +722,6 @@ onMounted(load)
         >
           <div class="reply-form__top">
             <div>
-              <div class="section-eyebrow">
-                APEX / REPLY
-              </div>
 
               <h3>
                 <template v-if="parentReply">

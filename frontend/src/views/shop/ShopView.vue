@@ -5,6 +5,7 @@ import { shopApi } from '@/services/shop/shop.js'
 import { walletApi } from '@/services/wallet/wallet.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import AppIcon from '@/components/core/AppIcon.vue'
+import ShopItemPreview from '@/components/shop/ShopItemPreview.vue'
 import {
   TYPE_LABELS,
   RARITY_LABELS,
@@ -28,15 +29,22 @@ const dailyBonusAmount = ref(0)
 
 const TABS = [
   { value: 'all', label: 'Всё' },
-  // Подсветка клана: отдельные вкладки для срока и оформления
-  { value: 'clan_highlight', label: 'Подсветка клана' },
-  { value: 'clan_highlight_style', label: 'Оформление подсветки' },
   { value: 'tier_priority', label: 'Приоритет теста' },
   { value: 'avatar_frame', label: 'Рамки' },
+  { value: 'skin_backdrop', label: 'Фоны скина' },
+  { value: 'card_theme', label: 'Карточки' },
   { value: 'profile_effect', label: 'Эффекты' },
   { value: 'badge', label: 'Бейджи' },
   { value: 'accent_color', label: 'Акценты' },
+  // Подсветка клана: отдельные вкладки для срока и оформления
+  { value: 'clan_highlight', label: 'Подсветка клана' },
+  { value: 'clan_highlight_style', label: 'Оформление подсветки' },
 ]
+
+/** Вкладки только с товарами: пустые категории не показываем. */
+const visibleTabs = computed(() =>
+    TABS.filter((tab) => tab.value === 'all' || items.value.some((item) => item.type === tab.value))
+)
 
 /**
  * Вкладка при открытии: из адреса (?type=clan_highlight), иначе «Всё».
@@ -227,35 +235,25 @@ onMounted(load)
 
 <template>
   <div class="shop">
-    <!-- HEADER -->
+    <!-- ===================== Шапка ===================== -->
     <header class="shop__head">
-      <div class="shop__heading">
-        <span class="eyebrow">APEX ECONOMY</span>
-
-        <h1 class="shop__title">
-          Магазин
-        </h1>
-
-        <p class="shop__subtitle">
-          Косметика и приоритет тир-тестов за ApexCoin
-        </p>
+      <div>
+        <h1 class="shop__title">Магазин</h1>
+        <p class="shop__subtitle">Косметика для профиля и приоритет тир-тестов за ApexCoin</p>
       </div>
 
       <div v-if="auth.isAuthenticated" class="shop__actions">
         <div class="balance">
-          <span class="balance__coin">₳</span>
-
+          <span class="balance__coin" aria-hidden="true">₳</span>
           <div class="balance__content">
-            <span class="balance__label">BALANCE</span>
-            <strong class="balance__value">
-              {{ formatBalance(balance) }}
-            </strong>
+            <span class="balance__label">Баланс</span>
+            <strong class="balance__value">{{ formatBalance(balance) }}</strong>
           </div>
         </div>
 
         <button
             v-if="dailyBonusAvailable"
-            class="btn btn--gold"
+            class="btn btn-primary"
             type="button"
             @click="claimDaily"
         >
@@ -263,74 +261,31 @@ onMounted(load)
           Забрать +{{ dailyBonusAmount }}
         </button>
 
-        <RouterLink
-            class="btn btn--ghost"
-            :to="{ name: 'wallet' }"
-        >
-          Кошелёк
-        </RouterLink>
+        <RouterLink class="btn btn-secondary" :to="{ name: 'wallet' }">Кошелёк</RouterLink>
+        <RouterLink class="btn btn-secondary" :to="{ name: 'inventory' }">Инвентарь</RouterLink>
       </div>
 
-      <RouterLink
-          v-else
-          class="btn btn--gold"
-          :to="{ name: 'login' }"
-      >
+      <RouterLink v-else class="btn btn-primary" :to="{ name: 'login' }">
         Войти, чтобы покупать
       </RouterLink>
     </header>
 
-    <!-- ALERTS -->
-    <div v-if="error" class="alert alert--error">
-      <AppIcon icon="alert-circle" :size="18" />
-      <span>{{ error }}</span>
-    </div>
+    <div v-if="error" class="alert alert--error" role="alert">{{ error }}</div>
+    <div v-if="notice" class="alert alert--ok" role="status">{{ notice }}</div>
 
-    <div v-if="notice" class="alert alert--ok">
-      <AppIcon icon="check-circle" :size="18" />
-      <span>{{ notice }}</span>
-    </div>
-
-    <!-- EARN -->
+    <!-- ===================== Как заработать ===================== -->
     <section class="earn">
-      <div class="section-head">
-        <div>
-          <span class="eyebrow">APEXCOIN</span>
-          <h2 class="section-title">
-            Как заработать монеты
-          </h2>
-        </div>
-
-        <span class="section-badge">
-          4 источника
-        </span>
-      </div>
+      <h2 class="section-title">Как заработать монеты</h2>
 
       <div class="earn__grid">
-        <!-- TIER TEST -->
         <article class="earn-card earn-card--primary">
-          <div class="earn-card__icon">
-            <AppIcon icon="target" :size="22" />
-          </div>
+          <AppIcon icon="target" :size="20" />
+          <div>
+            <h3>Тир-тест</h3>
+            <p>Главный источник монет — за каждый пройденный тест.</p>
 
-          <div class="earn-card__body">
-            <div class="earn-card__top">
-              <h3>Тир-тест</h3>
-              <span class="earn-card__tag">CORE</span>
-            </div>
-
-            <p>
-              Основной источник монет за каждый пройденный тест.
-            </p>
-
-            <ul
-                v-if="Object.keys(tierRewards).length"
-                class="earn-card__tiers"
-            >
-              <li
-                  v-for="(amount, tier) in tierRewards"
-                  :key="tier"
-              >
+            <ul v-if="Object.keys(tierRewards).length" class="earn-card__tiers">
+              <li v-for="(amount, tier) in tierRewards" :key="tier">
                 <span>{{ tier }}</span>
                 <strong>+{{ formatCoins(amount) }}</strong>
               </li>
@@ -338,82 +293,38 @@ onMounted(load)
           </div>
         </article>
 
-        <!-- ACHIEVEMENTS -->
         <article class="earn-card">
-          <div class="earn-card__icon">
-            <AppIcon icon="medal" :size="22" />
-          </div>
-
-          <div class="earn-card__body">
+          <AppIcon icon="medal" :size="20" />
+          <div>
             <h3>Ачивки</h3>
-
-            <p>
-              Каждая открытая ачивка приносит монеты.
-              Чем она реже — тем больше награда.
-            </p>
+            <p>Каждая ачивка приносит монеты. Чем реже — тем больше.</p>
+            <RouterLink to="/achievements" class="earn-card__link">Все ачивки →</RouterLink>
           </div>
         </article>
 
-        <!-- DAILY -->
         <article class="earn-card">
-          <div class="earn-card__icon">
-            <AppIcon icon="gift" :size="22" />
-          </div>
-
-          <div class="earn-card__body">
-            <div class="earn-card__top">
-              <h3>Ежедневный вход</h3>
-
-              <span
-                  v-if="dailyBonusAvailable"
-                  class="earn-card__live"
-              >
-                ДОСТУПНО
-              </span>
-            </div>
-
-            <p>
-              Заходи каждый день и забирай бонус
-              в кошельке.
-            </p>
-          </div>
-        </article>
-
-        <!-- PRIORITY -->
-        <article class="earn-card">
-          <div class="earn-card__icon">
-            <AppIcon icon="rocket" :size="22" />
-          </div>
-
-          <div class="earn-card__body">
-            <h3>Приоритет</h3>
-
-            <p>
-              Купи буст — заявка уйдёт в начало
-              очереди тестеров.
-            </p>
+          <AppIcon icon="gift" :size="20" />
+          <div>
+            <h3>
+              Ежедневный вход
+              <span v-if="dailyBonusAvailable" class="earn-card__live">доступно</span>
+            </h3>
+            <p>Заходите каждый день и забирайте бонус в кошельке.</p>
           </div>
         </article>
       </div>
     </section>
 
-    <!-- FILTERS -->
+    <!-- ===================== Каталог ===================== -->
     <div class="catalog-head">
-      <div>
-        <span class="eyebrow">CATALOG</span>
-        <h2 class="section-title">
-          Предметы
-        </h2>
-      </div>
+      <h2 class="section-title">Предметы</h2>
 
-      <nav class="tabs">
+      <nav class="tabs" aria-label="Категории">
         <button
-            v-for="tab in TABS"
+            v-for="tab in visibleTabs"
             :key="tab.value"
             class="tabs__tab"
-            :class="{
-            'tabs__tab--active': activeType === tab.value,
-          }"
+            :class="{ 'tabs__tab--active': activeType === tab.value }"
             type="button"
             @click="activeType = tab.value"
         >
@@ -422,188 +333,95 @@ onMounted(load)
       </nav>
     </div>
 
-    <!-- LOADING -->
-    <div v-if="loading" class="state">
-      <div class="state__loader"></div>
-      <span>Загружаем каталог…</span>
+    <div v-if="loading" class="state">Загружаем каталог…</div>
+
+    <div v-else-if="!filtered.length" class="state">
+      В этой категории пока нет предметов.
     </div>
 
-    <!-- EMPTY -->
-    <div v-else-if="!filtered.length" class="empty">
-      <div class="empty__icon">
-        <AppIcon icon="box" :size="28" />
-      </div>
-
-      <h3>Здесь пока пусто</h3>
-
-      <p>
-        В этой категории пока нет доступных предметов.
-      </p>
-    </div>
-
-    <!-- CATALOG -->
     <div v-else class="grid">
       <article
           v-for="item in filtered"
           :key="item.id"
           class="card"
+          :class="`card--${item.rarity || 'common'}`"
           :style="rarityStyle(item)"
       >
-        <div class="card__glow"></div>
-
-        <div class="card__top">
-          <div class="card__icon">
-            <AppIcon
-                :icon="item.icon"
-                :size="25"
-            />
-          </div>
-
-          <span class="card__rarity">
-            {{ RARITY_LABELS[item.rarity] || item.rarity }}
-          </span>
-        </div>
+        <ShopItemPreview :item="item" />
 
         <div class="card__content">
-          <h3 class="card__name">
-            {{ item.name }}
-          </h3>
+          <div class="card__top">
+            <h3 class="card__name">{{ item.name }}</h3>
+            <span class="card__rarity">{{ RARITY_LABELS[item.rarity] || item.rarity }}</span>
+          </div>
 
-          <p class="card__type">
-            {{ itemSubtitle(item) }}
-          </p>
-
-          <p
-              v-if="item.description"
-              class="card__desc"
-          >
-            {{ item.description }}
-          </p>
+          <p class="card__type">{{ itemSubtitle(item) }}</p>
+          <p v-if="item.description" class="card__desc">{{ item.description }}</p>
         </div>
 
         <div class="card__foot">
-          <div class="price">
-            <span class="price__coin">₳</span>
-            <span>{{ formatCoins(item.price) }}</span>
-          </div>
+          <span class="price">
+            <span class="price__coin" aria-hidden="true">₳</span>
+            {{ formatCoins(item.price) }}
+          </span>
 
-          <span
-              v-if="item.owned && !item.is_repeatable"
-              class="owned"
-          >
+          <span v-if="item.owned && !item.is_repeatable" class="owned">
             <AppIcon icon="check" :size="15" />
             Куплено
           </span>
 
           <button
               v-else
-              class="btn btn--buy"
+              class="btn btn-primary card__buy"
               type="button"
-              :disabled="
-              auth.isAuthenticated &&
-              !item.can_afford
-            "
+              :disabled="auth.isAuthenticated && !item.can_afford"
               @click="openPurchase(item)"
           >
-            {{
-              item.can_afford === false
-                  ? 'Не хватает'
-                  : 'Купить'
-            }}
+            {{ item.can_afford === false ? 'Не хватает' : 'Купить' }}
           </button>
         </div>
       </article>
     </div>
 
-    <!-- PURCHASE MODAL -->
+    <!-- ===================== Покупка ===================== -->
     <div
         v-if="purchaseItem"
         class="modal"
         @click.self="closePurchase"
     >
-      <div class="modal__box">
+      <div class="modal__box" role="dialog" aria-modal="true" :aria-label="`Покупка: ${purchaseItem.name}`">
+        <ShopItemPreview :item="purchaseItem" class="modal__preview" />
+
         <div class="modal__header">
           <div>
-            <span class="eyebrow">
-              PURCHASE
-            </span>
-
-            <h3 class="modal__title">
-              {{ purchaseItem.name }}
-            </h3>
-
-            <p class="modal__type">
-              {{
-                TYPE_LABELS[purchaseItem.type] ||
-                purchaseItem.type
-              }}
-            </p>
+            <h3 class="modal__title">{{ purchaseItem.name }}</h3>
+            <p class="modal__type">{{ TYPE_LABELS[purchaseItem.type] || purchaseItem.type }}</p>
           </div>
 
-          <button
-              class="modal__close"
-              type="button"
-              aria-label="Закрыть"
-              @click="closePurchase"
-          >
-            ×
-          </button>
+          <button class="modal__close" type="button" aria-label="Закрыть" @click="closePurchase">×</button>
         </div>
 
-        <!-- PRIORITY -->
+        <!-- Приоритет тир-теста -->
         <template v-if="isPriorityPurchase">
-          <div class="modal-info">
-            <AppIcon icon="rocket" :size="20" />
-
-            <p>
-              Приоритет поднимает заявку в начало
-              очереди тестеров и сгорает после её
-              завершения.
-            </p>
-          </div>
-
           <p class="modal__hint">
-            Можно применить сразу или купить впрок —
-            заряд будет ждать в инвентаре.
+            Приоритет поднимает заявку в начало очереди тестеров и сгорает после её завершения.
+            Можно применить сразу или купить впрок — заряд подождёт в инвентаре.
           </p>
 
-          <div
-              v-if="priorityLoading"
-              class="state state--sm"
-          >
-            <div class="state__loader"></div>
-            <span>Загружаем заявки…</span>
-          </div>
+          <div v-if="priorityLoading" class="state state--sm">Загружаем заявки…</div>
 
-          <template
-              v-else-if="priorityCandidates.length"
-          >
+          <template v-else-if="priorityCandidates.length">
             <div class="modal-section-title">
               <span>Применить сейчас</span>
-
-              <span class="charges">
-                {{ priorityCharges }} зарядов
-              </span>
+              <span class="charges">{{ priorityCharges }} зарядов</span>
             </div>
 
             <div class="tests">
               <label class="tests__row">
-                <input
-                    v-model="priorityTargetId"
-                    type="radio"
-                    :value="null"
-                >
-
-                <span class="tests__radio"></span>
-
+                <input v-model="priorityTargetId" type="radio" :value="null">
                 <span class="tests__content">
-                  <strong>
-                    Не сейчас
-                  </strong>
-
-                  <small>
-                    Оставить в инвентаре
-                  </small>
+                  <strong>Не сейчас</strong>
+                  <small>Оставить в инвентаре</small>
                 </span>
               </label>
 
@@ -611,124 +429,47 @@ onMounted(load)
                   v-for="test in priorityCandidates"
                   :key="test.id"
                   class="tests__row"
-                  :class="{
-                  'tests__row--disabled':
-                    test.is_priority,
-                }"
+                  :class="{ 'tests__row--disabled': test.is_priority }"
               >
-                <input
-                    v-model="priorityTargetId"
-                    type="radio"
-                    :value="test.id"
-                    :disabled="test.is_priority"
-                >
-
-                <span class="tests__radio"></span>
-
+                <input v-model="priorityTargetId" type="radio" :value="test.id" :disabled="test.is_priority">
                 <span class="tests__content">
-                  <strong>
-                    {{ modeLabel(test.mode) }}
-                  </strong>
-
-                  <small>
-                    Тест #{{ test.id }}
-                  </small>
+                  <strong>{{ modeLabel(test.mode) }}</strong>
+                  <small>Тест #{{ test.id }}</small>
                 </span>
-
-                <span
-                    v-if="test.is_priority"
-                    class="tests__flag"
-                >
-                  PRIORITY
-                </span>
+                <span v-if="test.is_priority" class="tests__flag">Уже в приоритете</span>
               </label>
             </div>
           </template>
 
-          <div
-              v-else
-              class="modal-info modal-info--blue"
-          >
-            <AppIcon icon="info" :size="19" />
-
-            <p>
-              Активных заявок нет — приоритет
-              сохранится в инвентаре.
-            </p>
-          </div>
+          <p v-else class="modal__hint">Активных заявок нет — приоритет сохранится в инвентаре.</p>
         </template>
 
-        <!-- QUANTITY -->
-        <label
-            v-if="
-            purchaseItem.is_repeatable &&
-            !isPriorityPurchase
-          "
-            class="qty"
-        >
+        <label v-if="purchaseItem.is_repeatable && !isPriorityPurchase" class="qty">
           <span>Количество</span>
-
-          <input
-              v-model.number="purchaseQuantity"
-              type="number"
-              min="1"
-              max="10"
-          >
+          <input v-model.number="purchaseQuantity" type="number" min="1" max="10">
         </label>
 
-        <!-- TOTAL -->
         <div class="modal-total">
           <div>
-            <span class="modal-total__label">
-              Итого
-            </span>
-
-            <span class="modal-total__balance">
-              Баланс: ₳ {{ formatCoins(balance) }}
-            </span>
+            <span class="modal-total__label">Итого</span>
+            <span class="modal-total__balance">Баланс: ₳ {{ formatCoins(balance) }}</span>
           </div>
-
-          <strong>
-            ₳ {{ formatCoins(totalPrice) }}
-          </strong>
+          <strong>₳ {{ formatCoins(totalPrice) }}</strong>
         </div>
 
-        <div
-            v-if="!canPay"
-            class="alert alert--error"
-        >
-          <AppIcon icon="alert-circle" :size="17" />
-
-          <span>
-            Не хватает
-            {{ formatCoins(totalPrice - balance) }}
-            ApexCoin.
-          </span>
+        <div v-if="!canPay" class="alert alert--error">
+          Не хватает {{ formatCoins(totalPrice - balance) }} ApexCoin.
         </div>
 
-        <!-- ACTIONS -->
         <div class="modal__actions">
+          <button class="btn btn-secondary" type="button" @click="closePurchase">Отмена</button>
           <button
-              class="btn btn--ghost"
+              class="btn btn-primary"
               type="button"
-              @click="closePurchase"
-          >
-            Отмена
-          </button>
-
-          <button
-              class="btn btn--gold"
-              type="button"
-              :disabled="
-              purchaseBusy || !canPay
-            "
+              :disabled="purchaseBusy || !canPay"
               @click="confirmPurchase"
           >
-            {{
-              purchaseBusy
-                  ? 'Покупаем…'
-                  : 'Подтвердить покупку'
-            }}
+            {{ purchaseBusy ? 'Покупаем…' : 'Подтвердить покупку' }}
           </button>
         </div>
       </div>

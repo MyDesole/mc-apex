@@ -3,6 +3,7 @@ import { alert as alertDialog, confirm as confirmDialog } from '@/utils/dialog.j
 import { onMounted, ref, watch } from 'vue'
 import { adminApi } from '@/services/core/admin.js'
 import AdminAchievementForm from '@/components/admin/AdminAchievementForm.vue'
+import AchievementBadge from '@/components/achievements/AchievementBadge.vue'
 
 const achievements = ref([])
 const loading = ref(true)
@@ -142,7 +143,7 @@ onMounted(load)
                 }"
           :style="{ '--color': a.color }"
       >
-        <div class="ach__icon">{{ a.icon }}</div>
+        <AchievementBadge :achievement="a" :size="44" />
 
         <div class="ach__info">
           <div class="ach__head">

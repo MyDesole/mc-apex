@@ -39,9 +39,6 @@ const percentile = computed(() => {
     <div class="rank-badge__glow"></div>
 
     <div class="rank-badge__topline">
-      <span class="rank-badge__label">
-        GLOBAL RANKING
-      </span>
 
       <span
           v-if="position <= 10"
@@ -129,13 +126,10 @@ const percentile = computed(() => {
       class="rank-badge rank-unranked"
   >
     <div class="rank-badge__topline">
-      <span class="rank-badge__label">
-        GLOBAL RANKING
-      </span>
 
       <span class="rank-badge__status rank-badge__status--idle">
         <i></i>
-        UNRANKED
+        Вне рейтинга
       </span>
     </div>
 

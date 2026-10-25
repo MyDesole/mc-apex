@@ -207,7 +207,7 @@ function rankOf(slotIdx) {
                 {{ scoreOf(topThree[slot]) }}
               </span>
 
-              <small>RATING</small>
+              <small>Рейтинг</small>
             </div>
 
             <RouterLink
@@ -473,14 +473,10 @@ function rankOf(slotIdx) {
   border: 1px solid
   color-mix(in srgb, var(--accent) 58%, transparent);
 
-  border-radius: 999px;
+  border-radius: 4px;
 
   box-shadow:
-      0 7px 22px
-      color-mix(in srgb, var(--accent) 25%, transparent),
       inset 0 1px rgba(255, 255, 255, .07);
-
-  backdrop-filter: blur(10px);
 }
 
 .podium__medal {
@@ -491,7 +487,7 @@ function rankOf(slotIdx) {
   color: #fff;
 
   font-size: 11px;
-  font-weight: 950;
+  font-weight: 800;
   letter-spacing: .5px;
 }
 
@@ -511,28 +507,23 @@ function rankOf(slotIdx) {
   border: 1px solid
   color-mix(in srgb, var(--accent) 45%, transparent);
 
-  border-radius: 999px;
+  border-radius: 4px;
 
   color:
       color-mix(in srgb, var(--accent) 82%, #fff);
 
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 800;
   letter-spacing: .35px;
 
-  backdrop-filter: blur(10px);
-
   box-shadow:
-      0 5px 18px
-      color-mix(in srgb, var(--accent) 18%, transparent),
       inset 0 1px rgba(255, 255, 255, .04);
 }
 
 .podium__score svg {
   color: var(--accent);
 
-  filter:
-      drop-shadow(
+  filter: drop-shadow(
           0 0 5px
           color-mix(in srgb, var(--accent) 70%, transparent)
       );
@@ -543,8 +534,8 @@ function rankOf(slotIdx) {
 
   color: rgba(255, 255, 255, .3);
 
-  font-size: 7px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
   letter-spacing: 1px;
 }
 
@@ -564,8 +555,7 @@ function rankOf(slotIdx) {
 
   cursor: pointer;
 
-  filter:
-      drop-shadow(0 20px 30px rgba(0, 0, 0, .55))
+  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, .55))
       drop-shadow(
           0 0 22px
           color-mix(in srgb, var(--accent) 28%, transparent)
@@ -601,8 +591,7 @@ function rankOf(slotIdx) {
 .podium__card:hover {
   transform: translateY(-5px) scale(1.015);
 
-  filter:
-      drop-shadow(0 24px 35px rgba(0, 0, 0, .6))
+  filter: drop-shadow(0 24px 35px rgba(0, 0, 0, .6))
       drop-shadow(
           0 0 30px
           color-mix(in srgb, var(--accent) 42%, transparent)
@@ -641,7 +630,7 @@ function rankOf(slotIdx) {
   border: 1px solid
   color-mix(in srgb, var(--accent) 22%, var(--border));
 
-  border-radius: 14px;
+  border-radius: 6px;
 
   box-shadow:
       inset 0 1px rgba(255,255,255,.04),
@@ -670,10 +659,7 @@ function rankOf(slotIdx) {
   border-color:
       color-mix(in srgb, var(--effect-color) 55%, var(--border));
 
-  box-shadow:
-      inset 0 1px rgba(255,255,255,.06),
-      0 0 25px
-      color-mix(in srgb, var(--effect-color) 18%, transparent);
+  box-shadow:inset 0 1px rgba(255,255,255,.06);
 }
 
 .rank-player--legendary::after {
@@ -724,11 +710,9 @@ function rankOf(slotIdx) {
   border: 2px solid
   color-mix(in srgb, var(--accent) 45%, transparent);
 
-  border-radius: 12px;
+  border-radius: 6px;
 
-  box-shadow:
-      0 0 20px
-      color-mix(in srgb, var(--accent) 20%, transparent);
+  box-shadow: none;
 }
 
 .rank-player__avatar img {
@@ -756,11 +740,9 @@ function rankOf(slotIdx) {
       color-mix(in srgb, var(--accent) 10%, #090910);
 
   font-size: 21px;
-  font-weight: 950;
+  font-weight: 800;
 
-  text-shadow:
-      0 0 14px
-      color-mix(in srgb, var(--accent) 60%, transparent);
+  text-shadow: none;
 }
 
 .rank-player__frame {
@@ -769,44 +751,44 @@ function rankOf(slotIdx) {
 
   inset: -3px;
 
-  border-radius: 14px;
+  border-radius: 6px;
 
   pointer-events: none;
 }
 
 .rank-player__frame--purple {
   border: 2px solid #7c3aed;
-  box-shadow: 0 0 12px #7c3aed;
+  box-shadow: none;
 }
 
 .rank-player__frame--cyan {
   border: 2px solid #06b6d4;
-  box-shadow: 0 0 12px #06b6d4;
+  box-shadow: none;
 }
 
 .rank-player__frame--green {
   border: 2px solid #22c55e;
-  box-shadow: 0 0 12px #22c55e;
+  box-shadow: none;
 }
 
 .rank-player__frame--gold {
   border: 2px solid #facc15;
-  box-shadow: 0 0 14px rgba(250,204,21,.65);
+  box-shadow: none;
 }
 
 .rank-player__frame--orange {
   border: 2px solid #f97316;
-  box-shadow: 0 0 14px rgba(249,115,22,.6);
+  box-shadow: none;
 }
 
 .rank-player__frame--pink {
   border: 2px solid #ec4899;
-  box-shadow: 0 0 14px rgba(236,72,153,.6);
+  box-shadow: none;
 }
 
 .rank-player__frame--red {
   border: 2px solid #ef4444;
-  box-shadow: 0 0 14px rgba(239,68,68,.6);
+  box-shadow: none;
 }
 
 .rank-player__frame--rainbow {
@@ -817,16 +799,13 @@ function rankOf(slotIdx) {
 .rank-player__frame--legendary {
   border: 2px solid transparent;
 
-  box-shadow:
-      0 0 10px #facc15,
-      0 0 25px rgba(249,115,22,.45);
+  box-shadow: none;
 }
 
 .rank-player__frame--season1 {
   border: 2px solid transparent;
 
-  box-shadow:
-      0 0 14px rgba(124,58,237,.4);
+  box-shadow: none;
 }
 
 .rank-player__online {
@@ -884,14 +863,14 @@ function rankOf(slotIdx) {
 
   border-radius: 6px;
 
-  font-size: 10px;
-  font-weight: 950;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .rank-player__clan {
   color: var(--text-muted);
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
 }
 
@@ -901,7 +880,7 @@ function rankOf(slotIdx) {
   color: #fff;
 
   font-size: 14px;
-  font-weight: 900;
+  font-weight: 800;
 
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -914,7 +893,7 @@ function rankOf(slotIdx) {
 
   color: var(--text-muted);
 
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
 
   white-space: nowrap;
@@ -958,7 +937,7 @@ function rankOf(slotIdx) {
       var(--bg-card);
 
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 6px;
 
   box-shadow:
       0 8px 25px rgba(0, 0, 0, .12);
@@ -976,7 +955,6 @@ function rankOf(slotIdx) {
   border-color: rgba(250, 204, 21, .4);
 
   box-shadow:
-      0 0 30px -12px rgba(250, 204, 21, .4),
       0 10px 30px rgba(0, 0, 0, .15);
 }
 
@@ -998,7 +976,7 @@ function rankOf(slotIdx) {
   color: var(--accent);
 
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 800;
 }
 
 .mobile-podium__card {
@@ -1035,10 +1013,10 @@ function rankOf(slotIdx) {
   border: 1px solid
   color-mix(in srgb, var(--accent) 42%, transparent);
 
-  border-radius: 999px;
+  border-radius: 4px;
 
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 800;
 }
 /* Медиа-запросы пьедестала: правила скопированы из PlayersView.css */
 @media (max-width: 900px) {
@@ -1110,7 +1088,7 @@ function rankOf(slotIdx) {
   }
 
   .rating-head__eyebrow {
-    font-size: 8px;
+    font-size: 12px;
   }
 
   .rating-head__title {
@@ -1175,7 +1153,7 @@ function rankOf(slotIdx) {
 
     gap: 9px;
 
-    border-radius: 11px;
+    border-radius: 6px;
   }
 
   .rank-player__avatar-wrap {
@@ -1184,7 +1162,7 @@ function rankOf(slotIdx) {
   }
 
   .rank-player__avatar {
-    border-radius: 10px;
+    border-radius: 6px;
   }
 
   .rank-player__name {
@@ -1196,15 +1174,15 @@ function rankOf(slotIdx) {
 
     min-width: 23px;
 
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .rank-player__clan {
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .rank-player__role {
-    font-size: 8px;
+    font-size: 12px;
   }
 
   .rest__head {
@@ -1237,7 +1215,7 @@ function rankOf(slotIdx) {
   }
 
   .rest__rank-number {
-    font-size: 10px;
+    font-size: 12px;
   }
 
   .rest__score {
@@ -1245,7 +1223,7 @@ function rankOf(slotIdx) {
 
     padding: 6px 7px;
 
-    font-size: 10px;
+    font-size: 12px;
   }
 
   .rest__arrow {
@@ -1258,7 +1236,7 @@ function rankOf(slotIdx) {
   }
 
   .rest-player__avatar {
-    border-radius: 9px;
+    border-radius: 6px;
   }
 
   .rest-player__name {
@@ -1266,11 +1244,11 @@ function rankOf(slotIdx) {
   }
 
   .rest-player__meta {
-    font-size: 8px;
+    font-size: 12px;
   }
 
   .rest__eyebrow {
-    font-size: 7px;
+    font-size: 12px;
   }
 }
 
@@ -1329,7 +1307,7 @@ function rankOf(slotIdx) {
   }
 
   .rest__rank-number {
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .rest-player {
@@ -1358,7 +1336,7 @@ function rankOf(slotIdx) {
 
     padding: 5px 6px;
 
-    font-size: 9px;
+    font-size: 12px;
   }
 }
 

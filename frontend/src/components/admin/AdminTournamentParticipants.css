@@ -7,7 +7,6 @@
   justify-content: center;
   padding: 20px;
   background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(6px);
 }
 
 .modal {
@@ -18,7 +17,7 @@
   flex-direction: column;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 6px;
   overflow: hidden;
 }
 
@@ -83,7 +82,7 @@
   padding: 10px 14px;
   background: #0d0d14;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 6px;
 }
 
 .row--pending {
@@ -105,7 +104,7 @@
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-  border-radius: 9px;
+  border-radius: 6px;
   color: #fff;
   font-size: 14px;
   font-weight: 800;
@@ -218,7 +217,7 @@
   color: #fff;
   background: var(--accent);
   border: 0;
-  border-radius: 9px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -244,7 +243,7 @@
 .btn-cancel {
   min-height: 40px;
   padding: 0 22px;
-  border-radius: 9px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -264,7 +263,7 @@
   padding: 14px 16px;
   background: rgba(124, 58, 237, 0.08);
   border: 1px solid rgba(124, 58, 237, 0.3);
-  border-radius: 12px;
+  border-radius: 6px;
 }
 
 .bracket-gen__title {
@@ -289,7 +288,7 @@
   color: #fff;
   background: var(--accent, #7c3aed);
   border: 1px solid var(--accent, #7c3aed);
-  border-radius: 10px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -310,7 +309,7 @@
 .gen-msg {
   margin: 0 24px 12px;
   padding: 10px 14px;
-  border-radius: 9px;
+  border-radius: 6px;
   font-size: 13px;
 }
 

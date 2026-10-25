@@ -128,6 +128,26 @@ class BroadcastTest extends TestCase
         });
     }
 
+    public function test_message_is_sent_even_when_websocket_server_is_down(): void
+    {
+        // Reverb не запущен: рассылка падает, но сообщение уже сохранено — 201, а не 500
+        config([
+            'broadcasting.default' => 'reverb',
+            'broadcasting.connections.reverb.options.host' => '127.0.0.1',
+            'broadcasting.connections.reverb.options.port' => 1,
+            'broadcasting.connections.reverb.options.scheme' => 'http',
+            'broadcasting.connections.reverb.options.useTLS' => false,
+        ]);
+
+        [$author, , $conversation] = $this->pair();
+
+        $this->actingAs($author)
+            ->postJson("/api/chat/conversations/{$conversation->id}/messages", ['body' => 'Без сокета'])
+            ->assertCreated();
+
+        $this->assertSame(1, Message::where('body', 'Без сокета')->count());
+    }
+
     public function test_notification_and_message_events_are_broadcastable(): void
     {
         $this->assertInstanceOf(

@@ -6,6 +6,7 @@ use App\Domains\Chat\Events\MessageSent;
 use App\Domains\Chat\Events\MessagesRead;
 use App\Domains\Chat\Events\UserTyping;
 use App\Http\Controllers\Controller;
+use App\Support\Broadcasting\SafeBroadcast;
 use App\Domains\Chat\Requests\Chat\ConversationHistoryRequest;
 use App\Domains\Chat\Requests\Chat\ForwardMessageRequest;
 use App\Domains\Chat\Requests\Chat\SendMessageRequest;
@@ -106,7 +107,7 @@ class ChatController extends Controller
             attachmentIds: $request->input('attachments', []),
         );
 
-        broadcast(new MessageSent($message))->toOthers();
+        SafeBroadcast::send(new MessageSent($message), toOthers: true);
 
         return response()->json([
             'message' => new MessageResource($message),
@@ -123,7 +124,7 @@ class ChatController extends Controller
 
         $forwarded = $this->chat->forward($message, $target, $request->user());
 
-        broadcast(new MessageSent($forwarded))->toOthers();
+        SafeBroadcast::send(new MessageSent($forwarded), toOthers: true);
 
         return response()->json([
             'message' => new MessageResource($forwarded),
@@ -200,7 +201,7 @@ class ChatController extends Controller
     {
         $this->authorize('view', $conversation);
 
-        broadcast(new UserTyping($conversation, $request->user()));
+        SafeBroadcast::send(new UserTyping($conversation, $request->user()));
 
         return response()->json(['ok' => true]);
     }
@@ -217,7 +218,7 @@ class ChatController extends Controller
          * Автору сообщения — чтобы галочка встала сразу. Собираем через
          * диалог: он знает всех участников.
          */
-        broadcast(MessagesRead::forConversation($message->conversation, $request->user()));
+        SafeBroadcast::send(MessagesRead::forConversation($message->conversation, $request->user()));
 
         // Формат плоский (unread_count в корне) — так его читает фронтенд
         return response()->json([
@@ -236,7 +237,7 @@ class ChatController extends Controller
          * Сообщаем автору: иначе галочка прочтения появлялась только
          * после обновления страницы.
          */
-        broadcast(MessagesRead::forConversation($conversation, $request->user()));
+        SafeBroadcast::send(MessagesRead::forConversation($conversation, $request->user()));
 
         return response()->json([
             'ok' => true,

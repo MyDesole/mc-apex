@@ -18,6 +18,12 @@ class ShopItem extends Model
     public const TYPE_CLAN_HIGHLIGHT = 'clan_highlight';
     public const TYPE_CLAN_HIGHLIGHT_STYLE = 'clan_highlight_style';
 
+    /** Сцена за 3D-скином в профиле. */
+    public const TYPE_SKIN_BACKDROP = 'skin_backdrop';
+
+    /** Оформление карточки игрока (PNG). */
+    public const TYPE_CARD_THEME = 'card_theme';
+
     /**
      * Типы, которые при надевании пишутся в поле профиля пользователя.
      */
@@ -25,6 +31,8 @@ class ShopItem extends Model
         self::TYPE_AVATAR_FRAME,
         self::TYPE_PROFILE_EFFECT,
         self::TYPE_ACCENT_COLOR,
+        self::TYPE_SKIN_BACKDROP,
+        self::TYPE_CARD_THEME,
         self::TYPE_BADGE,
         // Оформление подсветки клана применяется к клану лидера
         self::TYPE_CLAN_HIGHLIGHT_STYLE,

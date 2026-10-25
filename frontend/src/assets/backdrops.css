@@ -1,0 +1,150 @@
+/* =========================================================
+   ФОНЫ 3D-СКИНА (косметика из магазина)
+
+   Сцены собраны из градиентов, без картинок: пиксельная «текстура» —
+   шахматка 16×16, как у блоков. Используются в профиле (PlayerShowcase)
+   и в превью магазина. Ключи совпадают с effect_value в ShopItemSeeder.
+   ========================================================= */
+
+/* По умолчанию — шахматка блока без текстуры */
+.mc-backdrop {
+  --cell: 40px;
+
+  position: relative;
+  overflow: hidden;
+
+  background:
+      conic-gradient(#1b1825 25%, #1e1a28 0 50%, #1b1825 0 75%, #1e1a28 0)
+      0 0 / var(--cell) var(--cell);
+}
+
+/* Декоративные слои сцены: свечение и «земля» внизу */
+.mc-backdrop::before,
+.mc-backdrop::after {
+  content: '';
+
+  position: absolute;
+  left: 0;
+  right: 0;
+
+  pointer-events: none;
+}
+
+/* ---------- Верхний мир ---------- */
+
+.mc-backdrop--overworld {
+  background:
+      /* облака */
+      linear-gradient(#ffffff, #ffffff) 12% 16% / 22% 7% no-repeat,
+      linear-gradient(#ffffff, #ffffff) 17% 11% / 10% 6% no-repeat,
+      linear-gradient(#f1f5f9, #f1f5f9) 78% 26% / 18% 6% no-repeat,
+      linear-gradient(180deg, #6fb7ff 0%, #a7d8ff 72%, #c9e8ff 100%);
+}
+
+.mc-backdrop--overworld::after {
+  bottom: 0;
+  height: 24%;
+
+  background:
+      linear-gradient(180deg, #5d9b37 0 18%, #4f872e 18% 26%, transparent 26%),
+      conic-gradient(#86603f 25%, #7a5539 0 50%, #86603f 0 75%, #7a5539 0) 0 0 / 20px 20px;
+}
+
+/* ---------- Океан ---------- */
+
+.mc-backdrop--ocean {
+  background:
+      radial-gradient(circle, rgba(255, 255, 255, 0.55) 0 3px, transparent 4px) 20% 30% / 120px 140px,
+      radial-gradient(circle, rgba(255, 255, 255, 0.35) 0 2px, transparent 3px) 70% 60% / 90px 110px,
+      linear-gradient(180deg, #1e6aa8 0%, #134e7a 55%, #0b3050 100%);
+}
+
+.mc-backdrop--ocean::after {
+  bottom: 0;
+  height: 18%;
+
+  background: conic-gradient(#3a8a7c 25%, #2f7468 0 50%, #3a8a7c 0 75%, #2f7468 0) 0 0 / 20px 20px;
+}
+
+/* ---------- Незер ---------- */
+
+.mc-backdrop--nether {
+  background:
+      conic-gradient(#5c1a1a 25%, #4a1414 0 50%, #5c1a1a 0 75%, #4a1414 0) 0 0 / var(--cell) var(--cell);
+}
+
+.mc-backdrop--nether::before {
+  inset: 0;
+
+  background: radial-gradient(ellipse at 50% 120%, rgba(249, 115, 22, 0.55), transparent 60%);
+
+  animation: mc-lava 4s ease-in-out infinite alternate;
+}
+
+.mc-backdrop--nether::after {
+  bottom: 0;
+  height: 12%;
+
+  background: repeating-linear-gradient(90deg, #f97316 0 20px, #fb923c 20px 40px, #ea580c 40px 60px);
+}
+
+@keyframes mc-lava {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+/* ---------- Край ---------- */
+
+.mc-backdrop--end {
+  background:
+      radial-gradient(circle, #ffffff 0 1px, transparent 2px) 10% 20% / 60px 70px,
+      radial-gradient(circle, #e9d5ff 0 1px, transparent 2px) 40% 60% / 90px 80px,
+      radial-gradient(circle, #ffffff 0 1px, transparent 2px) 75% 35% / 110px 95px,
+      linear-gradient(180deg, #0c0716 0%, #1a1030 70%, #2a1846 100%);
+}
+
+.mc-backdrop--end::after {
+  bottom: 0;
+  height: 22%;
+
+  background: conic-gradient(#dcd8a1 25%, #cbc68f 0 50%, #dcd8a1 0 75%, #cbc68f 0) 0 0 / 20px 20px;
+}
+
+/* ---------- Глубокая тьма ---------- */
+
+.mc-backdrop--deep_dark {
+  background:
+      conic-gradient(#0c1214 25%, #0a0f11 0 50%, #0c1214 0 75%, #0a0f11 0) 0 0 / var(--cell) var(--cell);
+}
+
+/* Скалк: пятна, которые медленно мерцают */
+.mc-backdrop--deep_dark::before {
+  inset: 0;
+
+  background:
+      radial-gradient(circle at 18% 78%, rgba(45, 212, 191, 0.5) 0 6px, transparent 30px),
+      radial-gradient(circle at 82% 70%, rgba(45, 212, 191, 0.45) 0 5px, transparent 26px),
+      radial-gradient(circle at 60% 88%, rgba(34, 211, 238, 0.4) 0 4px, transparent 22px),
+      radial-gradient(circle at 30% 30%, rgba(45, 212, 191, 0.25) 0 3px, transparent 18px);
+
+  animation: mc-sculk 3.2s ease-in-out infinite alternate;
+}
+
+.mc-backdrop--deep_dark::after {
+  bottom: 0;
+  height: 16%;
+
+  background: conic-gradient(#0f2b2e 25%, #0b2023 0 50%, #0f2b2e 0 75%, #0b2023 0) 0 0 / 20px 20px;
+}
+
+@keyframes mc-sculk {
+  from { opacity: 0.45; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mc-backdrop--nether::before,
+  .mc-backdrop--deep_dark::before {
+    animation: none;
+  }
+}

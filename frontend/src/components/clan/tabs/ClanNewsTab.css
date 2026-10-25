@@ -37,8 +37,8 @@
   display: grid;
   place-items: center;
 
-  border: 1px solid rgba(139, 92, 246, 0.12);
-  border-radius: 11px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 
   background: rgba(139, 92, 246, 0.07);
 
@@ -65,7 +65,7 @@
 
   color: var(--text-muted);
 
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.4;
 }
 
@@ -80,8 +80,8 @@
 
   padding: 0 13px;
 
-  border: 1px solid rgba(139, 92, 246, 0.24);
-  border-radius: 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 
   background:
       linear-gradient(
@@ -93,13 +93,12 @@
   color: #fff;
 
   font-family: inherit;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
 
   cursor: pointer;
 
-  box-shadow:
-      0 7px 20px rgba(109, 40, 217, 0.13);
+  box-shadow: none;
 
   transition:
       transform 0.18s ease,
@@ -115,8 +114,7 @@
 .create-button:hover {
   transform: translateY(-1px);
 
-  box-shadow:
-      0 9px 26px rgba(109, 40, 217, 0.23);
+  box-shadow: none;
 }
 
 .create-button--active {
@@ -124,7 +122,7 @@
 
   background: rgba(139, 92, 246, 0.08);
 
-  border-color: rgba(139, 92, 246, 0.2);
+  border-color: var(--border);
 
   box-shadow: none;
 }
@@ -136,16 +134,10 @@
 .create-panel {
   overflow: hidden;
 
-  border: 1px solid rgba(139, 92, 246, 0.13);
-  border-radius: 15px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 
-  background:
-      radial-gradient(
-          circle at 0% 0%,
-          rgba(139, 92, 246, 0.065),
-          transparent 40%
-      ),
-      var(--bg-card);
+  background: var(--bg-card);
 
   box-shadow:
       0 18px 50px rgba(0, 0, 0, 0.16);
@@ -170,7 +162,7 @@
 
   color: var(--accent-light);
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 850;
   letter-spacing: 0.14em;
 }
@@ -189,7 +181,7 @@
 
   color: var(--text-muted);
 
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .create-panel__badge {
@@ -201,7 +193,7 @@
   display: grid;
   place-items: center;
 
-  border-radius: 9px;
+  border-radius: 6px;
 
   background: rgba(139, 92, 246, 0.08);
 
@@ -240,7 +232,7 @@
 
   color: var(--text-dim);
 
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 750;
 }
 
@@ -253,7 +245,7 @@
 .form-label-row span {
   color: #52525b;
 
-  font-size: 8px;
+  font-size: 12px;
 }
 
 .form-field input,
@@ -264,14 +256,14 @@
   box-sizing: border-box;
 
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: 6px;
 
   background: #0c0c12;
 
   color: var(--text);
 
   font-family: inherit;
-  font-size: 10px;
+  font-size: 12px;
 
   outline: none;
 
@@ -346,7 +338,7 @@
   color: var(--text);
 
   font: inherit;
-  font-size: 10px;
+  font-size: 12px;
 
   cursor: pointer;
 }
@@ -404,7 +396,7 @@
   color: var(--text);
 
   font-family: inherit;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .optional {
@@ -412,7 +404,7 @@
 
   color: #52525b;
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -437,7 +429,7 @@
 
   color: #52525b;
 
-  font-size: 8px;
+  font-size: 12px;
 }
 
 .create-panel__hint svg {
@@ -468,13 +460,12 @@
   color: #fff;
 
   font-family: inherit;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
 
   cursor: pointer;
 
-  box-shadow:
-      0 7px 18px rgba(109, 40, 217, 0.17);
+  box-shadow: none;
 }
 
 .publish-button svg {
@@ -522,15 +513,9 @@
   overflow: hidden;
 
   border: 1px solid rgba(255, 255, 255, 0.065);
-  border-radius: 14px;
+  border-radius: 6px;
 
-  background:
-      linear-gradient(
-          135deg,
-          rgba(255, 255, 255, 0.022),
-          transparent 45%
-      ),
-      var(--bg-card);
+  background: var(--bg-card);
 
   transition:
       border-color 0.2s ease,
@@ -599,9 +584,9 @@
 
   padding: 4px 8px;
 
-  border-radius: 999px;
+  border-radius: 4px;
 
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 850;
   letter-spacing: 0.045em;
   text-transform: uppercase;
@@ -615,8 +600,7 @@
 
   background: currentColor;
 
-  box-shadow:
-      0 0 8px currentColor;
+  box-shadow: none;
 }
 
 .event-type--announcement {
@@ -644,7 +628,7 @@
 
   color: var(--text-muted);
 
-  font-size: 9px;
+  font-size: 12px;
 
   overflow: hidden;
   text-overflow: ellipsis;
@@ -713,7 +697,7 @@
   color: var(--text-dim);
 
   font-family: inherit;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.65;
 
   white-space: pre-wrap;
@@ -756,8 +740,8 @@
 
   color: #fff;
 
-  font-size: 9px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .event-author > div:last-child {
@@ -772,7 +756,7 @@
 .event-author span {
   color: #52525b;
 
-  font-size: 7px;
+  font-size: 12px;
 }
 
 .event-author strong {
@@ -780,7 +764,7 @@
 
   color: var(--text-muted);
 
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
 
   overflow: hidden;
@@ -804,7 +788,7 @@
   color: var(--text-muted);
 
   font-family: inherit;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 750;
 
   cursor: pointer;
@@ -819,7 +803,7 @@
 
 .comments-button:hover,
 .comments-button--open {
-  border-color: rgba(139, 92, 246, 0.13);
+  border-color: var(--border);
 
   background: rgba(139, 92, 246, 0.06);
 
@@ -920,15 +904,9 @@
   padding: 30px;
 
   border: 1px dashed rgba(255, 255, 255, 0.08);
-  border-radius: 15px;
+  border-radius: 6px;
 
-  background:
-      radial-gradient(
-          circle at 50% 25%,
-          rgba(139, 92, 246, 0.05),
-          transparent 42%
-      ),
-      rgba(255, 255, 255, 0.012);
+  background: rgba(255, 255, 255, 0.012);
 
   text-align: center;
 }
@@ -942,8 +920,8 @@
 
   margin-bottom: 11px;
 
-  border: 1px solid rgba(139, 92, 246, 0.12);
-  border-radius: 13px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 
   background: rgba(139, 92, 246, 0.06);
 
@@ -967,7 +945,7 @@
 
   color: var(--text-muted);
 
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .events-empty button {
@@ -975,7 +953,7 @@
 
   padding: 7px 11px;
 
-  border: 1px solid rgba(139, 92, 246, 0.18);
+  border: 1px solid var(--border);
   border-radius: 8px;
 
   background: rgba(139, 92, 246, 0.07);
@@ -983,7 +961,7 @@
   color: var(--accent-light);
 
   font-family: inherit;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
 
   cursor: pointer;
@@ -1011,7 +989,7 @@
   padding: 15px 17px;
 
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 14px;
+  border-radius: 6px;
 
   background: var(--bg-card);
 
@@ -1034,13 +1012,7 @@
 
   transform: translateX(-100%);
 
-  background:
-      linear-gradient(
-          90deg,
-          transparent,
-          rgba(255, 255, 255, 0.045),
-          transparent
-      );
+  background: var(--bg-card);
 
   animation: skeleton 1.4s infinite;
 }
@@ -1182,7 +1154,7 @@
   }
 
   .events-toolbar p {
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .event-card__inner {

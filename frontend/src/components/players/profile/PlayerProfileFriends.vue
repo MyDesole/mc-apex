@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import {tierColor} from "@/composables/players/useTier.js";
 import { userLink } from '@/utils/links.js'
 
@@ -8,7 +8,13 @@ const props = defineProps({
 })
 const emit = defineEmits(['enter', 'leave'])
 
+/** Сколько друзей видно сразу: длинный список растягивал профиль. */
+const LIMIT = 12
+
+const expanded = ref(false)
+
 const list = computed(() => props.friends)
+const visible = computed(() => (expanded.value ? list.value : list.value.slice(0, LIMIT)))
 </script>
 
 <template>
@@ -20,7 +26,7 @@ const list = computed(() => props.friends)
 
     <div class="friends__grid">
       <RouterLink
-          v-for="f in list"
+          v-for="f in visible"
           :key="f.id"
           :to="userLink(f)"
           class="friend-tile"
@@ -43,6 +49,15 @@ const list = computed(() => props.friends)
         />
       </RouterLink>
     </div>
+
+    <button
+        v-if="list.length > LIMIT"
+        type="button"
+        class="friends__more"
+        @click="expanded = !expanded"
+    >
+      {{ expanded ? 'Свернуть' : `Показать всех (${list.length})` }}
+    </button>
   </aside>
 </template>
 

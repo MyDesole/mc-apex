@@ -190,8 +190,6 @@ function buildProps(component) {
  */
 const SKIP = {
   'TierHistoryChart.vue': 'Chart.js требует canvas, которого нет в jsdom',
-  'HelloWorld.vue': 'демонстрационный компонент из шаблона',
-  'TheWelcome.vue': 'демонстрационный компонент из шаблона',
 }
 
 const list = components()

@@ -46,6 +46,24 @@ const form = ref({
   featured_achievements: cleanArray(user.value?.featured_achievements),
 })
 
+/*
+ * Соцсети: ключи совпадают с PlayerProfileSocials и UpdateMeRequest.
+ * Раньше в профиле было место под соцсети, а настроить их было негде.
+ */
+const SOCIAL_FIELDS = [
+  { key: 'discord', label: 'Discord', placeholder: 'ник или ссылка-приглашение' },
+  { key: 'telegram', label: 'Telegram', placeholder: '@username' },
+  { key: 'youtube', label: 'YouTube', placeholder: 'ссылка на канал' },
+  { key: 'twitch', label: 'Twitch', placeholder: 'ссылка на канал' },
+  { key: 'vk', label: 'VK', placeholder: 'ссылка на страницу' },
+  { key: 'steam', label: 'Steam', placeholder: 'ссылка на профиль' },
+  { key: 'website', label: 'Сайт', placeholder: 'example.com' },
+]
+
+const socials = ref(Object.fromEntries(
+    SOCIAL_FIELDS.map(({ key }) => [key, user.value?.socials?.[key] ?? ''])
+))
+
 const loading = ref(false)
 const error = ref('')
 
@@ -234,13 +252,12 @@ async function submit() {
   error.value = ''
 
   try {
-    const mePayload = {}
+    // Соцсети уходят всегда: так очищенное поле действительно очищается
+    const mePayload = { socials: { ...socials.value } }
     if (avatarFile.value) mePayload.avatar = avatarFile.value
     if (coverFile.value) mePayload.cover = coverFile.value
 
-    if (Object.keys(mePayload).length) {
-      await playersApi.updateMe(mePayload)
-    }
+    await playersApi.updateMe(mePayload)
 
     // Чистим массивы от null / '' / undefined перед отправкой
     const payload = {
@@ -594,13 +611,19 @@ onBeforeUnmount(() => {
             </div>
 
             <div class="field">
-              <label>Discord tag</label>
-              <input
-                  v-model="form.discord_tag"
-                  type="text"
-                  maxlength="64"
-                  placeholder="username#0000"
-              />
+              <label>Соцсети</label>
+              <div class="socials-grid">
+                <label v-for="social in SOCIAL_FIELDS" :key="social.key" class="social-field">
+                  <span>{{ social.label }}</span>
+                  <input
+                      v-model="socials[social.key]"
+                      type="text"
+                      maxlength="255"
+                      :placeholder="social.placeholder"
+                  />
+                </label>
+              </div>
+              <small class="hint">Пустое поле — соцсеть не показывается в профиле</small>
             </div>
 
             <div class="field">

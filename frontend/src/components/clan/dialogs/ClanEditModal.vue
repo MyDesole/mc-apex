@@ -163,10 +163,6 @@ const colorPresets = [
 
           <header class="clan-modal__header">
             <div class="clan-modal__title-group">
-              <div class="clan-modal__eyebrow">
-                <span class="clan-modal__eyebrow-dot"></span>
-                CLAN MANAGEMENT
-              </div>
 
               <h2 id="clan-settings-title">
                 Настройки клана

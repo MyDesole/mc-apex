@@ -336,16 +336,16 @@ const tierProgress = computed(() => {
 
 const tierSubtitle = computed(() => {
   if (props.bridgeMode) {
-    return props.bridgeRank ? 'BRIDGE RANK' : 'ЗВАНИЕ НЕ ВЫДАНО'
+    return props.bridgeRank ? 'Звание бриджера' : 'Звание не выдано'
   }
 
   if (tier.value === 'UNRANKED') {
-    return 'AWAITING RANK'
+    return 'Тир ещё не получен'
   }
 
   return props.user.tier_title ||
       props.user.tier_description ||
-      'CURRENT RANK'
+      'Текущий тир'
 })
 
 /* =========================================================
@@ -461,10 +461,6 @@ const coverStyle = computed(() => {
 
     <div class="profile-header__topline">
 
-      <div class="profile-header__eyebrow">
-        <span class="profile-header__eyebrow-dot" />
-        {{ compact ? 'PLAYER' : 'PLAYER PROFILE' }}
-      </div>
 
       <button
           v-if="editable"
@@ -824,7 +820,7 @@ const coverStyle = computed(() => {
               class="profile-header__stat"
           >
             <span class="profile-header__stat-label">
-              RANK
+              Место
             </span>
 
             <strong>
@@ -837,7 +833,7 @@ const coverStyle = computed(() => {
               class="profile-header__stat"
           >
             <span class="profile-header__stat-label">
-              LEVEL
+              Уровень
             </span>
 
             <strong>
@@ -850,7 +846,7 @@ const coverStyle = computed(() => {
               class="profile-header__stat profile-header__stat--clan"
           >
             <span class="profile-header__stat-label">
-              CLAN
+              Клан
             </span>
 
             <strong>
@@ -863,7 +859,7 @@ const coverStyle = computed(() => {
               class="profile-header__stat"
           >
             <span class="profile-header__stat-label">
-              DAYS
+              Дней
             </span>
 
             <strong>
@@ -883,7 +879,7 @@ const coverStyle = computed(() => {
         >
           <div class="bridge-rank-block__rank">
             <span class="bridge-rank-block__label">
-              BRIDGE RANK
+              Звание
             </span>
 
             <strong
@@ -910,7 +906,7 @@ const coverStyle = computed(() => {
           <div class="tier-progress__head">
 
             <span>
-              TIER SCORE
+              Очки тира
             </span>
 
             <strong>

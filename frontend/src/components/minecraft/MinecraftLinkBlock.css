@@ -33,7 +33,7 @@
   background: rgba(34, 197, 94, 0.1);
 
   border: 1px solid rgba(34, 197, 94, 0.25);
-  border-radius: 9px;
+  border-radius: 6px;
 
   font-size: 12px;
 }
@@ -50,13 +50,9 @@
 
   border: 1px solid rgba(34, 197, 94, 0.3);
   border-left: 4px solid #22c55e;
-  border-radius: 12px;
+  border-radius: 6px;
 
-  background: linear-gradient(
-      135deg,
-      rgba(34, 197, 94, 0.1),
-      rgba(255, 255, 255, 0.02)
-  );
+  background: var(--bg-card);
 }
 
 .minecraft-link__info {
@@ -68,17 +64,16 @@
 .minecraft-link__label {
   color: rgba(255, 255, 255, 0.4);
 
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 .minecraft-link__name {
   color: #86efac;
 
   font-size: 18px;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .minecraft-link__claimed .minecraft-link__hint {
@@ -97,7 +92,7 @@
   background: rgba(255, 255, 255, 0.06);
 
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 9px;
+  border-radius: 6px;
 
   font-size: 12px;
   font-weight: 800;
@@ -139,7 +134,7 @@
   background: rgba(0, 0, 0, 0.3);
 
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
+  border-radius: 6px;
 
   font: inherit;
   font-size: 15px;
@@ -159,7 +154,7 @@
   background: var(--accent, #7c3aed);
 
   border: none;
-  border-radius: 10px;
+  border-radius: 6px;
 
   font-size: 13px;
   font-weight: 800;

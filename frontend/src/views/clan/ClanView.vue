@@ -1,4 +1,5 @@
 <script setup>
+import PageLoader from '@/components/core/PageLoader.vue'
 import { confirm as confirmDialog, prompt as promptDialog } from '@/utils/dialog.js'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -10,6 +11,7 @@ import ClanWars from '@/components/clan/dialogs/ClanWars.vue'
 import ClanApplications from '@/components/clan/dialogs/ClanApplications.vue'
 import TabTransition from '@/components/core/TabTransition.vue'
 import ClanEditModal from "@/components/clan/dialogs/ClanEditModal.vue";
+import PageState from '@/components/core/PageState.vue'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -36,8 +38,12 @@ const canManage = computed(() => {
   return me?.role === 'officer'
 })
 
+/** Ошибка загрузки: 404 или прочая — без неё страница оставалась пустой. */
+const loadError = ref(null)
+
 async function load() {
   loading.value = true
+  loadError.value = null
   try {
     data.value = await clansApi.show(route.params.id)
 
@@ -50,6 +56,8 @@ async function load() {
         applicationsCount.value = 0
       }
     }
+  } catch (e) {
+    loadError.value = e?.status === 404 ? 'notFound' : 'error'
   } finally {
     loading.value = false
   }
@@ -100,7 +108,7 @@ onMounted(load)
 </script>
 
 <template>
-  <div v-if="loading" class="loading">Загрузка...</div>
+  <PageLoader v-if="loading" />
 
   <div v-else-if="clan" class="clan-page">
     <!-- HEADER -->
@@ -285,6 +293,14 @@ onMounted(load)
         @updated="load"
     />
   </div>
+
+  <PageState
+      v-else
+      :kind="loadError || 'notFound'"
+      :title="loadError === 'error' ? null : 'Клан не найден'"
+      :text="loadError === 'error' ? null : 'Возможно, клан распущен или переименован.'"
+      :action="{ to: '/clans', label: 'Все кланы' }"
+  />
 </template>
 
 <style scoped>

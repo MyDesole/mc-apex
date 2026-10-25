@@ -8,15 +8,36 @@
   color: #f8fafc;
 }
 
-/* Бридж-профиль: блоки ниже техник и приглушены */
-.blocks--demoted {
-  opacity: 0.62;
-
-  transition: opacity 0.2s ease;
+/* Minecraft-витрина и факты: колонка фактов той же ширины, что и боковая панель профиля */
+.profile-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  align-items: start;
 }
 
-.blocks--demoted:hover {
-  opacity: 1;
+.profile-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fact {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  padding: 16px;
+
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+@media (max-width: 960px) {
+  .profile-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .bridge-wrap--lead {
@@ -27,31 +48,15 @@
   margin-bottom: 18px;
 }
 
-.blocks {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.block-col {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
 .block-title {
   margin: 0;
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
 
-.friend-block {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  color: var(--text-dim);
+
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
 }
 
 .loading {
@@ -68,7 +73,7 @@
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid rgba(124, 58, 237, 0.15);
+  border: 3px solid var(--border);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -112,7 +117,7 @@
   padding: 11px 22px;
   color: #fff;
   background: var(--accent);
-  border-radius: 10px;
+  border-radius: 6px;
   font-weight: 700;
   font-size: 13px;
   transition: all 0.2s;
@@ -123,8 +128,3 @@
   transform: translateY(-1px);
 }
 
-@media (max-width: 700px) {
-  .blocks {
-    grid-template-columns: 1fr;
-  }
-}

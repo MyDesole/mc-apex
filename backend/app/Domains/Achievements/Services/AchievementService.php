@@ -7,6 +7,7 @@ use App\Domains\Wallet\Models\CoinTransaction;
 use App\Domains\Users\Models\User;
 use App\Support\Concerns\AbortsWithMessage;
 use App\Domains\Wallet\Services\RewardService;
+use Throwable;
 
 class AchievementService
 {
@@ -164,76 +165,7 @@ class AchievementService
      */
     private static function eligibleCodes(User $user): array
     {
-        $codes = [];
-
-        $clanMember = $user->clanMember;
-
-        if ($clanMember) {
-            $codes[] = 'clan_joined';
-
-            if ($clanMember->role === 'leader') {
-                $codes[] = 'clan_leader';
-            } elseif ($clanMember->role === 'officer') {
-                $codes[] = 'clan_officer';
-            }
-
-            $wins = \App\Domains\Clan\Models\ClanWar::where('winner_clan_id', $clanMember->clan_id)->count();
-
-            if ($wins >= 1) $codes[] = 'clan_war_win';
-            if ($wins >= 5) $codes[] = 'clan_war_5';
-        }
-
-        $tierMap = ['E' => 'tier_e', 'D' => 'tier_d', 'C' => 'tier_c', 'B' => 'tier_b', 'A' => 'tier_a'];
-        $order = ['E', 'D', 'C', 'B', 'A'];
-
-        if ($user->tier && isset($tierMap[$user->tier])) {
-            $idx = array_search($user->tier, $order, true);
-
-            if ($idx !== false) {
-                for ($i = 0; $i <= $idx; $i++) {
-                    $codes[] = $tierMap[$order[$i]];
-                }
-            }
-        }
-
-        if ($user->tier === 'S') {
-            $codes[] = 'tier_s';
-        }
-
-        if ($user->tier === 'S+') {
-            $codes[] = 'tier_s_plus';
-            $codes[] = 'tier_s';
-
-            foreach ($order as $t) {
-                $codes[] = $tierMap[$t];
-            }
-        }
-
-        $testCount = $user->tierTests()->count();
-
-        if ($testCount >= 1) $codes[] = 'tier_test_first';
-        if ($testCount >= 5) $codes[] = 'tier_test_5';
-
-        $friendsCount = \App\Domains\Friends\Models\Friendship::where('status', 'accepted')
-            ->where(fn ($q) => $q->where('user_id', $user->id)->orWhere('friend_id', $user->id))
-            ->count();
-
-        if ($friendsCount >= 5) $codes[] = 'friends_5';
-        if ($friendsCount >= 20) $codes[] = 'friends_20';
-
-        if ($user->avatar && $user->bio && $user->cover_path
-            && $user->socials && collect($user->socials)->filter()->count() >= 2) {
-            $codes[] = 'profile_complete';
-        }
-
-        if ($user->tier_score > 0) {
-            $position = User::where('tier_score', '>', $user->tier_score)->count() + 1;
-
-            if ($position <= 10) $codes[] = 'top_10';
-            if ($position === 1) $codes[] = 'top_1';
-        }
-
-        return array_values(array_unique($codes));
+        return app(AchievementRules::class)->eligible($user);
     }
 
     /**
@@ -258,91 +190,56 @@ class AchievementService
         // 👇 уведомление
         $user->notify(new \App\Domains\Achievements\Notifications\AchievementGrantedNotification($achievement));
 
+        self::announce($user, $achievement);
+
         return true;
     }
 
     /**
-     * Массовая проверка всех возможных ачивок для юзера.
-     * Дёргается после значимых действий.
+     * Событие в ленте «Сейчас на APEX».
+     *
+     * attach() не даёт событий модели, поэтому каждый путь выдачи
+     * (автоматический и ручной из админки) вызывает это явно.
      */
-    public static function check(User $user): void
+    public static function announce(User $user, Achievement $achievement): void
     {
-        // Клан
-        $clanMember = $user->clanMember;
-        if ($clanMember) {
-            self::grant($user, 'clan_joined');
+        app(\App\Domains\Activity\Services\ActivityFeed::class)->record(
+            \App\Domains\Activity\Models\Activity::ACHIEVEMENT_EARNED,
+            $user,
+            [
+                'achievement' => [
+                    'id' => $achievement->id,
+                    'name' => $achievement->name,
+                    'icon' => $achievement->icon,
+                    'color' => $achievement->color,
+                    'rarity' => $achievement->rarity,
+                ],
+            ],
+        );
+    }
 
-            if ($clanMember->role === 'leader') {
-                self::grant($user, 'clan_leader');
-            } elseif ($clanMember->role === 'officer') {
-                self::grant($user, 'clan_officer');
-            }
+    /**
+     * Проверка ачивок игрока. Дёргается после значимых действий.
+     *
+     * Тиры S и S+ даются за турниры, но если тир уже стоит, связанные
+     * ачивки выдаются здесь же.
+     *
+     * @param  array<int, string>|null  $groups  какие группы проверять
+     *         (AchievementRules::GROUPS); null — все
+     */
+    public static function check(User $user, ?array $groups = null): void
+    {
+        $codes = app(AchievementRules::class)->eligible($user, $groups);
 
-            $wins = \App\Domains\Clan\Models\ClanWar::where('winner_clan_id', $clanMember->clan_id)->count();
-            if ($wins >= 1) self::grant($user, 'clan_war_win');
-            if ($wins >= 5) self::grant($user, 'clan_war_5');
+        if (! $codes) {
+            return;
         }
 
-        // Тиры E–A по проценту. S и S+ — за турниры, здесь НЕ выдаём.
-        $tierMap = [
-            'E' => 'tier_e',
-            'D' => 'tier_d',
-            'C' => 'tier_c',
-            'B' => 'tier_b',
-            'A' => 'tier_a',
-        ];
+        // Уже полученные пропускаем одним запросом, а не проверкой на каждый код
+        $owned = $user->achievements()->pluck('code')->all();
 
-        $order = ['E', 'D', 'C', 'B', 'A'];
-
-        if ($user->tier && isset($tierMap[$user->tier])) {
-            $idx = array_search($user->tier, $order);
-            if ($idx !== false) {
-                for ($i = 0; $i <= $idx; $i++) {
-                    self::grant($user, $tierMap[$order[$i]]);
-                }
-            }
-        }
-
-        // Отдельно: если у юзера уже S — выдаём tier_s
-        if ($user->tier === 'S') {
-            self::grant($user, 'tier_s');
-        }
-
-        // Отдельно: если у юзера S+ — выдаём tier_s_plus
-        if ($user->tier === 'S+') {
-            self::grant($user, 'tier_s_plus');
-            // И заодно tier_s, потому что S+ «включает» S
-            self::grant($user, 'tier_s');
-            // И все предыдущие тиры
-            foreach (['E', 'D', 'C', 'B', 'A'] as $t) {
-                self::grant($user, $tierMap[$t]);
-            }
-        }
-
-        // Тир-тесты
-        $testCount = $user->tierTests()->count();
-        if ($testCount >= 1) self::grant($user, 'tier_test_first');
-        if ($testCount >= 5) self::grant($user, 'tier_test_5');
-
-        // Друзья
-        $friendsCount = \App\Domains\Friends\Models\Friendship::where('status', 'accepted')
-            ->where(fn ($q) => $q->where('user_id', $user->id)->orWhere('friend_id', $user->id))
-            ->count();
-
-        if ($friendsCount >= 5) self::grant($user, 'friends_5');
-        if ($friendsCount >= 20) self::grant($user, 'friends_20');
-
-        // Полный профиль
-        if ($user->avatar && $user->bio && $user->cover_path
-            && $user->socials && collect($user->socials)->filter()->count() >= 2) {
-            self::grant($user, 'profile_complete');
-        }
-
-        // Топ
-        if ($user->tier_score > 0) {
-            $position = User::where('tier_score', '>', $user->tier_score)->count() + 1;
-            if ($position <= 10) self::grant($user, 'top_10');
-            if ($position === 1) self::grant($user, 'top_1');
+        foreach (array_diff($codes, $owned) as $code) {
+            self::grant($user, $code);
         }
     }
 }

@@ -348,7 +348,7 @@ function resendCode() {
   color: #a5b4fc;
   background: rgba(99, 102, 241, 0.1);
   border: 1px solid rgba(99, 102, 241, 0.35);
-  border-radius: 10px;
+  border-radius: 6px;
   font-size: 13px;
   line-height: 1.5;
 }
@@ -392,7 +392,7 @@ function resendCode() {
   padding: 11px 13px;
 
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 11px;
+  border-radius: 6px;
 
   background: rgba(255, 255, 255, 0.03);
 
@@ -416,7 +416,7 @@ function resendCode() {
   color: var(--text, #e5e5eb);
 
   font-size: 14px;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .play-style__desc {

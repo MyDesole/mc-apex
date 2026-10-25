@@ -7,7 +7,6 @@
   justify-content: center;
   padding: 20px;
   background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(6px);
 }
 
 .modal {
@@ -15,7 +14,7 @@
   max-width: 480px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 6px;
   overflow: hidden;
 }
 
@@ -89,7 +88,7 @@
   color: var(--text);
   background: #0d0d14;
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: 6px;
   font: inherit;
   outline: none;
   resize: vertical;
@@ -117,7 +116,7 @@
 .btn-danger {
   min-height: 40px;
   padding: 0 18px;
-  border-radius: 9px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;

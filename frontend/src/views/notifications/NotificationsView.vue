@@ -37,6 +37,7 @@ function notificationIcon(notification) {
 
     tier_test_request: 'target',
     tier_test_completed: 'trophy',
+    tier_test_appeal_resolved: 'check',
 
     clan_application: 'shield',
     clan_application_accepted: 'check',
@@ -57,6 +58,7 @@ function notificationType(notification) {
 
     tier_test_request: 'Тир-тест',
     tier_test_completed: 'Тир-тест',
+    tier_test_appeal_resolved: 'Апелляция',
 
     clan_application: 'Клан',
     clan_application_accepted: 'Клан',
@@ -160,7 +162,7 @@ async function open(notification) {
       }
     }
 
-    else if (type === 'tier_test_completed') {
+    else if (type === 'tier_test_completed' || type === 'tier_test_appeal_resolved') {
       await router.push('/profile')
     }
 
@@ -241,9 +243,6 @@ onMounted(load)
     <header class="notif-head">
 
       <div class="notif-head__content">
-        <span class="eyebrow">
-          APEX / NOTIFICATIONS
-        </span>
 
         <div class="notif-head__title-row">
           <div>
@@ -290,7 +289,7 @@ onMounted(load)
 
       <div class="summary__left">
         <span class="summary__label">
-          INBOX
+          Входящие
         </span>
 
         <span class="summary__value">
@@ -345,7 +344,7 @@ onMounted(load)
       </div>
 
       <span class="eyebrow eyebrow--small">
-        INBOX CLEAR
+        Всё прочитано
       </span>
 
       <strong>
@@ -367,9 +366,6 @@ onMounted(load)
 
       <div class="notifications__head">
         <div>
-          <span class="eyebrow eyebrow--small">
-            ACTIVITY FEED
-          </span>
 
           <h2>
             Последние события

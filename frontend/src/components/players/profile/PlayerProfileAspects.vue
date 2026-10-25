@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import { ASPECTS } from '@/data/players/aspects.js'
 
 const props = defineProps({
   aspects: {
@@ -21,25 +22,14 @@ const modes = {
     title: 'PvP',
     icon: '⚔',
     color: '#8b5cf6',
-    stats: [
-      { key: 'block_placing', label: 'Block Placement' },
-      { key: 'rotka', label: 'Rod' },
-      { key: 'movement', label: 'Movement' },
-      { key: 'aim', label: 'Aim' },
-      { key: 'game_sense', label: 'Game Sense' },
-    ],
+    // Подписи — общие с карточкой игрока и сравнением
+    stats: ASPECTS.pvp,
   },
   bedwars: {
     title: 'BedWars',
     icon: '◆',
     color: '#facc15',
-    stats: [
-      { key: 'pvp', label: 'PvP' },
-      { key: 'game_sense', label: 'Game Sense' },
-      { key: 'bed_play', label: 'Bed Play' },
-      { key: 'teamplay', label: 'Teamplay' },
-      { key: 'building', label: 'Building' },
-    ],
+    stats: ASPECTS.bedwars,
   },
 }
 

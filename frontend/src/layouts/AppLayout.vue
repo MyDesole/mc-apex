@@ -11,6 +11,11 @@ import VerifyEmailBanner from '@/components/notifications/VerifyEmailBanner.vue'
 import CoinBadge from '@/components/shop/CoinBadge.vue'
 import TierTestBanner from '@/components/tiers/TierTestBanner.vue'
 import NotificationToast from '@/components/notifications/NotificationToast.vue'
+import BrandCube from '@/components/core/BrandCube.vue'
+import CommandPalette from '@/components/core/CommandPalette.vue'
+import SiteFooter from '@/components/core/SiteFooter.vue'
+import { useCommandPalette, paletteShortcut } from '@/composables/core/useCommandPalette.js'
+import { startSitePresence, stopSitePresence } from '@/composables/chat/presence.js'
 
 import { useRealtimeNotifications } from '@/composables/notifications/useRealtimeNotifications.js'
 import { useRealtimeMessages } from '@/composables/chat/useRealtimeMessages.js'
@@ -25,6 +30,18 @@ const route = useRoute()
 const menuOpen = ref(false)
 const mobileMenuOpen = ref(false)
 
+const { open: openPalette } = useCommandPalette()
+
+/*
+ * Присутствие на всём сайте, а не только в чате: собеседник видит
+ * зелёную точку, где бы игрок ни находился.
+ */
+watch(
+    () => auth.user?.id,
+    (id) => (id ? startSitePresence(id) : stopSitePresence({ silent: true })),
+    { immediate: true },
+)
+
 const {
   unreadCount,
   latestNotification,
@@ -38,6 +55,9 @@ const chatUnread = ref(0)
 async function logout() {
   menuOpen.value = false
   mobileMenuOpen.value = false
+
+  // Пока сессия жива: после выхода сервер не примет отметку
+  stopSitePresence()
 
   await auth.logout()
   router.push('/')
@@ -145,8 +165,6 @@ watch(mobileMenuOpen, (open) => {
          ШАПКА
     ========================== -->
     <header class="site-header">
-      <div class="header-glow"></div>
-
       <div class="header-inner">
 
         <!-- Мобильная кнопка -->
@@ -163,7 +181,7 @@ watch(mobileMenuOpen, (open) => {
 
         <!-- ЛОГО -->
         <RouterLink to="/" class="brand">
-
+          <BrandCube class="brand-cube" />
 
           <span class="brand-text">
             <span class="brand-main">APEX</span>
@@ -204,19 +222,26 @@ watch(mobileMenuOpen, (open) => {
             <span>Новости</span>
           </RouterLink>
 
-          <RouterLink
-              v-if="auth.user?.clan_member"
-              to="/my-clan"
-              class="nav-link nav-link-clan"
-          >
-            <span class="nav-icon">◆</span>
-            <span>Мой клан</span>
-          </RouterLink>
 
         </nav>
 
         <!-- ДЕЙСТВИЯ СПРАВА -->
         <div class="header-actions">
+
+          <!-- ПОИСК (Ctrl+K) -->
+          <button
+              type="button"
+              class="search-trigger"
+              aria-label="Поиск по сайту"
+              @click="openPalette"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" stroke-linecap="round" />
+            </svg>
+            <span class="search-trigger__label">Поиск</span>
+            <kbd class="search-trigger__kbd">{{ paletteShortcut }}</kbd>
+          </button>
 
           <template v-if="!auth.isAuthenticated">
 
@@ -699,9 +724,14 @@ watch(mobileMenuOpen, (open) => {
       </RouterView>
     </main>
 
+    <!-- В сообщениях окно чата занимает всю высоту — подвал там лишний -->
+    <SiteFooter v-if="!route.path.startsWith('/messages')" />
+
   </div>
 
   <TierTestBanner />
+
+  <CommandPalette />
 
   <NotificationToast
       :notification="latestNotification"

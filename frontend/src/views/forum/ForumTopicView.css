@@ -64,8 +64,8 @@
   height: 34px;
   color: var(--accent-light);
   background: rgba(139, 92, 246, 0.08);
-  border: 1px solid rgba(139, 92, 246, 0.18);
-  border-radius: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 }
 
 .back-link__icon :deep(svg) {
@@ -82,15 +82,15 @@
 
 .back-link small {
   color: var(--text-muted);
-  font-size: 8px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
   letter-spacing: 1.4px;
 }
 
 .topic-nav__id {
   color: var(--text-muted);
-  font-size: 9px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
   letter-spacing: 1.5px;
 }
 
@@ -105,7 +105,7 @@
   margin-bottom: 14px;
   padding: 13px 16px;
   border: 1px solid;
-  border-radius: 12px;
+  border-radius: 6px;
   font-size: 13px;
 }
 
@@ -138,7 +138,7 @@
   height: 30px;
   flex: 0 0 30px;
   background: rgba(255, 255, 255, 0.04);
-  border-radius: 9px;
+  border-radius: 6px;
 }
 
 .state-card {
@@ -148,15 +148,9 @@
   min-height: 140px;
   padding: 26px;
   color: var(--text-dim);
-  background:
-      linear-gradient(
-          135deg,
-          rgba(139, 92, 246, 0.08),
-          transparent 50%
-      ),
-      var(--bg-card);
+  background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 6px;
 }
 
 .state-card__icon {
@@ -167,8 +161,8 @@
   height: 44px;
   color: var(--accent-light);
   background: rgba(139, 92, 246, 0.1);
-  border: 1px solid rgba(139, 92, 246, 0.2);
-  border-radius: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 }
 
 .state-card > div:nth-child(2) {
@@ -231,15 +225,9 @@
   position: relative;
   overflow: hidden;
   padding: 24px 26px 18px;
-  background:
-      radial-gradient(
-          circle at 90% 0%,
-          rgba(139, 92, 246, 0.08),
-          transparent 32%
-      ),
-      var(--bg-card);
+  background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 18px;
+  border-radius: 6px;
   box-shadow:
       0 18px 60px rgba(0, 0, 0, 0.18),
       inset 0 1px 0 rgba(255, 255, 255, 0.025);
@@ -256,7 +244,7 @@
   width: 3px;
   height: 100%;
   opacity: 0.9;
-  box-shadow: 0 0 22px currentColor;
+  box-shadow: none;
 }
 
 .topic-card__header {
@@ -290,10 +278,10 @@
           #5b21b6
       );
   border: 1px solid rgba(167, 139, 250, 0.4);
-  border-radius: 12px;
-  box-shadow: 0 8px 22px rgba(109, 40, 217, 0.22);
+  border-radius: 6px;
+  box-shadow: none;
   font-size: 15px;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .author-avatar img {
@@ -329,7 +317,7 @@
 
 .author-info__date {
   color: var(--text-muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .verified {
@@ -352,9 +340,9 @@
   color: #f9a8d4;
   background: rgba(236, 72, 153, 0.08);
   border: 1px solid rgba(236, 72, 153, 0.22);
-  border-radius: 999px;
-  font-size: 8px;
-  font-weight: 900;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 800;
   letter-spacing: 0.5px;
 }
 
@@ -373,8 +361,8 @@
   padding: 6px 9px;
   border: 1px solid;
   border-radius: 8px;
-  font-size: 8px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
   letter-spacing: 0.6px;
   text-transform: uppercase;
 }
@@ -416,7 +404,7 @@
   height: 5px;
   background: currentColor;
   border-radius: 50%;
-  box-shadow: 0 0 8px currentColor;
+  box-shadow: none;
 }
 
 .topic-card__eyebrow {
@@ -425,8 +413,8 @@
   gap: 8px;
   margin-bottom: 9px;
   color: var(--text-muted);
-  font-size: 8px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
   letter-spacing: 1.6px;
 }
 
@@ -442,7 +430,7 @@
   color: var(--text);
   word-break: break-word;
   font-size: clamp(24px, 3vw, 34px);
-  font-weight: 950;
+  font-weight: 800;
   line-height: 1.12;
   letter-spacing: -0.7px;
 }
@@ -479,7 +467,7 @@
   color: var(--text-muted);
   background: rgba(255, 255, 255, 0.025);
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
   font-weight: 800;
@@ -521,7 +509,7 @@
 }
 
 .topic-stat small {
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .action-link {
@@ -564,10 +552,9 @@
   gap: 6px;
   margin-bottom: 9px;
   color: var(--text-muted);
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
 }
 
 .attachments__grid {
@@ -583,7 +570,7 @@
   max-width: 280px;
   max-height: 210px;
   border: 1px solid var(--border);
-  border-radius: 11px;
+  border-radius: 6px;
   background: var(--bg);
 }
 
@@ -629,7 +616,7 @@
   color: var(--text-dim);
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 6px;
   transition: 0.2s ease;
 }
 
@@ -668,7 +655,7 @@
 
 .attachment-file__content small {
   color: var(--text-muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .attachment-file__arrow {
@@ -691,8 +678,8 @@
 .section-eyebrow {
   margin-bottom: 4px;
   color: var(--accent-light);
-  font-size: 8px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
   letter-spacing: 1.5px;
 }
 
@@ -700,7 +687,7 @@
   margin: 0;
   color: var(--text);
   font-size: 20px;
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: -0.3px;
 }
 
@@ -715,22 +702,16 @@
   align-items: center;
   gap: 6px;
   color: var(--text-muted);
-  font-size: 8px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
   letter-spacing: 0.9px;
 }
 
 .replies {
   padding: 4px 18px;
-  background:
-      linear-gradient(
-          180deg,
-          rgba(139, 92, 246, 0.025),
-          transparent 25%
-      ),
-      var(--bg-card);
+  background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 6px;
 }
 
 .empty-replies {
@@ -742,7 +723,7 @@
   text-align: center;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 6px;
 }
 
 .empty-replies__icon {
@@ -754,8 +735,8 @@
   margin-bottom: 4px;
   color: var(--accent-light);
   background: rgba(139, 92, 246, 0.08);
-  border: 1px solid rgba(139, 92, 246, 0.18);
-  border-radius: 13px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 }
 
 .empty-replies strong {
@@ -787,10 +768,9 @@
   display: block;
   margin-bottom: 6px;
   color: var(--text-muted);
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
 }
 
 .input,
@@ -799,7 +779,7 @@
   color: var(--text);
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 6px;
   outline: none;
   font-family: inherit;
   transition:
@@ -844,7 +824,7 @@
   min-height: 38px;
   padding: 0 15px;
   border: 1px solid transparent;
-  border-radius: 9px;
+  border-radius: 6px;
   cursor: pointer;
   font: inherit;
   font-size: 11px;
@@ -886,13 +866,11 @@
       );
   border-color: rgba(167, 139, 250, 0.5);
   box-shadow:
-      0 7px 20px rgba(109, 40, 217, 0.2),
       inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .btn--primary:not(:disabled):hover {
   box-shadow:
-      0 10px 28px rgba(109, 40, 217, 0.3),
       inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
@@ -902,15 +880,9 @@
 
 .edit-card {
   padding: 18px;
-  background:
-      linear-gradient(
-          135deg,
-          rgba(139, 92, 246, 0.07),
-          transparent 55%
-      ),
-      var(--bg-card);
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  border-radius: 15px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.14);
 }
 
@@ -929,8 +901,8 @@
   height: 34px;
   color: var(--accent-light);
   background: rgba(139, 92, 246, 0.1);
-  border: 1px solid rgba(139, 92, 246, 0.18);
-  border-radius: 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 }
 
 .edit-card__head > div:nth-child(2) {
@@ -941,8 +913,8 @@
 
 .edit-card__head small {
   color: var(--text-muted);
-  font-size: 8px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
   letter-spacing: 1px;
 }
 
@@ -980,15 +952,9 @@
   margin-top: 22px;
   padding: 20px;
   overflow: hidden;
-  background:
-      radial-gradient(
-          circle at 100% 0%,
-          rgba(139, 92, 246, 0.09),
-          transparent 35%
-      ),
-      var(--bg-card);
+  background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 6px;
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.14);
 }
 
@@ -1020,7 +986,7 @@
   margin: 0;
   color: var(--text);
   font-size: 17px;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .reply-form__top h3 strong {
@@ -1038,7 +1004,7 @@
   border-radius: 7px;
   cursor: pointer;
   font: inherit;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -1053,15 +1019,15 @@
   margin-bottom: 12px;
   padding: 10px 12px;
   background: rgba(139, 92, 246, 0.035);
-  border: 1px solid rgba(139, 92, 246, 0.1);
-  border-radius: 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 }
 
 .reply-context__line {
   width: 2px;
   flex: 0 0 2px;
   background: var(--accent);
-  border-radius: 999px;
+  border-radius: 4px;
 }
 
 .reply-context div {
@@ -1070,8 +1036,8 @@
 
 .reply-context small {
   color: var(--text-muted);
-  font-size: 8px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
   letter-spacing: 0.8px;
 }
 
@@ -1102,7 +1068,7 @@
   height: 2px;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 0 0 9px 9px;
+  border-radius: 0 0 6px 6px;
 }
 
 .reply-form__progress span {
@@ -1130,7 +1096,7 @@
   flex-wrap: wrap;
   gap: 6px;
   color: var(--text-muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .reply-hint__count {
@@ -1163,7 +1129,7 @@
   padding: 15px 17px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 13px;
+  border-radius: 6px;
 }
 
 .closed-state__icon,
@@ -1174,7 +1140,7 @@
   width: 34px;
   height: 34px;
   flex: 0 0 34px;
-  border-radius: 9px;
+  border-radius: 6px;
 }
 
 .closed-state__icon {
@@ -1237,7 +1203,7 @@
 
   .topic-card {
     padding: 18px 16px 15px;
-    border-radius: 14px;
+    border-radius: 6px;
   }
 
   .topic-card__header {
@@ -1279,7 +1245,7 @@
 
   .replies {
     padding: 2px 10px;
-    border-radius: 13px;
+    border-radius: 6px;
   }
 
   .reply-form {

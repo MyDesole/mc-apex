@@ -147,7 +147,6 @@ onMounted(() => {
       <AppIcon icon="shield" :size="38" />
     </div>
 
-    <span class="eyebrow">APEX / ACCESS CONTROL</span>
 
     <h1 class="denied__code">403</h1>
 
@@ -170,9 +169,6 @@ onMounted(() => {
 
     <header class="tester-head">
       <div class="tester-head__content">
-        <span class="eyebrow">
-          APEX / TESTER CONTROL
-        </span>
 
         <div class="tester-head__title-row">
           <div>
@@ -224,7 +220,7 @@ onMounted(() => {
             </div>
 
             <span class="stat-card__eyebrow">
-              QUEUE
+              В очереди
             </span>
           </div>
 
@@ -244,7 +240,7 @@ onMounted(() => {
             </div>
 
             <span class="stat-card__eyebrow">
-              ACTIVE
+              Активен
             </span>
           </div>
 
@@ -264,7 +260,7 @@ onMounted(() => {
             </div>
 
             <span class="stat-card__eyebrow">
-              TODAY
+              Сегодня
             </span>
           </div>
 
@@ -284,7 +280,7 @@ onMounted(() => {
             </div>
 
             <span class="stat-card__eyebrow">
-              TOTAL
+              Всего
             </span>
           </div>
 
@@ -305,9 +301,6 @@ onMounted(() => {
     <section class="toolbar">
 
       <div class="toolbar__left">
-        <span class="eyebrow eyebrow--small">
-          TEST QUEUE
-        </span>
 
         <h2 class="toolbar__title">
           {{ filteredTitle }}
@@ -389,7 +382,7 @@ onMounted(() => {
       </div>
 
       <span class="eyebrow eyebrow--small">
-        QUEUE EMPTY
+        Очередь пуста
       </span>
 
       <strong>Заявок нет</strong>
@@ -412,9 +405,6 @@ onMounted(() => {
 
         <span class="tests__head-line"></span>
 
-        <span class="tests__head-status">
-          LIVE QUEUE
-        </span>
       </div>
 
       <div class="tests__list">
@@ -493,7 +483,7 @@ onMounted(() => {
                 </span>
 
                 <span class="priority-badge__text">
-                  PRIORITY
+                  Приоритет
                 </span>
 
                 <span
@@ -532,7 +522,7 @@ onMounted(() => {
               </span>
 
               <span class="meta-item">
-                <span class="meta-item__label">SCORE</span>
+                <span class="meta-item__label">Очки</span>
                 {{ test.user?.tier_score ?? 0 }}%
               </span>
 
@@ -566,7 +556,7 @@ onMounted(() => {
               class="priority-info"
           >
             <span class="priority-info__label">
-              PRIORITY
+              Приоритет
             </span>
 
             <span class="priority-info__text">

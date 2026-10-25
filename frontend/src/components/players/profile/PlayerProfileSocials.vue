@@ -104,10 +104,6 @@ function displayValue(item) {
   >
     <div class="socials__head">
       <div>
-        <div class="socials__eyebrow">
-          <span class="socials__eyebrow-line" />
-          CONNECTIONS
-        </div>
 
         <h3 class="socials__title">
           Социальные сети

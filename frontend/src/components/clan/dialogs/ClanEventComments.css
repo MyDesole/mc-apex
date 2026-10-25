@@ -21,7 +21,7 @@
   justify-content: center;
   flex-shrink: 0;
   background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-  border-radius: 10px;
+  border-radius: 6px;
   color: #fff;
   font-size: 15px;
   font-weight: 800;
@@ -57,7 +57,7 @@
   color: var(--text);
   background: #0d0d14;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 6px;
   font: inherit;
   font-size: 13px;
   line-height: 1.5;

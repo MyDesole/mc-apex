@@ -175,10 +175,6 @@ onMounted(load)
 
     <header class="inventory-header">
       <div class="inventory-header__main">
-        <div class="inventory-eyebrow">
-          <span class="inventory-eyebrow__line"></span>
-          APEX LOADOUT
-        </div>
 
         <div class="inventory-header__row">
           <div>
@@ -370,7 +366,7 @@ onMounted(load)
       </div>
 
       <span class="inventory-empty__eyebrow">
-        INVENTORY EMPTY
+        Инвентарь пуст
       </span>
 
       <h2 class="inventory-empty__title">
@@ -411,9 +407,6 @@ onMounted(load)
             </div>
 
             <div>
-              <span class="inventory-group__eyebrow">
-                INVENTORY CLASS
-              </span>
 
               <h2 class="inventory-group__title">
                 {{ group.label }}
@@ -423,7 +416,7 @@ onMounted(load)
 
           <div class="inventory-group__count">
             {{ String(group.items.length).padStart(2, '0') }}
-            <span>ITEMS</span>
+            <span>предметов</span>
           </div>
         </div>
 
@@ -573,9 +566,6 @@ onMounted(load)
               </div>
 
               <div>
-                <span class="priority-modal__eyebrow">
-                  PRIORITY BOOST
-                </span>
 
                 <h3 class="priority-modal__title">
                   Применить приоритет

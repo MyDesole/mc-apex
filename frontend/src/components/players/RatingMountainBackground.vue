@@ -447,7 +447,7 @@
   overflow: hidden;
 
   border: 1px solid rgba(255, 255, 255, .07);
-  border-radius: 22px;
+  border-radius: 6px;
 
   background: #070710;
 

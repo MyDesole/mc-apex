@@ -169,10 +169,6 @@ function scorePercent(player) {
 
     <header class="rating-head">
       <div class="rating-head__text">
-        <div class="rating-head__eyebrow">
-          <span class="rating-head__eyebrow-line" />
-          RANKING SYSTEM
-        </div>
 
         <h1 class="rating-head__title">
           Восхождение к <span class="apex">APEX</span>
@@ -339,9 +335,6 @@ function scorePercent(player) {
       >
         <header class="rest__head">
           <div class="rest__heading">
-            <span class="rest__eyebrow">
-              THE CLIMB CONTINUES
-            </span>
 
             <div class="rest__heading-row">
               <h2 class="rest__title">
@@ -354,10 +347,6 @@ function scorePercent(player) {
             </div>
           </div>
 
-          <div class="rest__legend">
-            <span class="rest__legend-dot" />
-            RANKED PLAYERS
-          </div>
         </header>
 
         <div class="rest__grid">
@@ -447,7 +436,7 @@ function scorePercent(player) {
 
             <div class="rest__progress">
               <div class="rest__progress-top">
-                <span>RATING</span>
+                <span>Рейтинг</span>
 
                 <span class="rest__progress-value">
                   {{ scoreOf(p) }}

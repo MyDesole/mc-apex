@@ -6,7 +6,7 @@
   color: var(--text);
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 6px;
   outline: none;
 }
 
@@ -24,7 +24,7 @@
   padding: 16px 18px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 6px;
 }
 
 .event-head {

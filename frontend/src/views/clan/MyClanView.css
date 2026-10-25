@@ -34,7 +34,7 @@
   width: 58px;
   height: 58px;
   margin-bottom: 22px;
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  border: 1px solid var(--border);
   border-radius: 50%;
 }
 
@@ -42,7 +42,7 @@
   content: '';
   position: absolute;
   inset: 7px;
-  border: 1px solid rgba(139, 92, 246, 0.25);
+  border: 1px solid var(--border);
   border-radius: 50%;
 }
 
@@ -55,7 +55,7 @@
   margin-left: -3.5px;
   border-radius: 50%;
   background: var(--accent-color);
-  box-shadow: 0 0 18px var(--accent-color);
+  box-shadow: none;
   animation: loading-orbit 1.2s linear infinite;
 }
 
@@ -96,24 +96,16 @@
   overflow: hidden;
   padding: 28px;
   border: 1px solid var(--border-color);
-  border-radius: 24px;
-  background:
-      radial-gradient(
+  border-radius: 6px;
+  background: radial-gradient(
           circle at 10% 0%,
           color-mix(in srgb, var(--clan-color) 17%, transparent),
           transparent 35%
-      ),
-      radial-gradient(
+      ), radial-gradient(
           circle at 90% 100%,
           color-mix(in srgb, var(--clan-color) 12%, transparent),
           transparent 38%
-      ),
-      linear-gradient(
-          145deg,
-          rgba(255, 255, 255, 0.055),
-          rgba(255, 255, 255, 0.018)
-      ),
-      var(--card-bg);
+      ), var(--card-bg), var(--bg-card);
   box-shadow:
       0 24px 80px rgba(0, 0, 0, 0.24),
       inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -176,22 +168,20 @@
   display: grid;
   place-items: center;
   border: 1px solid color-mix(in srgb, var(--clan-color) 45%, white 8%);
-  border-radius: 28px;
+  border-radius: 6px;
   background:
       linear-gradient(
           145deg,
           color-mix(in srgb, var(--clan-color) 18%, transparent),
           rgba(255, 255, 255, 0.035)
       );
-  box-shadow:
-      0 0 0 6px rgba(255, 255, 255, 0.025),
-      0 18px 50px color-mix(in srgb, var(--clan-color) 14%, transparent);
+  box-shadow:0 0 0 6px rgba(255, 255, 255, 0.025);
 }
 
 .crest-glow {
   position: absolute;
   inset: 10px;
-  border-radius: 20px;
+  border-radius: 6px;
   background: var(--clan-color);
   opacity: 0.12;
   filter: blur(18px);
@@ -203,7 +193,7 @@
   width: 76px;
   height: 76px;
   object-fit: cover;
-  border-radius: 19px;
+  border-radius: 6px;
 }
 
 .crest-fallback {
@@ -216,7 +206,7 @@
   width: 76px;
   height: 76px;
 
-  border-radius: 19px;
+  border-radius: 6px;
 
   background:
       linear-gradient(
@@ -244,7 +234,7 @@
   margin-bottom: 8px;
 
   color: var(--text-muted-local);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.16em;
 }
@@ -254,7 +244,7 @@
   height: 6px;
   border-radius: 50%;
   background: #34d399;
-  box-shadow: 0 0 10px rgba(52, 211, 153, 0.65);
+  box-shadow: none;
 }
 
 .clan-name {
@@ -290,7 +280,7 @@
   padding: 6px 10px;
 
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
+  border-radius: 4px;
 
   background: rgba(255, 255, 255, 0.045);
 
@@ -343,7 +333,7 @@
   padding: 0 14px;
 
   border: 1px solid transparent;
-  border-radius: 11px;
+  border-radius: 6px;
 
   font-family: inherit;
   font-size: 12px;
@@ -411,7 +401,7 @@
   padding: 13px 14px;
 
   border: 1px solid rgba(251, 191, 36, 0.14);
-  border-radius: 15px;
+  border-radius: 6px;
 
   background: rgba(251, 191, 36, 0.055);
 }
@@ -425,7 +415,7 @@
   display: grid;
   place-items: center;
 
-  border-radius: 10px;
+  border-radius: 6px;
 
   background: rgba(251, 191, 36, 0.1);
   color: #fbbf24;
@@ -497,7 +487,7 @@
   padding: 10px 12px;
 
   border: 1px solid rgba(248, 113, 113, 0.15);
-  border-radius: 11px;
+  border-radius: 6px;
 
   background: rgba(248, 113, 113, 0.055);
   color: #fca5a5;
@@ -540,7 +530,7 @@
   padding: 13px;
 
   border: 1px solid rgba(255, 255, 255, 0.055);
-  border-radius: 14px;
+  border-radius: 6px;
 
   background: rgba(0, 0, 0, 0.14);
 }
@@ -554,7 +544,7 @@
   display: grid;
   place-items: center;
 
-  border-radius: 10px;
+  border-radius: 6px;
 
   background: rgba(139, 92, 246, 0.09);
   color: var(--accent-light-color);
@@ -596,7 +586,7 @@
 
 .stat-label {
   color: var(--text-muted-local);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -613,11 +603,9 @@
   padding: 5px;
 
   border: 1px solid var(--border-color);
-  border-radius: 15px;
+  border-radius: 6px;
 
   background: rgba(14, 14, 17, 0.84);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
 
   box-shadow:
       0 10px 35px rgba(0, 0, 0, 0.16),
@@ -649,7 +637,7 @@
   flex: 0 0 auto;
 
   border: 0;
-  border-radius: 10px;
+  border-radius: 6px;
 
   background: transparent;
   color: var(--text-muted-local);
@@ -706,12 +694,12 @@
 
   padding: 0 5px;
 
-  border-radius: 999px;
+  border-radius: 4px;
 
   background: rgba(139, 92, 246, 0.15);
   color: var(--accent-light-color);
 
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
 }
 
@@ -722,7 +710,7 @@
 
   border-radius: 50%;
   background: #f87171;
-  box-shadow: 0 0 8px rgba(248, 113, 113, 0.8);
+  box-shadow: none;
 
   animation: pulse-dot 1.5s ease-in-out infinite;
 }
@@ -742,7 +730,7 @@
   margin-top: 18px;
 
   border: 1px solid var(--border-color);
-  border-radius: 20px;
+  border-radius: 6px;
 
   background: var(--card-bg);
 
@@ -770,7 +758,7 @@
   margin-bottom: 5px;
 
   color: var(--text-muted-local);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.15em;
 }
@@ -790,7 +778,7 @@
   gap: 6px;
 
   color: var(--text-muted-local);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 650;
 }
 
@@ -801,7 +789,7 @@
   border-radius: 50%;
 
   background: #34d399;
-  box-shadow: 0 0 9px rgba(52, 211, 153, 0.55);
+  box-shadow: none;
 }
 
 .content-body {
@@ -820,7 +808,7 @@
 
   .clan-hero {
     padding: 22px;
-    border-radius: 20px;
+    border-radius: 6px;
   }
 
   .hero-top {
@@ -849,7 +837,7 @@
 
   .clan-hero {
     padding: 17px;
-    border-radius: 18px;
+    border-radius: 6px;
   }
 
   .hero-identity {
@@ -860,14 +848,14 @@
   .clan-crest {
     width: 76px;
     height: 76px;
-    border-radius: 20px;
+    border-radius: 6px;
   }
 
   .crest-image,
   .crest-fallback {
     width: 56px;
     height: 56px;
-    border-radius: 15px;
+    border-radius: 6px;
   }
 
   .crest-fallback {
@@ -880,7 +868,7 @@
 
   .identity-eyebrow {
     margin-bottom: 6px;
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .identity-meta {
@@ -888,7 +876,7 @@
   }
 
   .identity-caption {
-    font-size: 10px;
+    font-size: 12px;
   }
 
   .hero-actions {
@@ -943,13 +931,13 @@
   }
 
   .stat-label {
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .clan-tabs {
     margin-top: 12px;
     top: 8px;
-    border-radius: 13px;
+    border-radius: 6px;
   }
 
   .tab-button {
@@ -958,12 +946,12 @@
   }
 
   .tab-label {
-    font-size: 10px;
+    font-size: 12px;
   }
 
   .clan-content {
     margin-top: 12px;
-    border-radius: 16px;
+    border-radius: 6px;
   }
 
   .content-header {

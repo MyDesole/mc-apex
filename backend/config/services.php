@@ -12,6 +12,13 @@ return [
     */
     'minecraft' => [
         'server_key' => env('MINECRAFT_SERVER_KEY'),
+
+        // Куда сайт стучится за статусом сервера (Server List Ping)
+        'host' => env('MINECRAFT_SERVER_HOST'),
+        'port' => (int) env('MINECRAFT_SERVER_PORT', 25565),
+
+        // Адрес, который игроки вводят в Minecraft; по умолчанию — host
+        'address' => env('MINECRAFT_SERVER_ADDRESS'),
     ],
 
     /*

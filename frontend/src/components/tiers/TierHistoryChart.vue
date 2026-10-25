@@ -191,9 +191,6 @@ const chartOptions = {
         <span class="chart__dot"></span>
 
         <div>
-          <span class="chart__label">
-            PERFORMANCE
-          </span>
 
           <span class="chart__caption">
             История результатов

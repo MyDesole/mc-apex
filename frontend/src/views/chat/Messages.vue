@@ -10,6 +10,7 @@ import ChatAttachmentsInput from '@/components/chat/ChatAttachmentsInput.vue'
 import { userLink } from '@/utils/links.js'
 import { usePresence } from '@/composables/chat/presence.js'
 import { useMessagePolling } from '@/composables/chat/useMessagePolling.js'
+import { mergeMessages } from '@/utils/chatMessages.js'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -225,7 +226,12 @@ async function loadConversations() {
   }
 }
 
+/** Номер последнего открытия: ответ на прошлое открытие не должен затереть новое. */
+let openRequest = 0
+
 async function openConversation(id) {
+  const request = ++openRequest
+
   loadingChat.value = true
   error.value = ''
 
@@ -236,6 +242,9 @@ async function openConversation(id) {
 
   try {
     const data = await chatApi.show(id, { limit: 40 })
+
+    // Игрок успел открыть другой диалог — этот ответ устарел
+    if (request !== openRequest) return
 
     activeConversation.value = data.conversation
     messages.value = data.messages ?? []
@@ -263,9 +272,9 @@ async function openConversation(id) {
 
     await scrollToBottom()
   } catch (e) {
-    error.value = e.message || 'Не удалось открыть диалог'
+    if (request === openRequest) error.value = e.message || 'Не удалось открыть диалог'
   } finally {
-    loadingChat.value = false
+    if (request === openRequest) loadingChat.value = false
   }
 }
 
@@ -288,17 +297,22 @@ async function loadOlder() {
   const heightBefore = el?.scrollHeight ?? 0
   const topBefore = el?.scrollTop ?? 0
 
+  const conversationId = activeConversation.value.id
+
   try {
-    const data = await chatApi.show(activeConversation.value.id, {
+    const data = await chatApi.show(conversationId, {
       beforeId: oldestId.value,
       limit: 40,
       markRead: false,
     })
 
+    // Пока грузили историю, открыли другой диалог
+    if (activeConversation.value?.id !== conversationId) return
+
     const older = data.messages ?? []
 
     if (older.length) {
-      messages.value = [...older, ...messages.value]
+      messages.value = mergeMessages(messages.value, older).list
       oldestId.value =
           data.oldest_id ??
           older[0]?.id ??
@@ -376,7 +390,8 @@ async function sendMessage() {
         attachmentIds,
     )
 
-    messages.value.push(data.message)
+    // Опрос мог уже принести это сообщение, пока шла отправка
+    messages.value = mergeMessages(messages.value, data.message).list
     renderLimit.value = RENDER_WINDOW
 
     const idx = conversations.value.findIndex(
@@ -1157,7 +1172,8 @@ watch(latestMessage, async message => {
       message.conversation_id ===
       activeConversation.value.id
   ) {
-    messages.value.push(message)
+    // Опрос мог принести его раньше сокета
+    messages.value = mergeMessages(messages.value, message).list
 
     chatApi
         .show(message.conversation_id)
