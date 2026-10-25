@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Domains\Users\Requests\Admin\BanUserRequest;
 use App\Domains\Users\Requests\Admin\VerifyUserRequest;
 use App\Domains\Users\Models\User;
+use App\Domains\Moderation\Models\ModerationLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -43,6 +44,8 @@ class UserController extends Controller
             'is_verified' => true,
             'verified_reason' => $request->input('reason'),
         ]);
+
+        ModerationLog::record($request->user(), 'user.verify', $user->id, ['reason' => $request->input('reason')]);
 
         return response()->json(['user' => $user->fresh()]);
     }
@@ -92,6 +95,8 @@ class UserController extends Controller
             'verified_reason' => null,
         ]);
 
+        ModerationLog::record($request->user(), 'user.unverify', $user->id);
+
         return response()->json(['user' => $user->fresh()]);
     }
 
@@ -129,6 +134,11 @@ class UserController extends Controller
             'banned_by' => $request->user()->id,
         ]);
 
+        ModerationLog::record($request->user(), 'user.ban', $user->id, [
+            'reason' => $user->ban_reason,
+            'until' => $request->input('until'),
+        ]);
+
         return response()->json(['user' => $user->fresh()]);
     }
 
@@ -140,6 +150,8 @@ class UserController extends Controller
             'banned_until' => null,
             'banned_by' => null,
         ]);
+
+        ModerationLog::record($request->user(), 'user.unban', $user->id);
 
         return response()->json(['user' => $user->fresh()]);
     }

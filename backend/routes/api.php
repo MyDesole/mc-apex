@@ -580,7 +580,23 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     Route::get('/tier-test-appeals', [\App\Domains\Tiers\Controllers\TierTestAppealController::class, 'mine']);
 
+    // Жалобы игроков
+    Route::get('/reports/reasons', [\App\Domains\Moderation\Controllers\ReportController::class, 'reasons']);
+    Route::post('/reports', [\App\Domains\Moderation\Controllers\ReportController::class, 'store'])->middleware('throttle:10,1');
+
     Route::middleware('role:moderator,admin')->prefix('admin')->group(function () {
+        // Дашборд, счётчики меню, досье игрока
+        Route::get('/dashboard', [\App\Domains\Moderation\Controllers\DashboardController::class, 'index']);
+        Route::get('/counters', [\App\Domains\Moderation\Controllers\DashboardController::class, 'counters']);
+        Route::get('/users/{user}/dossier', [\App\Domains\Moderation\Controllers\DashboardController::class, 'dossier'])->whereNumber('user');
+
+        // Жалобы и журнал модерации
+        Route::get('/reports', [\App\Domains\Moderation\Controllers\ReportController::class, 'index']);
+        Route::post('/reports/{report}/resolve', [\App\Domains\Moderation\Controllers\ReportController::class, 'resolve'])->whereNumber('report');
+        Route::get('/moderation-log', [\App\Domains\Moderation\Controllers\ReportController::class, 'log']);
+        // Поиск игрока для досье — модератору тоже (без почты в выдаче)
+        Route::get('/players/search', [\App\Domains\Moderation\Controllers\ReportController::class, 'searchPlayers']);
+
         // Апелляции на результаты тир-тестов
         Route::get('/tier-test-appeals', [\App\Domains\Tiers\Controllers\TierTestAppealController::class, 'index']);
         Route::post('/tier-test-appeals/{appeal}/resolve', [\App\Domains\Tiers\Controllers\TierTestAppealController::class, 'resolve'])

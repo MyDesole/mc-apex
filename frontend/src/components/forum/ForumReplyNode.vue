@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { userLink } from '@/utils/links.js'
 import AppIcon from '@/components/core/AppIcon.vue'
+import { openReport } from '@/composables/core/useReport.js'
 
 const props = defineProps({
   reply: {
@@ -517,6 +518,17 @@ function onDelete() {
             />
 
             <span>Изменить</span>
+          </button>
+
+          <!-- Пожаловаться: залогиненный (может отвечать) и не автор -->
+          <button
+              v-if="canReply && !reply.is_owner"
+              type="button"
+              class="forum-reply__action"
+              @click="openReport({ type: 'forum_reply', id: reply.id, name: `Ответ от ${author.username ?? 'игрока'}` })"
+          >
+            <AppIcon icon="alert" :size="13" />
+            <span>Пожаловаться</span>
           </button>
 
           <button

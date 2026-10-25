@@ -5,6 +5,7 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { forumApi } from '@/services/forum/forum.js'
 import { userLink } from '@/utils/links.js'
 import { useAuthStore } from '@/stores/core/auth.js'
+import { openReport } from '@/composables/core/useReport.js'
 import AppIcon from '@/components/core/AppIcon.vue'
 import ForumAttachmentsInput from '@/components/forum/ForumAttachmentsInput.vue'
 import ForumReplyNode from '@/components/forum/ForumReplyNode.vue'
@@ -601,6 +602,16 @@ onMounted(load)
             >
               <AppIcon icon="palette" :size="13" />
               Редактировать
+            </button>
+
+            <button
+                v-if="auth.isAuthenticated && topic.author && topic.author.id !== auth.user?.id"
+                class="action-link"
+                type="button"
+                @click="openReport({ type: 'forum_topic', id: topic.id, name: `Тема «${topic.title}»` })"
+            >
+              <AppIcon icon="alert" :size="13" />
+              Пожаловаться
             </button>
 
             <button

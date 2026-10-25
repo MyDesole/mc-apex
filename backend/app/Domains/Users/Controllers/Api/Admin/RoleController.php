@@ -14,7 +14,13 @@ class RoleController extends Controller
         // нельзя менять свою роль (защита от слива прав)
         abort_if($user->id === $request->user()->id, 422, 'Нельзя менять свою роль.');
 
+        $from = $user->role;
         $user->update(['role' => $request->string('role')->toString()]);
+
+        \App\Domains\Moderation\Models\ModerationLog::record($request->user(), 'user.role', $user->id, [
+            'from' => $from,
+            'to' => $user->role,
+        ]);
 
         return response()->json(['user' => $user->fresh()]);
     }

@@ -1,9 +1,12 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { inject, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { adminApi } from '@/services/core/admin.js'
 import AdminUserActions from '@/components/admin/AdminUserActions.vue'
 import { userLink } from '@/utils/links.js'
+
+// Досье открывает AdminView — панель поверх раздела
+const openDossier = inject('openDossier', () => {})
 
 const users = ref([])
 const loading = ref(true)
@@ -145,6 +148,7 @@ onMounted(load)
           </div>
         </RouterLink>
 
+        <button type="button" class="dossier-btn" @click="openDossier(user.id)">Досье</button>
         <AdminUserActions :user="user" @updated="onUpdated" />
       </div>
     </div>
@@ -160,4 +164,20 @@ onMounted(load)
 
 <style scoped>
 @import "@/components/admin/AdminUsers.css";
+
+.dossier-btn {
+  flex-shrink: 0;
+
+  padding: 6px 12px;
+
+  color: var(--accent-light);
+  background: var(--accent-soft);
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  border-radius: 6px;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
 </style>

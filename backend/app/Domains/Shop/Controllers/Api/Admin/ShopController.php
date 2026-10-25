@@ -134,6 +134,11 @@ class ShopController extends Controller
             return response()->json(['message' => $e->getMessage()], 422);
         }
 
+        \App\Domains\Moderation\Models\ModerationLog::record($request->user(), 'user.coins', $user->id, [
+            'amount' => (int) $validated['amount'],
+            'reason' => $validated['reason'] ?? null,
+        ]);
+
         return response()->json([
             'message' => 'Баланс обновлён.',
             'balance' => (int) $user->fresh()->apex_coins,

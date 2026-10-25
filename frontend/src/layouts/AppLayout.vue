@@ -13,6 +13,7 @@ import TierTestBanner from '@/components/tiers/TierTestBanner.vue'
 import NotificationToast from '@/components/notifications/NotificationToast.vue'
 import BrandCube from '@/components/core/BrandCube.vue'
 import CommandPalette from '@/components/core/CommandPalette.vue'
+import ReportDialog from '@/components/core/ReportDialog.vue'
 import SiteFooter from '@/components/core/SiteFooter.vue'
 import { useCommandPalette, paletteShortcut } from '@/composables/core/useCommandPalette.js'
 import { startSitePresence, stopSitePresence } from '@/composables/chat/presence.js'
@@ -732,6 +733,8 @@ watch(mobileMenuOpen, (open) => {
   <TierTestBanner />
 
   <CommandPalette />
+  <!-- Окно жалобы: открывается из профиля, чата и форума через openReport() -->
+  <ReportDialog v-if="auth.isAuthenticated" />
 
   <NotificationToast
       :notification="latestNotification"

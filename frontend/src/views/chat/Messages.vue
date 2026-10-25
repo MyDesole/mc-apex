@@ -12,6 +12,7 @@ import { usePresence } from '@/composables/chat/presence.js'
 import { useMessagePolling } from '@/composables/chat/useMessagePolling.js'
 import { mergeMessages } from '@/utils/chatMessages.js'
 import { dayLabel, startsNewDay } from '@/utils/chatDates.js'
+import { openReport } from '@/composables/core/useReport.js'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -858,6 +859,18 @@ function actionReply() {
 
   setReply(actionSheetMessage.value)
   closeActionSheet()
+}
+
+/** Жалоба на чужое сообщение — модераторам в админку. */
+function reportMessage(message) {
+  if (!message) return
+  openReport({ type: 'message', id: message.id, name: `Сообщение от ${message.user?.username ?? 'игрока'}` })
+}
+
+function actionReport() {
+  const message = actionSheetMessage.value
+  closeActionSheet()
+  reportMessage(message)
 }
 
 function actionForward() {
@@ -2076,6 +2089,20 @@ onUnmounted(() => {
                   </svg>
                 </button>
 
+                <!-- Пожаловаться: только на чужое сообщение -->
+                <button
+                    v-if="m.user?.id !== auth.user?.id"
+                    class="msg__action"
+                    type="button"
+                    title="Пожаловаться"
+                    @click="reportMessage(m)"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 22V4" />
+                    <path d="M4 4h12l-2 4 2 4H4" />
+                  </svg>
+                </button>
+
                 <template
                     v-if="
                     m.user?.id ===
@@ -3008,6 +3035,22 @@ onUnmounted(() => {
               </span>
 
               Переслать
+            </button>
+
+            <button
+                v-if="actionSheetMessage && actionSheetMessage.user?.id !== auth.user?.id"
+                class="action-sheet__item"
+                type="button"
+                @click="actionReport"
+            >
+              <span class="action-sheet__icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 22V4" />
+                  <path d="M4 4h12l-2 4 2 4H4" />
+                </svg>
+              </span>
+
+              Пожаловаться
             </button>
 
             <button

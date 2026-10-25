@@ -1,6 +1,31 @@
 import { api } from '@/services/core/api.js'
 
 export const adminApi = {
+    // Дашборд, счётчики меню, досье
+    dashboard() {
+        return api.get('/admin/dashboard')
+    },
+    counters() {
+        return api.get('/admin/counters')
+    },
+    dossier(userId) {
+        return api.get(`/admin/users/${userId}/dossier`)
+    },
+    searchPlayers(q) {
+        return api.get('/admin/players/search', { params: { q } })
+    },
+
+    // Жалобы и журнал модерации
+    reports(params = {}) {
+        return api.get('/admin/reports', { params })
+    },
+    resolveReport(id, payload) {
+        return api.post(`/admin/reports/${id}/resolve`, payload)
+    },
+    moderationLog(params = {}) {
+        return api.get('/admin/moderation-log', { params })
+    },
+
     // Юзеры
     users(params = {}) {
         const q = new URLSearchParams(params).toString()

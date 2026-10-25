@@ -9,6 +9,7 @@ import FriendButton from '@/components/friends/FriendButton.vue'
 import PlayerShowcase from '@/components/players/PlayerShowcase.vue'
 import PlayerSeasons from '@/components/players/profile/PlayerSeasons.vue'
 import PlayerRatingBreakdown from '@/components/players/profile/PlayerRatingBreakdown.vue'
+import { openReport } from '@/composables/core/useReport.js'
 import { api } from '@/services/core/api.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 
@@ -164,6 +165,15 @@ watch(
               @update="onFriendshipUpdate"
           />
         </section>
+
+        <button
+            v-if="!isMe && auth.isAuthenticated"
+            type="button"
+            class="report-link"
+            @click="openReport({ type: 'user', id: user.id, name: user.username })"
+        >
+          Пожаловаться на игрока
+        </button>
       </aside>
     </div>
 
@@ -182,4 +192,24 @@ watch(
 
 <style scoped>
 @import "@/views/players/PlayerView.css";
+
+.report-link {
+  align-self: flex-start;
+
+  padding: 0;
+
+  color: var(--text-muted);
+  background: none;
+  border: 0;
+
+  font: inherit;
+  font-size: 13px;
+
+  cursor: pointer;
+}
+
+.report-link:hover {
+  color: #fca5a5;
+  text-decoration: underline;
+}
 </style>

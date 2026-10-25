@@ -38,6 +38,8 @@ function notificationIcon(notification) {
     tier_test_request: 'target',
     tier_test_completed: 'trophy',
     tier_test_appeal_resolved: 'check',
+    moderation_warning: 'alert',
+    report_resolved: 'shield',
 
     clan_application: 'shield',
     clan_application_accepted: 'check',
@@ -59,6 +61,8 @@ function notificationType(notification) {
     tier_test_request: 'Тир-тест',
     tier_test_completed: 'Тир-тест',
     tier_test_appeal_resolved: 'Апелляция',
+    moderation_warning: 'Модерация',
+    report_resolved: 'Жалоба',
 
     clan_application: 'Клан',
     clan_application_accepted: 'Клан',
@@ -74,7 +78,8 @@ function notificationClass(notification) {
   const type = notification?.data?.type
 
   if (
-      type === 'clan_application_declined'
+      type === 'clan_application_declined' ||
+      type === 'moderation_warning'
   ) {
     return 'notif--danger'
   }
