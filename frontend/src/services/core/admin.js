@@ -159,6 +159,9 @@ export const adminApi = {
     approveParticipant(tid, pid) {
         return api.post(`/admin/tournaments/${tid}/participants/${pid}/approve`)
     },
+    removeParticipant(tid, pid) {
+        return api.delete(`/admin/tournaments/${tid}/participants/${pid}`)
+    },
     rejectParticipant(tid, pid) {
         return api.post(`/admin/tournaments/${tid}/participants/${pid}/reject`)
     },

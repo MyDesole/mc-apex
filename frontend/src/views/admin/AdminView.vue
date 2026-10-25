@@ -32,6 +32,7 @@ import AdminVerification from '@/components/admin/AdminVerification.vue'
 import AdminAppeals from '@/components/admin/AdminAppeals.vue'
 import AdminReferrals from '@/components/admin/AdminReferrals.vue'
 import AdminControl from '@/components/admin/AdminControl.vue'
+import AdminSupport from '@/components/admin/AdminSupport.vue'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -60,6 +61,7 @@ const SECTIONS = [
   {
     title: 'Модерация',
     items: [
+      { key: 'support', label: 'Поддержка', icon: 'send', component: AdminSupport, badge: 'support' },
       { key: 'reports', label: 'Жалобы', icon: 'alert', component: AdminReports, badge: 'reports' },
       { key: 'appeals', label: 'Апелляции', icon: 'shield', component: AdminAppeals, badge: 'appeals' },
       { key: 'log', label: 'Журнал действий', icon: 'doc', component: AdminModerationLog },
@@ -122,7 +124,7 @@ const current = computed(() => items.value.find((i) => i.key === tab.value))
 
 /* ---------- Счётчики ---------- */
 
-const counters = ref({ reports: 0, appeals: 0, tests: 0 })
+const counters = ref({ reports: 0, appeals: 0, tests: 0, support: 0 })
 let countersTimer = null
 
 async function loadCounters() {

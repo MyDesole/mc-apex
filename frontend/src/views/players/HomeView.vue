@@ -8,6 +8,7 @@ import BrandCube from '@/components/core/BrandCube.vue'
 import LiveFeed from '@/components/activity/LiveFeed.vue'
 import { tierColors } from '@/data/players/profileCustomization.js'
 import { userLink, clanLink } from '@/utils/links.js'
+import { rankColor, rankLabel } from '@/utils/playerStyling.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 
 const auth = useAuthStore()
@@ -77,7 +78,7 @@ function playerBar(player) {
 }
 
 function playerTierColor(player) {
-  return tierColors[player?.tier] || '#a78bfa'
+  return rankColor(player)
 }
 
 function clanColor(clan) {
@@ -192,7 +193,7 @@ onMounted(async () => {
                 class="tier-block leader__tier"
                 :style="{ '--tier': playerTierColor(leader) }"
             >
-              {{ leader.tier }}
+              {{ rankLabel(leader) }}
             </span>
           </div>
         </RouterLink>
@@ -391,7 +392,7 @@ onMounted(async () => {
                     class="tier-block rank-row__tier"
                     :style="{ '--tier': playerTierColor(player) }"
                 >
-                  {{ player.tier }}
+                  {{ rankLabel(player) }}
                 </span>
               </RouterLink>
             </li>

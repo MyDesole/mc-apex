@@ -7,6 +7,7 @@ use App\Domains\Forum\Models\ForumCategory;
 use App\Domains\Forum\Models\ForumLike;
 use App\Domains\Forum\Models\ForumReply;
 use App\Domains\Forum\Models\ForumTopic;
+use App\Domains\Forum\Notifications\ForumReplyNotification;
 use App\Domains\Users\Models\User;
 use App\Domains\Forum\Resources\ForumTopicResource;
 use App\Domains\Forum\Support\ForumPresenter;
@@ -92,7 +93,7 @@ class ForumService
         $query = ForumTopic::query()
             ->visible()
             ->with([
-                'author:id,username,avatar,tier,role,is_verified',
+                'author:id,username,avatar,tier,bridge_primary,bridge_rank_id,role,is_verified',
                 'category:id,slug,name,color,icon',
                 'lastReplyUser:id,username',
             ]);
@@ -230,7 +231,48 @@ class ForumService
             'last_reply_user_id' => $author->id,
         ]);
 
+        $this->notifyAboutReply($topic, $reply, $author, $parentId);
+
         return $reply->load(['author', 'attachments']);
+    }
+
+    /**
+     * Уведомить автора ответа, на который ответили, и автора темы.
+     * Пока прежнее уведомление по этой теме не прочитано, новое не шлём —
+     * в живой теме иначе набегали бы десятки одинаковых.
+     */
+    private function notifyAboutReply(ForumTopic $topic, ForumReply $reply, User $author, ?int $parentId): void
+    {
+        $notified = [];
+        $title = Str::limit($topic->title, 60);
+
+        if ($parentId) {
+            $parent = ForumReply::find($parentId);
+            $recipient = $parent?->author;
+
+            if ($recipient && $recipient->id !== $author->id) {
+                $this->sendForumNotification($recipient, 'forum_reply_to_you', "{$author->username} ответил вам в теме «{$title}»", $topic, $reply);
+                $notified[] = $recipient->id;
+            }
+        }
+
+        $topicAuthor = $topic->author;
+
+        if ($topicAuthor && $topicAuthor->id !== $author->id && ! in_array($topicAuthor->id, $notified, true)) {
+            $this->sendForumNotification($topicAuthor, 'forum_reply', "Новый ответ в вашей теме «{$title}» от {$author->username}", $topic, $reply);
+        }
+    }
+
+    private function sendForumNotification(User $recipient, string $type, string $message, ForumTopic $topic, ForumReply $reply): void
+    {
+        $pending = $recipient->unreadNotifications()
+            ->where('data->type', $type)
+            ->where('data->topic_id', $topic->id)
+            ->exists();
+
+        if (! $pending) {
+            $recipient->notify(new ForumReplyNotification($type, $message, $topic->id, $reply->id));
+        }
     }
 
     /**

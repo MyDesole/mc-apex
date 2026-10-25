@@ -3,6 +3,8 @@
 namespace App\Domains\Shop\Services;
 
 use App\Domains\Clan\Models\Clan;
+use App\Domains\Clan\Models\ClanInventory;
+use App\Domains\Clan\Services\ClanTreasuryService;
 use App\Domains\Wallet\Models\CoinTransaction;
 use App\Domains\Shop\Models\ShopItem;
 use App\Domains\Tiers\Models\TierTest;
@@ -30,6 +32,13 @@ class ShopService
             ->orderBy('price')
             ->get();
 
+        // Клановые предметы покупает только лидер — остальным их не показываем
+        $leaderClan = $user ? self::leaderClan($user) : null;
+
+        $items = $items
+            ->reject(fn (ShopItem $item) => $item->isClanItem() && ! $leaderClan)
+            ->values();
+
         if (! $user) {
             return $items->map(fn (ShopItem $item) => self::presentItem($item));
         }
@@ -38,16 +47,33 @@ class ShopService
             ->get()
             ->keyBy('shop_item_id');
 
-        return $items->map(function (ShopItem $item) use ($owned, $user) {
-            $row = $owned->get($item->id);
+        $clanOwned = $leaderClan
+            ? ClanInventory::where('clan_id', $leaderClan->id)->get()->keyBy('shop_item_id')
+            : collect();
+
+        return $items->map(function (ShopItem $item) use ($owned, $clanOwned, $user, $leaderClan) {
+            $row = $item->type === ShopItem::TYPE_CLAN_HIGHLIGHT_STYLE
+                ? $clanOwned->get($item->id)
+                : $owned->get($item->id);
+
+            $canAfford = (int) $user->apex_coins >= (int) $item->price
+                || ($item->isClanItem() && (int) $leaderClan?->treasury >= (int) $item->price);
 
             return self::presentItem($item, [
                 'owned' => $row !== null,
-                'quantity' => $row?->quantity ?? 0,
+                'quantity' => $row?->quantity ?? ($row ? 1 : 0),
                 'equipped' => (bool) $row?->equipped_at,
-                'can_afford' => (int) $user->apex_coins >= (int) $item->price,
+                'can_afford' => $canAfford,
             ]);
         });
+    }
+
+    /** Клан, которым руководит игрок, или null. */
+    public static function leaderClan(User $user): ?Clan
+    {
+        $clan = $user->clanMember?->clan;
+
+        return $clan && $clan->isLeader($user->id) ? $clan : null;
     }
 
     public static function presentItem(ShopItem $item, array $extra = []): array
@@ -158,48 +184,54 @@ class ShopService
             throw new RuntimeException('Этот предмет можно купить только один раз.');
         }
 
-        $owned = UserInventory::where('user_id', $user->id)
-            ->where('shop_item_id', $item->id)
-            ->first();
-
-        if ($owned && ! $item->isStackable()) {
-            throw new RuntimeException('Этот предмет уже есть в вашем инвентаре.');
-        }
-
-        if ($owned && $item->max_quantity !== null && $owned->quantity + $quantity > $item->max_quantity) {
-            throw new RuntimeException('Достигнут максимум по этому предмету.');
-        }
-
-        $price = $item->price * $quantity;
-
-        if (! CoinService::canAfford($user, $price)) {
-            throw new RuntimeException('Недостаточно ApexCoin. Не хватает ' . ($price - (int) $user->apex_coins) . '.');
-        }
-
-        $tierTest = null;
-
-        // Подсветка клана: предмет покупает лидер, и оформление ставится
-        // его клану. Проверяем это до списания монет.
+        // Подсветка клана и её оформление: покупает лидер для клана.
+        // Права проверяем до всего остального, чтобы игрок сразу видел причину.
         $clan = null;
-
-        // Оформление (цвет или эффект) требует активной подсветки
         $isStyle = $item->type === ShopItem::TYPE_CLAN_HIGHLIGHT_STYLE;
+        $fromTreasury = $item->isClanItem() && ($options['pay_from'] ?? null) === 'treasury';
 
-        if ($item->type === ShopItem::TYPE_CLAN_HIGHLIGHT || $isStyle) {
+        if ($item->isClanItem()) {
             $clan = $user->clanMember?->clan;
 
             if (! $clan) {
-                throw new RuntimeException('Подсветка доступна только участникам клана.');
+                throw new RuntimeException('Клановые предметы доступны только лидеру клана. Вы не состоите в клане.');
             }
 
             if (! $clan->isLeader($user->id)) {
-                throw new RuntimeException('Подсветку клана может купить только лидер.');
+                throw new RuntimeException('Недостаточно прав: клановые предметы покупает только лидер клана. Попросите лидера или скиньтесь в казну клана.');
             }
 
             if ($isStyle && ! $clan->isHighlightActive()) {
                 throw new RuntimeException('Сначала купите подсветку клана, потом её оформление.');
             }
         }
+
+        // Оформление лежит в инвентаре клана, остальное — в личном
+        $owned = $isStyle
+            ? ClanInventory::where('clan_id', $clan->id)->where('shop_item_id', $item->id)->first()
+            : UserInventory::where('user_id', $user->id)->where('shop_item_id', $item->id)->first();
+
+        if ($owned && ! $item->isStackable()) {
+            throw new RuntimeException($isStyle
+                ? 'Это оформление уже есть в инвентаре клана — наденьте его в настройках клана.'
+                : 'Этот предмет уже есть в вашем инвентаре.');
+        }
+
+        if ($owned && ! $isStyle && $item->max_quantity !== null && $owned->quantity + $quantity > $item->max_quantity) {
+            throw new RuntimeException('Достигнут максимум по этому предмету.');
+        }
+
+        $price = $item->price * $quantity;
+
+        if ($fromTreasury) {
+            if ((int) $clan->treasury < $price) {
+                throw new RuntimeException('В казне клана недостаточно ApexCoin. Не хватает ' . ($price - (int) $clan->treasury) . '.');
+            }
+        } elseif (! CoinService::canAfford($user, $price)) {
+            throw new RuntimeException('Недостаточно ApexCoin. Не хватает ' . ($price - (int) $user->apex_coins) . '.');
+        }
+
+        $tierTest = null;
 
         // Приоритет: заявку можно указать сразу, но это не обязательно —
         // заряд кладётся в инвентарь и применяется позже (страница «Инвентарь»).
@@ -215,22 +247,43 @@ class ShopService
             }
         }
 
-        DB::transaction(function () use ($user, $item, $quantity, $price, $options, &$tierTest, &$clan, $isStyle) {
-            CoinService::debit(
-                $user,
-                $price,
-                CoinTransaction::SOURCE_PURCHASE,
-                "Покупка: {$item->name}" . ($quantity > 1 ? " ×{$quantity}" : ''),
-                [
-                    'reference_type' => ShopItem::class,
-                    'reference_id' => $item->id,
-                    'meta' => array_filter([
-                        'slug' => $item->slug,
-                        'quantity' => $quantity,
-                        'tier_test_id' => $tierTest?->id,
-                    ], fn ($v) => $v !== null),
-                ]
-            );
+        DB::transaction(function () use ($user, $item, $quantity, $price, $options, &$tierTest, &$clan, $isStyle, $fromTreasury) {
+            $title = "Покупка: {$item->name}" . ($quantity > 1 ? " ×{$quantity}" : '');
+
+            if ($fromTreasury) {
+                app(ClanTreasuryService::class)->spend($clan, $user, $price, $title);
+            } else {
+                CoinService::debit(
+                    $user,
+                    $price,
+                    CoinTransaction::SOURCE_PURCHASE,
+                    $title,
+                    [
+                        'reference_type' => ShopItem::class,
+                        'reference_id' => $item->id,
+                        'meta' => array_filter([
+                            'slug' => $item->slug,
+                            'quantity' => $quantity,
+                            'tier_test_id' => $tierTest?->id,
+                        ], fn ($v) => $v !== null),
+                    ]
+                );
+            }
+
+            // Оформление подсветки — в инвентарь клана и сразу надеваем
+            if ($clan && $isStyle) {
+                self::applyHighlightStyle($clan, $item);
+                self::markClanStyleEquipped($clan, $item, $user);
+
+                return;
+            }
+
+            // Срок подсветки — расходник клана, в личный инвентарь не кладём
+            if ($clan) {
+                self::extendClanHighlight($clan, $item, $quantity);
+
+                return;
+            }
 
             $inventory = UserInventory::firstOrNew([
                 'user_id' => $user->id,
@@ -265,12 +318,6 @@ class ShopService
             if ($tierTest) {
                 self::applyPriorityCharge($user, $item, $tierTest);
             }
-
-            if ($clan && $isStyle) {
-                self::applyHighlightStyle($clan, $item);
-            } elseif ($clan) {
-                self::extendClanHighlight($clan, $item, $quantity);
-            }
         });
 
         $user->refresh();
@@ -287,6 +334,7 @@ class ShopService
                 'clan_id' => $clan->id,
                 'is_highlighted' => (bool) $clan->is_highlighted,
                 'highlight_until' => $clan->highlight_until?->toIso8601String(),
+                'treasury' => (int) $clan->fresh()->treasury,
             ] : null,
         ];
     }
@@ -487,6 +535,13 @@ class ShopService
             throw new RuntimeException('Этот предмет нельзя надеть.');
         }
 
+        // Оформление подсветки лежит в инвентаре клана
+        if ($item->type === ShopItem::TYPE_CLAN_HIGHLIGHT_STYLE) {
+            DB::transaction(fn () => self::equipClanHighlightStyle($user, $item));
+
+            return self::inventory($user->fresh())->all();
+        }
+
         $row = UserInventory::where('user_id', $user->id)
             ->where('shop_item_id', $item->id)
             ->first();
@@ -498,8 +553,6 @@ class ShopService
         DB::transaction(function () use ($user, $item, $row) {
             if ($item->type === ShopItem::TYPE_BADGE) {
                 self::equipBadge($user, $row);
-            } elseif ($item->type === ShopItem::TYPE_CLAN_HIGHLIGHT_STYLE) {
-                self::equipClanHighlightStyle($user, $item, $row);
             } else {
                 self::equipSingleSlot($user, $item, $row);
             }
@@ -514,10 +567,9 @@ class ShopService
      * Один цвет и один эффект одновременно: надевая новый цвет,
      * снимаем предыдущий, эффект при этом не трогаем.
      */
-    private static function equipClanHighlightStyle(User $user, ShopItem $item, UserInventory $row): void
+    private static function equipClanHighlightStyle(User $user, ShopItem $item): void
     {
-        $kind = $item->metadata['kind'] ?? null;
-        $field = self::clanHighlightField($kind);
+        $field = self::clanHighlightField($item->metadata['kind'] ?? null);
 
         if (! $field) {
             throw new RuntimeException('У этого предмета не задано, что он меняет.');
@@ -525,17 +577,30 @@ class ShopService
 
         $clan = self::clanForHighlight($user);
 
-        // Снимаем предыдущее оформление того же вида
-        UserInventory::where('user_id', $user->id)
-            ->where('equipped_at', '!=', null)
-            ->whereHas('item', function ($q) use ($item, $kind) {
-                $q->where('type', ShopItem::TYPE_CLAN_HIGHLIGHT_STYLE)
-                    ->where('metadata->kind', $kind);
-            })
-            ->update(['equipped_at' => null]);
+        if (! ClanInventory::where('clan_id', $clan->id)->where('shop_item_id', $item->id)->exists()) {
+            throw new RuntimeException('Этого оформления нет в инвентаре клана.');
+        }
 
         $clan->update([$field => $item->effect_value]);
 
+        self::markClanStyleEquipped($clan, $item, $user);
+    }
+
+    /**
+     * Отметить оформление надетым в инвентаре клана (создав запись при покупке).
+     * Одновременно надеты один цвет и один эффект: прежний того же вида снимаем.
+     */
+    private static function markClanStyleEquipped(Clan $clan, ShopItem $item, User $buyer): void
+    {
+        $kind = $item->metadata['kind'] ?? null;
+
+        ClanInventory::where('clan_id', $clan->id)
+            ->whereNotNull('equipped_at')
+            ->whereHas('item', fn ($q) => $q->where('type', ShopItem::TYPE_CLAN_HIGHLIGHT_STYLE)->where('metadata->kind', $kind))
+            ->update(['equipped_at' => null]);
+
+        $row = ClanInventory::firstOrNew(['clan_id' => $clan->id, 'shop_item_id' => $item->id]);
+        $row->purchased_by ??= $buyer->id;
         $row->equipped_at = now();
         $row->save();
     }
@@ -618,22 +683,24 @@ class ShopService
 
     public static function unequip(User $user, ShopItem $item): array
     {
-        $row = UserInventory::where('user_id', $user->id)
-            ->where('shop_item_id', $item->id)
-            ->first();
+        $isStyle = $item->type === ShopItem::TYPE_CLAN_HIGHLIGHT_STYLE;
+        $clan = $isStyle ? self::clanForHighlight($user) : null;
+
+        $row = $isStyle
+            ? ClanInventory::where('clan_id', $clan->id)->where('shop_item_id', $item->id)->first()
+            : UserInventory::where('user_id', $user->id)->where('shop_item_id', $item->id)->first();
 
         if (! $row || ! $row->isEquipped()) {
             throw new RuntimeException('Этот предмет не надет.');
         }
 
-        DB::transaction(function () use ($user, $item, $row) {
+        DB::transaction(function () use ($user, $item, $row, $clan) {
             $row->equipped_at = null;
             $row->save();
 
-            if ($item->type === ShopItem::TYPE_CLAN_HIGHLIGHT_STYLE) {
+            if ($clan) {
                 // Возвращаем оформление по умолчанию, а не пустое значение
                 $field = self::clanHighlightField($item->metadata['kind'] ?? null);
-                $clan = self::clanForHighlight($user);
 
                 if ($field) {
                     $clan->update([
@@ -669,10 +736,11 @@ class ShopService
      */
     public static function clanHighlightStyles(User $user): array
     {
-        $rows = UserInventory::with('item')
-            ->where('user_id', $user->id)
-            ->whereHas('item', fn ($q) => $q->where('type', ShopItem::TYPE_CLAN_HIGHLIGHT_STYLE))
-            ->get();
+        $clanId = $user->clanMember?->clan_id;
+
+        $rows = $clanId
+            ? ClanInventory::with('item')->where('clan_id', $clanId)->get()
+            : collect();
 
         $colors = [];
         $effects = [];

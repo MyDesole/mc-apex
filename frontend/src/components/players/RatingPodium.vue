@@ -15,6 +15,7 @@ import {
   avatarFrame,
   avatarLetter,
   profileEffectStyle,
+  rankLabel,
   roleLabel,
   scoreOf,
 } from '@/utils/playerStyling.js'
@@ -258,7 +259,7 @@ function rankOf(slotIdx) {
                 <div class="rank-player__body">
                   <div class="rank-player__top">
                     <span class="rank-player__tier">
-                      {{ topThree[slot].tier || '—' }}
+                      {{ rankLabel(topThree[slot]) }}
                     </span>
 
                     <span
@@ -353,7 +354,7 @@ function rankOf(slotIdx) {
               <div class="rank-player__body">
                 <div class="rank-player__top">
                   <span class="rank-player__tier">
-                    {{ topThree[slot].tier || '—' }}
+                    {{ rankLabel(topThree[slot]) }}
                   </span>
 
                   <span

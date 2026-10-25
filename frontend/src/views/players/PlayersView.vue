@@ -11,7 +11,9 @@ import {
   accent,
   avatarFrame,
   avatarLetter,
+  bridgeRankOf,
   profileEffectStyle,
+  rankLabel,
   roleLabel,
   scoreOf,
 } from '@/utils/playerStyling.js'
@@ -454,8 +456,11 @@ function scorePercent(player) {
                 </div>
 
                 <div class="rest-player__meta">
-                  <span class="rest-player__tier">
-                    {{ p.tier || '—' }}
+                  <span
+                      class="rest-player__tier"
+                      :style="bridgeRankOf(p) ? { color: bridgeRankOf(p).color } : null"
+                  >
+                    {{ rankLabel(p) }}
                   </span>
 
                   <span

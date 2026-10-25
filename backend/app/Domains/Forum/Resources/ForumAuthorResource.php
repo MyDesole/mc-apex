@@ -22,6 +22,7 @@ class ForumAuthorResource extends JsonResource
             'username' => $author->username,
             'avatar_url' => $author->avatar_url,
             'tier' => $author->tier,
+            'display_rank' => $author->display_rank,
             'role' => $author->role,
             'is_media' => $author->isMedia(),
             'is_verified' => (bool) $author->is_verified,

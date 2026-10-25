@@ -657,3 +657,25 @@
     width: 100%;
   }
 }
+
+/* Чем платить за клановый предмет: свой баланс или казна клана */
+.pay-from {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.pay-from__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.pay-from__option:has(input:checked) {
+  border-color: var(--accent, #a78bfa);
+  background: rgba(167, 139, 250, 0.08);
+}

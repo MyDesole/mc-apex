@@ -62,6 +62,7 @@ class GlobalSearchService
                 'minecraft_username' => $user->minecraft_username,
                 'avatar_url' => $user->avatar_url,
                 'tier' => $user->tier,
+                'display_rank' => $user->display_rank,
                 'tier_score' => (int) $user->tier_score,
                 'clan_tag' => $user->clan_tag,
                 'clan_color' => $user->clan_color,

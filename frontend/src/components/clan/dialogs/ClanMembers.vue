@@ -1,4 +1,5 @@
 <script setup>
+import { rankLabel } from '@/utils/playerStyling.js'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { RouterLink } from 'vue-router'
 import { clansApi } from '@/services/clan/clans.js'
@@ -61,7 +62,7 @@ async function kick(user) {
             </div>
 
             <div class="member-meta">
-              <span class="tier">{{ m.user.tier || '—' }}</span>
+              <span class="tier">{{ rankLabel(m.user) }}</span>
               <span>Тир</span>
               <i></i>
               <span>Вклад: {{ m.contribution }}</span>

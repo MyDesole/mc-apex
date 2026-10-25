@@ -144,7 +144,7 @@ class ClanHighlightPurchaseTest extends TestCase
         $this->actingAs($officer)
             ->postJson("/api/shop/{$item->id}/purchase")
             ->assertStatus(422)
-            ->assertJsonPath('message', 'Подсветку клана может купить только лидер.');
+            ->assertJsonPath('message', 'Недостаточно прав: клановые предметы покупает только лидер клана. Попросите лидера или скиньтесь в казну клана.');
 
         $this->assertFalse($clan->fresh()->is_highlighted);
         $this->assertSame(5000, $officer->fresh()->apex_coins, 'Монеты не списаны');
@@ -158,7 +158,7 @@ class ClanHighlightPurchaseTest extends TestCase
         $this->actingAs($loner)
             ->postJson("/api/shop/{$item->id}/purchase")
             ->assertStatus(422)
-            ->assertJsonPath('message', 'Подсветка доступна только участникам клана.');
+            ->assertJsonPath('message', 'Клановые предметы доступны только лидеру клана. Вы не состоите в клане.');
 
         $this->assertSame(5000, $loner->fresh()->apex_coins);
     }

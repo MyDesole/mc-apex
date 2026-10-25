@@ -72,6 +72,19 @@ const priorityTargetId = ref(null)
 const priorityCharges = ref(0)
 const priorityLoading = ref(false)
 
+// Лидеру приходит казна клана: клановые предметы можно оплатить из неё
+const clan = ref(null)
+const payFrom = ref('balance')
+const purchaseError = ref('')
+
+const isClanPurchase = computed(() =>
+    ['clan_highlight', 'clan_highlight_style'].includes(purchaseItem.value?.type),
+)
+
+const payBalance = computed(() =>
+    isClanPurchase.value && payFrom.value === 'treasury' ? (clan.value?.treasury ?? 0) : balance.value,
+)
+
 const isPriorityPurchase = computed(() => {
   return purchaseItem.value?.type === 'tier_priority'
 })
@@ -81,7 +94,7 @@ const totalPrice = computed(() => {
 })
 
 const canPay = computed(() => {
-  return totalPrice.value <= balance.value
+  return totalPrice.value <= payBalance.value
 })
 
 function rarityStyle(item) {
@@ -108,6 +121,7 @@ async function load() {
     items.value = data.items ?? []
     balance.value = data.balance ?? auth.user?.apex_coins ?? 0
     tierRewards.value = data.tier_rewards ?? {}
+    clan.value = data.clan ?? null
 
     if (auth.isAuthenticated) {
       const wallet = await walletApi.summary()
@@ -151,6 +165,11 @@ function openPurchase(item) {
 
   purchaseItem.value = item
   purchaseQuantity.value = 1
+  purchaseError.value = ''
+  // Если на балансе не хватает, а в казне хватает — сразу предлагаем казну
+  payFrom.value = clan.value && item.price > balance.value && item.price <= clan.value.treasury
+      ? 'treasury'
+      : 'balance'
   priorityTargetId.value = null
   priorityCandidates.value = []
 
@@ -186,6 +205,7 @@ async function confirmPurchase() {
 
   purchaseBusy.value = true
   error.value = ''
+  purchaseError.value = ''
 
   try {
     const payload = {}
@@ -198,6 +218,10 @@ async function confirmPurchase() {
       payload.tier_test_id = priorityTargetId.value
     }
 
+    if (isClanPurchase.value && clan.value) {
+      payload.pay_from = payFrom.value
+    }
+
     const result = await shopApi.purchase(
         purchaseItem.value.id,
         payload,
@@ -205,6 +229,10 @@ async function confirmPurchase() {
 
     notice.value = result.message
     balance.value = result.balance
+
+    if (clan.value && result.clan_highlight) {
+      clan.value.treasury = result.clan_highlight.treasury ?? clan.value.treasury
+    }
 
     const owned = items.value.find(
         (item) => item.id === purchaseItem.value.id,
@@ -224,7 +252,9 @@ async function confirmPurchase() {
     await auth.fetchMe()
     closePurchase()
   } catch (e) {
-    error.value = e.message || 'Не удалось купить предмет.'
+    // Показываем причину внутри окна покупки: на телефоне окно закрывает
+    // весь экран, и сообщение над витриной было не видно
+    purchaseError.value = e.message || 'Не удалось купить предмет.'
   } finally {
     purchaseBusy.value = false
   }
@@ -449,17 +479,32 @@ onMounted(load)
           <input v-model.number="purchaseQuantity" type="number" min="1" max="10">
         </label>
 
+        <div v-if="isClanPurchase && clan" class="pay-from" role="radiogroup" aria-label="Чем платить">
+          <label class="pay-from__option">
+            <input v-model="payFrom" type="radio" value="balance">
+            <span>Свой баланс · ₳ {{ formatCoins(balance) }}</span>
+          </label>
+          <label class="pay-from__option">
+            <input v-model="payFrom" type="radio" value="treasury">
+            <span>Казна клана [{{ clan.tag }}] · ₳ {{ formatCoins(clan.treasury) }}</span>
+          </label>
+        </div>
+
         <div class="modal-total">
           <div>
             <span class="modal-total__label">Итого</span>
-            <span class="modal-total__balance">Баланс: ₳ {{ formatCoins(balance) }}</span>
+            <span class="modal-total__balance">
+              {{ isClanPurchase && payFrom === 'treasury' ? 'Казна' : 'Баланс' }}: ₳ {{ formatCoins(payBalance) }}
+            </span>
           </div>
           <strong>₳ {{ formatCoins(totalPrice) }}</strong>
         </div>
 
         <div v-if="!canPay" class="alert alert--error">
-          Не хватает {{ formatCoins(totalPrice - balance) }} ApexCoin.
+          Не хватает {{ formatCoins(totalPrice - payBalance) }} ApexCoin{{ isClanPurchase && payFrom === 'treasury' ? ' в казне клана' : '' }}.
         </div>
+
+        <div v-if="purchaseError" class="alert alert--error" role="alert">{{ purchaseError }}</div>
 
         <div class="modal__actions">
           <button class="btn btn-secondary" type="button" @click="closePurchase">Отмена</button>

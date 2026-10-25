@@ -58,6 +58,31 @@ async function reject(p) {
   }
 }
 
+/** Убрать участника совсем: если сетка ещё не сыграна, она сбросится. */
+async function remove(p) {
+  const name = p.user?.username ?? p.clan?.name ?? 'участника'
+  const ok = await confirmDialog(`Удалить ${name} из турнира? Если сетка уже построена, её придётся сформировать заново.`, {
+    title: 'Удаление участника',
+    danger: true,
+  })
+  if (!ok) return
+
+  processing.value = p.id
+  generateError.value = ''
+  try {
+    const result = await adminApi.removeParticipant(props.tournament.id, p.id)
+    if (result?.bracket_reset) {
+      generateOk.value = 'Участник удалён, сетка сброшена — сформируйте её заново.'
+      emit('updated')
+    }
+    await load()
+  } catch (e) {
+    generateError.value = e.message || 'Не удалось удалить участника.'
+  } finally {
+    processing.value = null
+  }
+}
+
 // --- Генерация турнирной сетки ---
 const generating = ref(false)
 const generateError = ref('')
@@ -198,8 +223,14 @@ onMounted(load)
                 >
                   Отклонить
                 </button>
-
-                <span v-else class="no-actions">—</span>
+                <button
+                    class="btn-reject"
+                    :disabled="processing === p.id"
+                    title="Убрать участника из турнира"
+                    @click="remove(p)"
+                >
+                  Удалить
+                </button>
               </div>
             </div>
           </div>

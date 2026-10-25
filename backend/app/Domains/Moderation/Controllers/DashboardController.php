@@ -33,6 +33,7 @@ class DashboardController extends Controller
             'reports' => Report::where('status', Report::STATUS_OPEN)->count(),
             'appeals' => TierTestAppeal::where('status', TierTestAppeal::STATUS_PENDING)->count(),
             'tests' => TierTest::where('status', 'pending')->count(),
+            'support' => \App\Domains\Support\Models\SupportTicket::where('status', \App\Domains\Support\Models\SupportTicket::STATUS_OPEN)->count(),
         ]);
     }
 

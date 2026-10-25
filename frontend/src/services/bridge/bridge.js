@@ -92,6 +92,21 @@ export const bridgeReviewApi = {
     },
 }
 
+/** Бридж игрока в досье: правка оценок и заявок — только админ. */
+export const bridgeAdminApi = {
+    player(userId) {
+        return api.get(`/admin/users/${userId}/bridge`)
+    },
+
+    update(submissionId, payload) {
+        return api.put(`/admin/bridge/submissions/${submissionId}`, payload)
+    },
+
+    remove(submissionId) {
+        return api.delete(`/admin/bridge/submissions/${submissionId}`)
+    },
+}
+
 /**
  * Куратор бриджа: каталог видов и подвидов.
  *

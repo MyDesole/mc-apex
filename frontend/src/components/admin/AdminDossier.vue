@@ -17,6 +17,7 @@ import AdminAspectsModal from '@/components/admin/AdminAspectsModal.vue'
 import AdminRoleModal from '@/components/admin/AdminRoleModal.vue'
 import AdminAchievementsModal from '@/components/admin/AdminAchievementsModal.vue'
 import AdminTierTestModal from '@/components/admin/AdminTierTestModal.vue'
+import AdminDossierBridge from '@/components/admin/AdminDossierBridge.vue'
 
 const props = defineProps({
   userId: { type: Number, required: true },
@@ -394,6 +395,9 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               · войны {{ data.rating.war_points + data.rating.war_win_points }}
             </p>
           </section>
+
+          <!-- Бридж: правка оценок тестера и звания — только админ -->
+          <AdminDossierBridge v-if="isAdmin" :user-id="user.id" @changed="load(); emit('changed')" />
 
           <!-- Жалобы на игрока -->
           <section class="dossier__section">

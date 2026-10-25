@@ -40,6 +40,8 @@ class ModerationLog extends Model
         'control.update' => 'Пульт: настройки',
         'control.giveaway' => 'Раздача',
         'control.promo' => 'Новый промокод',
+        'bridge.submission_updated' => 'Бридж: правка оценок',
+        'bridge.submission_deleted' => 'Бридж: заявка удалена',
     ];
 
     protected $fillable = [

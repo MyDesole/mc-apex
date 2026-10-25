@@ -59,6 +59,7 @@ onMounted(async () => {
         <RouterLink to="/stats">Статистика</RouterLink>
         <RouterLink to="/status">Статус сервера</RouterLink>
         <RouterLink to="/news">Новости</RouterLink>
+        <RouterLink to="/support">Техподдержка</RouterLink>
       </nav>
 
       <nav class="site-footer__col" aria-label="Сообщество">

@@ -410,6 +410,14 @@ watch(mobileMenuOpen, (open) => {
                     <span>Инвентарь</span>
                   </RouterLink>
                   <RouterLink
+                      to="/support"
+                      class="dropdown-item"
+                      @click="menuOpen = false"
+                  >
+                    <span class="dropdown-icon">?</span>
+                    <span>Техподдержка</span>
+                  </RouterLink>
+                  <RouterLink
                       to="/friends"
                       class="dropdown-item"
                       @click="menuOpen = false"
@@ -603,6 +611,15 @@ watch(mobileMenuOpen, (open) => {
             >
               <span class="dropdown-icon">◇</span>
               <span>Инвентарь</span>
+            </RouterLink>
+
+            <RouterLink
+                to="/support"
+                class="dropdown-item"
+                @click="menuOpen = false"
+            >
+              <span class="dropdown-icon">?</span>
+              <span>Техподдержка</span>
             </RouterLink>
 
             <RouterLink

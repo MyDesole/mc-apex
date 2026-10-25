@@ -198,7 +198,7 @@ class BridgeService
         return UserBridgeTechnique::query()
             ->where('status', UserBridgeTechnique::STATUS_DECLARED)
             ->with([
-                'user:id,username,avatar,tier,tier_score,bridge_rank_id',
+                'user:id,username,avatar,tier,tier_score,bridge_primary,bridge_rank_id',
                 'user.bridgeRank',
                 'user.clanMember.clan:id,name,tag,banner_color',
                 'technique.variants',
@@ -325,7 +325,7 @@ class BridgeService
                 UserBridgeTechnique::STATUS_REJECTED,
             ])
             ->with([
-                'user:id,username,avatar,tier,tier_score,bridge_rank_id',
+                'user:id,username,avatar,tier,tier_score,bridge_primary,bridge_rank_id',
                 'user.bridgeRank',
                 'technique.variants',
                 'reviewer:id,username,avatar',

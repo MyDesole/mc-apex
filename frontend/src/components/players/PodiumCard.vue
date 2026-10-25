@@ -11,7 +11,7 @@ import { RouterLink } from 'vue-router'
 
 import UserName from '@/components/players/UserName.vue'
 import { userLink, clanLink } from '@/utils/links.js'
-import { tierColors } from '@/data/players/profileCustomization.js'
+import { rankColor, rankLabel } from '@/utils/playerStyling.js'
 
 const props = defineProps({
   // Игрок или клан
@@ -42,7 +42,7 @@ const link = computed(() =>
     isClan.value ? clanLink(props.entry) : userLink(props.entry)
 )
 
-const tierColor = computed(() => tierColors[props.entry?.tier] || '#a78bfa')
+const tierColor = computed(() => rankColor(props.entry))
 
 const clanColor = computed(() => props.entry?.banner_color || '#7c3aed')
 
@@ -82,7 +82,7 @@ const initial = computed(() => {
           class="tier-block"
           :style="{ '--tier': tierColor }"
       >
-        {{ entry.tier }}
+        {{ rankLabel(entry) }}
       </span>
     </div>
 

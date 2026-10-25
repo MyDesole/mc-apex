@@ -22,6 +22,8 @@ const { latestMessage, latestRead, typingUsers } = useRealtimeMessages()
 /* Присутствие подключается ниже: нужен activeConversation */
 
 
+import { bridgeRankOf, rankColor, rankLabel } from '@/utils/playerStyling.js'
+
 const tierColors = {
   'S+': '#fbbf24',
   S: '#facc15',
@@ -2494,15 +2496,15 @@ onUnmounted(() => {
                     </div>
 
                     <div class="search-item__sub">
-                      Тир
+                      {{ bridgeRankOf(u) ? 'Звание' : 'Тир' }}
                       <b
                           :style="{
                           color:
-                            tierColors[u.tier] ||
-                            '#6b7280',
+                            rankColor(u, '#6b7280'),
+                            
                         }"
                       >
-                        {{ u.tier ?? '—' }}
+                        {{ rankLabel(u) }}
                       </b>
                     </div>
                   </div>
@@ -2833,15 +2835,15 @@ onUnmounted(() => {
                           forward-modal__item-sub
                         "
                       >
-                        Тир
+                        {{ bridgeRankOf(u) ? 'Звание' : 'Тир' }}
                         <b
                             :style="{
                             color:
-                              tierColors[u.tier] ||
-                              '#6b7280',
+                              rankColor(u, '#6b7280'),
+                              
                           }"
                         >
-                          {{ u.tier ?? '—' }}
+                          {{ rankLabel(u) }}
                         </b>
                       </div>
                     </div>

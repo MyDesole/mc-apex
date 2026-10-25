@@ -6,7 +6,7 @@ use App\Domains\Clan\Models\Clan;
 use App\Domains\Clan\Models\ClanMember;
 use App\Domains\Shop\Models\ShopItem;
 use App\Domains\Users\Models\User;
-use App\Domains\Shop\Models\UserInventory;
+use App\Domains\Clan\Models\ClanInventory;
 use App\Domains\Clan\Support\ClanHighlight;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -38,11 +38,11 @@ class ClanHighlightEquipTest extends TestCase
 
     private function own(User $user, ShopItem $item): void
     {
-        UserInventory::create([
-            'user_id' => $user->id,
+        // Оформление принадлежит клану игрока, а не ему лично
+        ClanInventory::create([
+            'clan_id' => ClanMember::where('user_id', $user->id)->value('clan_id'),
             'shop_item_id' => $item->id,
-            'quantity' => 1,
-            'acquired_at' => now(),
+            'purchased_by' => $user->id,
         ]);
     }
 
@@ -146,7 +146,7 @@ class ClanHighlightEquipTest extends TestCase
         $this->actingAs($leader)
             ->postJson("/api/shop/{$color->id}/equip")
             ->assertStatus(422)
-            ->assertJsonPath('message', 'Сначала нужно купить этот предмет.');
+            ->assertJsonPath('message', 'Этого оформления нет в инвентаре клана.');
 
         $this->assertNull($clan->fresh()->highlight_color);
     }
@@ -171,13 +171,13 @@ class ClanHighlightEquipTest extends TestCase
         $officer = User::factory()->create();
         $color = $this->styleItem('color', 'rose');
 
-        $this->own($officer, $color);
-
         ClanMember::create([
             'clan_id' => $clan->id,
             'user_id' => $officer->id,
             'role' => 'officer',
         ]);
+
+        $this->own($officer, $color);
 
         $this->actingAs($officer)
             ->postJson("/api/shop/{$color->id}/equip")
@@ -230,13 +230,13 @@ class ClanHighlightEquipTest extends TestCase
 
         $this->actingAs($leader)->postJson("/api/shop/{$color->id}/equip")->assertOk();
 
-        // Инвентарь приходит под ключом items
+        // Инвентарь клана приходит в дашборде клана
         $inventory = collect(
-            $this->actingAs($leader)->getJson('/api/shop/inventory')->assertOk()->json('items')
+            $this->actingAs($leader)->getJson('/api/my-clan')->assertOk()->json('highlight_styles.colors')
         );
 
-        $equipped = $inventory->firstWhere('shop_item_id', $color->id);
-        $notEquipped = $inventory->firstWhere('shop_item_id', $other->id);
+        $equipped = $inventory->firstWhere('id', $color->id);
+        $notEquipped = $inventory->firstWhere('id', $other->id);
 
         $this->assertTrue((bool) $equipped['equipped'], 'Надетое оформление помечено');
         $this->assertFalse((bool) $notEquipped['equipped'], 'Остальное не помечено');

@@ -70,6 +70,7 @@ const router = createRouter({
     { path: '/inventory', name: 'inventory', component: InventoryView, meta: { title: 'Инвентарь', auth: true } },
     { path: '/wallet', name: 'wallet', component: () => import('@/views/shop/WalletView.vue'), meta: { title: 'Кошелёк', auth: true } },
     { path: '/forum', name: 'forum', component: ForumView, meta: { title: 'Форум' } },
+    { path: '/support/:id(\\d+)?', name: 'support', component: () => import('@/views/support/SupportView.vue'), meta: { title: 'Техподдержка', auth: true } },
     { path: '/forum/new', name: 'forum-new', component: () => import('@/views/forum/ForumNewView.vue'), meta: { title: 'Новая тема', auth: true } },
     // Без whereNumber: при обновлении страницы маршрут должен совпасть.
     // Регулярка в строке JS требует двойного экранирования (\\d), иначе это литерал «d».

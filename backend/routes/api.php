@@ -492,6 +492,16 @@ Route::middleware('auth:sanctum')->group(function () {
     | Записи в очередь нет: игрок отмечает вид и прикладывает видео,
     | проверяет его бридж-тестер.
     */
+    // Техподдержка: обращения игрока и переписка с персоналом
+    Route::prefix('support')->group(function () {
+        $support = \App\Domains\Support\Controllers\SupportController::class;
+        Route::get('/tickets', [$support, 'index']);
+        Route::post('/tickets', [$support, 'store'])->middleware('throttle:5,10');
+        Route::get('/tickets/{ticket}', [$support, 'show'])->whereNumber('ticket');
+        Route::post('/tickets/{ticket}/messages', [$support, 'reply'])->whereNumber('ticket')->middleware('throttle:20,1');
+        Route::post('/tickets/{ticket}/close', [$support, 'close'])->whereNumber('ticket');
+    });
+
     Route::prefix('bridge')->group(function () {
         Route::get('/techniques', [BridgeController::class, 'index']);
         Route::post('/techniques', [BridgeController::class, 'store']);
@@ -598,6 +608,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/reports', [\App\Domains\Moderation\Controllers\ReportController::class, 'index']);
         Route::post('/reports/{report}/resolve', [\App\Domains\Moderation\Controllers\ReportController::class, 'resolve'])->whereNumber('report');
         Route::get('/moderation-log', [\App\Domains\Moderation\Controllers\ReportController::class, 'log']);
+
+        // Техподдержка: очередь обращений и ответы
+        Route::get('/support', [\App\Domains\Support\Controllers\AdminSupportController::class, 'index']);
+        Route::get('/support/{ticket}', [\App\Domains\Support\Controllers\AdminSupportController::class, 'show'])->whereNumber('ticket');
+        Route::post('/support/{ticket}/messages', [\App\Domains\Support\Controllers\AdminSupportController::class, 'reply'])->whereNumber('ticket');
+        Route::post('/support/{ticket}/close', [\App\Domains\Support\Controllers\AdminSupportController::class, 'close'])->whereNumber('ticket');
         // Поиск игрока для досье — модератору тоже (без почты в выдаче)
         Route::get('/players/search', [\App\Domains\Moderation\Controllers\ReportController::class, 'searchPlayers']);
 
@@ -662,6 +678,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/tournaments/{tournament}/participants', [AdminTournamentController::class, 'participants'])->whereNumber('tournament');
         Route::post('/tournaments/{tournament}/participants/{participant}/approve', [AdminTournamentController::class, 'approveParticipant']);
         Route::post('/tournaments/{tournament}/participants/{participant}/reject', [AdminTournamentController::class, 'rejectParticipant']);
+        Route::delete('/tournaments/{tournament}/participants/{participant}', [AdminTournamentController::class, 'removeParticipant']);
         Route::post('/tournaments/{tournament}/seeds', [AdminTournamentController::class, 'setSeeds'])->whereNumber('tournament');
 
         Route::get('/tournaments/{tournament}/matches', [AdminTournamentController::class, 'matches'])->whereNumber('tournament');
@@ -708,7 +725,12 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/verify-email', [$player, 'verifyEmail']);
             Route::post('/logout-everywhere', [$player, 'logoutEverywhere']);
             Route::post('/unlink-minecraft', [$player, 'unlinkMinecraft']);
+            Route::get('/bridge', [\App\Domains\Bridge\Controllers\Api\Admin\BridgeAdminController::class, 'show']);
         });
+
+        // Бридж игрока: исправить оценки тестера, статус или удалить заявку
+        Route::put('/bridge/submissions/{submission}', [\App\Domains\Bridge\Controllers\Api\Admin\BridgeAdminController::class, 'update'])->whereNumber('submission');
+        Route::delete('/bridge/submissions/{submission}', [\App\Domains\Bridge\Controllers\Api\Admin\BridgeAdminController::class, 'destroy'])->whereNumber('submission');
 
         // Рефералы: кто кого привёл
         Route::get('/referrals', [\App\Domains\Moderation\Controllers\PlayerAdminController::class, 'referrals']);
@@ -755,6 +777,10 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware(['auth:sanctum', 'clan.member'])->prefix('my-clan')->group(function () {
     // Дашборд
     Route::get('/', [\App\Domains\Clan\Controllers\Api\MyClanController::class, 'index']);
+
+    // Казна: участники скидываются, лидер тратит на клановые предметы
+    Route::get('/treasury', [\App\Domains\Clan\Controllers\Api\MyClanController::class, 'treasury']);
+    Route::post('/treasury/donate', [\App\Domains\Clan\Controllers\Api\MyClanController::class, 'donate'])->middleware('throttle:20,1');
 
     // Форум
     Route::get('/forum', [\App\Domains\Clan\Controllers\Api\ClanForumController::class, 'index']);

@@ -74,6 +74,41 @@ class TournamentLifecycleTest extends TestCase
         return $played;
     }
 
+    public function test_admin_removes_approved_participant_and_unplayed_bracket_resets(): void
+    {
+        $t = $this->createTournament();
+        $this->registerAndApprove($t, 4);
+        $this->actingAs($this->admin)->postJson("/api/admin/tournaments/{$t->id}/bracket/generate")->assertOk();
+
+        $participant = $t->participants()->first();
+
+        $this->actingAs($this->admin)
+            ->deleteJson("/api/admin/tournaments/{$t->id}/participants/{$participant->id}")
+            ->assertOk()
+            ->assertJsonPath('bracket_reset', true);
+
+        $this->assertDatabaseMissing('tournament_participants', ['id' => $participant->id]);
+        $this->assertSame(0, TournamentMatch::where('tournament_id', $t->id)->count());
+        $this->assertSame('registration', $t->fresh()->status);
+
+        // Сетку можно построить заново из оставшихся
+        $this->actingAs($this->admin)->postJson("/api/admin/tournaments/{$t->id}/bracket/generate")->assertOk();
+    }
+
+    public function test_participant_cannot_be_removed_after_matches_are_played(): void
+    {
+        $t = $this->createTournament();
+        $this->registerAndApprove($t, 4);
+        $this->actingAs($this->admin)->postJson("/api/admin/tournaments/{$t->id}/bracket/generate")->assertOk();
+        $this->playReadyMatches($t);
+
+        $participant = $t->participants()->first();
+
+        $this->actingAs($this->admin)
+            ->deleteJson("/api/admin/tournaments/{$t->id}/participants/{$participant->id}")
+            ->assertUnprocessable();
+    }
+
     public function test_full_tournament_with_byes_reaches_a_champion(): void
     {
         $t = $this->createTournament();

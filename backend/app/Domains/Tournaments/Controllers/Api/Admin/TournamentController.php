@@ -14,6 +14,7 @@ use App\Domains\Tournaments\Services\TournamentBracketService;
 use App\Domains\Tournaments\Notifications\TournamentNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class TournamentController extends Controller
@@ -76,7 +77,7 @@ class TournamentController extends Controller
     public function participants(Request $request, Tournament $tournament): JsonResponse
     {
         $participants = $tournament->participants()
-            ->with(['user:id,username,avatar,tier', 'clan:id,name,tag,banner_color'])
+            ->with(['user:id,username,avatar,tier,bridge_primary,bridge_rank_id', 'clan:id,name,tag,banner_color'])
             ->orderBy('seed')
             ->get();
 
@@ -103,6 +104,43 @@ class TournamentController extends Controller
         $this->notifyParticipant($participant, 'tournament_rejected', "Заявка на турнир «{$tournament->name}» отклонена.");
 
         return response()->json(['participant' => $participant->fresh()]);
+    }
+
+    /**
+     * Убрать участника из турнира совсем — например, уже одобренного,
+     * который не сможет играть. Если сетка построена, но ни один матч
+     * ещё не сыгран, сетку сбрасываем — админ строит её заново.
+     */
+    public function removeParticipant(Request $request, Tournament $tournament, TournamentParticipant $participant): JsonResponse
+    {
+        abort_if($participant->tournament_id !== $tournament->id, 404);
+
+        $inBracket = TournamentMatch::where('tournament_id', $tournament->id)
+            ->where(fn ($q) => $q->where('participant1_id', $participant->id)->orWhere('participant2_id', $participant->id))
+            ->exists();
+
+        $played = TournamentMatch::where('tournament_id', $tournament->id)
+            ->where('status', 'completed')
+            ->where('is_bye', false)
+            ->exists();
+
+        abort_if($inBracket && $played, 422, 'Турнир уже идёт: участник есть в сыгранной сетке. Отметьте его поражение в матче вместо удаления.');
+
+        $this->notifyParticipant($participant, 'tournament_rejected', "Вы удалены из турнира «{$tournament->name}».");
+
+        DB::transaction(function () use ($tournament, $participant, $inBracket) {
+            if ($inBracket) {
+                $tournament->matches()->delete();
+                $tournament->update(['status' => 'registration']);
+            }
+
+            $participant->delete();
+        });
+
+        return response()->json([
+            'ok' => true,
+            'bracket_reset' => $inBracket,
+        ]);
     }
 
     /** Игроку — лично, клану — его лидеру. */

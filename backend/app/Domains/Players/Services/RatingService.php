@@ -65,7 +65,7 @@ class RatingService
         }
 
         foreach ($this->compute($ids->all()) as $id => $row) {
-            User::whereKey($id)->where('rating_points', '!=', $row['total'])->update(['rating_points' => $row['total']]);
+            User::whereKey($id)->update(['rating_points' => $row['total'], 'bridge_primary' => $row['bridge_primary']]);
         }
 
         $clanIds = ClanMember::whereIn('user_id', $ids)->pluck('clan_id');
@@ -79,7 +79,7 @@ class RatingService
 
         User::query()->select('id')->chunkById(500, function ($users) use (&$count) {
             foreach ($this->compute($users->pluck('id')->all()) as $id => $row) {
-                User::whereKey($id)->update(['rating_points' => $row['total']]);
+                User::whereKey($id)->update(['rating_points' => $row['total'], 'bridge_primary' => $row['bridge_primary']]);
                 $count++;
             }
         });
@@ -137,6 +137,8 @@ class RatingService
             $row['pvp'] = (int) ($pvp[$id] ?? 0);
             $row['bedwars'] = (int) ($bedwars[$id] ?? 0);
             $row['bridge'] = (int) round((float) ($bridge[$id] ?? 0));
+            // Бридж сильнее PvP — на сайте вместо тира показываем звание бриджера
+            $row['bridge_primary'] = $row['bridge'] > $row['pvp'];
             $row['tiers_average'] = round(($row['pvp'] + $row['bedwars'] + $row['bridge']) / 3, 1);
 
             $row['match_wins'] = (int) ($matchWins[$id] ?? 0);
@@ -166,7 +168,7 @@ class RatingService
     private function empty(): array
     {
         return [
-            'pvp' => 0, 'bedwars' => 0, 'bridge' => 0, 'tiers_average' => 0.0, 'tiers_points' => 0,
+            'pvp' => 0, 'bedwars' => 0, 'bridge' => 0, 'bridge_primary' => false, 'tiers_average' => 0.0, 'tiers_points' => 0,
             'match_wins' => 0, 'match_points' => 0,
             'tournament_wins' => 0, 'tournament_points' => 0,
             'wars' => 0, 'war_points' => 0, 'wars_won' => 0, 'war_win_points' => 0,

@@ -1,4 +1,5 @@
 <script setup>
+import { rankLabel } from '@/utils/playerStyling.js'
 import PageLoader from '@/components/core/PageLoader.vue'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { onMounted, ref } from 'vue'
@@ -127,7 +128,7 @@ onMounted(load)
               <span v-if="m.title" class="custom-title">{{ m.title }}</span>
             </div>
             <div class="meta">
-              Тир: {{ m.user.tier }} · Вклад: {{ m.contribution }}
+              {{ m.user.display_rank?.type === 'bridge' ? 'Звание' : 'Тир' }}: {{ rankLabel(m.user) }} · Вклад: {{ m.contribution }}
               <template v-if="m.permissions?.length">
                 · Права: {{ m.permissions.join(', ') }}
               </template>

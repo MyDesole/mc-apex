@@ -5,6 +5,15 @@ export const myClanApi = {
         return api.get('/my-clan')
     },
 
+    /** Казна: баланс, вкладчики, история. */
+    treasury() {
+        return api.get('/my-clan/treasury')
+    },
+
+    donate(amount) {
+        return api.post('/my-clan/treasury/donate', { amount })
+    },
+
     // Форум
     forum(params = {}) {
         const q = new URLSearchParams(params).toString()

@@ -50,6 +50,25 @@ export function accent(player) {
   return TIER_COLORS[player?.tier] || '#7c3aed'
 }
 
+/**
+ * Звание бриджера, если бридж — основной режим игрока (очков больше,
+ * чем в PvP), иначе null. Сервер присылает его в display_rank.
+ */
+export function bridgeRankOf(player) {
+  const rank = player?.display_rank
+  return rank?.type === 'bridge' ? rank : null
+}
+
+/** Подпись рядом с ником: звание бриджера или тир. */
+export function rankLabel(player, fallback = '—') {
+  return bridgeRankOf(player)?.label || player?.tier || fallback
+}
+
+/** Цвет подписи рядом с ником. */
+export function rankColor(player, fallback = '#a78bfa') {
+  return bridgeRankOf(player)?.color || TIER_COLORS[player?.tier] || fallback
+}
+
 /** Рейтинговый балл. */
 export function scoreOf(player) {
   return player?.rating_score ?? 0

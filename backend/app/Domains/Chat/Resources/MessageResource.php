@@ -54,6 +54,7 @@ class MessageResource extends JsonResource
             'username' => $user->username,
             'avatar_url' => $user->avatar_url,
             'tier' => $user->tier,
+            'display_rank' => $user->display_rank,
             'is_verified' => (bool) $user->is_verified,
         ];
     }

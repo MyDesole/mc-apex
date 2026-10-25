@@ -26,10 +26,17 @@ class ShopController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
+        $leaderClan = $user ? ShopService::leaderClan($user) : null;
 
         return response()->json([
             'items' => ShopService::catalog($user),
             'balance' => $user ? (int) $user->apex_coins : null,
+            // Лидеру — казна клана: клановые предметы можно оплатить из неё
+            'clan' => $leaderClan ? [
+                'id' => $leaderClan->id,
+                'tag' => $leaderClan->tag,
+                'treasury' => (int) $leaderClan->treasury,
+            ] : null,
             'tier_rewards' => RewardService::tierTable(),
             'currency' => config('apex.currency'),
         ]);

@@ -1,4 +1,5 @@
 <script setup>
+import { rankLabel } from '@/utils/playerStyling.js'
 import UserName from '@/components/players/UserName.vue'
 import {tierColor} from "@/composables/players/useTier.js";
 import { MODE_COLORS, MODE_LABELS, pluralDays } from "@/composables/players/usePlayerDisplay.js";
@@ -62,7 +63,7 @@ defineProps({
               boxShadow: `0 0 16px ${tierColor(friend.tier)}40`,
             }"
           >
-            {{ friend.tier ?? '—' }}
+            {{ rankLabel(friend) }}
           </div>
         </div>
       </div>

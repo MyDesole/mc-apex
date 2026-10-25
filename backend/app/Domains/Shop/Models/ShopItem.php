@@ -88,4 +88,10 @@ class ShopItem extends Model
     {
         return in_array($this->type, self::EQUIPPABLE, true);
     }
+
+    /** Предмет для клана: покупает лидер, можно оплатить из казны. */
+    public function isClanItem(): bool
+    {
+        return in_array($this->type, [self::TYPE_CLAN_HIGHLIGHT, self::TYPE_CLAN_HIGHLIGHT_STYLE], true);
+    }
 }

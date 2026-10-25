@@ -44,6 +44,10 @@ function notificationIcon(notification) {
     tournament_approved: 'check',
     tournament_rejected: 'close',
     tournament_won: 'trophy',
+    forum_reply: 'send',
+    forum_reply_to_you: 'send',
+    support_reply: 'info',
+    support_player_reply: 'info',
 
     clan_application: 'shield',
     clan_application_accepted: 'check',
@@ -71,6 +75,10 @@ function notificationType(notification) {
     tournament_approved: 'Турнир',
     tournament_rejected: 'Турнир',
     tournament_won: 'Турнир',
+    forum_reply: 'Форум',
+    forum_reply_to_you: 'Форум',
+    support_reply: 'Поддержка',
+    support_player_reply: 'Поддержка',
 
     clan_application: 'Клан',
     clan_application_accepted: 'Клан',
@@ -177,6 +185,18 @@ async function open(notification) {
 
     else if (type === 'tier_test_completed' || type === 'tier_test_appeal_resolved') {
       await router.push('/profile')
+    }
+
+    else if (type === 'support_reply' && data.ticket_id) {
+      await router.push(`/support/${data.ticket_id}`)
+    }
+
+    else if (type === 'support_player_reply') {
+      await router.push('/admin?tab=support')
+    }
+
+    else if (type?.startsWith('forum_reply') && data.topic_id) {
+      await router.push(`/forum/${data.topic_id}`)
     }
 
     // Турнир: одобрение заявки, отказ, победа

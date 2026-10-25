@@ -121,6 +121,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'banned_until' => 'datetime',
         'favorite_modes' => 'array',
         'bridge_rank_at' => 'datetime',
+        'bridge_primary' => 'boolean',
         'minecraft_linked_at' => 'datetime',
         'featured_achievements' => 'array',
         'is_verified' => 'boolean',
@@ -201,7 +202,31 @@ class User extends Authenticatable implements MustVerifyEmail
         'card_background_url', 'days_on_platform',
         'featured_achievements_list',
         'friends_all',
+        'display_rank',
     ];
+
+    /**
+     * Что показывать рядом с ником: звание бриджера, если бридж —
+     * основной режим игрока и звание выдано, иначе тир.
+     * Звания берутся из кэша, чтобы списки игроков не делали лишних запросов.
+     *
+     * @return array{type: string, label: ?string, color: ?string}
+     */
+    public function getDisplayRankAttribute(): array
+    {
+        $attributes = $this->getAttributes();
+
+        if (! empty($attributes['bridge_primary']) && ! empty($attributes['bridge_rank_id'])) {
+            $rank = \App\Domains\Bridge\Models\BridgeRank::cachedById((int) $attributes['bridge_rank_id']);
+
+            if ($rank) {
+                return ['type' => 'bridge', 'label' => $rank['label'], 'color' => $rank['color']];
+            }
+        }
+
+        return ['type' => 'tier', 'label' => $attributes['tier'] ?? null, 'color' => null];
+    }
+
     public function getAspectsAttribute()
     {
         return [

@@ -129,7 +129,7 @@ function playerItem(player) {
     label: player.username,
     prefix: player.clan_tag ? `[${player.clan_tag}]` : null,
     prefixColor: player.clan_color,
-    sub: [nick, player.tier ? `тир ${player.tier}` : null].filter(Boolean).join(' · ') || 'Игрок',
+    sub: [nick, player.display_rank?.type === 'bridge' ? player.display_rank.label : (player.tier ? `тир ${player.tier}` : null)].filter(Boolean).join(' · ') || 'Игрок',
     tier: player.tier,
     avatar: player.avatar_url,
     to: userLink(player),

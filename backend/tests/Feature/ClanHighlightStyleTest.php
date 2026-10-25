@@ -235,7 +235,10 @@ class ClanHighlightStyleTest extends TestCase
     {
         $this->seed(\Database\Seeders\ShopItemSeeder::class);
 
+        // Клановые предметы видит только лидер
         $user = User::factory()->create();
+        $clan = \App\Domains\Clan\Models\Clan::create(['name' => 'Витрина', 'tag' => 'VIT', 'leader_id' => $user->id]);
+        \App\Domains\Clan\Models\ClanMember::create(['clan_id' => $clan->id, 'user_id' => $user->id, 'role' => 'leader']);
 
         $items = collect(
             $this->actingAs($user)->getJson('/api/shop')->assertOk()->json('items')
@@ -244,6 +247,10 @@ class ClanHighlightStyleTest extends TestCase
         $styles = $items->where('type', 'clan_highlight_style');
 
         $this->assertGreaterThan(0, $styles->count());
+
+        $player = User::factory()->create();
+        $hidden = collect($this->actingAs($player)->getJson('/api/shop')->assertOk()->json('items'));
+        $this->assertCount(0, $hidden->filter(fn ($i) => str_starts_with($i['type'], 'clan_')));
 
         foreach ($styles as $style) {
             $this->assertArrayHasKey('effect_value', $style);

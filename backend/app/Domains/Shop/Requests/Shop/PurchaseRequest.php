@@ -11,6 +11,8 @@ class PurchaseRequest extends BaseFormRequest
         return [
             'tier_test_id' => ['nullable', 'integer', 'exists:tier_tests,id'],
             'quantity' => ['nullable', 'integer', 'min:1', 'max:10'],
+            // Клановый предмет лидер может оплатить из казны клана
+            'pay_from' => ['nullable', 'in:balance,treasury'],
         ];
     }
 

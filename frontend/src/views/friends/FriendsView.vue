@@ -1,4 +1,5 @@
 <script setup>
+import { rankLabel } from '@/utils/playerStyling.js'
 import PageLoader from '@/components/core/PageLoader.vue'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { onMounted, ref, computed } from 'vue'
@@ -93,7 +94,7 @@ const currentList = computed(() => {
             <div class="name">
               <UserName :user="user" />
             </div>
-            <div class="tier">Тир: {{ user.tier || '—' }}</div>
+            <div class="tier">{{ user.display_rank?.type === 'bridge' ? 'Звание' : 'Тир' }}: {{ rankLabel(user) }}</div>
           </div>
         </RouterLink>
 
