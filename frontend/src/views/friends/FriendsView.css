@@ -175,9 +175,40 @@ h1 {
     margin-bottom: 18px;
   }
 
+  /* Вкладки в одну строку: раньше подпись переносилась и от неё оставалось «(9)» */
+  .tabs {
+    gap: 0;
+  }
+
+  .tabs button {
+    flex: 1;
+    padding: 10px 6px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  /* Кнопки — отдельной строкой под игроком: иначе имя и тир сжимались до буквы */
   .friend-row {
+    flex-wrap: wrap;
     padding: 10px 12px;
     gap: 10px;
+  }
+
+  .friend-main {
+    flex-basis: 100%;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  /* GiftCoinsButton — фрагмент (кнопка + Teleport), scoped-атрибут на него не ставится */
+  .actions :deep(.gift-btn),
+  .btn-accept,
+  .btn-remove {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
   }
 
   .avatar {

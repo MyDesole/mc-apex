@@ -71,7 +71,7 @@ export function renderPlayerCard({ user, rank = null, aspects = null, skin = nul
     drawBrand(ctx)
     drawRank(ctx, rank)
     drawTierColumn(ctx, tier, tierColor, score)
-    drawFigure(ctx, user, skin, avatar)
+    drawPortrait(ctx, user, skin, avatar, theme, accent)
     drawIdentity(ctx, user, theme)
     drawAspects(ctx, aspects, accent)
     drawFooter(ctx)
@@ -94,37 +94,6 @@ function drawBackground(ctx, theme, accent) {
     ctx.fillStyle = accent
     ctx.fillRect(0, 0, CARD_WIDTH, 8)
 
-    // Постамент под фигурой: шахматка, как у блока без текстуры
-    const px = 300
-    const py = 40
-    const pw = 268
-    const ph = 452
-    const cell = 26
-
-    ctx.save()
-    roundRect(ctx, px, py, pw, ph, 12)
-    ctx.clip()
-
-    for (let y = py; y < py + ph; y += cell) {
-        for (let x = px; x < px + pw; x += cell) {
-            const even = ((x - px) / cell + (y - py) / cell) % 2 === 0
-
-            ctx.globalAlpha = even ? 1 : (theme.panelAltAlpha ?? 1)
-            ctx.fillStyle = even ? theme.panel : theme.panelAlt
-            ctx.fillRect(x, y, cell, cell)
-        }
-    }
-
-    ctx.globalAlpha = 1
-
-    // Мягкое затемнение к низу постамента — в цвет фона карточки
-    const fade = ctx.createLinearGradient(0, py, 0, py + ph)
-    fade.addColorStop(0, withAlpha(theme.bg, 0))
-    fade.addColorStop(1, withAlpha(theme.bg, 0.75))
-    ctx.fillStyle = fade
-    ctx.fillRect(px, py, pw, ph)
-
-    ctx.restore()
     ctx.restore()
 
     // Рамка
@@ -203,52 +172,57 @@ function drawTierColumn(ctx, tier, tierColor, score) {
     ctx.fillText('очков тира', 32, 350)
 }
 
-function drawFigure(ctx, user, skin, avatar) {
-    const centerX = 434
-    const top = 70
-    const height = 400
-
-    ctx.imageSmoothingEnabled = false
-
-    if (skin?.image) {
-        const figure = renderSkinFront(skin.image, { model: skin.model, scale: 16 })
-        const width = (figure.width / figure.height) * height
-
-        // Тень под ногами
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)'
-        ctx.beginPath()
-        ctx.ellipse(centerX, top + height + 4, width * 0.42, 9, 0, 0, Math.PI * 2)
-        ctx.fill()
-
-        ctx.drawImage(figure, centerX - width / 2, top, width, height)
-
-        return
-    }
-
-    // Скина нет — аватар или первая буква ника
-    const size = 180
-    const x = centerX - size / 2
-    const y = top + 90
+/**
+ * Портрет в круге: скин по грудь, как аватар профиля — голова и плечи,
+ * низ обрезан кругом. Кольцо в цвет темы или тира.
+ * Раньше рисовалась фигура в полный рост на шахматном постаменте —
+ * мелко и пусто по бокам.
+ */
+function drawPortrait(ctx, user, skin, avatar, theme, accent) {
+    const cx = 434
+    const cy = 270
+    const r = 130
 
     ctx.save()
-    roundRect(ctx, x, y, size, size, 14)
+    ctx.beginPath()
+    ctx.arc(cx, cy, r, 0, Math.PI * 2)
     ctx.clip()
 
-    if (avatar) {
+    ctx.fillStyle = theme.panel
+    ctx.fillRect(cx - r, cy - r, r * 2, r * 2)
+
+    if (skin?.image) {
+        // Фигура 16×32 пикселя скина чуть шире круга: голова — около половины
+        // диаметра, плечи и руки уходят за кольцо, как у портрета
+        const unit = (r * 2 * 1.08) / 16
+        const figure = renderSkinFront(skin.image, { model: skin.model, scale: 16 })
+        const width = 16 * unit
+        const height = 32 * unit
+
+        ctx.imageSmoothingEnabled = false
+        ctx.drawImage(figure, cx - width / 2, cy - r + r * 2 * 0.12, width, height)
+    } else if (avatar) {
         ctx.imageSmoothingEnabled = true
-        ctx.drawImage(avatar, x, y, size, size)
+        ctx.drawImage(avatar, cx - r, cy - r, r * 2, r * 2)
     } else {
+        // Ни скина, ни аватара — первая буква ника
         ctx.fillStyle = C.accent
-        ctx.fillRect(x, y, size, size)
+        ctx.fillRect(cx - r, cy - r, r * 2, r * 2)
         ctx.fillStyle = '#fff'
-        ctx.font = `800 84px ${DISPLAY}`
+        ctx.font = `800 96px ${DISPLAY}`
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
-        ctx.fillText((user?.username || '?').charAt(0).toUpperCase(), centerX, y + size / 2)
+        ctx.fillText((user?.username || '?').charAt(0).toUpperCase(), cx, cy)
         ctx.textAlign = 'left'
     }
 
     ctx.restore()
+
+    ctx.beginPath()
+    ctx.arc(cx, cy, r, 0, Math.PI * 2)
+    ctx.strokeStyle = accent
+    ctx.lineWidth = 6
+    ctx.stroke()
 }
 
 function drawIdentity(ctx, user, theme) {
@@ -351,13 +325,6 @@ function drawFooter(ctx) {
 
 /* ------------------------------ Помощники ------------------------------ */
 
-/** #rrggbb → rgba с прозрачностью. */
-function withAlpha(hex, alpha) {
-    const value = /^#([0-9a-f]{6})$/i.exec(hex)?.[1] ?? '16141c'
-    const [r, g, b] = [0, 2, 4].map((i) => parseInt(value.slice(i, i + 2), 16))
-
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`
-}
 
 /** Знак APEX — тот же блок, что в шапке сайта. */
 function drawCube(ctx, x, y, size) {
