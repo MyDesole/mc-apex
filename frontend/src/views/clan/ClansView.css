@@ -203,8 +203,8 @@
   grid-template-columns:
     56px
     minmax(0, 1fr)
-    90px
-    82px;
+    72px
+    132px;
 
   align-items: center;
 
@@ -538,6 +538,8 @@
 .clan-stat > span {
   margin-top: 4px;
 
+  white-space: nowrap;
+
   color: var(--text-muted);
 
   font-size: 12px;
@@ -581,16 +583,12 @@
    ============================================================ */
 
 .effect-label {
-  position: absolute;
+  padding: 2px 7px;
 
-  top: 8px;
-  right: 10px;
+  border: 1px solid color-mix(in srgb, var(--clan-color) 35%, transparent);
+  border-radius: 4px;
 
-  padding: 3px 6px;
-
-  border-radius: 5px;
-
-  background: rgba(0,0,0,.22);
+  background: color-mix(in srgb, var(--clan-color) 12%, transparent);
 
   color: color-mix(
       in srgb,
@@ -598,14 +596,11 @@
       var(--text)
   );
 
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
 
-  letter-spacing: 0;
-
-  opacity: .65;
-
-  pointer-events: none;
+  white-space: nowrap;
 }
 
 /* ============================================================

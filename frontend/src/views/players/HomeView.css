@@ -504,9 +504,24 @@ a.leader:hover {
   color: var(--accent-light);
 }
 
+/*
+ * Главная новость — горизонтальная карточка на всю ширину: обложка
+ * слева без обрезки (16:9), текст справа. Раньше она занимала 2×2
+ * ячейки и растягивалась под соседние карточки с пустотой под текстом.
+ */
 .news-card--featured {
-  grid-column: span 2;
-  grid-row: span 2;
+  grid-column: 1 / -1;
+  flex-direction: row;
+}
+
+.news-card--featured .news-card__cover {
+  flex-shrink: 0;
+  width: 56%;
+}
+
+.news-card--featured .news-card__body {
+  justify-content: center;
+  padding: 24px 28px;
 }
 
 .news-card__cover {
@@ -852,7 +867,15 @@ a.leader:hover {
 
   .news-card--featured {
     grid-column: auto;
-    grid-row: auto;
+    flex-direction: column;
+  }
+
+  .news-card--featured .news-card__cover {
+    width: auto;
+  }
+
+  .news-card--featured .news-card__body {
+    padding: 16px 18px 18px;
   }
 
   .rank-row {

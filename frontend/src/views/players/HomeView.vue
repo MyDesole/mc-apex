@@ -20,6 +20,13 @@ const players = ref([])
 const clans = ref([])
 const news = ref([])
 
+// Главная новость на всю ширину, под ней — полные ряды по три без дыр
+const visibleNews = computed(() => {
+  const rest = news.value.length - 1
+  if (rest < 3) return news.value
+  return news.value.slice(0, 1 + rest - (rest % 3))
+})
+
 const typeLabels = {
   news: 'Новость',
   update: 'Обновление',
@@ -271,7 +278,7 @@ onMounted(async () => {
 
         <div class="news-grid">
           <RouterLink
-              v-for="(item, index) in news"
+              v-for="(item, index) in visibleNews"
               :key="item.id"
               :to="`/news/${item.id}`"
               class="news-card"

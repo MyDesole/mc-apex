@@ -142,6 +142,14 @@
             >
               Мой
             </span>
+
+            <!-- Эффект выделения — чипом рядом с названием, а не поверх статистики -->
+            <span
+                v-if="isHighlighted(clan)"
+                class="effect-label"
+            >
+              {{ effectLabel(effectiveClanEffect(clan)) }}
+            </span>
           </div>
 
           <p class="clan-description">
@@ -199,17 +207,6 @@
           <span>
             Победы / поражения
           </span>
-        </div>
-
-        <!-- ========================================================
-             EFFECT NAME
-             ======================================================== -->
-
-        <div
-            v-if="isHighlighted(clan)"
-            class="effect-label"
-        >
-          {{ effectLabel(effectiveClanEffect(clan)) }}
         </div>
       </article>
     </div>
