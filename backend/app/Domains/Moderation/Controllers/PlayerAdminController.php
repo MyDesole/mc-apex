@@ -232,14 +232,50 @@ class PlayerAdminController extends Controller
         }
     }
 
+    /**
+     * Завершить все сессии игрока. На проде сессии в файлах
+     * (SESSION_DRIVER=file) — там ищем файлы с id игрока в ключе входа.
+     */
     private function revokeSessions(User $user): void
     {
-        if (config('session.driver') === 'database') {
-            DB::table(config('session.table', 'sessions'))->where('user_id', $user->id)->delete();
-        }
+        match (config('session.driver')) {
+            'database' => DB::table(config('session.table', 'sessions'))->where('user_id', $user->id)->delete(),
+            'file' => $this->revokeFileSessions($user),
+            default => null,
+        };
 
         if (method_exists($user, 'tokens')) {
             $user->tokens()->delete();
+        }
+    }
+
+    private function revokeFileSessions(User $user): void
+    {
+        $path = config('session.files');
+
+        if (! $path || ! is_dir($path)) {
+            return;
+        }
+
+        foreach (glob($path.'/*') ?: [] as $file) {
+            $raw = @file_get_contents($file);
+
+            if ($raw === false || ! str_contains($raw, 'login_web_')) {
+                continue;
+            }
+
+            $data = @unserialize($raw, ['allowed_classes' => false]);
+
+            if (! is_array($data)) {
+                continue;
+            }
+
+            foreach ($data as $key => $value) {
+                if (str_starts_with((string) $key, 'login_web_') && (int) $value === $user->id) {
+                    @unlink($file);
+                    break;
+                }
+            }
         }
     }
 }

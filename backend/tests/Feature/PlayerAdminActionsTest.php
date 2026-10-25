@@ -96,6 +96,26 @@ class PlayerAdminActionsTest extends TestCase
         $this->assertSame(5, ModerationLog::where('target_user_id', $this->player->id)->count());
     }
 
+    public function test_logout_everywhere_deletes_file_sessions_of_this_player_only(): void
+    {
+        $dir = storage_path('framework/testing-sessions');
+        @mkdir($dir, 0777, true);
+        config(['session.driver' => 'file', 'session.files' => $dir]);
+
+        $mine = $dir.'/player-session';
+        $other = $dir.'/other-session';
+        file_put_contents($mine, serialize(['login_web_abc' => $this->player->id, '_token' => 'x']));
+        file_put_contents($other, serialize(['login_web_abc' => $this->admin->id]));
+
+        $this->actingAs($this->admin)->postJson("/api/admin/users/{$this->player->id}/logout-everywhere")->assertOk();
+
+        $this->assertFileDoesNotExist($mine);
+        $this->assertFileExists($other);
+
+        @unlink($other);
+        @rmdir($dir);
+    }
+
     public function test_referrals_in_dossier_and_admin_section(): void
     {
         $friend = User::factory()->create(['referred_by' => $this->player->id, 'tier_score' => 40]);
