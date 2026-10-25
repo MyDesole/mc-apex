@@ -18,12 +18,26 @@ import ForumView from '@/views/forum/ForumView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
-  // Якоря вида /rules#rating: ждём, пока ленивая страница отрисуется после перехода
-  scrollBehavior(to) {
-    if (!to.hash) return undefined
-    return new Promise((resolve) => {
-      setTimeout(() => resolve({ el: to.hash, top: 80, behavior: 'smooth' }), 350)
-    })
+  /*
+   * Прокрутка при переходах:
+   * - «Назад/вперёд» — туда, где был пользователь;
+   * - якорь (/rules#rating) — к блоку, когда ленивая страница отрисуется;
+   * - смена только query/hash той же страницы (фильтры, вкладки) — не дёргаем;
+   * - любой другой переход — в начало страницы. Раньше позиция сохранялась,
+   *   и, открыв клан из середины списка, человек оказывался внизу.
+   */
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return savedPosition
+
+    if (to.hash) {
+      return new Promise((resolve) => {
+        setTimeout(() => resolve({ el: to.hash, top: 80, behavior: 'smooth' }), 350)
+      })
+    }
+
+    if (to.path === from.path) return false
+
+    return { top: 0 }
   },
   routes: [
     { path: '/', name: 'home', component: HomeView, meta: { title: 'Главная' } },

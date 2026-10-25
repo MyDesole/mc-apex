@@ -5,6 +5,7 @@ import { api } from '@/services/core/api.js'
 import { playersApi } from '@/services/players/players.js'
 import { userLink } from '@/utils/links.js'
 import RatingPodium from '@/components/players/RatingPodium.vue'
+import ClanRanking from '@/components/clan/ClanRanking.vue'
 import TabTransition from '@/components/core/TabTransition.vue'
 import {
   accent,
@@ -24,6 +25,8 @@ const loading = ref(true)
 const CATEGORIES = [
   { value: 'pvp', label: 'PvP', color: '#ef4444' },
   { value: 'other', label: 'Не PvP', color: '#06b6d4' },
+  // Свой компонент и свой источник данных — ClanRanking
+  { value: 'clans', label: 'Кланы', color: '#facc15' },
 ]
 
 const PVP_MODES = [
@@ -55,6 +58,12 @@ const rankingMode = computed(() =>
 )
 
 async function load() {
+  // Рейтинг кланов грузит ClanRanking сам
+  if (category.value === 'clans') {
+    loading.value = false
+    return
+  }
+
   loading.value = true
   cursor.value = null
   hasMore.value = false
@@ -116,6 +125,8 @@ function showMoreRendered() {
  * подошёл к концу видимого списка.
  */
 function onWindowScroll() {
+  if (category.value === 'clans') return
+
   const scrolled = window.innerHeight + window.scrollY
   const total = document.documentElement.scrollHeight
 
@@ -223,6 +234,23 @@ function scorePercent(player) {
             <path d="M3 21l2-2" />
           </svg>
 
+          <!-- Кланы: флаг -->
+          <svg
+              v-else-if="c.value === 'clans'"
+              class="mode-tab__icon"
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+          >
+            <path d="M4 22V4" />
+            <path d="M4 4h12l-2 4 2 4H4" />
+          </svg>
+
           <svg
               v-else
               class="mode-tab__icon"
@@ -271,11 +299,17 @@ function scorePercent(player) {
     </div>
 
     <!-- =========================================================
+         КЛАНЫ — отдельная таблица
+         ========================================================= -->
+
+    <ClanRanking v-if="category === 'clans'" />
+
+    <!-- =========================================================
          LOADING
          ========================================================= -->
 
     <div
-        v-if="loading"
+        v-else-if="loading"
         class="state"
     >
       <div class="spinner" />

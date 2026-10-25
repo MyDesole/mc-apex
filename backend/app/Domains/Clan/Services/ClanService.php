@@ -39,32 +39,73 @@ class ClanService
     /**
      * Список кланов по силе с числом участников.
      */
-    public function list(?string $search, ?User $me = null): LengthAwarePaginator
+    /** Сортировки списка кланов: ключ из запроса → описание для фронтенда. */
+    public const SORTS = ['power', 'members', 'wins', 'winrate', 'rating', 'new', 'name'];
+
+    /**
+     * @param  array{search?: ?string, sort?: ?string, open?: bool, has_slots?: bool}  $filters
+     */
+    public function list(array $filters, ?User $me = null): LengthAwarePaginator
     {
         // id своего клана: фронтенд по нему ведёт клик во вкладку «Мой клан»
         $myClanId = $me?->clanMember?->clan_id;
 
-        $clans = Clan::query()
+        $search = trim((string) ($filters['search'] ?? ''));
+        $sort = in_array($filters['sort'] ?? null, self::SORTS, true) ? $filters['sort'] : 'power';
+
+        // Средние очки рейтинга участников без персонала — «уровень» клана
+        $avgRating = '(SELECT COALESCE(AVG(u.rating_points), 0) FROM clan_members cm
+            JOIN users u ON u.id = cm.user_id
+            WHERE cm.clan_id = clans.id AND u.role NOT IN ('.implode(',', array_map(
+                fn ($role) => "'{$role}'", User::STAFF_ROLES,
+            )).'))';
+        $winrate = 'CASE WHEN (clans.wins + clans.losses) = 0 THEN 0
+            ELSE clans.wins * 1.0 / (clans.wins + clans.losses) END';
+
+        $query = Clan::query()
+            ->select('clans.*')
+            ->selectRaw("{$avgRating} AS avg_rating")
+            ->withCount('members')
             ->with('leader:id,username,avatar')
-            ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('tag', 'like', "%{$search}%");
+            ->where('is_banned', false)
+            ->when($search !== '', function ($query) use ($search) {
+                $like = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $search).'%';
+                $query->where(function ($q) use ($like) {
+                    $q->whereRaw("name LIKE ? ESCAPE '!'", [$like])
+                        ->orWhereRaw("tag LIKE ? ESCAPE '!'", [$like]);
                 });
             })
-            ->orderByDesc('power')
-            ->paginate(self::PER_PAGE);
+            ->when(! empty($filters['open']), fn ($q) => $q->where('is_open', true))
+            ->when(! empty($filters['has_slots']), fn ($q) => $q->whereRaw(
+                '(SELECT COUNT(*) FROM clan_members cm WHERE cm.clan_id = clans.id) < clans.max_members'
+            ));
 
-        $counts = $this->memberCounts($clans->pluck('id'));
+        match ($sort) {
+            'members' => $query->orderByDesc('members_count'),
+            'wins' => $query->orderByDesc('wins')->orderBy('losses'),
+            'winrate' => $query->orderByRaw("{$winrate} DESC")->orderByDesc('wins'),
+            'rating' => $query->orderByRaw("{$avgRating} DESC"),
+            'new' => $query->orderByDesc('clans.created_at'),
+            'name' => $query->orderBy('name'),
+            default => $query->orderByDesc('power'),
+        };
+
+        $clans = $query->orderBy('clans.id')->paginate(self::PER_PAGE);
+
+        $offset = ($clans->currentPage() - 1) * $clans->perPage();
 
         // Отдаём через ресурс: он считает признак подсветки с учётом срока
         // и отдаёт цвет с эффектом. Ручной transform этого не делал,
         // поэтому истёкшая подсветка продолжала подсвечиваться.
-        $clans->through(function (Clan $clan) use ($counts, $myClanId) {
-            $clan->members_count = (int) ($counts[$clan->id] ?? 0);
+        $clans->through(function (Clan $clan, $i) use ($myClanId, $offset) {
             $clan->my_clan_id = $clan->id === $myClanId ? $myClanId : null;
 
-            return (new ClanCardResource($clan))->resolve();
+            return [
+                ...(new ClanCardResource($clan))->resolve(),
+                // Место в текущей сортировке — для таблицы рейтинга кланов
+                'position' => $offset + $i + 1,
+                'avg_rating' => (int) round((float) $clan->avg_rating),
+            ];
         });
 
         return $clans;
