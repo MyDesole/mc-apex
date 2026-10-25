@@ -64,8 +64,11 @@ chown -R "$WEB_USER":"$WEB_USER" "$APP_DIR/backend/storage" "$APP_DIR/backend/bo
 
 log "Перезапуск сервисов"
 cd "$APP_DIR/backend"
+# Мягкий перезапуск: процесс сам выходит после текущей задачи, supervisor
+# поднимает его заново. «supervisorctl restart all» ждал до stopwaitsecs=3600
+# и держал сайт в режиме обслуживания, пока кто-то сидел в чате.
 php artisan queue:restart
-supervisorctl restart all
+php artisan reverb:restart
 systemctl reload php8.4-fpm
 
 log "Готово: $(git -C "$APP_DIR" log --oneline -1)"
