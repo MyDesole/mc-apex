@@ -34,7 +34,32 @@ export const PROFILE_EFFECTS = [
     { id: 'fire', name: 'Огонь', gradient: 'linear-gradient(135deg, #ef4444, #f97316, #facc15)', rarity: 'epic' },
     { id: 'ice', name: 'Лёд', gradient: 'linear-gradient(135deg, #06b6d4, #a5f3fc, #06b6d4)', rarity: 'epic' },
     { id: 'legendary', name: 'Легендарный', gradient: 'linear-gradient(135deg, #facc15, #f97316)', rarity: 'legendary', animated: true },
+
+    /*
+     * Эффекты-слои в стиле Minecraft: рисует ProfileEffectLayer.
+     * particles — сколько частиц, size/duration — разброс [min, max],
+     * sheet — полотно поверх (блеск, сияние, кольца).
+     */
+    { id: 'rain', name: 'Дождь', color: '#60a5fa', rarity: 'common', layer: { particles: 30, size: [2, 2], duration: [0.7, 1.2], streak: true } },
+    { id: 'snow', name: 'Снегопад', color: '#e0f2fe', rarity: 'rare', layer: { particles: 22, size: [3, 5], duration: [6, 11] } },
+    { id: 'embers', name: 'Искры Незера', color: '#f97316', color2: '#fde047', rarity: 'rare', layer: { particles: 18, size: [2, 4], duration: [3.5, 7] } },
+    { id: 'redstone', name: 'Редстоун-пыль', color: '#ef4444', rarity: 'rare', layer: { particles: 20, size: [3, 4], duration: [1.6, 3.2] } },
+    { id: 'ender', name: 'Частицы Края', color: '#c084fc', rarity: 'epic', layer: { particles: 20, size: [3, 5], duration: [5, 9] } },
+    { id: 'xp', name: 'Опыт', color: '#a3e635', color2: '#4d7c0f', rarity: 'epic', layer: { particles: 12, size: [6, 9], duration: [4, 7] } },
+    { id: 'enchant', name: 'Зачарование', color: '#a78bfa', color2: '#f0abfc', rarity: 'epic', layer: { sheet: true } },
+    { id: 'aurora', name: 'Северное сияние', color: '#34d399', color2: '#22d3ee', rarity: 'legendary', layer: { sheet: true } },
+    { id: 'sculk', name: 'Скалк', color: '#2dd4bf', rarity: 'legendary', layer: { sheet: true, particles: 10, size: [2, 3], duration: [3, 6] } },
 ]
+
+/**
+ * Настройки слоя эффекта для ProfileEffectLayer или null, если эффект
+ * рисуется стилями шапки (свечение, огонь и прочие первые эффекты).
+ */
+export function layerEffect(id) {
+    const effect = PROFILE_EFFECTS.find((e) => e.id === id && e.layer)
+
+    return effect ? { ...effect.layer, color: effect.color, color2: effect.color2 } : null
+}
 
 export const ACCENT_COLORS = [
     '#7c3aed', '#8b5cf6', '#06b6d4', '#22c55e',

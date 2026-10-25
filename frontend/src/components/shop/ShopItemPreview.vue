@@ -10,7 +10,8 @@
 import { computed, onMounted, ref } from 'vue'
 
 import AppIcon from '@/components/core/AppIcon.vue'
-import { frameById } from '@/data/players/profileCustomization.js'
+import { frameById, layerEffect } from '@/data/players/profileCustomization.js'
+import ProfileEffectLayer from '@/components/players/ProfileEffectLayer.vue'
 import { cardTheme } from '@/data/shop/cosmetics.js'
 import { loadSkin, renderSkinHead } from '@/utils/minecraftSkin.js'
 import { useAuthStore } from '@/stores/core/auth.js'
@@ -37,6 +38,8 @@ const frameStyle = computed(() => {
 })
 
 const theme = computed(() => (props.item.type === 'card_theme' ? cardTheme(value.value) : null))
+
+const hasLayer = computed(() => !!layerEffect(value.value))
 
 const initial = computed(() => (auth.user?.username || 'A').charAt(0).toUpperCase())
 
@@ -87,6 +90,15 @@ onMounted(async () => {
       <span class="preview__card-figure" />
       <span class="preview__card-line" />
       <span class="preview__card-line preview__card-line--short" />
+    </div>
+
+    <!-- Эффект профиля: живой слой на мини-шапке -->
+    <div
+        v-else-if="item.type === 'profile_effect' && hasLayer"
+        class="preview__header"
+    >
+      <ProfileEffectLayer :effect="value" :density="0.6" />
+      <span class="preview__header-name">{{ auth.user?.username || 'Игрок' }}</span>
     </div>
 
     <!-- Акцентный цвет -->
@@ -261,6 +273,34 @@ onMounted(async () => {
   bottom: 10px;
   right: 30px;
   opacity: 0.5;
+}
+
+/* ---------- Эффект профиля ---------- */
+
+.preview--profile_effect {
+  background: #121019;
+}
+
+.preview__header {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: flex-end;
+
+  padding: 14px;
+}
+
+.preview__header-name {
+  position: relative;
+  z-index: 5;
+
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
 }
 
 /* ---------- Цвет ---------- */

@@ -1,5 +1,5 @@
 import { TIER_COLORS } from '@/composables/players/useTier.js'
-import { frameById } from '@/data/players/profileCustomization.js'
+import { frameById, PROFILE_EFFECTS } from '@/data/players/profileCustomization.js'
 
 /**
  * Общие хелперы оформления игрока.
@@ -114,7 +114,10 @@ export function profileEffectStyle(player) {
     pulse: '#06b6d4',
   }
 
-  return colors[effect] ? { '--effect-color': colors[effect] } : {}
+  // Эффекты-слои берут цвет из своих настроек
+  const color = colors[effect] ?? PROFILE_EFFECTS.find((e) => e.id === effect)?.color
+
+  return color ? { '--effect-color': color } : {}
 }
 
 /** Легендарный эффект: рамка карточки подсвечивается особым образом. */

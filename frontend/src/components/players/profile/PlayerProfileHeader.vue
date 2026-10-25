@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { tierColor } from '@/composables/players/useTier.js'
 import AppIcon from '@/components/core/AppIcon.vue'
+import ProfileEffectLayer from '@/components/players/ProfileEffectLayer.vue'
 import {
   AVATAR_FRAMES,
   PROFILE_EFFECTS,
@@ -420,8 +421,15 @@ const coverStyle = computed(() => {
          Works for both normal and compact modes
          ===================================================== -->
 
+    <!-- Эффекты-слои (снег, искры, сияние…) — свой компонент с частицами -->
+    <ProfileEffectLayer
+        v-if="hasProfileEffect && profileEffect.layer"
+        :effect="effectId"
+        :density="compact ? 0.5 : 1"
+    />
+
     <div
-        v-if="hasProfileEffect"
+        v-else-if="hasProfileEffect"
         class="profile-header__effect"
         aria-hidden="true"
     />
