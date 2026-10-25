@@ -95,6 +95,16 @@ select {
     font-family: inherit;
 }
 
+/*
+ * Пункты выпадающего списка браузер рисует сам. У полупрозрачного
+ * селекта Chrome берёт светло-серый фон — задаём тёмный явно.
+ */
+select option,
+select optgroup {
+    background: var(--bg-card);
+    color: var(--text);
+}
+
 a {
     color: inherit;
     text-decoration: none;
@@ -251,6 +261,30 @@ h3 {
     font-size: 14px;
     font-weight: 800;
     line-height: 1;
+}
+
+/*
+ * Звание бриджера на месте тира: текст длинный («Bridge Профи»),
+ * поэтому блок тянется по ширине, а не остаётся квадратом.
+ * Двойной класс перебивает размеры конкретных мест (.leader__tier и т. п.).
+ */
+.tier-block.tier-block--rank {
+    width: auto;
+    max-width: 100%;
+    min-width: 32px;
+    height: 26px;
+    padding: 0 10px;
+
+    color: #fff;
+    background: color-mix(in srgb, var(--tier) 22%, transparent);
+    border: 1px solid var(--tier);
+    box-shadow: none;
+
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* =========================================================

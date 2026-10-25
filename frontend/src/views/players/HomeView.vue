@@ -8,7 +8,7 @@ import BrandCube from '@/components/core/BrandCube.vue'
 import LiveFeed from '@/components/activity/LiveFeed.vue'
 import { tierColors } from '@/data/players/profileCustomization.js'
 import { userLink, clanLink } from '@/utils/links.js'
-import { rankColor, rankLabel } from '@/utils/playerStyling.js'
+import { bridgeRankOf, rankColor, rankLabel } from '@/utils/playerStyling.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 
 const auth = useAuthStore()
@@ -191,6 +191,7 @@ onMounted(async () => {
 
             <span
                 class="tier-block leader__tier"
+                :class="{ 'tier-block--rank': bridgeRankOf(leader) }"
                 :style="{ '--tier': playerTierColor(leader) }"
             >
               {{ rankLabel(leader) }}
@@ -390,6 +391,7 @@ onMounted(async () => {
 
                 <span
                     class="tier-block rank-row__tier"
+                    :class="{ 'tier-block--rank': bridgeRankOf(player) }"
                     :style="{ '--tier': playerTierColor(player) }"
                 >
                   {{ rankLabel(player) }}
