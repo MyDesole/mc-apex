@@ -289,8 +289,10 @@ class ShopItemSeeder extends Seeder
             ],
         ];
 
+        // Только добавляем недостающие товары: цены и видимость, изменённые
+        // в админке, повторный запуск на проде не перетирает
         foreach ($items as $item) {
-            ShopItem::updateOrCreate(
+            ShopItem::firstOrCreate(
                 ['slug' => $item['slug']],
                 array_merge([
                     'is_active' => true,
