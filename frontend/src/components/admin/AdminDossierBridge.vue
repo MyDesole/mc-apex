@@ -24,7 +24,15 @@ const selectedId = ref(null)
 const selected = computed(() => data.value?.submissions.find((s) => s.id === selectedId.value) ?? null)
 
 async function load() {
-  data.value = await bridgeAdminApi.player(props.userId)
+  const result = await bridgeAdminApi.player(props.userId).catch(() => null)
+
+  // Пустой или неудачный ответ — показываем пустой блок, а не падаем
+  data.value = {
+    submissions: [],
+    ranks: [],
+    summary: { confirmed_count: 0, aspects_total: 0 },
+    ...(result ?? {}),
+  }
   rankId.value = data.value.rank?.id ?? null
   // Выбранную заявку сохраняем, если она ещё есть, иначе берём первую
   if (!data.value.submissions.some((s) => s.id === selectedId.value)) {

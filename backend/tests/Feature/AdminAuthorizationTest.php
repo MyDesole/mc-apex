@@ -175,15 +175,10 @@ class AdminAuthorizationTest extends TestCase
     }
 
     /**
-     * ПРЕ-СУЩЕСТВУЮЩИЙ БАГ (не чиним, только фиксируем поведение).
-     *
-     * EnsureUserIsNotBanned вызывает $user->currentAccessToken()?->delete().
-     * Для сессионной (SPA, cookie-based) аутентификации Sanctum подставляет
-     * Laravel\Sanctum\TransientToken, у которого НЕТ метода delete() — вместо
-     * аккуратного 403 «Ваш аккаунт забанен.» летит фатальный Error (500).
-     * Токенная аутентификация (см. тест выше) работает корректно.
+     * Вход через сайт (сессия): у Sanctum тут TransientToken без delete().
+     * Раньше middleware падал на нём с 500 — теперь аккуратный 403.
      */
-    public function test_banned_session_user_currently_crashes_instead_of_403(): void
+    public function test_banned_session_user_gets_403_instead_of_crash(): void
     {
         $banned = User::factory()->create([
             'role' => 'admin',
@@ -193,13 +188,9 @@ class AdminAuthorizationTest extends TestCase
 
         $this->actingAs($banned);
 
-        $response = $this->getJson('/api/admin/users');
-
-        // Текущее (некорректное) поведение: 500 с текстом фатальной ошибки
-        $response->assertStatus(500);
-        $this->assertStringContainsString(
-            'TransientToken::delete()',
-            (string) $response->json('message')
-        );
+        $this->getJson('/api/admin/users')
+            ->assertForbidden()
+            ->assertJsonPath('message', 'Ваш аккаунт забанен.')
+            ->assertJsonPath('reason', 'Спам');
     }
 }

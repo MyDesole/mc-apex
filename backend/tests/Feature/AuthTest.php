@@ -528,21 +528,17 @@ class AuthTest extends TestCase
     }
 
     /**
-     * ТЕКУЩЕЕ ПОВЕДЕНИЕ (баг): для пользователя, вошедшего по сессии/куке,
-     * currentAccessToken() — это Laravel\Sanctum\TransientToken, у которого нет
-     * метода delete(). Middleware падает с 500 вместо 403.
+     * Вход по сессии/куке: currentAccessToken() — TransientToken без delete().
+     * Middleware больше не падает с 500, а отвечает 403 и завершает сессию.
      */
-    public function test_banned_session_user_gets_500_instead_of_403(): void
+    public function test_banned_session_user_gets_403_and_is_logged_out(): void
     {
         $banned = User::factory()->create(['is_banned' => true, 'ban_reason' => 'читы']);
 
-        $response = $this->actingAs($banned)->getJson('/api/auth/me');
-
-        $response->assertStatus(500);
-        $this->assertStringContainsString(
-            'TransientToken::delete()',
-            (string) $response->json('message')
-        );
+        $this->actingAs($banned)->getJson('/api/auth/me')
+            ->assertForbidden()
+            ->assertJsonPath('message', 'Ваш аккаунт забанен.')
+            ->assertJsonPath('reason', 'читы');
     }
 
     public function test_expired_ban_does_not_block_the_user(): void
