@@ -2,7 +2,15 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+/*
+ * Планировщик. На сервере его запускает cron раз в минуту (deploy/cron).
+ * Только уборка: упавшие задачи очереди и протухшие токены не копятся вечно.
+ */
+Schedule::command('queue:prune-failed --hours=168')->daily()->at('03:30');
+Schedule::command('sanctum:prune-expired --hours=24')->daily()->at('03:40');

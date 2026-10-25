@@ -20,8 +20,12 @@ import './assets/content-page.css'
 import './echo'
 
 import { useAuthStore } from '@/stores/core/auth.js'
+import { initSentry, setSentryUser } from '@/sentry.js'
+import { watch } from 'vue'
 
 const app = createApp(App)
+
+initSentry(app, router)
 
 const pinia = createPinia()
 
@@ -31,6 +35,8 @@ app.use(router)
 const auth = useAuthStore(pinia)
 
 await auth.fetchMe()
+
+watch(() => auth.user?.id, () => setSentryUser(auth.user), { immediate: true })
 
 router.beforeEach((to) => {
     if (to.meta.auth && !auth.isAuthenticated) {

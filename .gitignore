@@ -26,6 +26,7 @@
 /backend/.env
 /frontend/.env
 /frontend/.env.*
+!/frontend/.env.example
 
 # Временные артефакты правок
 *.apex-bak

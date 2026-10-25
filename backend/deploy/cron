@@ -1,0 +1,11 @@
+# /etc/cron.d/apex — задачи APEX на сервере.
+# Ставится: cp backend/deploy/cron /etc/cron.d/apex
+
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Планировщик Laravel (routes/console.php)
+* * * * * www-data cd /var/www/mc-apex.ru/mc-apex/backend && php artisan schedule:run >> /dev/null 2>&1
+
+# Ночной бэкап базы в 04:10
+10 4 * * * root bash /var/www/mc-apex.ru/mc-apex/backend/deploy/backup.sh >> /var/log/apex-backup.log 2>&1
