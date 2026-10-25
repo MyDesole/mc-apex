@@ -20,6 +20,8 @@ const props = defineProps({
   position: { type: Number, required: true },
   // Подпись под карточкой; по умолчанию — «N место»
   baseLabel: { type: String, default: '' },
+  // Очки лидера — от них считается длина полоски (очки не ограничены сотней)
+  max: { type: Number, default: 0 },
 })
 
 const modifiers = {
@@ -45,12 +47,15 @@ const tierColor = computed(() => tierColors[props.entry?.tier] || '#a78bfa')
 const clanColor = computed(() => props.entry?.banner_color || '#7c3aed')
 
 /**
- * Балл игрока.
- *
- * На главной приходит tier_score, в рейтинге — rating_score,
- * поэтому берём то, что есть.
+ * Очки общего рейтинга (RatingService): на главной — rating_points,
+ * в списке рейтинга — rating_score.
  */
-const score = computed(() => Number(props.entry?.tier_score ?? props.entry?.rating_score ?? 0))
+const score = computed(() => Number(props.entry?.rating_points ?? props.entry?.rating_score ?? 0))
+
+const barWidth = computed(() => {
+  const max = props.max || score.value
+  return max > 0 ? Math.min(100, (score.value / max) * 100) : 0
+})
 
 /** Первая буква ника или тега, когда нет аватарки. */
 const initial = computed(() => {
@@ -123,9 +128,9 @@ const initial = computed(() => {
 
     <div v-else class="podium-card__score">
       <div class="podium-card__bar" aria-hidden="true">
-        <span :style="{ width: `${Math.min(score, 100)}%`, background: tierColor }" />
+        <span :style="{ width: `${barWidth}%`, background: tierColor }" />
       </div>
-      <span>{{ score }}%</span>
+      <span>{{ score }} оч.</span>
     </div>
   </RouterLink>
 </template>

@@ -148,7 +148,7 @@ onMounted(async () => {
               <li v-for="row in s.top" :key="row.rank">
                 <span class="tier-block season__tier" :style="{ '--tier': tierColors[row.tier] }">{{ row.tier }}</span>
                 <RouterLink v-if="row.user" :to="userLink(row.user)">{{ row.user.username }}</RouterLink>
-                <span class="season__score">{{ row.tier_score }}%</span>
+                <span class="season__score">{{ row.rating_points }} оч.</span>
               </li>
             </ol>
           </article>

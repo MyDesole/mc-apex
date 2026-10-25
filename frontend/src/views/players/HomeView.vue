@@ -65,8 +65,15 @@ const stats = computed(() => [
   { label: 'матчей', value: statsData.value.matches ?? 0 },
 ])
 
+/** Очки общего рейтинга — по ним же отсортирован топ. */
 function playerScore(player) {
-  return Number(player?.tier_score ?? 0)
+  return Number(player?.rating_points ?? 0)
+}
+
+/** Длина полоски: относительно лидера, очки не ограничены сотней. */
+function playerBar(player) {
+  const max = playerScore(players.value?.[0])
+  return max > 0 ? Math.min(100, (playerScore(player) / max) * 100) : 0
 }
 
 function playerTierColor(player) {
@@ -178,7 +185,7 @@ onMounted(async () => {
               <strong>
                 <UserName :user="leader" />
               </strong>
-              <span>{{ playerScore(leader) }}% очков тира</span>
+              <span>{{ playerScore(leader) }} очков рейтинга</span>
             </div>
 
             <span
@@ -344,6 +351,7 @@ onMounted(async () => {
                 :key="player.id"
                 :entry="player"
                 :position="index + 1"
+                :max="playerScore(leader)"
             />
           </div>
 
@@ -371,13 +379,13 @@ onMounted(async () => {
                 <span class="rank-row__progress" aria-hidden="true">
                   <span
                       :style="{
-                        width: `${Math.min(playerScore(player), 100)}%`,
+                        width: `${playerBar(player)}%`,
                         background: playerTierColor(player),
                       }"
                   />
                 </span>
 
-                <span class="rank-row__score">{{ playerScore(player) }}%</span>
+                <span class="rank-row__score">{{ playerScore(player) }}</span>
 
                 <span
                     class="tier-block rank-row__tier"

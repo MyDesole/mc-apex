@@ -67,7 +67,8 @@ export function renderPlayerCard({ user, rank = null, aspects = null, skin = nul
 
     const tier = user?.tier || 'E'
     const tierColor = tierColors[tier] || C.accentLight
-    const score = Math.round(Number(user?.tier_score ?? 0))
+    // Очки общего рейтинга по формуле (RatingService), а не процент тира
+    const score = Math.round(Number(user?.rating_points ?? 0))
 
     // Тема из магазина: фон, постамент и цвет полос; иначе — цвет тира
     const theme = cardTheme(user?.card_theme)
@@ -171,11 +172,11 @@ function drawTierColumn(ctx, tier, tierColor, score) {
     ctx.textBaseline = 'alphabetic'
     ctx.fillStyle = '#fff'
     ctx.font = `800 56px ${DISPLAY}`
-    ctx.fillText(`${score}%`, 32, 324)
+    ctx.fillText(String(score), 32, 324)
 
     ctx.fillStyle = C.muted
     ctx.font = `400 15px ${BODY}`
-    ctx.fillText('очков тира', 32, 350)
+    ctx.fillText('очков рейтинга', 32, 350)
 }
 
 /**
