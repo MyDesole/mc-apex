@@ -13,6 +13,7 @@ import AppIcon from '@/components/core/AppIcon.vue'
 import { frameById, layerEffect } from '@/data/players/profileCustomization.js'
 import ProfileEffectLayer from '@/components/players/ProfileEffectLayer.vue'
 import { cardTheme } from '@/data/shop/cosmetics.js'
+import { profileLayout } from '@/data/players/profileLayouts.js'
 import { loadSkin, renderSkinHead } from '@/utils/minecraftSkin.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 
@@ -38,6 +39,9 @@ const frameStyle = computed(() => {
 })
 
 const theme = computed(() => (props.item.type === 'card_theme' ? cardTheme(value.value) : null))
+
+// Макет профиля: мини-страница с расстановкой и цветами макета
+const layout = computed(() => (props.item.type === 'profile_layout' ? profileLayout(value.value) : null))
 
 const hasLayer = computed(() => !!layerEffect(value.value))
 
@@ -90,6 +94,34 @@ onMounted(async () => {
       <span class="preview__card-figure" />
       <span class="preview__card-line" />
       <span class="preview__card-line preview__card-line--short" />
+    </div>
+
+    <!-- Макет профиля: миниатюра страницы -->
+    <div
+        v-else-if="layout"
+        class="preview__page"
+        :class="`preview__page--${layout.arrangement}`"
+        :style="{
+          '--lp-page': layout.preview.page,
+          '--lp-card': layout.preview.card,
+          '--lp-side': layout.preview.side,
+          '--lp-accent': layout.preview.accent,
+          '--lp-line': layout.preview.line,
+        }"
+    >
+      <span class="preview__page-main">
+        <span class="preview__page-head">
+          <span class="preview__page-avatar" />
+          <span class="preview__page-name" />
+        </span>
+        <span class="preview__page-row" />
+        <span class="preview__page-row preview__page-row--short" />
+      </span>
+      <span class="preview__page-side">
+        <span class="preview__page-chip" />
+        <span class="preview__page-chip" />
+        <span class="preview__page-chip" />
+      </span>
     </div>
 
     <!-- Эффект профиля: живой слой на мини-шапке -->
@@ -273,6 +305,111 @@ onMounted(async () => {
   bottom: 10px;
   right: 30px;
   opacity: 0.5;
+}
+
+/* ---------- Макет профиля ---------- */
+
+.preview--profile_layout {
+  background: none;
+}
+
+.preview__page {
+  width: 100%;
+  height: 100%;
+  padding: 12px 16px;
+
+  display: grid;
+  grid-template-columns: 1fr 34%;
+  gap: 8px;
+
+  background: var(--lp-page);
+}
+
+.preview__page--left {
+  grid-template-columns: 34% 1fr;
+}
+
+.preview__page--left .preview__page-side {
+  order: -1;
+}
+
+.preview__page--top,
+.preview__page--bottom {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr auto;
+}
+
+.preview__page--top .preview__page-side {
+  order: -1;
+}
+
+.preview__page--top .preview__page-side,
+.preview__page--bottom .preview__page-side {
+  flex-direction: row;
+  padding: 5px;
+}
+
+.preview__page-main,
+.preview__page-side {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  padding: 7px;
+
+  border: 1px solid color-mix(in srgb, var(--lp-accent) 55%, transparent);
+  border-radius: 4px;
+}
+
+.preview__page-main {
+  background: var(--lp-card);
+}
+
+.preview__page-side {
+  background: var(--lp-side);
+}
+
+.preview__page-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.preview__page-avatar {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+
+  background: var(--lp-accent);
+  border-radius: 3px;
+}
+
+.preview__page-name,
+.preview__page-row {
+  height: 5px;
+  flex: 1;
+
+  background: var(--lp-line);
+  border-radius: 2px;
+  opacity: 0.85;
+}
+
+/* Строки текста — тонкие полоски, а не растянутые по высоте блоки */
+.preview__page-row {
+  flex: 0 0 5px;
+}
+
+.preview__page-row--short {
+  max-width: 60%;
+  opacity: 0.5;
+}
+
+.preview__page-chip {
+  flex: 1;
+  min-height: 9px;
+
+  background: color-mix(in srgb, var(--lp-accent) 40%, transparent);
+  border-radius: 2px;
 }
 
 /* ---------- Эффект профиля ---------- */

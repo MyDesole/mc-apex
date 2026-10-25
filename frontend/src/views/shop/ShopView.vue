@@ -29,6 +29,7 @@ const dailyBonusAmount = ref(0)
 
 const TABS = [
   { value: 'all', label: 'Всё' },
+  { value: 'profile_layout', label: 'Макеты профиля' },
   { value: 'tier_priority', label: 'Приоритет теста' },
   { value: 'avatar_frame', label: 'Рамки' },
   { value: 'skin_backdrop', label: 'Фоны скина' },

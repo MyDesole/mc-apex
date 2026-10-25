@@ -782,6 +782,7 @@ class ShopService
             ShopItem::TYPE_CARD_BACKGROUND => 'card_background',
             ShopItem::TYPE_SKIN_BACKDROP => 'skin_backdrop',
             ShopItem::TYPE_CARD_THEME => 'card_theme',
+            ShopItem::TYPE_PROFILE_LAYOUT => 'profile_layout',
             default => null,
         };
     }

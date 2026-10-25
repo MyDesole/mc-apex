@@ -45,11 +45,9 @@ class PlayerProfileService
         return [
             'user' => (new PlayerProfileResource($player))->resolve(),
 
-            // Режим профиля: от него зависит порядок блоков на странице.
-            // Бридж сильнее PvP и звание выдано — профиль бриджера, как и везде на сайте
-            'profile_mode' => $player->display_rank['type'] === 'bridge'
-                ? 'bridge'
-                : ($player->profile_mode ?? 'pvp'),
+            // Режим профиля выбирает сам игрок: от него зависит порядок блоков
+            // и звание бриджера вместо тира
+            'profile_mode' => $player->profile_mode ?? 'pvp',
 
             // Звание бриджера: в бридж-профиле это главный ранг
             'bridge_rank' => $player->bridgeRank
@@ -167,7 +165,7 @@ class PlayerProfileService
     {
         return ProfileRecommendation::where('target_id', $player->id)
             ->where('is_hidden', false)
-            ->with('author:id,username,avatar,tier,bridge_primary,bridge_rank_id,is_verified,accent_color,banner_color')
+            ->with('author:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,is_verified,accent_color,banner_color')
             ->latest()
             ->limit(20)
             ->get();

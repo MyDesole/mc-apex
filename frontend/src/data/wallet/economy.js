@@ -23,6 +23,7 @@ export const TYPE_LABELS = {
     card_background: 'Фон карточки',
     skin_backdrop: 'Фон 3D-скина',
     card_theme: 'Тема карточки игрока',
+    profile_layout: 'Макет профиля',
     badge: 'Бейдж',
     tier_priority: 'Приоритет тир-теста',
     coin_bundle: 'Набор монет',
@@ -70,6 +71,10 @@ export function itemSubtitle(item) {
 
     if (item?.type === 'card_theme') {
         return 'Оформление карточки для соцсетей'
+    }
+
+    if (item?.type === 'profile_layout') {
+        return 'Другая расстановка, цвета и фон профиля'
     }
 
     return TYPE_LABELS[item?.type] || 'Предмет'

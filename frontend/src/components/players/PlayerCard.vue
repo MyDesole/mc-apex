@@ -14,6 +14,7 @@ import PlayerProfileShowcase from '@/components/players/profile/PlayerProfileSho
 import PlayerProfileFriends from '@/components/players/profile/PlayerProfileFriends.vue'
 import PlayerFriendHoverCard from '@/components/players/profile/PlayerFriendHoverCard.vue'
 import AchievementModal from '@/components/players/profile/AchievementModal.vue'
+import { profileLayout } from '@/data/players/profileLayouts.js'
 
 const props = defineProps({
   user: {
@@ -97,6 +98,16 @@ const cardStyle = computed(() => {
     '--accent-color': accent.value,
   }
 })
+
+/*
+ * Макет из магазина: класс .profile-layout--{id} меняет расстановку
+ * блоков, цвета, фон и шрифты (см. profileLayouts.css).
+ */
+const layout = computed(() => profileLayout(props.user.profile_layout))
+
+const layoutClass = computed(() => (layout.value
+    ? ['profile-layout--themed', `profile-layout--${props.user.profile_layout}`, `profile-layout--side-${layout.value.arrangement}`]
+    : []))
 
 const accentStyle = computed(() => ({
   '--accent-color': accent.value,
@@ -313,6 +324,7 @@ const profileCompleteness = computed(() => {
 <template>
   <div
       class="profile-layout"
+      :class="layoutClass"
       :style="accentStyle"
   >
     <!-- =====================================================
@@ -325,6 +337,7 @@ const profileCompleteness = computed(() => {
     >
       <!-- Header -->
       <PlayerProfileHeader
+          data-block="header"
           :user="user"
           :editable="editable"
           :cover-url="user.cover_url"
@@ -344,7 +357,7 @@ const profileCompleteness = computed(() => {
            STATS
            =================================================== -->
 
-      <section class="profile-stats">
+      <section class="profile-stats" data-block="stats">
         <div
             v-for="stat in profileStats"
             :key="stat.key"
@@ -374,6 +387,7 @@ const profileCompleteness = computed(() => {
       <section
           v-if="hasSocials"
           class="profile-section profile-section--socials"
+          data-block="socials"
       >
         <div class="section-heading">
           <div>
@@ -391,6 +405,7 @@ const profileCompleteness = computed(() => {
       <section
           v-else-if="editable"
           class="profile-section profile-empty"
+          data-block="socials"
       >
         <div class="profile-empty__icon">
           @
@@ -419,6 +434,7 @@ const profileCompleteness = computed(() => {
       <section
           v-if="bridgeMode"
           class="profile-section"
+          data-block="games"
       >
         <div class="section-heading">
           <div>
@@ -500,6 +516,7 @@ const profileCompleteness = computed(() => {
       <section
           v-else
           class="profile-section"
+          data-block="games"
       >
         <div class="section-heading">
           <div>
@@ -549,6 +566,7 @@ const profileCompleteness = computed(() => {
       <section
           v-if="hasAspects && !bridgeMode"
           class="profile-section"
+          data-block="aspects"
       >
         <div class="section-heading">
           <div>
@@ -569,6 +587,7 @@ const profileCompleteness = computed(() => {
       <section
           v-else-if="!hasAnyExtraInfo"
           class="profile-empty profile-empty--profile"
+          data-block="empty"
       >
         <div class="profile-empty__visual">
           <span></span>
@@ -608,7 +627,7 @@ const profileCompleteness = computed(() => {
 
     <aside class="side-column">
       <!-- Achievements -->
-      <section class="side-panel">
+      <section class="side-panel" data-block="achievements">
         <PlayerProfileShowcase
             v-if="allAchievements.length"
             :achievements="allAchievements"
@@ -632,7 +651,7 @@ const profileCompleteness = computed(() => {
       </section>
 
       <!-- Friends -->
-      <section class="side-panel">
+      <section class="side-panel" data-block="friends">
         <PlayerProfileFriends
             v-if="allFriends.length"
             :friends="allFriends"
@@ -710,4 +729,9 @@ const profileCompleteness = computed(() => {
 
 <style scoped>
 @import "@/components/players/PlayerCard.css";
+</style>
+
+<!-- Макеты не scoped: им нужно достать и до шапки, и до вложенных панелей -->
+<style>
+@import "@/components/players/profileLayouts.css";
 </style>

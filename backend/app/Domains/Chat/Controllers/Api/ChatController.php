@@ -85,7 +85,7 @@ class ChatController extends Controller
         return response()->json([
             'conversation' => $conversation->load([
                 'clan:id,name,tag,banner_color,avatar',
-                'author:id,username,avatar,tier,bridge_primary,bridge_rank_id,is_verified',
+                'author:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,is_verified',
             ]),
         ], 201);
     }

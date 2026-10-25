@@ -1,3 +1,7 @@
+/*
+ * Плашка звания бриджера: блок в цвете звания с гранями, как у куба,
+ * и маленьким значком-блоком. Тот же стиль, что у .tier-block--rank в списках.
+ */
 .bridge-rank {
   --rank-color: var(--accent, #a78bfa);
 
@@ -8,38 +12,44 @@
 
   gap: 8px;
 
-  color: var(--rank-color);
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
 
-  background: color-mix(
-          in srgb,
-          var(--rank-color) 12%,
-          transparent
+  background: linear-gradient(
+          180deg,
+          color-mix(in srgb, var(--rank-color) 62%, #1c1826) 0%,
+          color-mix(in srgb, var(--rank-color) 34%, #0d0c11) 100%
   );
 
-  border: 1px solid color-mix(
-          in srgb,
-          var(--rank-color) 42%,
-          transparent
-  );
-
+  border: 1px solid color-mix(in srgb, var(--rank-color) 75%, #fff);
   border-radius: 4px;
 
+  box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.28),
+          inset 0 -3px 0 rgba(0, 0, 0, 0.32),
+          0 0 18px color-mix(in srgb, var(--rank-color) 38%, transparent);
+
   font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 
   white-space: nowrap;
 }
 
+/* Значок-блок: светлая верхняя грань, боковая — цвета звания */
 .bridge-rank__dot {
   flex: 0 0 auto;
 
-  width: 7px;
-  height: 7px;
+  width: 10px;
+  height: 10px;
 
-  border-radius: 50%;
+  background: linear-gradient(
+          180deg,
+          #fff 0 38%,
+          color-mix(in srgb, var(--rank-color) 80%, #fff) 38% 100%
+  );
 
-  background: var(--rank-color);
-
-  box-shadow: none;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
 }
 
 .bridge-rank__label {
@@ -49,20 +59,20 @@
 .bridge-rank--sm {
   min-height: 26px;
 
-  padding: 0 9px;
+  padding: 0 9px 0 7px;
 
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .bridge-rank--sm .bridge-rank__dot {
-  width: 5px;
-  height: 5px;
+  width: 8px;
+  height: 8px;
 }
 
 .bridge-rank--md {
   min-height: 32px;
 
-  padding: 0 11px;
+  padding: 0 12px 0 9px;
 
   font-size: 12px;
 }
@@ -70,20 +80,24 @@
 .bridge-rank--lg {
   min-height: 44px;
 
-  padding: 0 15px;
+  padding: 0 16px 0 12px;
 
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .bridge-rank--lg .bridge-rank__dot {
-  width: 9px;
-  height: 9px;
+  width: 13px;
+  height: 13px;
 }
 
 .bridge-rank--empty {
   color: var(--text-dim, #64748b);
+  text-shadow: none;
+  text-transform: none;
 
-  background: rgba(255,255,255,.025);
+  background: rgba(255, 255, 255, 0.025);
 
-  border-color: rgba(255,255,255,.08);
+  border-color: rgba(255, 255, 255, 0.08);
+
+  box-shadow: none;
 }

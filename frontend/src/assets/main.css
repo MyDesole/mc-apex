@@ -269,22 +269,46 @@ h3 {
  * Двойной класс перебивает размеры конкретных мест (.leader__tier и т. п.).
  */
 .tier-block.tier-block--rank {
+    gap: 7px;
+
     width: auto;
     max-width: 100%;
     min-width: 32px;
-    height: 26px;
-    padding: 0 10px;
+    height: 28px;
+    padding: 0 11px 0 8px;
 
     color: #fff;
-    background: color-mix(in srgb, var(--tier) 22%, transparent);
-    border: 1px solid var(--tier);
-    box-shadow: none;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
 
-    font-size: 12px;
-    letter-spacing: 0.02em;
+    /* Блок в цвете звания: светлее сверху, темнее снизу, как грань куба */
+    background: linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--tier) 62%, #1c1826) 0%,
+            color-mix(in srgb, var(--tier) 34%, #0d0c11) 100%
+    );
+    border: 1px solid color-mix(in srgb, var(--tier) 75%, #fff);
+    border-radius: 4px;
+    box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.28),
+            inset 0 -3px 0 rgba(0, 0, 0, 0.32),
+            0 0 16px color-mix(in srgb, var(--tier) 38%, transparent);
+
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* Значок-блок перед званием: верхняя грань светлая, боковая — цвета звания */
+.tier-block.tier-block--rank::before {
+    content: '';
+    flex: 0 0 9px;
+    height: 9px;
+
+    background: linear-gradient(180deg, #fff 0 38%, color-mix(in srgb, var(--tier) 80%, #fff) 38% 100%);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
 }
 
 /* =========================================================

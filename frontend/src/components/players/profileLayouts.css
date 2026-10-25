@@ -1,0 +1,650 @@
+/* =========================================================
+   МАКЕТЫ ПРОФИЛЯ (магазин, тип profile_layout)
+
+   Подключается без scoped из PlayerCard.vue. Каждый макет —
+   класс .profile-layout--{id} на корне профиля:
+
+   1. Палитра: переопределяем общие переменные (--bg-card, --border,
+      --text…) — их уже читают шапка, панели, ачивки и друзья,
+      поэтому тема доходит до всех вложенных компонентов.
+   2. Сцена: профиль стоит в «комнате» со своим фоном.
+   3. Расстановка: боковая колонка слева, сверху или снизу
+      (.profile-layout--side-*), порядок блоков — через order.
+   4. Характер: шрифты, рамки, свечение, узоры.
+
+   Селекторы начинаются с .profile-layout.profile-layout--x: так они
+   сильнее scoped-стилей компонентов (у тех класс + атрибут).
+   ========================================================= */
+
+/* ---------- Общее для всех макетов ---------- */
+
+.profile-layout.profile-layout--themed {
+  position: relative;
+
+  padding: 18px;
+
+  background: var(--layout-page);
+  border: 1px solid var(--layout-edge, var(--border));
+  border-radius: var(--layout-radius, 10px);
+
+  color: var(--text);
+  font-family: var(--font-body);
+
+  isolation: isolate;
+}
+
+/* Узор поверх фона комнаты: у каждого макета свой (--layout-pattern) */
+.profile-layout.profile-layout--themed::before {
+  content: '';
+
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+
+  border-radius: inherit;
+
+  background: var(--layout-pattern, none);
+  opacity: var(--layout-pattern-opacity, 1);
+
+  pointer-events: none;
+}
+
+/* Акцент макета сильнее акцента игрока: иначе тема разваливается */
+.profile-layout.profile-layout--themed .player-card,
+.profile-layout.profile-layout--themed .side-column {
+  --accent-color: var(--layout-accent);
+}
+
+.profile-layout.profile-layout--themed .profile-header {
+  --player-accent: var(--layout-accent) !important;
+
+  font-family: var(--font-body);
+}
+
+.profile-layout.profile-layout--themed .player-card {
+  display: flex;
+  flex-direction: column;
+
+  background-color: var(--bg-card);
+  border-color: var(--layout-edge, var(--border));
+  border-radius: var(--layout-radius, 10px);
+}
+
+.profile-layout.profile-layout--themed .side-panel {
+  border-color: var(--layout-edge, var(--border));
+  border-radius: var(--layout-radius, 10px);
+}
+
+.profile-layout.profile-layout--themed .section-heading h3,
+.profile-layout.profile-layout--themed .profile-header__name {
+  font-family: var(--layout-heading-font, var(--font-display));
+}
+
+/* Порядок блоков по умолчанию; макеты меняют отдельные значения */
+.profile-layout.profile-layout--themed [data-block="header"] { order: -10; }
+.profile-layout.profile-layout--themed [data-block="stats"] { order: 1; }
+.profile-layout.profile-layout--themed [data-block="socials"] { order: 2; }
+.profile-layout.profile-layout--themed [data-block="games"] { order: 3; }
+.profile-layout.profile-layout--themed [data-block="aspects"] { order: 4; }
+.profile-layout.profile-layout--themed [data-block="empty"] { order: 5; }
+
+/* Центрированная шапка (Край, Тронный зал): всё содержимое — по оси */
+.profile-layout.profile-layout--end_void .profile-header__identity,
+.profile-layout.profile-layout--royal .profile-header__identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ---------- Расстановка боковой колонки ---------- */
+
+@media (min-width: 901px) {
+  .profile-layout.profile-layout--side-left {
+    grid-template-columns: 300px minmax(0, 1fr);
+  }
+
+  .profile-layout.profile-layout--side-left .side-column {
+    order: -1;
+  }
+}
+
+.profile-layout.profile-layout--side-top,
+.profile-layout.profile-layout--side-bottom {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.profile-layout.profile-layout--side-top .side-column,
+.profile-layout.profile-layout--side-bottom .side-column {
+  position: static;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: start;
+}
+
+.profile-layout.profile-layout--side-top .side-column {
+  order: -1;
+}
+
+/* =========================================================
+   АДСКАЯ КУЗНЯ — незерак, лава, колонка слева
+   ========================================================= */
+
+.profile-layout.profile-layout--nether_forge {
+  --layout-accent: #f97316;
+  --layout-edge: #7f1d1d;
+  --layout-radius: 4px;
+  --layout-page: linear-gradient(180deg, #1f0a08 0%, #120505 100%);
+
+  /* Незерак: неровные красные блоки 16px */
+  --layout-pattern:
+      linear-gradient(90deg, rgba(0, 0, 0, 0.35) 1px, transparent 1px) 0 0 / 32px 32px,
+      linear-gradient(rgba(0, 0, 0, 0.35) 1px, transparent 1px) 0 0 / 32px 32px,
+      conic-gradient(#3b0f0c 25%, #4a1410 0 50%, #330c0a 0 75%, #451310 0) 0 0 / 16px 16px;
+  --layout-pattern-opacity: 0.55;
+  --layout-heading-font: var(--font-display);
+
+  --bg-card: #1d0b09;
+  --bg: #140606;
+  --border: #5c1a12;
+  --border-hover: #9a3412;
+  --text: #fde8d8;
+  --text-dim: #f0b49a;
+  --text-muted: #b97a63;
+  --accent-light: #fb923c;
+}
+
+.profile-layout.profile-layout--nether_forge .player-card,
+.profile-layout.profile-layout--nether_forge .side-panel {
+  box-shadow:
+      inset 0 0 0 1px rgba(251, 146, 60, 0.12),
+      0 0 0 1px #2a0a07,
+      0 0 26px rgba(249, 115, 22, 0.18);
+}
+
+/* Лава снизу карточки */
+.profile-layout.profile-layout--nether_forge .player-card::after {
+  content: '';
+
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 0;
+
+  height: 5px;
+
+  background: repeating-linear-gradient(90deg, #f97316 0 12px, #fbbf24 12px 18px, #dc2626 18px 28px);
+  box-shadow: 0 0 18px #f97316;
+}
+
+.profile-layout.profile-layout--nether_forge .section-heading h3 {
+  color: #fdba74;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 12px rgba(249, 115, 22, 0.55);
+}
+
+/* =========================================================
+   ПУСТОТА КРАЯ — звёзды, одна колонка, витрина сверху
+   ========================================================= */
+
+.profile-layout.profile-layout--end_void {
+  --layout-accent: #c084fc;
+  --layout-edge: #3b2a63;
+  --layout-radius: 14px;
+  --layout-page: radial-gradient(ellipse at 50% -10%, #2e1a55 0%, #0b0716 55%, #05030b 100%);
+
+  /* Звёздное небо из точек разного размера */
+  --layout-pattern:
+      radial-gradient(1px 1px at 20px 30px, #fff, transparent) 0 0 / 120px 120px,
+      radial-gradient(1px 1px at 80px 70px, #e9e5a8, transparent) 0 0 / 120px 120px,
+      radial-gradient(2px 2px at 50px 100px, #d8b4fe, transparent) 0 0 / 160px 160px,
+      radial-gradient(1px 1px at 130px 20px, #fff, transparent) 0 0 / 200px 200px;
+  --layout-pattern-opacity: 0.8;
+
+  --bg-card: rgba(20, 14, 38, 0.82);
+  --bg: #0b0716;
+  --border: #2d2150;
+  --border-hover: #6d28d9;
+  --text: #f3eaff;
+  --text-dim: #c4b5fd;
+  --text-muted: #8b7bb8;
+  --accent-light: #d8b4fe;
+
+  max-width: 980px;
+  margin-inline: auto;
+}
+
+.profile-layout.profile-layout--end_void .player-card,
+.profile-layout.profile-layout--end_void .side-panel {
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 40px rgba(192, 132, 252, 0.12);
+}
+
+/* Шапка по центру: аватар над ником */
+.profile-layout.profile-layout--end_void .profile-header__content {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.profile-layout.profile-layout--end_void .profile-header__name-row,
+.profile-layout.profile-layout--end_void .profile-header__badges {
+  justify-content: center;
+}
+
+.profile-layout.profile-layout--end_void .section-heading {
+  justify-content: center;
+}
+
+.profile-layout.profile-layout--end_void .section-heading h3 {
+  color: #e9e5a8;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* =========================================================
+   ТЕРМИНАЛ — зелёный моноширинный, развёртка, статистика первой
+   ========================================================= */
+
+.profile-layout.profile-layout--terminal {
+  --layout-accent: #22c55e;
+  --layout-edge: #14532d;
+  --layout-radius: 0;
+  --layout-page: #020603;
+
+  /* Строки развёртки */
+  --layout-pattern: repeating-linear-gradient(180deg, rgba(34, 197, 94, 0.06) 0 1px, transparent 1px 3px);
+  --layout-heading-font: 'JetBrains Mono', 'Cascadia Code', Consolas, ui-monospace, monospace;
+
+  --font-body: 'JetBrains Mono', 'Cascadia Code', Consolas, ui-monospace, monospace;
+  --font-display: var(--font-body);
+
+  --bg-card: #03100a;
+  --bg: #020804;
+  --border: #14532d;
+  --border-hover: #22c55e;
+  --text: #86efac;
+  --text-dim: #4ade80;
+  --text-muted: #2f8f55;
+  --accent-light: #4ade80;
+}
+
+.profile-layout.profile-layout--terminal * {
+  border-radius: 0 !important;
+}
+
+.profile-layout.profile-layout--terminal .player-card,
+.profile-layout.profile-layout--terminal .side-panel {
+  box-shadow: inset 0 0 30px rgba(34, 197, 94, 0.08), 0 0 0 1px #052e16;
+}
+
+.profile-layout.profile-layout--terminal .profile-header__name,
+.profile-layout.profile-layout--terminal .profile-stat__content strong {
+  color: #bbf7d0;
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.7);
+}
+
+/* Заголовки как команды: «> ИСТОРИЯ ТИРОВ_» */
+.profile-layout.profile-layout--terminal .section-heading h3 {
+  color: #4ade80;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.profile-layout.profile-layout--terminal .section-heading h3::before {
+  content: '> ';
+}
+
+.profile-layout.profile-layout--terminal .section-heading h3::after {
+  content: '_';
+  animation: layout-caret 1s steps(1) infinite;
+}
+
+@keyframes layout-caret {
+  50% { opacity: 0; }
+}
+
+/* Статистика сразу после шапки и шире: таблица значений */
+.profile-layout.profile-layout--terminal [data-block="stats"] { order: -5; }
+.profile-layout.profile-layout--terminal [data-block="aspects"] { order: 1; }
+.profile-layout.profile-layout--terminal [data-block="games"] { order: 2; }
+.profile-layout.profile-layout--terminal [data-block="socials"] { order: 6; }
+
+.profile-layout.profile-layout--terminal .profile-stat {
+  background: transparent;
+  border-style: dashed;
+}
+
+/* =========================================================
+   КНИГА И ПЕРО — светлый пергамент, чернила, засечки
+   ========================================================= */
+
+.profile-layout.profile-layout--book {
+  --layout-accent: #9a3412;
+  --layout-edge: #8b6b45;
+  --layout-radius: 3px;
+  --layout-page: linear-gradient(180deg, #3a2a1c, #2a1d12);
+
+  /* Кожаный переплёт: мелкая зернистость */
+  --layout-pattern:
+      radial-gradient(rgba(0, 0, 0, 0.25) 1px, transparent 1px) 0 0 / 5px 5px;
+  --layout-pattern-opacity: 0.6;
+  --layout-heading-font: Georgia, 'Times New Roman', serif;
+
+  --font-body: Georgia, 'Times New Roman', serif;
+
+  --bg-card: #f3e7cf;
+  --bg: #eadbbd;
+  --border: #c9ad83;
+  --border-hover: #9a3412;
+  --text: #2a1d12;
+  --text-dim: #5b4430;
+  --text-muted: #7a6148;
+  --accent-light: #9a3412;
+}
+
+.profile-layout.profile-layout--book .player-card,
+.profile-layout.profile-layout--book .side-panel {
+  /* Старая бумага: светлый центр, затемнённые края */
+  background:
+      radial-gradient(ellipse at 50% 40%, #f8eed8 0%, #efe0c2 60%, #e3cfa6 100%);
+  box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+      inset 0 0 40px rgba(120, 80, 30, 0.18),
+      0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+/* Тёмные декоративные слои шапки на бумаге не нужны */
+.profile-layout.profile-layout--book .player-card::before,
+.profile-layout.profile-layout--book .player-card__glow,
+.profile-layout.profile-layout--book .player-card__grid,
+.profile-layout.profile-layout--book .profile-header__aurora,
+.profile-layout.profile-layout--book .profile-header__grid,
+.profile-layout.profile-layout--book .profile-header__noise {
+  display: none;
+}
+
+.profile-layout.profile-layout--book .profile-header {
+  background: transparent;
+  border-bottom: 3px double #8b6b45;
+  box-shadow: none;
+}
+
+.profile-layout.profile-layout--book .profile-header__cover:not(.profile-header__cover--image) {
+  opacity: 0;
+}
+
+.profile-layout.profile-layout--book .profile-header__name,
+.profile-layout.profile-layout--book .profile-header__username,
+.profile-layout.profile-layout--book .profile-header__bio,
+.profile-layout.profile-layout--book .profile-header__quote-text,
+.profile-layout.profile-layout--book .profile-header__status-text,
+.profile-layout.profile-layout--book .tier-display__name,
+.profile-layout.profile-layout--book .bridge-display__name {
+  color: #2a1d12;
+  text-shadow: none;
+}
+
+.profile-layout.profile-layout--book .profile-header__tier-watermark {
+  color: rgba(90, 60, 30, 0.08);
+}
+
+.profile-layout.profile-layout--book .profile-stat {
+  background: rgba(255, 250, 238, 0.6);
+}
+
+/* Заголовки с буквицей и чернильной линией */
+.profile-layout.profile-layout--book .section-heading {
+  border-bottom: 1px solid #c9ad83;
+  padding-bottom: 6px;
+}
+
+.profile-layout.profile-layout--book .section-heading h3 {
+  font-size: 19px;
+  font-style: italic;
+  font-weight: 700;
+  color: #4a2a12;
+}
+
+.profile-layout.profile-layout--book .section-heading h3::first-letter {
+  color: #9a3412;
+  font-size: 1.35em;
+}
+
+/* =========================================================
+   СИНТВЕЙВ — неоновый закат и сетка до горизонта
+   ========================================================= */
+
+.profile-layout.profile-layout--synthwave {
+  --layout-accent: #ec4899;
+  --layout-edge: #7e22ce;
+  --layout-radius: 12px;
+  --layout-page:
+      linear-gradient(180deg, #12052a 0%, #2a0845 45%, #4c0d4f 62%, #12052a 63%, #0a0318 100%);
+
+  /* Перспективная сетка в нижней части */
+  --layout-pattern:
+      linear-gradient(transparent 62%, rgba(236, 72, 153, 0.35) 62.3%, transparent 62.6%),
+      linear-gradient(90deg, rgba(34, 211, 238, 0.18) 1px, transparent 1px) 0 0 / 48px 100%,
+      linear-gradient(rgba(34, 211, 238, 0.18) 1px, transparent 1px) 0 0 / 100% 36px;
+  --layout-pattern-opacity: 0.9;
+
+  --bg-card: rgba(25, 8, 52, 0.88);
+  --bg: #12052a;
+  --border: #5b21b6;
+  --border-hover: #ec4899;
+  --text: #fdf4ff;
+  --text-dim: #f5d0fe;
+  --text-muted: #c084fc;
+  --accent-light: #22d3ee;
+}
+
+.profile-layout.profile-layout--synthwave .player-card,
+.profile-layout.profile-layout--synthwave .side-panel {
+  box-shadow:
+      0 0 0 1px rgba(236, 72, 153, 0.35),
+      0 0 24px rgba(236, 72, 153, 0.25),
+      inset 0 0 30px rgba(34, 211, 238, 0.06);
+}
+
+.profile-layout.profile-layout--synthwave .profile-header__name {
+  background: linear-gradient(90deg, #f472b6, #22d3ee);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+}
+
+.profile-layout.profile-layout--synthwave .section-heading h3 {
+  color: #22d3ee;
+  font-style: italic;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(34, 211, 238, 0.8), 2px 2px 0 #ec4899;
+}
+
+/* Аспекты сразу за шапкой */
+.profile-layout.profile-layout--synthwave [data-block="aspects"] { order: -5; }
+
+/* =========================================================
+   ТРОННЫЙ ЗАЛ — золото на пурпуре, шапка по центру
+   ========================================================= */
+
+.profile-layout.profile-layout--royal {
+  --layout-accent: #facc15;
+  --layout-edge: #a16207;
+  --layout-radius: 2px;
+  --layout-page: radial-gradient(ellipse at 50% 0%, #3b1a5c 0%, #1a0b29 60%, #0f0618 100%);
+
+  /* Узор ковра: золотые ромбы */
+  --layout-pattern:
+      linear-gradient(45deg, rgba(250, 204, 21, 0.06) 25%, transparent 25%, transparent 75%, rgba(250, 204, 21, 0.06) 75%) 0 0 / 28px 28px,
+      linear-gradient(45deg, rgba(250, 204, 21, 0.06) 25%, transparent 25%, transparent 75%, rgba(250, 204, 21, 0.06) 75%) 14px 14px / 28px 28px;
+  --layout-heading-font: Georgia, 'Times New Roman', serif;
+
+  --bg-card: #1f0f30;
+  --bg: #170a24;
+  --border: #6b4a12;
+  --border-hover: #facc15;
+  --text: #fef9e7;
+  --text-dim: #fde68a;
+  --text-muted: #c4a46a;
+  --accent-light: #fde68a;
+}
+
+/* Двойная золотая рамка */
+.profile-layout.profile-layout--royal .player-card,
+.profile-layout.profile-layout--royal .side-panel {
+  border: 2px solid #ca8a04;
+  box-shadow:
+      inset 0 0 0 4px #1f0f30,
+      inset 0 0 0 5px rgba(250, 204, 21, 0.45),
+      0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.profile-layout.profile-layout--royal .profile-header__content {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.profile-layout.profile-layout--royal .profile-header__name-row,
+.profile-layout.profile-layout--royal .profile-header__badges {
+  justify-content: center;
+}
+
+.profile-layout.profile-layout--royal .profile-header__name {
+  color: #fde68a;
+  letter-spacing: 0.04em;
+  text-shadow: 0 2px 0 #713f12, 0 0 20px rgba(250, 204, 21, 0.35);
+}
+
+.profile-layout.profile-layout--royal .section-heading {
+  justify-content: center;
+}
+
+/* Заголовок между золотыми линиями: ——— ✦ История ✦ ——— */
+.profile-layout.profile-layout--royal .section-heading h3 {
+  color: #facc15;
+  font-size: 18px;
+  letter-spacing: 0.06em;
+}
+
+.profile-layout.profile-layout--royal .section-heading h3::before { content: '✦ '; }
+.profile-layout.profile-layout--royal .section-heading h3::after { content: ' ✦'; }
+
+/* =========================================================
+   ДРЕВНИЙ ГОРОД — скалк, глубинный сланец, колонка слева
+   ========================================================= */
+
+.profile-layout.profile-layout--ancient_city {
+  --layout-accent: #2dd4bf;
+  --layout-edge: #134e4a;
+  --layout-radius: 6px;
+  --layout-page: linear-gradient(180deg, #071413 0%, #030807 100%);
+
+  /* Глубинный сланец: тёмные плиты с бирюзовыми прожилками скалка */
+  --layout-pattern:
+      radial-gradient(circle at 30% 40%, rgba(45, 212, 191, 0.18) 0 2px, transparent 3px) 0 0 / 46px 46px,
+      radial-gradient(circle at 70% 80%, rgba(20, 184, 166, 0.14) 0 1px, transparent 2px) 0 0 / 30px 30px,
+      conic-gradient(#0c1515 25%, #0f1a1a 0 50%, #0a1212 0 75%, #0e1818 0) 0 0 / 24px 24px;
+  --layout-pattern-opacity: 0.9;
+
+  --bg-card: #081413;
+  --bg: #050d0c;
+  --border: #134e4a;
+  --border-hover: #2dd4bf;
+  --text: #ccfbf1;
+  --text-dim: #99f6e4;
+  --text-muted: #4f8f86;
+  --accent-light: #5eead4;
+}
+
+.profile-layout.profile-layout--ancient_city .player-card,
+.profile-layout.profile-layout--ancient_city .side-panel {
+  box-shadow: inset 0 0 0 1px rgba(45, 212, 191, 0.1), 0 0 30px rgba(20, 184, 166, 0.12);
+}
+
+/* Скалковое мерцание по краю карточки */
+.profile-layout.profile-layout--ancient_city .player-card {
+  animation: layout-sculk 4s ease-in-out infinite;
+}
+
+@keyframes layout-sculk {
+  50% { box-shadow: inset 0 0 0 1px rgba(45, 212, 191, 0.25), 0 0 46px rgba(45, 212, 191, 0.22); }
+}
+
+.profile-layout.profile-layout--ancient_city .section-heading h3 {
+  color: #5eead4;
+  letter-spacing: 0.05em;
+}
+
+/* =========================================================
+   ЛЕДЯНОЙ ПИК — матовое стекло, круглые углы, витрина сверху
+   ========================================================= */
+
+.profile-layout.profile-layout--frost {
+  --layout-accent: #7dd3fc;
+  --layout-edge: rgba(186, 230, 253, 0.35);
+  --layout-radius: 20px;
+  --layout-page: linear-gradient(160deg, #0f2236 0%, #0b1622 50%, #13263a 100%);
+
+  /* Иней: мелкие светлые снежинки */
+  --layout-pattern:
+      radial-gradient(circle, rgba(224, 242, 254, 0.35) 0 1px, transparent 1.5px) 0 0 / 22px 22px,
+      radial-gradient(circle, rgba(224, 242, 254, 0.2) 0 1px, transparent 1.5px) 11px 11px / 22px 22px;
+  --layout-pattern-opacity: 0.6;
+
+  --bg-card: rgba(19, 38, 58, 0.72);
+  --bg: #0b1622;
+  --border: rgba(125, 211, 252, 0.25);
+  --border-hover: #7dd3fc;
+  --text: #f0f9ff;
+  --text-dim: #bae6fd;
+  --text-muted: #7aa6c2;
+  --accent-light: #bae6fd;
+}
+
+.profile-layout.profile-layout--frost .player-card,
+.profile-layout.profile-layout--frost .side-panel {
+  backdrop-filter: blur(10px) saturate(1.2);
+  box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      0 18px 50px rgba(2, 12, 27, 0.55);
+}
+
+.profile-layout.profile-layout--frost .profile-stat {
+  border-radius: 14px;
+  background: rgba(186, 230, 253, 0.06);
+}
+
+.profile-layout.profile-layout--frost .section-heading h3 {
+  color: #e0f2fe;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Телефон: комната без лишних отступов ---------- */
+
+@media (max-width: 600px) {
+  .profile-layout.profile-layout--themed {
+    padding: 8px;
+  }
+
+  .profile-layout.profile-layout--side-top .side-column,
+  .profile-layout.profile-layout--side-bottom .side-column {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* На телефоне сначала сам профиль, витрина — под ним */
+  .profile-layout.profile-layout--side-top .side-column {
+    order: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-layout.profile-layout--themed *,
+  .profile-layout.profile-layout--themed {
+    animation: none !important;
+  }
+}

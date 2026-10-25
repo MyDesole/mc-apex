@@ -66,7 +66,7 @@ class MessageSent implements ShouldBroadcastNow
 
     /** Связи, нужные для полного состава полей. */
     private const RELATIONS = [
-        'user:id,username,avatar,tier,bridge_primary,bridge_rank_id,is_verified',
+        'user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,is_verified',
         'replyTo.user:id,username,avatar',
         'forwardedFrom',
         'attachments',

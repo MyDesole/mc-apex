@@ -36,7 +36,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'favorite_modes', 'discord_tag',
         'profile_mode', 'bridge_rank_id', 'bridge_rank_by', 'bridge_rank_at',
         'minecraft_uuid', 'minecraft_username', 'minecraft_linked_at',
-        'skin_backdrop', 'card_theme',
+        'skin_backdrop', 'card_theme', 'profile_layout',
         'apex_coins', 'apex_coins_spent', 'equipped_badges',
         'referral_code', 'referred_by',
         'is_verified', 'verified_reason', 'clan_joined_at',
@@ -206,8 +206,8 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
-     * Что показывать рядом с ником: звание бриджера, если бридж —
-     * основной режим игрока и звание выдано, иначе тир.
+     * Что показывать рядом с ником: звание бриджера, если игрок выбрал
+     * bridge-профиль и звание выдано, иначе тир. У PvP-профиля звания нет.
      * Звания берутся из кэша, чтобы списки игроков не делали лишних запросов.
      *
      * @return array{type: string, label: ?string, color: ?string}
@@ -216,7 +216,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $attributes = $this->getAttributes();
 
-        if (! empty($attributes['bridge_primary']) && ! empty($attributes['bridge_rank_id'])) {
+        if (($attributes['profile_mode'] ?? null) === 'bridge' && ! empty($attributes['bridge_rank_id'])) {
             $rank = \App\Domains\Bridge\Models\BridgeRank::cachedById((int) $attributes['bridge_rank_id']);
 
             if ($rank) {

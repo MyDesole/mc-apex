@@ -24,6 +24,9 @@ class ShopItem extends Model
     /** Оформление карточки игрока (PNG). */
     public const TYPE_CARD_THEME = 'card_theme';
 
+    /** Макет страницы профиля: расстановка блоков, цвета, фон, шрифты. */
+    public const TYPE_PROFILE_LAYOUT = 'profile_layout';
+
     /**
      * Типы, которые при надевании пишутся в поле профиля пользователя.
      */
@@ -33,6 +36,7 @@ class ShopItem extends Model
         self::TYPE_ACCENT_COLOR,
         self::TYPE_SKIN_BACKDROP,
         self::TYPE_CARD_THEME,
+        self::TYPE_PROFILE_LAYOUT,
         self::TYPE_BADGE,
         // Оформление подсветки клана применяется к клану лидера
         self::TYPE_CLAN_HIGHLIGHT_STYLE,

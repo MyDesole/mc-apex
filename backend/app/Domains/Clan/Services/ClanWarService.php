@@ -25,7 +25,7 @@ class ClanWarService
     private const WAR_RELATIONS = [
         'challenger:id,name,tag,power,banner_color,avatar',
         'opponent:id,name,tag,power,banner_color,avatar',
-        'participants.user:id,username,avatar,tier,bridge_primary,bridge_rank_id',
+        'participants.user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode',
         'participants.clan:id,name,tag,banner_color',
     ];
 
