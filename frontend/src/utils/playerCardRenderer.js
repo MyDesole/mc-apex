@@ -14,6 +14,12 @@ export const CARD_HEIGHT = 840
 
 const SCALE = 2
 
+/** Рамка с фигурой игрока справа (в координатах карточки). */
+const FRAME = { x: 310, y: 40, w: 248, h: 460, r: 24 }
+
+/** Размер 3D-кадра, который готовит renderSkin3d — под рамку с учётом SCALE. */
+export const FIGURE_FRAME = { width: FRAME.w * SCALE, height: FRAME.h * SCALE }
+
 /** Цвета текста и элементов; фон, постамент и рамку задаёт тема карточки. */
 const C = {
     track: '#262230',
@@ -50,7 +56,7 @@ export async function ensureCardFonts() {
  * }} data
  * @returns {HTMLCanvasElement}
  */
-export function renderPlayerCard({ user, rank = null, aspects = null, skin = null, avatar = null }) {
+export function renderPlayerCard({ user, rank = null, aspects = null, skin = null, figure = null, avatar = null }) {
     const canvas = document.createElement('canvas')
 
     canvas.width = CARD_WIDTH * SCALE
@@ -71,7 +77,7 @@ export function renderPlayerCard({ user, rank = null, aspects = null, skin = nul
     drawBrand(ctx)
     drawRank(ctx, rank)
     drawTierColumn(ctx, tier, tierColor, score)
-    drawPortrait(ctx, user, skin, avatar, theme, accent)
+    drawFigure(ctx, user, { skin, figure, avatar }, theme, accent)
     drawIdentity(ctx, user, theme)
     drawAspects(ctx, aspects, accent)
     drawFooter(ctx)
@@ -173,55 +179,64 @@ function drawTierColumn(ctx, tier, tierColor, score) {
 }
 
 /**
- * Портрет в круге: скин по грудь, как аватар профиля — голова и плечи,
- * низ обрезан кругом. Кольцо в цвет темы или тира.
- * Раньше рисовалась фигура в полный рост на шахматном постаменте —
- * мелко и пусто по бокам.
+ * Игрок в полный рост в высокой скруглённой рамке с цветной обводкой.
+ *
+ * Основной вариант — 3D-кадр (renderSkin3d): вид три четверти и второй
+ * слой скина. Без WebGL — плоская фигура спереди, без скина — аватар
+ * или первая буква ника.
  */
-function drawPortrait(ctx, user, skin, avatar, theme, accent) {
-    const cx = 434
-    const cy = 270
-    const r = 130
+function drawFigure(ctx, user, { skin, figure, avatar }, theme, accent) {
+    const { x, y, w, h, r } = FRAME
 
     ctx.save()
-    ctx.beginPath()
-    ctx.arc(cx, cy, r, 0, Math.PI * 2)
+    roundRect(ctx, x, y, w, h, r)
     ctx.clip()
 
-    ctx.fillStyle = theme.panel
-    ctx.fillRect(cx - r, cy - r, r * 2, r * 2)
+    // Фон рамки: чуть светлее карточки, к низу темнее — фигура «стоит»
+    const bg = ctx.createLinearGradient(0, y, 0, y + h)
+    bg.addColorStop(0, theme.panel)
+    bg.addColorStop(1, theme.bg)
+    ctx.fillStyle = bg
+    ctx.fillRect(x, y, w, h)
 
-    if (skin?.image) {
-        // Фигура 16×32 пикселя скина чуть шире круга: голова — около половины
-        // диаметра, плечи и руки уходят за кольцо, как у портрета
-        const unit = (r * 2 * 1.08) / 16
-        const figure = renderSkinFront(skin.image, { model: skin.model, scale: 16 })
-        const width = 16 * unit
-        const height = 32 * unit
+    if (figure) {
+        ctx.imageSmoothingEnabled = true
+        ctx.drawImage(figure, x, y, w, h)
+    } else if (skin?.image) {
+        const flat = renderSkinFront(skin.image, { model: skin.model, scale: 16 })
+        const height = h - 70
+        const width = (flat.width / flat.height) * height
 
         ctx.imageSmoothingEnabled = false
-        ctx.drawImage(figure, cx - width / 2, cy - r + r * 2 * 0.12, width, height)
-    } else if (avatar) {
-        ctx.imageSmoothingEnabled = true
-        ctx.drawImage(avatar, cx - r, cy - r, r * 2, r * 2)
+        ctx.drawImage(flat, x + (w - width) / 2, y + 35, width, height)
     } else {
-        // Ни скина, ни аватара — первая буква ника
-        ctx.fillStyle = C.accent
-        ctx.fillRect(cx - r, cy - r, r * 2, r * 2)
-        ctx.fillStyle = '#fff'
-        ctx.font = `800 96px ${DISPLAY}`
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        ctx.fillText((user?.username || '?').charAt(0).toUpperCase(), cx, cy)
-        ctx.textAlign = 'left'
+        const size = 160
+        const ax = x + (w - size) / 2
+        const ay = y + (h - size) / 2
+
+        roundRect(ctx, ax, ay, size, size, 14)
+        ctx.clip()
+
+        if (avatar) {
+            ctx.imageSmoothingEnabled = true
+            ctx.drawImage(avatar, ax, ay, size, size)
+        } else {
+            ctx.fillStyle = C.accent
+            ctx.fillRect(ax, ay, size, size)
+            ctx.fillStyle = '#fff'
+            ctx.font = `800 80px ${DISPLAY}`
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'middle'
+            ctx.fillText((user?.username || '?').charAt(0).toUpperCase(), ax + size / 2, ay + size / 2)
+            ctx.textAlign = 'left'
+        }
     }
 
     ctx.restore()
 
-    ctx.beginPath()
-    ctx.arc(cx, cy, r, 0, Math.PI * 2)
+    roundRect(ctx, x, y, w, h, r)
     ctx.strokeStyle = accent
-    ctx.lineWidth = 6
+    ctx.lineWidth = 5
     ctx.stroke()
 }
 

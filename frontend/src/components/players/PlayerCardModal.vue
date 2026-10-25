@@ -9,7 +9,8 @@
 import { computed, onUnmounted, ref, watch } from 'vue'
 
 import { loadSkin } from '@/utils/minecraftSkin.js'
-import { ensureCardFonts, renderPlayerCard } from '@/utils/playerCardRenderer.js'
+import { ensureCardFonts, FIGURE_FRAME, renderPlayerCard } from '@/utils/playerCardRenderer.js'
+import { renderSkin3d } from '@/utils/skinRender3d.js'
 import { playerAspects } from '@/data/players/aspects.js'
 import { userLink } from '@/utils/links.js'
 
@@ -64,11 +65,15 @@ async function render() {
       ensureCardFonts(),
     ])
 
+    // 3D-кадр со вторым слоем; без WebGL карточка нарисует плоскую фигуру
+    const figure = skin ? await renderSkin3d(skin, FIGURE_FRAME) : null
+
     canvas = renderPlayerCard({
       user: props.user,
       rank: props.rank,
       aspects: playerAspects(props.user),
       skin,
+      figure,
       avatar,
     })
 
