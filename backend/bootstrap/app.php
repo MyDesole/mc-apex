@@ -20,6 +20,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'not.banned' => \App\Http\Middleware\EnsureUserIsNotBanned::class,
             'clan.member' => \App\Http\Middleware\EnsureClanMember::class,
                 'minecraft.server' => \App\Http\Middleware\EnsureMinecraftServer::class,
+            // Переключатели функций с «Пульта» админки
+            'feature' => \App\Http\Middleware\EnsureFeatureEnabled::class,
         ]);
         // API-приложение без веб-роутов входа: гость должен получать 401 JSON,
         // а не попытку редиректа на несуществующий маршрут login (это давало 500).

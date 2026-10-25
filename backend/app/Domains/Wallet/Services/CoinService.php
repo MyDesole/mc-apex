@@ -62,6 +62,18 @@ class CoinService
             return 0;
         }
 
+        // Событие «xN ApexCoin» с «Пульта»: умножаем только заработок
+        // (тесты, ачивки, бонус, рефералы), а не покупки и подарки
+        if ($amount > 0 && in_array($source, \App\Domains\Control\Services\ControlService::BOOSTED_SOURCES, true)) {
+            $multiplier = \App\Domains\Control\Services\ControlService::multiplier();
+
+            if ($multiplier > 1) {
+                $amount *= $multiplier;
+                $options['meta'] = [...($options['meta'] ?? []), 'multiplier' => $multiplier];
+                $description = trim(($description ?? '').' · событие x'.$multiplier);
+            }
+        }
+
         return DB::transaction(function () use ($user, $amount, $source, $description, $idempotencyKey, $options) {
             $query = User::whereKey($user->id);
 

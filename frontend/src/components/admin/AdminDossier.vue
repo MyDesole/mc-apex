@@ -186,6 +186,31 @@ async function grantCoins() {
   await run(() => adminShopApi.grantCoins(user.value.id, { amount: value, reason: reason.trim() || null }))
 }
 
+/* ---------- Подарок предмета ---------- */
+
+const giftItems = ref(null)
+const giftItemId = ref(null)
+
+async function openGift() {
+  try {
+    giftItems.value = (await adminApi.control()).items ?? []
+  } catch {
+    giftItems.value = []
+  }
+}
+
+async function giveItem() {
+  const item = giftItems.value.find((i) => i.id === giftItemId.value)
+  if (!item || !(await confirm(`Подарить «${item.name}» игроку ${user.value.username}?`, { confirmText: 'Подарить' }))) return
+
+  const done = await run(() => adminApi.giveItem(user.value.id, item.id), { reload: false })
+  if (done) {
+    giftItems.value = null
+    giftItemId.value = null
+    await alert('Подарок в инвентаре игрока, уведомление отправлено', { title: 'Готово' })
+  }
+}
+
 async function toggleBadge() {
   if (data.value.user.is_verified) {
     await run(() => adminApi.unverifyUser(user.value.id))
@@ -322,6 +347,14 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               <button type="button" class="kit-btn" :disabled="busy" @click="modal = 'achievements'">Ачивки</button>
               <button v-if="!isSelf" type="button" class="kit-btn" :disabled="busy" @click="modal = 'role'">Роль</button>
               <button type="button" class="kit-btn" :disabled="busy" @click="grantCoins">ApexCoin</button>
+              <button v-if="!giftItems" type="button" class="kit-btn" :disabled="busy" @click="openGift">Подарить предмет</button>
+              <span v-else class="dossier__inline">
+                <select v-model="giftItemId" class="kit-select" aria-label="Предмет">
+                  <option :value="null" disabled>Предмет…</option>
+                  <option v-for="i in giftItems" :key="i.id" :value="i.id">{{ i.name }}</option>
+                </select>
+                <button type="button" class="kit-btn kit-btn--primary" :disabled="busy || !giftItemId" @click="giveItem">Подарить</button>
+              </span>
             </div>
           </section>
 

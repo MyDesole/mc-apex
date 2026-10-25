@@ -156,7 +156,8 @@ class AdminTournamentTest extends TestCase
             ->post('/api/admin/tournaments', [
                 'name' => 'С баннером',
                 'type' => 'clan',
-                'format' => 'double_elim',
+                // Других форматов сетки сайт пока не строит
+                'format' => 'single_elim',
                 'max_participants' => 16,
                 'banner' => UploadedFile::fake()->image('banner.png', 800, 300),
             ])

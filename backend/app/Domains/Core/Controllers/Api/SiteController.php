@@ -42,6 +42,8 @@ class SiteController extends Controller
             'server_address' => config('services.minecraft.address') ?: config('services.minecraft.host'),
             // Очки за турниры и войны — для страницы правил (настраиваются в админке)
             'rating' => app(\App\Domains\Players\Services\RatingService::class)->weights(),
+            // «Пульт»: баннер на весь сайт, выключенные функции, событие xN
+            'control' => \App\Domains\Control\Services\ControlService::publicState(),
         ]);
     }
 

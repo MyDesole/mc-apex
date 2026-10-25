@@ -34,6 +34,35 @@ export const adminApi = {
         return api.get('/admin/referrals')
     },
 
+    // «Пульт»
+    control() {
+        return api.get('/admin/control')
+    },
+    updateControl(payload) {
+        return api.put('/admin/control', payload)
+    },
+    giveaway(payload) {
+        return api.post('/admin/control/giveaway', payload)
+    },
+    onlineNow() {
+        return api.get('/admin/control/online')
+    },
+    promoCodes() {
+        return api.get('/admin/control/promo-codes')
+    },
+    createPromo(payload) {
+        return api.post('/admin/control/promo-codes', payload)
+    },
+    togglePromo(id) {
+        return api.post(`/admin/control/promo-codes/${id}/toggle`)
+    },
+    deletePromo(id) {
+        return api.delete(`/admin/control/promo-codes/${id}`)
+    },
+    giveItem(userId, shopItemId) {
+        return api.post(`/admin/users/${userId}/give-item`, { shop_item_id: shopItemId })
+    },
+
     // Юзеры
     users(params = {}) {
         const q = new URLSearchParams(params).toString()

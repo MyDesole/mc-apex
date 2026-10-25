@@ -137,10 +137,9 @@ const tiers = ['S', 'A', 'B', 'C', 'D', 'E']
 
           <div class="field">
             <label>Формат *</label>
+            <!-- Другие форматы сайт пока не проводит: сетка только на выбывание -->
             <select v-model="form.format">
-              <option value="single_elim">Single Elimination</option>
-              <option value="double_elim">Double Elimination</option>
-              <option value="round_robin">Round Robin</option>
+              <option value="single_elim">На выбывание (Single Elimination)</option>
             </select>
           </div>
 

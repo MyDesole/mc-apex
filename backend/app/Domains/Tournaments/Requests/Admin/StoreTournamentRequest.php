@@ -12,7 +12,9 @@ class StoreTournamentRequest extends BaseFormRequest
             'name' => ['required', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:5000'],
             'type' => ['required', 'in:solo,clan'],
-            'format' => ['required', 'in:single_elim,double_elim,round_robin'],
+            // Сетку сайт умеет строить только на выбывание — другие форматы
+            // создавались, но провести такой турнир было невозможно
+            'format' => ['required', 'in:single_elim'],
             'prize_pool' => ['nullable', 'numeric', 'min:0'],
             'prize_currency' => ['nullable', 'string', 'max:8'],
             'prize_description' => ['nullable', 'string', 'max:255'],

@@ -15,6 +15,7 @@ import BrandCube from '@/components/core/BrandCube.vue'
 import CommandPalette from '@/components/core/CommandPalette.vue'
 import ReportDialog from '@/components/core/ReportDialog.vue'
 import SiteFooter from '@/components/core/SiteFooter.vue'
+import SiteAnnouncement from '@/components/core/SiteAnnouncement.vue'
 import { useCommandPalette, paletteShortcut } from '@/composables/core/useCommandPalette.js'
 import { startSitePresence, stopSitePresence } from '@/composables/chat/presence.js'
 
@@ -706,6 +707,9 @@ watch(mobileMenuOpen, (open) => {
     <!-- =========================
          КОНТЕНТ
     ========================== -->
+
+    <!-- Объявление и событие xN с «Пульта» админки -->
+    <SiteAnnouncement />
 
     <main class="page">
       <!--

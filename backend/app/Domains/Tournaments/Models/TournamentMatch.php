@@ -12,10 +12,11 @@ class TournamentMatch extends Model
         'participant1_id', 'participant2_id', 'winner_id',
         'score1', 'score2', 'status',
         'scheduled_at', 'completed_at',
-        'next_match_id', 'next_slot',
+        'next_match_id', 'next_slot', 'is_bye',
     ];
 
     protected $casts = [
+        'is_bye' => 'boolean',
         'scheduled_at' => 'datetime',
         'completed_at' => 'datetime',
     ];

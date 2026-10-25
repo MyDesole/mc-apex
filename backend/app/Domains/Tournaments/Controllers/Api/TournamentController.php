@@ -59,6 +59,14 @@ class TournamentController extends Controller
                 ->first();
         }
 
+        // Чемпион — победитель финала (матч без следующего)
+        $final = $tournament->matches->first(fn ($m) => $m->next_match_id === null && $m->winner_id);
+        $champion = $final ? $tournament->participants->firstWhere('id', $final->winner_id) : null;
+
+        $tournament->setAttribute('champion', $champion?->user
+            ? ['id' => $champion->user->id, 'username' => $champion->user->username, 'avatar_url' => $champion->user->avatar_url]
+            : ($champion?->clan ? ['clan_id' => $champion->clan->id, 'name' => $champion->clan->name, 'tag' => $champion->clan->tag] : null));
+
         return response()->json([
             'tournament' => $tournament,
             'my_participation' => $myParticipation,

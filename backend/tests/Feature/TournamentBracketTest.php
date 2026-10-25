@@ -127,11 +127,16 @@ class TournamentBracketTest extends TestCase
         // 3 участника → сетка на 4: 2 матча первого раунда + финал
         $this->assertSame(3, TournamentMatch::where('tournament_id', $tournament->id)->count());
 
-        // Один матч первого раунда без пары — в статусе pending
-        $this->assertSame(
-            1,
-            TournamentMatch::where('tournament_id', $tournament->id)->where('round', 1)->where('status', 'pending')->count()
-        );
+        // Сильнейший посев без пары проходит сразу (bye), второй матч готов к игре,
+        // а в финале уже ждёт прошедший по пропуску
+        $bye = TournamentMatch::where('tournament_id', $tournament->id)->where('round', 1)->where('is_bye', true)->first();
+        $this->assertNotNull($bye);
+        $this->assertSame('completed', $bye->status);
+
+        $this->assertSame(1, TournamentMatch::where('tournament_id', $tournament->id)->where('round', 1)->where('status', 'ready')->count());
+
+        $final = TournamentMatch::where('tournament_id', $tournament->id)->where('round', 2)->first();
+        $this->assertSame($bye->winner_id, $final->participant1_id ?? $final->participant2_id);
     }
 
     public function test_regeneration_replaces_old_matches(): void

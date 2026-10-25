@@ -5,7 +5,7 @@ import { RouterLink } from 'vue-router'
 import { adminApi } from '@/services/core/admin.js'
 import AdminTournamentForm from '@/components/admin/AdminTournamentForm.vue'
 import AdminTournamentParticipants from '@/components/admin/AdminTournamentParticipants.vue'
-import AdminTournamentBracket from '@/components/admin/AdminTournamentBracket.vue'
+import AdminTournamentBracketModal from '@/components/admin/AdminTournamentBracketModal.vue'
 
 const tournaments = ref([])
 const loading = ref(true)
@@ -181,11 +181,11 @@ onMounted(load)
         @updated="onUpdated"
     />
 
-    <AdminTournamentBracket
+    <AdminTournamentBracketModal
         v-if="showBracket && bracketTournament"
         :tournament="bracketTournament"
-        @close="showBracket = false"
-        @updated="onUpdated"
+        @close="showBracket = false; load()"
+        @updated="load"
     />
   </div>
 </template>

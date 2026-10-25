@@ -36,6 +36,10 @@ class ModerationLog extends Model
         'user.email_verified' => 'Почта подтверждена',
         'user.sessions_revoked' => 'Выход со всех устройств',
         'user.minecraft_unlinked' => 'Отвязан Minecraft',
+        'user.item_gift' => 'Подарен предмет',
+        'control.update' => 'Пульт: настройки',
+        'control.giveaway' => 'Раздача',
+        'control.promo' => 'Новый промокод',
     ];
 
     protected $fillable = [

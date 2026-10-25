@@ -12,7 +12,7 @@ class UpdateTournamentRequest extends BaseFormRequest
             'name' => ['sometimes', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:5000'],
             'type' => ['sometimes', 'in:solo,clan'],
-            'format' => ['sometimes', 'in:single_elim,double_elim,round_robin'],
+            'format' => ['sometimes', 'in:single_elim'],
             'status' => ['sometimes', 'in:draft,registration,ongoing,completed,cancelled'],
             'prize_pool' => ['nullable', 'numeric', 'min:0'],
             'prize_currency' => ['nullable', 'string', 'max:8'],

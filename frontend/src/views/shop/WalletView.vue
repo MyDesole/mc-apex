@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { walletApi } from '@/services/wallet/wallet.js'
+import { api } from '@/services/core/api.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import { SOURCE_LABELS, formatCoins } from '@/data/wallet/economy.js'
 
@@ -116,6 +117,33 @@ async function claimDaily() {
     await auth.fetchMe()
   } catch (e) {
     error.value = e.message || 'Не удалось получить бонус.'
+  }
+}
+
+/* Промокод: монеты и/или предмет от администрации */
+const promoCode = ref('')
+const promoBusy = ref(false)
+
+async function redeemPromo() {
+  if (!promoCode.value.trim() || promoBusy.value) return
+
+  promoBusy.value = true
+  error.value = ''
+  notice.value = ''
+
+  try {
+    const result = await api.post('/promo/redeem', { code: promoCode.value.trim() })
+    const parts = [result.coins ? `+${formatCoins(result.coins)} ApexCoin` : null, result.item ? `«${result.item.name}» в инвентаре` : null]
+
+    notice.value = `Промокод активирован: ${parts.filter(Boolean).join(' и ')}`
+    promoCode.value = ''
+
+    await load()
+    await auth.fetchMe()
+  } catch (e) {
+    error.value = e.message || 'Не удалось активировать промокод.'
+  } finally {
+    promoBusy.value = false
   }
 }
 
@@ -273,6 +301,21 @@ onMounted(load)
     </div>
 
     <template v-else>
+
+      <!-- Промокод от администрации -->
+      <form class="promo" @submit.prevent="redeemPromo">
+        <span class="promo__label">Есть промокод?</span>
+        <input
+            v-model="promoCode"
+            class="promo__input"
+            maxlength="32"
+            placeholder="Например, APEX-2026"
+            aria-label="Промокод"
+        />
+        <button type="submit" class="promo__button" :disabled="!promoCode.trim() || promoBusy">
+          {{ promoBusy ? '…' : 'Активировать' }}
+        </button>
+      </form>
 
       <!-- ===================================================
            BALANCE OVERVIEW
@@ -856,4 +899,60 @@ onMounted(load)
 
 <style scoped>
 @import "@/views/shop/WalletView.css";
+
+.promo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+
+  margin-bottom: 16px;
+  padding: 12px 14px;
+
+  background: var(--bg-card);
+  border: 1px dashed rgba(250, 204, 21, 0.35);
+  border-radius: 6px;
+}
+
+.promo__label {
+  color: #fcd34d;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.promo__input {
+  flex: 1;
+  min-width: 160px;
+
+  padding: 9px 12px;
+
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+
+  font: inherit;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.promo__button {
+  padding: 9px 16px;
+
+  color: #1c1917;
+  background: #facc15;
+  border: 0;
+  border-radius: 6px;
+  box-shadow: inset 0 -3px 0 #a16207;
+
+  font: inherit;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.promo__button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
 </style>

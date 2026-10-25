@@ -204,6 +204,8 @@ class RatingService
             ->join('tournament_participants as p', 'p.id', '=', 'm.winner_id')
             ->whereIn('p.user_id', $ids)
             ->whereNull('p.clan_id')
+            // Пропуск (bye) — не победа в матче
+            ->where('m.is_bye', false)
             ->groupBy('p.user_id')
             ->selectRaw('p.user_id, COUNT(*) as wins')
             ->pluck('wins', 'user_id');

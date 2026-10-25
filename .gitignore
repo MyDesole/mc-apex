@@ -44,3 +44,72 @@ Thumbs.db
 /minecraft-tier-plugin/
 /minecraft-rod-plugin/
 /minecraft-tier-plugin-18/
+
+# ============================================================
+#  Minecraft: сервер, плагины и сборки
+# ============================================================
+#  Здесь всё, что относится к игровому серверу, а не к сайту.
+#  Папка plugins/ — это живой сервер: jar-ы плагинов, их конфиги,
+#  миры и логи. Весит под 150 МБ, в репозитории ей не место.
+
+# Живой сервер: плагины, конфиги, миры
+/plugins/
+/server/
+/minecraft-server/
+/run/
+
+# Исходники наших плагинов
+/minecraft-plugin/
+/minecraft-rod-plugin/
+/minecraft-tier-plugin/
+/minecraft-tier-plugin-18/
+/minecraft-*/
+
+# Сборка Maven и Gradle
+/target/
+**/target/
+/build/
+**/build/
+.gradle/
+*.jar
+*.class
+*.pom
+
+# Файлы самого сервера Minecraft
+eula.txt
+server.properties
+ops.json
+whitelist.json
+banned-ips.json
+banned-players.json
+usercache.json
+permissions.yml
+bukkit.yml
+spigot.yml
+paper.yml
+paper-global.yml
+paper-world-defaults.yml
+purpur.yml
+commands.yml
+help.yml
+session.lock
+
+# Миры и регионы
+/world/
+/world_*/
+/lobby/
+/lobby_*/
+/apex_map/
+**/level.dat
+**/level.dat_old
+**/region/
+**/DIM-*/
+*.mca
+*.mcr
+*.dat_old
+
+# Логи и краши игрового сервера
+/crash-reports/
+/minecraft-logs/
+**/latest.log
+*.log.gz

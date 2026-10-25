@@ -1,9 +1,16 @@
 import { api } from '@/services/core/api.js'
 
+// Один запрос /site на загрузку страницы: его ждут подвал и баннер объявления
+let infoPromise = null
+
 export const siteApi = {
-    /** Подвал: соцсети, текст и адрес Minecraft-сервера. */
+    /** Подвал: соцсети, адрес сервера, баннер и состояние «Пульта». */
     info() {
-        return api.get('/site')
+        infoPromise ??= api.get('/site').catch((e) => {
+            infoPromise = null
+            throw e
+        })
+        return infoPromise
     },
 
     /** Статус Minecraft-сервера: онлайн, игроки, версия, MOTD. */

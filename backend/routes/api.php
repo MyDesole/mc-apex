@@ -70,13 +70,14 @@ Route::prefix('auth')->group(function () {
     // Регистрация (3 шага)
     Route::post('/login', [AuthController::class, 'login']);
 
+    // Выключенная регистрация останавливает уже на первом шаге — до письма с кодом
     Route::post('/register/send-code', [AuthController::class, 'sendVerificationCode'])
-        ->middleware('throttle:3,1');
+        ->middleware(['throttle:3,1', 'feature:registration']);
 
     Route::post('/register/verify-code', [AuthController::class, 'verifyCode'])
         ->middleware('throttle:10,1');
 
-    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/register', [AuthController::class, 'register'])->middleware('feature:registration');
 });
 
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
@@ -295,10 +296,10 @@ Route::middleware('auth:sanctum')->group(function () {
     |----------------------------------------------------------------------
     */
     Route::prefix('forum')->group(function () {
-        Route::post('/topics', [ForumController::class, 'store']);
+        Route::post('/topics', [ForumController::class, 'store'])->middleware('feature:forum_posting');
         Route::put('/topics/{topic}', [ForumController::class, 'update'])->whereNumber('topic');
         Route::delete('/topics/{topic}', [ForumController::class, 'destroy'])->whereNumber('topic');
-        Route::post('/topics/{topic}/reply', [ForumController::class, 'reply'])->whereNumber('topic');
+        Route::post('/topics/{topic}/reply', [ForumController::class, 'reply'])->whereNumber('topic')->middleware('feature:forum_posting');
 
         Route::put('/replies/{reply}', [ForumController::class, 'updateReply'])->whereNumber('reply');
         Route::delete('/replies/{reply}', [ForumController::class, 'destroyReply'])->whereNumber('reply');
@@ -342,7 +343,7 @@ Route::middleware('auth:sanctum')->group(function () {
     |----------------------------------------------------------------------
     */
     Route::prefix('shop')->group(function () {
-        Route::post('/{shopItem}/purchase', [ShopController::class, 'purchase'])->whereNumber('shopItem');
+        Route::post('/{shopItem}/purchase', [ShopController::class, 'purchase'])->whereNumber('shopItem')->middleware('feature:shop');
         Route::post('/{shopItem}/equip', [ShopController::class, 'equip'])->whereNumber('shopItem');
         Route::post('/{shopItem}/unequip', [ShopController::class, 'unequip'])->whereNumber('shopItem');
     });
@@ -381,7 +382,7 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     Route::prefix('tier-tests')->group(function () {
         Route::get('/', [TierTestController::class, 'index']);
-        Route::post('/', [TierTestController::class, 'store']);
+        Route::post('/', [TierTestController::class, 'store'])->middleware('feature:tier_tests');
         Route::get('/{tierTest}', [TierTestController::class, 'show'])->whereNumber('tierTest');
         Route::post('/{tierTest}/cancel', [TierTestController::class, 'cancel'])->whereNumber('tierTest');
         Route::post('/{tierTest}/appeal', [\App\Domains\Tiers\Controllers\TierTestAppealController::class, 'store'])
@@ -420,7 +421,7 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     Route::prefix('clans')->group(function () {
         // Создание
-        Route::post('/', [ClanController::class, 'store']);
+        Route::post('/', [ClanController::class, 'store'])->middleware('feature:clan_creation');
 
         // Просмотр клана вынесен в публичные маршруты (доступен гостям)
         Route::match(['put', 'post'], '/{clan}', [ClanController::class, 'update'])->whereNumber('clan');
@@ -580,6 +581,9 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     Route::get('/tier-test-appeals', [\App\Domains\Tiers\Controllers\TierTestAppealController::class, 'mine']);
 
+    // Промокоды от администрации — в кошельке
+    Route::post('/promo/redeem', [\App\Domains\Control\Controllers\ControlController::class, 'redeem'])->middleware('throttle:10,1');
+
     // Жалобы игроков
     Route::get('/reports/reasons', [\App\Domains\Moderation\Controllers\ReportController::class, 'reasons']);
     Route::post('/reports', [\App\Domains\Moderation\Controllers\ReportController::class, 'store'])->middleware('throttle:10,1');
@@ -708,6 +712,20 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Рефералы: кто кого привёл
         Route::get('/referrals', [\App\Domains\Moderation\Controllers\PlayerAdminController::class, 'referrals']);
+
+        // «Пульт»: объявление, переключатели, событие xN, раздачи, промокоды
+        Route::prefix('control')->group(function () {
+            $control = \App\Domains\Control\Controllers\ControlController::class;
+            Route::get('/', [$control, 'show']);
+            Route::put('/', [$control, 'update']);
+            Route::post('/giveaway', [$control, 'giveaway']);
+            Route::get('/online', [$control, 'online']);
+            Route::get('/promo-codes', [$control, 'promoIndex']);
+            Route::post('/promo-codes', [$control, 'promoStore']);
+            Route::post('/promo-codes/{promo}/toggle', [$control, 'promoToggle'])->whereNumber('promo');
+            Route::delete('/promo-codes/{promo}', [$control, 'promoDestroy'])->whereNumber('promo');
+        });
+        Route::post('/users/{user}/give-item', [\App\Domains\Control\Controllers\ControlController::class, 'giveItem'])->whereNumber('user');
 
         // --- АЧИВКИ ---
         Route::post('/users/{user}/achievements/{achievement}', [AdminAchievementController::class, 'grant']);

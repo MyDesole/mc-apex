@@ -40,6 +40,10 @@ function notificationIcon(notification) {
     tier_test_appeal_resolved: 'check',
     moderation_warning: 'alert',
     report_resolved: 'shield',
+    announcement: 'gift',
+    tournament_approved: 'check',
+    tournament_rejected: 'close',
+    tournament_won: 'trophy',
 
     clan_application: 'shield',
     clan_application_accepted: 'check',
@@ -63,6 +67,10 @@ function notificationType(notification) {
     tier_test_appeal_resolved: 'Апелляция',
     moderation_warning: 'Модерация',
     report_resolved: 'Жалоба',
+    announcement: 'Администрация',
+    tournament_approved: 'Турнир',
+    tournament_rejected: 'Турнир',
+    tournament_won: 'Турнир',
 
     clan_application: 'Клан',
     clan_application_accepted: 'Клан',
@@ -169,6 +177,11 @@ async function open(notification) {
 
     else if (type === 'tier_test_completed' || type === 'tier_test_appeal_resolved') {
       await router.push('/profile')
+    }
+
+    // Турнир: одобрение заявки, отказ, победа
+    else if (type?.startsWith('tournament_') && data.tournament_id) {
+      await router.push(`/tournaments/${data.tournament_id}`)
     }
 
     // Заявка на вид бриджа: ведём в раздел проверки

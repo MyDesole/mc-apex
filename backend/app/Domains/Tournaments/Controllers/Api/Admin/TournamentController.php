@@ -11,6 +11,7 @@ use App\Domains\Tournaments\Models\Tournament;
 use App\Domains\Tournaments\Models\TournamentMatch;
 use App\Domains\Tournaments\Models\TournamentParticipant;
 use App\Domains\Tournaments\Services\TournamentBracketService;
+use App\Domains\Tournaments\Notifications\TournamentNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -51,6 +52,14 @@ class TournamentController extends Controller
     {
         $validated = $request->validated();
 
+        // Баннер сохраняем файлом, как при создании: раньше в базу
+        // попадал путь временного файла загрузки
+        if ($request->hasFile('banner')) {
+            $validated['banner'] = $request->file('banner')->store('tournaments', 'public');
+        } else {
+            unset($validated['banner']);
+        }
+
         $tournament->update($validated);
 
         return response()->json(['tournament' => $tournament->fresh()]);
@@ -80,6 +89,8 @@ class TournamentController extends Controller
 
         $participant->update(['status' => 'approved']);
 
+        $this->notifyParticipant($participant, 'tournament_approved', "Заявка на турнир «{$tournament->name}» одобрена — ждите сетку!");
+
         return response()->json(['participant' => $participant->fresh()]);
     }
 
@@ -89,7 +100,17 @@ class TournamentController extends Controller
 
         $participant->update(['status' => 'rejected']);
 
+        $this->notifyParticipant($participant, 'tournament_rejected', "Заявка на турнир «{$tournament->name}» отклонена.");
+
         return response()->json(['participant' => $participant->fresh()]);
+    }
+
+    /** Игроку — лично, клану — его лидеру. */
+    private function notifyParticipant(TournamentParticipant $participant, string $type, string $message): void
+    {
+        $recipient = $participant->user ?? $participant->clan?->leader;
+
+        $recipient?->notify(new TournamentNotification($type, $message, $participant->tournament_id));
     }
 
     public function setSeeds(SetTournamentSeedsRequest $request, Tournament $tournament): JsonResponse
@@ -144,14 +165,20 @@ class TournamentController extends Controller
         $validated = $request->validated();
 
         if (! empty($validated['winner_id'])) {
-            // Победитель обязан быть участником ЭТОГО турнира: правило
-            // exists:tournament_participants проверяло только существование,
-            // и в следующий матч мог пройти чужой участник.
-            $belongs = TournamentParticipant::where('id', $validated['winner_id'])
-                ->where('tournament_id', $tournament->id)
-                ->exists();
+            // Победитель — один из двух участников именно этого матча
+            abort_unless(
+                in_array((int) $validated['winner_id'], [(int) $match->participant1_id, (int) $match->participant2_id], true),
+                422,
+                'Победитель должен быть одним из участников матча.'
+            );
 
-            abort_unless($belongs, 422, 'Победитель не участвует в этом турнире.');
+            // Следующий матч уже сыгран — менять результат поздно: в нём играл прежний победитель
+            $next = $match->nextMatch;
+            abort_if(
+                $next && $next->status === 'completed' && (int) $match->winner_id !== (int) $validated['winner_id'],
+                422,
+                'Следующий матч уже сыгран — сначала исправьте его.'
+            );
 
             $validated['status'] = 'completed';
             $validated['completed_at'] = now();

@@ -178,6 +178,24 @@ onMounted(load)
       </div>
     </section>
 
+    <!-- ЧЕМПИОН: победитель финала -->
+    <section v-if="tournament.champion" class="champion">
+      <span class="champion__cup" aria-hidden="true">🏆</span>
+      <div>
+        <span class="champion__label">Чемпион турнира</span>
+        <RouterLink
+            v-if="tournament.champion.username"
+            :to="`/user/${encodeURIComponent(tournament.champion.username)}`"
+            class="champion__name"
+        >
+          {{ tournament.champion.username }}
+        </RouterLink>
+        <RouterLink v-else :to="`/clans/${tournament.champion.clan_id}`" class="champion__name">
+          [{{ tournament.champion.tag }}] {{ tournament.champion.name }}
+        </RouterLink>
+      </div>
+    </section>
+
     <!-- СЕТКА -->
     <section class="block">
       <header class="block-head">
@@ -204,4 +222,41 @@ onMounted(load)
 
 <style scoped>
 @import "@/views/tournaments/TournamentView.css";
+
+.champion {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  margin-bottom: 18px;
+  padding: 16px 20px;
+
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.14), rgba(250, 204, 21, 0.03));
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  border-radius: 6px;
+}
+
+.champion__cup {
+  font-size: 34px;
+}
+
+.champion__label {
+  display: block;
+  color: #fcd34d;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.champion__name {
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 22px;
+  text-decoration: none;
+}
+
+.champion__name:hover {
+  text-decoration: underline;
+}
 </style>

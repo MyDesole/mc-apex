@@ -5,7 +5,20 @@ import { avatarLetter } from '@/utils/playerStyling.js'
 const props = defineProps({
   matches: { type: Array, default: () => [] },
   tournamentType: { type: String, default: 'solo' }, // solo / clan
+  // В админке матч с двумя участниками кликабелен — открывает ввод результата
+  editable: { type: Boolean, default: false },
+  selectedId: { type: Number, default: null },
 })
+
+const emit = defineEmits(['pick'])
+
+function canPick(match) {
+  return props.editable && !match.is_bye && match.participant1 && match.participant2
+}
+
+function pick(match) {
+  if (canPick(match)) emit('pick', match)
+}
 
 const rounds = computed(() => {
   const grouped = {}
@@ -122,8 +135,14 @@ function slotScore(match, slot) {
                             {
                                 'match--ready': m.participant1 && m.participant2 && m.status !== 'completed',
                                 'match--live': m.status === 'live',
+                                'match--pickable': canPick(m),
+                                'match--selected': selectedId === m.id,
                             }
                         ]"
+              :role="canPick(m) ? 'button' : undefined"
+              :tabindex="canPick(m) ? 0 : undefined"
+              @click="pick(m)"
+              @keydown.enter="pick(m)"
           >
             <!-- Слот 1 -->
             <div
@@ -202,8 +221,16 @@ function slotScore(match, slot) {
             </div>
 
             <!-- Подпись статуса -->
+            <div v-else-if="m.is_bye" class="match__status match__status--pending">
+              Пропуск — без соперника
+            </div>
+
             <div v-else-if="m.status === 'completed'" class="match__status">
               Завершён
+            </div>
+
+            <div v-else-if="canPick(m)" class="match__status match__status--action">
+              Ввести результат
             </div>
 
             <div v-else-if="m.status === 'cancelled'" class="match__status match__status--cancelled">
@@ -222,4 +249,21 @@ function slotScore(match, slot) {
 
 <style scoped>
 @import "@/components/admin/AdminTournamentBracket.css";
+
+.match--pickable {
+  cursor: pointer;
+}
+
+.match--pickable:hover {
+  border-color: var(--accent);
+}
+
+.match--selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.match__status--action {
+  color: var(--accent-light);
+}
 </style>
