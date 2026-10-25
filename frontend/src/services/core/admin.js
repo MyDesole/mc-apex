@@ -26,6 +26,14 @@ export const adminApi = {
         return api.get('/admin/moderation-log', { params })
     },
 
+    // Действия с аккаунтом из досье
+    playerAction(userId, action, payload = {}) {
+        return api.post(`/admin/users/${userId}/${action}`, payload)
+    },
+    referrals() {
+        return api.get('/admin/referrals')
+    },
+
     // Юзеры
     users(params = {}) {
         const q = new URLSearchParams(params).toString()

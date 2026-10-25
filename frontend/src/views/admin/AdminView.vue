@@ -30,6 +30,7 @@ import AdminShop from '@/components/admin/AdminShop.vue'
 import AdminForum from '@/components/admin/AdminForum.vue'
 import AdminVerification from '@/components/admin/AdminVerification.vue'
 import AdminAppeals from '@/components/admin/AdminAppeals.vue'
+import AdminReferrals from '@/components/admin/AdminReferrals.vue'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -67,6 +68,7 @@ const SECTIONS = [
     items: [
       { key: 'users', label: 'Пользователи', icon: 'handshake', component: AdminUsers, adminOnly: true },
       { key: 'verification', label: 'Верификация', icon: 'check', component: AdminVerification, adminOnly: true },
+      { key: 'referrals', label: 'Рефералы', icon: 'gift', component: AdminReferrals, adminOnly: true },
     ],
   },
   {
@@ -216,6 +218,7 @@ onUnmounted(() => clearInterval(countersTimer))
         :user-id="dossierId"
         @close="dossierId = null"
         @changed="loadCounters"
+        @open="openDossier"
     />
   </div>
 </template>

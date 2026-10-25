@@ -26,6 +26,16 @@ class ModerationLog extends Model
         'report.dismiss' => 'Жалоба отклонена',
         'report.resolve' => 'Жалоба рассмотрена',
         'content.remove' => 'Удаление контента',
+        'user.rename' => 'Смена ника',
+        'user.avatar_removed' => 'Удалён аватар',
+        'user.cover_removed' => 'Удалена обложка',
+        'user.profile_cleared' => 'Очищен профиль',
+        'user.note' => 'Заметка',
+        'user.password_reset_sent' => 'Письмо для сброса пароля',
+        'user.password_set' => 'Временный пароль',
+        'user.email_verified' => 'Почта подтверждена',
+        'user.sessions_revoked' => 'Выход со всех устройств',
+        'user.minecraft_unlinked' => 'Отвязан Minecraft',
     ];
 
     protected $fillable = [

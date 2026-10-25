@@ -3,6 +3,8 @@
 namespace App\Domains\Moderation\Controllers;
 
 use App\Domains\Clan\Models\ClanWar;
+use App\Domains\Forum\Models\ForumReply;
+use App\Domains\Forum\Models\ForumTopic;
 use App\Domains\Moderation\Models\ModerationLog;
 use App\Domains\Moderation\Models\Report;
 use App\Domains\Players\Services\PlayerProfileService;
@@ -88,7 +90,17 @@ class DashboardController extends Controller
                 'last_seen_at' => $user->last_seen_at,
                 'achievements_count' => $user->achievements_count,
                 'clan' => $user->clanMember?->clan,
+                'email_verified' => (bool) $user->email_verified_at,
+                // Что можно почистить кнопками в досье
+                'has_avatar' => (bool) $user->avatar,
+                'has_cover' => (bool) $user->cover_path,
+                'cover_url' => $user->cover_url,
+                'bio' => $user->bio,
+                'status' => $user->status,
+                'quote' => $user->quote,
             ],
+            'forum' => $this->forumActivity($user),
+            'referrals' => $this->referralsOf($user, $isAdmin),
             'rank' => ['position' => $position, 'total' => $total],
             'rating' => $user->isStaff() ? null : $rating->breakdown($user),
             'tier_tests' => TierTest::where('user_id', $user->id)
@@ -117,6 +129,64 @@ class DashboardController extends Controller
                     ->get(['id', 'amount', 'balance_after', 'source', 'description', 'created_at'])
                 : null,
         ]);
+    }
+
+    /* ----------------------------- Досье: форум и рефералы ----------------------------- */
+
+    /** Темы и ответы игрока на форуме, включая удалённые (с пометкой). */
+    private function forumActivity(User $user): array
+    {
+        return [
+            'topics_count' => ForumTopic::where('author_id', $user->id)->count(),
+            'replies_count' => ForumReply::where('author_id', $user->id)->count(),
+            'topics' => ForumTopic::where('author_id', $user->id)
+                ->latest()
+                ->limit(8)
+                ->get(['id', 'title', 'replies_count', 'deleted_at', 'created_at']),
+            'replies' => ForumReply::where('author_id', $user->id)
+                ->with('topic:id,title')
+                ->latest()
+                ->limit(8)
+                ->get(['id', 'topic_id', 'body', 'deleted_at', 'created_at'])
+                ->map(fn (ForumReply $r) => [
+                    'id' => $r->id,
+                    'topic_id' => $r->topic_id,
+                    'topic_title' => $r->topic?->title,
+                    'body' => \Illuminate\Support\Str::limit(strip_tags((string) $r->body), 160),
+                    'deleted' => (bool) $r->deleted_at,
+                    'created_at' => $r->created_at,
+                ]),
+        ];
+    }
+
+    /** Кто пригласил игрока и кого привёл он. */
+    private function referralsOf(User $user, bool $isAdmin): array
+    {
+        $referrer = $user->referred_by ? User::find($user->referred_by, ['id', 'username']) : null;
+
+        return [
+            'code' => $isAdmin ? $user->referral_code : null,
+            'invited_by' => $referrer ? ['id' => $referrer->id, 'username' => $referrer->username] : null,
+            'invited_count' => User::where('referred_by', $user->id)->count(),
+            'invited' => User::where('referred_by', $user->id)
+                ->latest()
+                ->limit(15)
+                ->get(['id', 'username', 'tier', 'tier_score', 'is_banned', 'created_at'])
+                ->map(fn (User $u) => [
+                    'id' => $u->id,
+                    'username' => $u->username,
+                    'tier' => $u->tier,
+                    'tested' => (float) $u->tier_score > 0,
+                    'is_banned' => (bool) $u->is_banned,
+                    'created_at' => $u->created_at,
+                ]),
+            'coins_earned' => $isAdmin
+                ? (int) CoinTransaction::where('user_id', $user->id)
+                    ->where('source', CoinTransaction::SOURCE_REFERRAL)
+                    ->where('amount', '>', 0)
+                    ->sum('amount')
+                : null,
+        ];
     }
 
     /* ----------------------------- Блоки дашборда ----------------------------- */

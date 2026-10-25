@@ -597,6 +597,15 @@ Route::middleware('auth:sanctum')->group(function () {
         // Поиск игрока для досье — модератору тоже (без почты в выдаче)
         Route::get('/players/search', [\App\Domains\Moderation\Controllers\ReportController::class, 'searchPlayers']);
 
+        // Чистка профиля и заметки — модератору и админу
+        Route::prefix('users/{user}')->whereNumber('user')->group(function () {
+            $player = \App\Domains\Moderation\Controllers\PlayerAdminController::class;
+            Route::post('/remove-avatar', [$player, 'removeAvatar']);
+            Route::post('/remove-cover', [$player, 'removeCover']);
+            Route::post('/clear-profile', [$player, 'clearProfile']);
+            Route::post('/note', [$player, 'note']);
+        });
+
         // Апелляции на результаты тир-тестов
         Route::get('/tier-test-appeals', [\App\Domains\Tiers\Controllers\TierTestAppealController::class, 'index']);
         Route::post('/tier-test-appeals/{appeal}/resolve', [\App\Domains\Tiers\Controllers\TierTestAppealController::class, 'resolve'])
@@ -685,6 +694,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/users/{user}/verify', [AdminUserController::class, 'verify'])->whereNumber('user');
         Route::post('/users/{user}/unverify', [AdminUserController::class, 'unverify'])->whereNumber('user');
         Route::post('/users/{user}/role', [AdminRoleController::class, 'update'])->whereNumber('user');
+
+        // Аккаунт игрока из досье: ник, пароль, почта, сессии, Minecraft
+        Route::prefix('users/{user}')->whereNumber('user')->group(function () {
+            $player = \App\Domains\Moderation\Controllers\PlayerAdminController::class;
+            Route::post('/rename', [$player, 'rename']);
+            Route::post('/send-password-reset', [$player, 'sendPasswordReset'])->middleware('throttle:5,1');
+            Route::post('/temporary-password', [$player, 'temporaryPassword']);
+            Route::post('/verify-email', [$player, 'verifyEmail']);
+            Route::post('/logout-everywhere', [$player, 'logoutEverywhere']);
+            Route::post('/unlink-minecraft', [$player, 'unlinkMinecraft']);
+        });
+
+        // Рефералы: кто кого привёл
+        Route::get('/referrals', [\App\Domains\Moderation\Controllers\PlayerAdminController::class, 'referrals']);
 
         // --- АЧИВКИ ---
         Route::post('/users/{user}/achievements/{achievement}', [AdminAchievementController::class, 'grant']);

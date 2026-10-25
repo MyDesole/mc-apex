@@ -297,6 +297,18 @@ class User extends Authenticatable implements MustVerifyEmail
             ->where('status', 'accepted');
     }
 
+    /** Кого игрок пригласил по своей реферальной ссылке. */
+    public function referrals(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(self::class, 'referred_by');
+    }
+
+    /** Кто пригласил игрока. */
+    public function referrer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(self::class, 'referred_by');
+    }
+
     public function friendsList(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(
