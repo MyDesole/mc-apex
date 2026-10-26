@@ -350,9 +350,12 @@ function formatDate(value) {
         </button>
       </div>
 
-      <!-- Active war -->
+      <!--
+        Состав и запись «В бой». Записаться можно и пока соперник не
+        принял вызов: иначе создатель войны не мог в ней участвовать.
+      -->
       <div
-          v-if="war.status === 'accepted'"
+          v-if="['pending', 'accepted'].includes(war.status)"
           class="active-war"
       >
         <button
@@ -553,7 +556,7 @@ function formatDate(value) {
           </button>
 
           <button
-              v-if="permissions.wars"
+              v-if="permissions.wars && war.status === 'accepted'"
               class="active-action active-action--result"
               @click="openResult"
           >

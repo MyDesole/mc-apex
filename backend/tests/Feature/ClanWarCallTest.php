@@ -85,6 +85,27 @@ class ClanWarCallTest extends TestCase
         $this->assertCount(0, $this->warNotes($stranger, 'clan_war_call'));
     }
 
+    public function test_creator_joins_own_war_before_it_is_accepted(): void
+    {
+        [$clan, $leader] = $this->clan('AAA');
+        [$enemy] = $this->clan('BBB');
+
+        $warId = $this->actingAs($leader)
+            ->postJson("/api/clans/{$enemy->id}/wars")
+            ->assertCreated()
+            ->json('war.id');
+
+        $this->actingAs($leader)->postJson("/api/wars/{$warId}/join")->assertOk();
+
+        $this->assertDatabaseHas('clan_war_participants', [
+            'clan_war_id' => $warId, 'user_id' => $leader->id, 'clan_id' => $clan->id,
+        ]);
+
+        // Состав виден на странице клана, иначе кнопка «Покинуть» не появится
+        $wars = $this->actingAs($leader)->getJson("/api/clans/{$clan->id}")->assertOk()->json('outgoing_wars');
+        $this->assertSame($leader->id, collect($wars)->firstWhere('id', $warId)['participants'][0]['user_id'] ?? null);
+    }
+
     public function test_regular_member_cannot_call(): void
     {
         [$clan] = $this->clan('AAA');
