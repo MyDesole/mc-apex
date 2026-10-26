@@ -7,6 +7,7 @@ use App\Domains\Shop\Requests\Shop\PurchaseRequest;
 use App\Domains\Shop\Models\ShopItem;
 use App\Domains\Tiers\Models\TierTest;
 use App\Domains\Wallet\Services\RewardService;
+use App\Domains\Shop\Services\BundleService;
 use App\Domains\Shop\Services\ShopService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -55,6 +56,29 @@ class ShopController extends Controller
             'priority_charges' => ShopService::priorityCharges($user),
             'priority_candidates' => ShopService::priorityCandidates($user),
             'max_equipped_badges' => (int) config('apex.shop.max_equipped_badges', 3),
+            // Наборы, из которых что-то есть: надеваются одной кнопкой
+            'bundles' => BundleService::forInventory($user),
+        ]);
+    }
+
+    /** Надеть набор целиком. */
+    public function equipBundle(Request $request, ShopItem $shopItem): JsonResponse
+    {
+        $user = $request->user();
+
+        try {
+            $count = BundleService::equip($user, $shopItem);
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        $user = $user->fresh();
+
+        return response()->json([
+            'message' => "{$shopItem->name} надет — предметов: {$count}.",
+            'items' => ShopService::inventory($user),
+            'equipped_badges' => ShopService::equippedBadges($user),
+            'bundles' => BundleService::forInventory($user),
         ]);
     }
 
@@ -76,6 +100,9 @@ class ShopController extends Controller
             'tier_test' => $result['tier_test'],
             // Подсветка клана: до какого момента действует
             'clan_highlight' => $result['clan_highlight'] ?? null,
+            // Набор: что именно выдано и сколько списано с учётом скидки
+            'granted' => $result['granted'] ?? null,
+            'paid' => $result['paid'] ?? null,
             'inventory' => ShopService::inventory($request->user()->fresh()),
         ], 201);
     }

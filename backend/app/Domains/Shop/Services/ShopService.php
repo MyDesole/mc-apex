@@ -41,7 +41,10 @@ class ShopService
             ->values();
 
         if (! $user) {
-            return $items->map(fn (ShopItem $item) => self::presentItem($item));
+            return $items->map(fn (ShopItem $item) => self::presentItem(
+                $item,
+                $item->isBundle() ? BundleService::present($item) : [],
+            ));
         }
 
         $owned = UserInventory::where('user_id', $user->id)
@@ -52,7 +55,30 @@ class ShopService
             ? ClanInventory::where('clan_id', $leaderClan->id)->get()->keyBy('shop_item_id')
             : collect();
 
-        return $items->map(function (ShopItem $item) use ($owned, $clanOwned, $user, $leaderClan) {
+        $ownsEverything = self::ownsAllCosmetics($user);
+        $ownedIds = $owned->keys()->map(fn ($id) => (int) $id)->all();
+
+        return $items->map(function (ShopItem $item) use ($owned, $clanOwned, $user, $leaderClan, $ownsEverything, $ownedIds) {
+            // Набор: состав, ценность и цена с учётом уже купленного
+            if ($item->isBundle()) {
+                $bundle = BundleService::present($item, $ownedIds, $ownsEverything);
+
+                return self::presentItem($item, [
+                    ...$bundle,
+                    'can_afford' => (int) $user->apex_coins >= $bundle['bundle']['price_for_you'],
+                ]);
+            }
+
+            // Админу вся личная косметика доступна без покупки
+            if ($ownsEverything && $item->isPersonalCosmetic()) {
+                return self::presentItem($item, [
+                    'owned' => true,
+                    'quantity' => 1,
+                    'equipped' => (bool) $owned->get($item->id)?->equipped_at,
+                    'can_afford' => true,
+                ]);
+            }
+
             $row = $item->type === ShopItem::TYPE_CLAN_HIGHLIGHT_STYLE
                 ? $clanOwned->get($item->id)
                 : $owned->get($item->id);
@@ -73,6 +99,15 @@ class ShopService
                 'treasury_price' => $treasuryPrice,
             ], fn ($value) => $value !== null));
         });
+    }
+
+    /**
+     * Админам вся личная косметика доступна сразу, без покупки:
+     * в инвентаре видна целиком, надевается без записи о покупке.
+     */
+    public static function ownsAllCosmetics(?User $user): bool
+    {
+        return $user?->role === 'admin';
     }
 
     /** Клан, которым руководит игрок, или null. */
@@ -114,10 +149,12 @@ class ShopService
      */
     public static function inventory(User $user): Collection
     {
-        return UserInventory::with('item')
+        $rows = UserInventory::with('item')
             ->where('user_id', $user->id)
             ->get()
-            ->filter(fn (UserInventory $row) => $row->item !== null)
+            ->filter(fn (UserInventory $row) => $row->item !== null);
+
+        $inventory = $rows
             ->map(fn (UserInventory $row) => array_merge(
                 self::presentItem($row->item),
                 [
@@ -130,6 +167,31 @@ class ShopService
                 ]
             ))
             ->values();
+
+        if (! self::ownsAllCosmetics($user)) {
+            return $inventory;
+        }
+
+        // Админ: добавляем всю личную косметику, которой ещё нет в инвентаре
+        $have = $rows->pluck('shop_item_id')->all();
+
+        $free = ShopItem::query()
+            ->whereIn('type', ShopItem::EQUIPPABLE)
+            ->whereNotIn('id', $have)
+            ->orderBy('sort_order')
+            ->get()
+            ->filter(fn (ShopItem $item) => $item->isPersonalCosmetic())
+            ->map(fn (ShopItem $item) => array_merge(self::presentItem($item), [
+                'inventory_id' => "free-{$item->id}",
+                'shop_item_id' => $item->id,
+                'quantity' => 1,
+                'owned' => true,
+                'equipped' => false,
+                'equipped_at' => null,
+                'acquired_at' => null,
+            ]));
+
+        return $inventory->concat($free)->values();
     }
 
     /**
@@ -183,6 +245,14 @@ class ShopService
     {
         if (! $item->is_active) {
             throw new RuntimeException('Этот предмет больше не продаётся.');
+        }
+
+        if ($item->isBundle()) {
+            return BundleService::purchase($user, $item);
+        }
+
+        if (self::ownsAllCosmetics($user) && $item->isPersonalCosmetic()) {
+            throw new RuntimeException('Вам вся косметика доступна бесплатно — просто наденьте её в инвентаре.');
         }
 
         $quantity = max(1, (int) ($options['quantity'] ?? 1));
@@ -556,6 +626,16 @@ class ShopService
             ->where('shop_item_id', $item->id)
             ->first();
 
+        // Админу запись в инвентаре создаётся при первом надевании
+        if (! $row && self::ownsAllCosmetics($user) && $item->isPersonalCosmetic()) {
+            $row = UserInventory::create([
+                'user_id' => $user->id,
+                'shop_item_id' => $item->id,
+                'quantity' => 1,
+                'acquired_at' => now(),
+            ]);
+        }
+
         if (! $row) {
             throw new RuntimeException('Сначала нужно купить этот предмет.');
         }
@@ -812,6 +892,11 @@ class ShopService
                 'name' => $row->item->name,
                 'icon' => $row->item->icon,
                 'color' => $row->item->color,
+                // Пиксельная картинка и анимация бейджа (новые бейджи)
+                'sprite' => $row->item->metadata['sprite'] ?? null,
+                'anim' => $row->item->metadata['anim'] ?? null,
+                // Премиальное оформление чипа: holo, neon, glitch, galaxy, fire, gold
+                'style' => $row->item->metadata['style'] ?? null,
             ])
             ->values()
             ->all();

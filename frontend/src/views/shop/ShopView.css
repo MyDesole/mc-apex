@@ -680,6 +680,26 @@
   background: rgba(167, 139, 250, 0.08);
 }
 
+/* Наборы */
+
+.bundles {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bundles__head p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.bundles__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 16px;
+}
+
 /* Баннер кейсов */
 
 .cases-banner {

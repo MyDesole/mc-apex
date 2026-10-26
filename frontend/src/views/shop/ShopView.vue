@@ -6,6 +6,7 @@ import { walletApi } from '@/services/wallet/wallet.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import AppIcon from '@/components/core/AppIcon.vue'
 import ShopItemPreview from '@/components/shop/ShopItemPreview.vue'
+import BundleCard from '@/components/shop/BundleCard.vue'
 import {
   TYPE_LABELS,
   RARITY_LABELS,
@@ -57,10 +58,15 @@ const activeType = ref(
     TABS.some((tab) => tab.value === requestedType) ? requestedType : 'all'
 )
 
-const filtered = computed(() => {
-  if (activeType.value === 'all') return items.value
+// Наборы показываем отдельной витриной над каталогом
+const bundles = computed(() => items.value.filter((item) => item.type === 'bundle'))
 
-  return items.value.filter((item) => item.type === activeType.value)
+const filtered = computed(() => {
+  const list = items.value.filter((item) => item.type !== 'bundle')
+
+  if (activeType.value === 'all') return list
+
+  return list.filter((item) => item.type === activeType.value)
 })
 
 // === Покупка ===
@@ -95,6 +101,10 @@ const payingFromTreasury = computed(() => isClanPurchase.value && payFrom.value 
 
 const totalPrice = computed(() => {
   const item = purchaseItem.value
+
+  // Набор дешевеет на то, что уже куплено: цену считает сервер
+  if (item?.bundle) return item.bundle.price_for_you
+
   const unit = payingFromTreasury.value && item?.treasury_price != null ? item.treasury_price : (item?.price ?? 0)
 
   return unit * purchaseQuantity.value
@@ -257,6 +267,15 @@ async function confirmPurchase() {
     }
 
     await auth.fetchMe()
+
+    // Набор выдал сразу несколько предметов — перечитываем витрину целиком
+    if (purchaseItem.value.type === 'bundle') {
+      closePurchase()
+      await load()
+      notice.value = result.message
+      return
+    }
+
     closePurchase()
   } catch (e) {
     // Показываем причину внутри окна покупки: на телефоне окно закрывает
@@ -363,6 +382,24 @@ onMounted(load)
             <p>Заходите каждый день и забирайте бонус в кошельке.</p>
           </div>
         </article>
+      </div>
+    </section>
+
+    <!-- ===================== Наборы ===================== -->
+    <section v-if="bundles.length" class="bundles">
+      <div class="bundles__head">
+        <h2 class="section-title">Наборы</h2>
+        <p>Коллекции «Майнкрафт оживает»: всё в одной теме и дешевле, чем по отдельности. Часть предметов есть только в наборах.</p>
+      </div>
+
+      <div class="bundles__grid">
+        <BundleCard
+            v-for="bundle in bundles"
+            :key="bundle.id"
+            :bundle="bundle"
+            :can-buy="!auth.isAuthenticated || bundle.can_afford"
+            @buy="openPurchase(bundle)"
+        />
       </div>
     </section>
 

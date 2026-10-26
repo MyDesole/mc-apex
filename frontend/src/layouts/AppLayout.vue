@@ -77,6 +77,26 @@ async function loadCaseStatus() {
 }
 
 watch(menuOpen, (open) => open && loadCaseStatus())
+watch(mobileMenuOpen, (open) => open && loadCaseStatus())
+
+/** Мобильное меню: разделы сайта плитками. */
+const MOBILE_SECTIONS = [
+  { to: '/', label: 'Главная', icon: 'M3 11 12 3l9 8M5 9.5V21h5v-6h4v6h5V9.5' },
+  { to: '/players', label: 'Рейтинг', icon: 'M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM17 5h3a2 2 0 0 1 0 4h-3M7 5H4a2 2 0 0 0 0 4h3' },
+  { to: '/clans', label: 'Кланы', icon: 'M12 2 3 6v6c0 5 3.8 9.3 9 10 5.2-.7 9-5 9-10V6l-9-4Z' },
+  { to: '/forum', label: 'Форум', icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' },
+  { to: '/tournaments', label: 'Турниры', icon: 'M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2' },
+  { to: '/news', label: 'Новости', icon: 'M4 4h16v16H4zM8 8h8M8 12h8M8 16h5' },
+]
+
+/** Мобильное меню: аккаунт. count — счётчик непрочитанного. */
+const MOBILE_ACCOUNT = [
+  { to: '/inventory', label: 'Инвентарь', icon: 'M21 8 12 3 3 8v8l9 5 9-5V8ZM3 8l9 5 9-5M12 13v8' },
+  { to: '/messages', label: 'Сообщения', icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', count: () => chatUnread.value },
+  { to: '/notifications', label: 'Уведомления', icon: 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0', count: () => unreadCount.value },
+  { to: '/friends', label: 'Друзья', icon: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75' },
+  { to: '/support', label: 'Техподдержка', icon: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4M12 17h.01' },
+]
 
 /** Служебные разделы: показываем только ролям с доступом. */
 const STAFF_LINKS = [
@@ -604,183 +624,110 @@ watch(mobileMenuOpen, (open) => {
           v-if="mobileMenuOpen"
           class="mobile-menu"
       >
+        <!-- Игрок: аватар, ник, баланс — ведёт в профиль -->
+        <RouterLink v-if="auth.isAuthenticated" to="/profile" class="mobile-user">
+          <span class="dropdown-avatar">
+            <img v-if="auth.user?.avatar_url" :src="auth.user.avatar_url" :alt="auth.user.username" />
+            <template v-else>{{ (auth.user?.username || 'И').charAt(0).toUpperCase() }}</template>
+          </span>
+          <span class="mobile-user__info">
+            <strong><UserName :user="auth.user" compact /></strong>
+            <span>₳ {{ (auth.user?.apex_coins ?? 0).toLocaleString('ru-RU') }} · открыть профиль</span>
+          </span>
+          <span class="mobile-user__arrow">→</span>
+        </RouterLink>
 
-        <div class="mobile-menu-top">
-          <span>Навигация</span>
-          <span class="mobile-line"></span>
-        </div>
-
-        <nav class="mobile-nav">
-
-          <RouterLink to="/" class="mobile-nav-link">
-            <span class="mobile-icon">⌂</span>
-            <span>Главная</span>
-          </RouterLink>
-
-          <RouterLink to="/players" class="mobile-nav-link">
-            <span class="mobile-icon">♙</span>
-            <span>Рейтинг игроков</span>
-          </RouterLink>
-
-          <RouterLink to="/clans" class="mobile-nav-link">
-            <span class="mobile-icon">♜</span>
-            <span>Кланы</span>
-          </RouterLink>
-
-          <RouterLink to="/forum" class="mobile-nav-link">
-            <span class="mobile-icon">✉</span>
-            <span>Форум</span>
-          </RouterLink>
-
-          <RouterLink to="/tournaments" class="mobile-nav-link">
-            <span class="mobile-icon">♛</span>
-            <span>Турниры</span>
-          </RouterLink>
-
-          <RouterLink to="/news" class="mobile-nav-link">
-            <span class="mobile-icon">▤</span>
-            <span>Новости</span>
-          </RouterLink>
-
-          <RouterLink
-              v-if="auth.user?.clan_member"
-              to="/my-clan"
-              class="mobile-nav-link"
-          >
-            <span class="mobile-icon">◆</span>
-            <span>Мой клан</span>
-          </RouterLink>
-
-          <RouterLink to="/cases" class="mobile-nav-link">
-            <span class="mobile-icon">▣</span>
-            <span>Кейсы</span>
-          </RouterLink>
-
-        </nav>
-
-        <template v-if="auth.isAuthenticated">
-
-          <div class="mobile-section">
-            <span>Аккаунт</span>
-            <span class="mobile-line"></span>
-          </div>
-
-          <nav class="mobile-nav">
-
-            <RouterLink
-                to="/profile"
-                class="mobile-nav-link"
-            >
-              <span class="mobile-icon">◉</span>
-              <span>Профиль</span>
-            </RouterLink>
-
-            <RouterLink
-                to="/inventory"
-                class="dropdown-item"
-                @click="menuOpen = false"
-            >
-              <span class="dropdown-icon">◇</span>
-              <span>Инвентарь</span>
-            </RouterLink>
-
-            <RouterLink
-                to="/support"
-                class="dropdown-item"
-                @click="menuOpen = false"
-            >
-              <span class="dropdown-icon">?</span>
-              <span>Техподдержка</span>
-            </RouterLink>
-
-            <RouterLink
-                to="/friends"
-                class="mobile-nav-link"
-            >
-              <span class="mobile-icon">♧</span>
-              <span>Друзья</span>
-            </RouterLink>
-
-            <RouterLink
-                to="/messages"
-                class="mobile-nav-link"
-            >
-              <span class="mobile-icon">◌</span>
-              <span>Сообщения</span>
-
-              <span
-                  v-if="chatUnread > 0"
-                  class="mobile-badge"
-              >
-                {{ chatUnread > 99 ? '99+' : chatUnread }}
-              </span>
-            </RouterLink>
-
-            <RouterLink
-                to="/notifications"
-                class="mobile-nav-link"
-            >
-              <span class="mobile-icon">♢</span>
-              <span>Уведомления</span>
-
-              <span
-                  v-if="unreadCount > 0"
-                  class="mobile-badge"
-              >
-                {{ unreadCount > 99 ? '99+' : unreadCount }}
-              </span>
-            </RouterLink>
-
-            <RouterLink
-                v-if="['tester', 'admin'].includes(auth.user?.role)"
-                to="/tester"
-                class="mobile-nav-link"
-            >
-              <span class="mobile-icon">✓</span>
-              <span>Панель тестера</span>
-            </RouterLink>
-
-            <RouterLink
-                v-if="['moderator', 'admin'].includes(auth.user?.role)"
-                to="/admin"
-                class="mobile-nav-link"
-            >
-              <span class="mobile-icon">⚙</span>
-              <span>Админка</span>
-            </RouterLink>
-
-            <button
-                class="mobile-nav-link mobile-nav-link--danger"
-                @click="logout"
-            >
-              <span class="mobile-icon">↪</span>
-              <span>Выйти</span>
-            </button>
-
-          </nav>
-
-        </template>
-
-        <div
-            v-else
-            class="mobile-auth"
-        >
-          <RouterLink
-              to="/login"
-              class="mobile-login"
-          >
-            Войти
-          </RouterLink>
-
-          <RouterLink
-              to="/register"
-              class="mobile-register"
-          >
+        <div v-else class="mobile-auth">
+          <RouterLink to="/login" class="mobile-login">Войти</RouterLink>
+          <RouterLink to="/register" class="mobile-register">
             Создать аккаунт
             <span>→</span>
           </RouterLink>
         </div>
 
+        <!-- Разделы сайта плитками -->
+        <div class="mobile-label">Разделы</div>
+        <nav class="mobile-tiles">
+          <RouterLink v-for="link in MOBILE_SECTIONS" :key="link.to" :to="link.to" class="dropdown-tile mobile-tile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path :d="link.icon" />
+            </svg>
+            <span>{{ link.label }}</span>
+          </RouterLink>
+        </nav>
+
+        <!-- Клан и кейсы — заметными карточками -->
+        <RouterLink
+            v-if="clanPulse"
+            to="/my-clan"
+            class="dropdown-clan"
+            :style="{ '--clan-color': clanPulse.clan.banner_color || '#8b5cf6' }"
+        >
+          <span class="dropdown-clan__avatar">
+            <img v-if="clanPulse.clan.avatar_url" :src="clanPulse.clan.avatar_url" :alt="clanPulse.clan.name" />
+            <template v-else>{{ clanPulse.clan.tag?.charAt(0) }}</template>
+          </span>
+          <span class="dropdown-clan__info">
+            <strong>[{{ clanPulse.clan.tag }}] {{ clanPulse.clan.name }}</strong>
+            <span>Мой клан · {{ clanPulse.level }} ур.</span>
+          </span>
+          <span v-if="!clanPulse.checked_in" class="dropdown-clan__chip dropdown-clan__chip--pulse">Отметься</span>
+          <span v-else class="dropdown-clan__arrow">→</span>
+        </RouterLink>
+
+        <RouterLink v-else-if="auth.isAuthenticated" to="/clans" class="dropdown-clan dropdown-clan--join">
+          <span class="dropdown-clan__avatar">＋</span>
+          <span class="dropdown-clan__info">
+            <strong>Найти клан</strong>
+            <span>Клановые войны, казна и уровень</span>
+          </span>
+          <span class="dropdown-clan__arrow">→</span>
+        </RouterLink>
+
+        <div class="mobile-shop-row">
+          <RouterLink to="/cases" class="mobile-shop-card mobile-shop-card--cases">
+            <strong>Кейсы</strong>
+            <span>{{ dailyCaseAvailable ? 'Бесплатный ждёт!' : 'Сундуки с косметикой' }}</span>
+            <i v-if="dailyCaseAvailable" class="mobile-shop-card__dot"></i>
+          </RouterLink>
+          <RouterLink to="/shop" class="mobile-shop-card mobile-shop-card--shop">
+            <strong>Магазин</strong>
+            <span>Наборы и косметика</span>
+          </RouterLink>
+        </div>
+
+        <template v-if="auth.isAuthenticated">
+          <div class="mobile-label">Аккаунт</div>
+
+          <nav class="mobile-list">
+            <RouterLink v-for="link in MOBILE_ACCOUNT" :key="link.to" :to="link.to" class="dropdown-item">
+              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path :d="link.icon" />
+              </svg>
+              <span>{{ link.label }}</span>
+              <span v-if="link.count && link.count() > 0" class="dropdown-count">{{ link.count() > 99 ? '99+' : link.count() }}</span>
+            </RouterLink>
+          </nav>
+
+          <template v-if="staffLinks.length">
+            <div class="mobile-label">Служебное</div>
+            <nav class="mobile-list">
+              <RouterLink v-for="link in staffLinks" :key="link.to" :to="link.to" class="dropdown-item">
+                <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path :d="link.icon" />
+                </svg>
+                <span>{{ link.label }}</span>
+              </RouterLink>
+            </nav>
+          </template>
+
+          <button class="dropdown-item danger mobile-logout" @click="logout">
+            <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+            </svg>
+            <span>Выйти</span>
+          </button>
+        </template>
       </div>
     </Transition>
 

@@ -24,6 +24,7 @@ export const TYPE_LABELS = {
     skin_backdrop: 'Фон 3D-скина',
     card_theme: 'Тема карточки игрока',
     profile_layout: 'Макет профиля',
+    bundle: 'Набор',
     badge: 'Бейдж',
     tier_priority: 'Приоритет тир-теста',
     coin_bundle: 'Набор монет',

@@ -41,6 +41,8 @@ class ShopController extends Controller
                 ShopItem::TYPE_BADGE,
                 ShopItem::TYPE_TIER_PRIORITY,
                 ShopItem::TYPE_COIN_BUNDLE,
+                ShopItem::TYPE_PROFILE_LAYOUT,
+                ShopItem::TYPE_BUNDLE,
             ],
             'rarities' => ['common', 'rare', 'epic', 'legendary'],
         ]);

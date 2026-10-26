@@ -145,6 +145,7 @@ async function load() {
     const data = await shopApi.inventory()
 
     items.value = data.items ?? []
+    bundles.value = data.bundles ?? []
     maxBadges.value = data.max_equipped_badges ?? 3
     priorityCharges.value = data.priority_charges ?? 0
     priorityCandidates.value = data.priority_candidates ?? []
@@ -198,6 +199,30 @@ async function confirmApply() {
 
 function modeLabel(mode) {
   return mode === 'pvp' ? 'PvP' : 'BedWars'
+}
+
+// Наборы: надеваются одной кнопкой — всё, что из набора есть
+const bundles = ref([])
+const bundleBusy = ref(null)
+
+async function equipBundle(bundle) {
+  bundleBusy.value = bundle.id
+  error.value = ''
+  notice.value = ''
+
+  try {
+    const result = await shopApi.equipBundle(bundle.id)
+
+    items.value = result.items ?? items.value
+    bundles.value = result.bundles ?? bundles.value
+    notice.value = result.message
+
+    await auth.fetchMe()
+  } catch (e) {
+    error.value = e.message || 'Не удалось надеть набор.'
+  } finally {
+    bundleBusy.value = null
+  }
 }
 
 async function toggleEquip(item) {
@@ -493,6 +518,41 @@ onMounted(() => {
               <b>{{ equippedBadges.map((b) => b.name).join(', ') || 'Не надето' }}</b>
             </span>
           </button>
+        </div>
+      </section>
+
+      <!-- ===== Наборы: надеть целиком ===== -->
+      <section v-if="bundles.length" class="inv-bundles">
+        <h2 class="loadout__title">Наборы</h2>
+
+        <div class="inv-bundles__list">
+          <article
+              v-for="bundle in bundles"
+              :key="bundle.id"
+              class="inv-bundle"
+              :class="{ 'inv-bundle--on': bundle.equipped_all }"
+          >
+            <ShopItemPreview :item="bundle" class="inv-bundle__preview" />
+
+            <div class="inv-bundle__info">
+              <strong>{{ bundle.name.replace(/^Набор\s+/, '').replace(/[«»]/g, '') }}</strong>
+              <span>{{ bundle.owned_count }} из {{ bundle.total_count }} предметов</span>
+            </div>
+
+            <span v-if="bundle.equipped_all" class="inv-bundle__state">
+              <AppIcon icon="check" :size="14" />
+              Надет
+            </span>
+            <button
+                v-else
+                type="button"
+                class="inv-bundle__btn"
+                :disabled="bundleBusy === bundle.id"
+                @click="equipBundle(bundle)"
+            >
+              {{ bundleBusy === bundle.id ? 'Надеваем…' : 'Надеть набор' }}
+            </button>
+          </article>
         </div>
       </section>
 

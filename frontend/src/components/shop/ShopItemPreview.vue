@@ -13,6 +13,9 @@ import AppIcon from '@/components/core/AppIcon.vue'
 import { frameById, layerEffect } from '@/data/players/profileCustomization.js'
 import ProfileEffectLayer from '@/components/players/ProfileEffectLayer.vue'
 import AvatarFrameDecor from '@/components/players/AvatarFrameDecor.vue'
+import PixelSprite from '@/components/shop/PixelSprite.vue'
+import { bundleTheme } from '@/data/shop/bundleThemes.js'
+import '@/components/shop/badgeStyles.css'
 import { cardTheme } from '@/data/shop/cosmetics.js'
 import { profileLayout } from '@/data/players/profileLayouts.js'
 import { loadSkin, renderSkinHead } from '@/utils/minecraftSkin.js'
@@ -46,6 +49,8 @@ const layout = computed(() => (props.item.type === 'profile_layout' ? profileLay
 
 const hasLayer = computed(() => !!layerEffect(value.value))
 
+const bundleLook = computed(() => bundleTheme(props.item.bundle?.theme || props.item.metadata?.theme))
+
 const initial = computed(() => (auth.user?.username || 'A').charAt(0).toUpperCase())
 
 onMounted(async () => {
@@ -62,7 +67,7 @@ onMounted(async () => {
   <div class="preview" :class="`preview--${item.type}`">
     <!-- Рамка аватара -->
     <div v-if="item.type === 'avatar_frame'" class="preview__frame" :style="frameStyle">
-      <AvatarFrameDecor :frame="value" />
+      <AvatarFrameDecor :frame="value" :size="80" />
       <span class="preview__avatar">
         <img v-if="head" :src="head" alt="" />
         <span v-else>{{ initial }}</span>
@@ -146,11 +151,39 @@ onMounted(async () => {
     <span
         v-else-if="item.type === 'badge'"
         class="preview__badge"
+        :class="[
+          { 'preview__badge--sprite': item.metadata?.sprite },
+          item.metadata?.style ? `badge-fx--${item.metadata.style}` : null,
+        ]"
         :style="{ '--badge': color }"
     >
-      <AppIcon :icon="item.icon" :size="15" />
+      <PixelSprite
+          v-if="item.metadata?.sprite"
+          :sprite="item.metadata.sprite"
+          :size="22"
+          :anim="item.metadata.anim"
+          :glow="color"
+      />
+      <AppIcon v-else :icon="item.icon" :size="15" />
       {{ item.name.replace(/^Бейдж\s+/, '').replace(/[«»]/g, '') }}
     </span>
+
+    <!-- Набор: тематический фон и состав пиксельными значками -->
+    <div
+        v-else-if="item.type === 'bundle'"
+        class="preview__bundle"
+        :style="{ background: bundleLook.bg, '--glow': bundleLook.glow }"
+    >
+      <span
+          v-for="part in (item.bundle?.items || []).slice(0, 5)"
+          :key="part.id"
+          class="preview__bundle-part"
+          :style="{ '--part': part.color || color }"
+      >
+        <PixelSprite v-if="part.metadata?.sprite" :sprite="part.metadata.sprite" :size="20" />
+        <AppIcon v-else :icon="part.icon" :size="16" />
+      </span>
+    </div>
 
     <!-- Всё остальное — крупная иконка -->
     <span v-else class="preview__icon" :style="{ color }">
@@ -476,6 +509,52 @@ onMounted(async () => {
 
   font-size: 13px;
   font-weight: 700;
+}
+
+.preview__badge--sprite {
+  padding: 5px 12px 5px 8px;
+}
+
+/* ---------- Набор ---------- */
+
+.preview__bundle {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+
+  padding: 14px;
+}
+
+.preview__bundle-part {
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--part);
+  background: rgba(10, 8, 14, 0.55);
+  border: 1px solid color-mix(in srgb, var(--part) 50%, transparent);
+  border-radius: 8px;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--glow) 40%, transparent);
+
+  animation: bundle-bob 2.4s ease-in-out infinite;
+}
+
+.preview__bundle-part:nth-child(2) { animation-delay: -0.4s; }
+.preview__bundle-part:nth-child(3) { animation-delay: -0.8s; }
+.preview__bundle-part:nth-child(4) { animation-delay: -1.2s; }
+.preview__bundle-part:nth-child(5) { animation-delay: -1.6s; }
+
+@keyframes bundle-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
 
 /* ---------- Иконка ---------- */

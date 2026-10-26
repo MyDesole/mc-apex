@@ -4,6 +4,8 @@ import { tierColor } from '@/composables/players/useTier.js'
 import AppIcon from '@/components/core/AppIcon.vue'
 import ProfileEffectLayer from '@/components/players/ProfileEffectLayer.vue'
 import AvatarFrameDecor from '@/components/players/AvatarFrameDecor.vue'
+import PixelSprite from '@/components/shop/PixelSprite.vue'
+import '@/components/shop/badgeStyles.css'
 import {
   AVATAR_FRAMES,
   PROFILE_EFFECTS,
@@ -556,7 +558,7 @@ const coverStyle = computed(() => {
               '--avatar-frame-color': avatarFrameGlow,
             }"
         >
-          <AvatarFrameDecor :frame="user.avatar_frame" />
+          <AvatarFrameDecor :frame="user.avatar_frame" :size="70" />
 
           <div class="profile-header__avatar-frame-inner">
 
@@ -714,7 +716,7 @@ const coverStyle = computed(() => {
             }"
         >
 
-          <AvatarFrameDecor :frame="user.avatar_frame" />
+          <AvatarFrameDecor :frame="user.avatar_frame" :size="118" />
 
           <div class="profile-header__avatar-frame-inner">
 
@@ -798,11 +800,14 @@ const coverStyle = computed(() => {
       v-for="badge in playerBadges"
       :key="badge.slug"
       class="profile-badge"
+      :class="badge.style ? `badge-fx--${badge.style}` : null"
       :style="{ '--badge-color': badge.color || '#7c3aed' }"
       :title="badge.name"
   >
-    <span class="profile-badge__icon">
-      <AppIcon :icon="badge.icon" :size="12" />
+    <span class="profile-badge__icon" :class="{ 'profile-badge__icon--sprite': badge.sprite }">
+      <!-- Новые бейджи — пиксельная картинка с анимацией -->
+      <PixelSprite v-if="badge.sprite" :sprite="badge.sprite" :size="14" :anim="badge.anim" :glow="badge.color" />
+      <AppIcon v-else :icon="badge.icon" :size="12" />
     </span>
 
     <span class="profile-badge__text">

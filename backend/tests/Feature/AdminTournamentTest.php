@@ -49,6 +49,23 @@ class AdminTournamentTest extends TestCase
         }
     }
 
+    /* ------------------------ даты регистрации ------------------------- */
+
+    public function test_update_rejects_registration_end_before_saved_start(): void
+    {
+        // Так на проде закрылась регистрация: в конце указали прошлый год
+        $tournament = $this->tournament(['registration_starts_at' => '2026-09-24 13:38:00']);
+
+        $this->actingAs($this->admin())
+            ->putJson("/api/admin/tournaments/{$tournament->id}", ['registration_ends_at' => '2026-01-20 23:59:00'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('registration_ends_at');
+
+        $this->actingAs($this->admin())
+            ->putJson("/api/admin/tournaments/{$tournament->id}", ['registration_ends_at' => '2026-11-20 23:59:00'])
+            ->assertOk();
+    }
+
     /* ------------------------------- index ------------------------------ */
 
     public function test_index_paginates_and_filters_by_status(): void

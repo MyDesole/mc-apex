@@ -23,6 +23,11 @@ export const shopApi = {
         return api.post(`/shop/${id}/equip`)
     },
 
+    /** Надеть набор целиком: всё, что из него есть. */
+    equipBundle(id) {
+        return api.post(`/shop/${id}/equip-bundle`)
+    },
+
     unequip(id) {
         return api.post(`/shop/${id}/unequip`)
     },

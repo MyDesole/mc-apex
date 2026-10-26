@@ -48,7 +48,8 @@ class ControlPanelTest extends TestCase
 
     public function test_disabled_feature_blocks_players_but_not_admin(): void
     {
-        $item = ShopItem::create(['slug' => 'test-frame', 'name' => 'Рамка', 'type' => 'avatar_frame', 'effect_value' => 'gold', 'price' => 10, 'is_active' => true]);
+        // Не косметика: её админам выдавать не нужно, она у них и так есть
+        $item = ShopItem::create(['slug' => 'test-priority', 'name' => 'Приоритет', 'type' => 'tier_priority', 'effect_value' => 'priority', 'price' => 10, 'is_active' => true, 'is_consumable' => true, 'is_repeatable' => true]);
         $player = User::factory()->create(['apex_coins' => 100]);
 
         $this->control(['features' => ['shop' => false]]);

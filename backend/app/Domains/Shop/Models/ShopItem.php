@@ -27,6 +27,9 @@ class ShopItem extends Model
     /** Макет страницы профиля: расстановка блоков, цвета, фон, шрифты. */
     public const TYPE_PROFILE_LAYOUT = 'profile_layout';
 
+    // Набор: несколько предметов одной темы со скидкой (metadata.items — slug'и)
+    public const TYPE_BUNDLE = 'bundle';
+
     /**
      * Типы, которые при надевании пишутся в поле профиля пользователя.
      */
@@ -91,6 +94,17 @@ class ShopItem extends Model
     public function isEquippable(): bool
     {
         return in_array($this->type, self::EQUIPPABLE, true);
+    }
+
+    public function isBundle(): bool
+    {
+        return $this->type === self::TYPE_BUNDLE;
+    }
+
+    /** Личная косметика: надевается в профиль игрока (не клановая). */
+    public function isPersonalCosmetic(): bool
+    {
+        return $this->isEquippable() && ! $this->isClanItem();
     }
 
     /** Предмет для клана: покупает лидер, можно оплатить из казны. */

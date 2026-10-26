@@ -357,6 +357,7 @@ Route::middleware('auth:sanctum')->group(function () {
             ->where('slug', '[a-z_]+')
             ->middleware(['feature:shop', 'throttle:20,1']);
         Route::post('/{shopItem}/equip', [ShopController::class, 'equip'])->whereNumber('shopItem');
+        Route::post('/{shopItem}/equip-bundle', [ShopController::class, 'equipBundle'])->whereNumber('shopItem');
         Route::post('/{shopItem}/unequip', [ShopController::class, 'unequip'])->whereNumber('shopItem');
     });
 

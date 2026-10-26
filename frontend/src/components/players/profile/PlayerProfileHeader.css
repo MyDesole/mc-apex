@@ -1235,6 +1235,13 @@
       inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
+/* Пиксельный бейдж: картинка крупнее и без кружка-подложки */
+.profile-badge__icon--sprite {
+  width: 20px !important;
+  background: none !important;
+  overflow: visible;
+}
+
 .profile-badge__icon {
   width: 19px;
   height: 19px;
