@@ -307,6 +307,20 @@ onMounted(load)
       </RouterLink>
     </header>
 
+    <!-- Кейсы: заметный вход прямо из магазина -->
+    <RouterLink to="/cases" class="cases-banner">
+      <span class="cases-banner__chests" aria-hidden="true">
+        <i class="cases-banner__chest cases-banner__chest--oak"></i>
+        <i class="cases-banner__chest cases-banner__chest--amethyst"></i>
+        <i class="cases-banner__chest cases-banner__chest--gold"></i>
+      </span>
+      <span class="cases-banner__text">
+        <strong>Кейсы с косметикой</strong>
+        <span>Бесплатный сундук каждый день · платные с повышенным шансом на легендарку</span>
+      </span>
+      <span class="cases-banner__cta">Открыть →</span>
+    </RouterLink>
+
     <div v-if="error" class="alert alert--error" role="alert">{{ error }}</div>
     <div v-if="notice" class="alert alert--ok" role="status">{{ notice }}</div>
 

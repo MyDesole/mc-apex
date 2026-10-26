@@ -680,6 +680,108 @@
   background: rgba(167, 139, 250, 0.08);
 }
 
+/* Баннер кейсов */
+
+.cases-banner {
+  position: relative;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  padding: 16px 20px;
+
+  color: inherit;
+  background:
+      radial-gradient(circle at 0% 50%, rgba(250, 204, 21, 0.2), transparent 40%),
+      radial-gradient(circle at 100% 50%, rgba(168, 85, 247, 0.22), transparent 45%),
+      #15131c;
+  border: 1px solid rgba(250, 204, 21, 0.3);
+  border-radius: 16px;
+
+  text-decoration: none;
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cases-banner:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(250, 204, 21, 0.15);
+}
+
+.cases-banner__chests {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.cases-banner__chest {
+  width: 34px;
+  height: 28px;
+
+  background:
+      linear-gradient(transparent 38%, rgba(0, 0, 0, 0.35) 38% 46%, transparent 46%),
+      linear-gradient(var(--c1), var(--c2));
+  border: 3px solid var(--c3);
+  border-radius: 5px;
+
+  animation: banner-chest 2.6s ease-in-out infinite;
+}
+
+.cases-banner__chest--oak { --c1: #a0652e; --c2: #6d4019; --c3: #3b3b44; }
+.cases-banner__chest--amethyst { --c1: #7e3fc4; --c2: #4c1d95; --c3: #2e1065; animation-delay: 0.3s; height: 32px; }
+.cases-banner__chest--gold { --c1: #e0a512; --c2: #92600a; --c3: #7c2d12; animation-delay: 0.6s; height: 36px; width: 40px; }
+
+@keyframes banner-chest {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.cases-banner__text {
+  min-width: 0;
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cases-banner__text strong {
+  color: #fff;
+  font-size: 16px;
+}
+
+.cases-banner__text span {
+  color: #b9b4c7;
+  font-size: 13px;
+}
+
+.cases-banner__cta {
+  flex-shrink: 0;
+
+  padding: 9px 16px;
+
+  color: #422006;
+  background: linear-gradient(135deg, #fde047, #f59e0b);
+  border-radius: 10px;
+
+  font-size: 13px;
+  font-weight: 900;
+}
+
+@media (max-width: 600px) {
+  .cases-banner {
+    flex-wrap: wrap;
+  }
+
+  .cases-banner__cta {
+    width: 100%;
+    text-align: center;
+  }
+}
+
 .pay-from__discount {
   margin-left: 6px;
   padding: 2px 6px;

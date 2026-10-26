@@ -13,6 +13,7 @@ import ClansView from "@/views/clan/ClansView.vue";
 import ClanCreateView from "@/views/clan/ClanCreateView.vue";
 import ShopView from '@/views/shop/ShopView.vue'
 import InventoryView from '@/views/shop/InventoryView.vue'
+import CasesView from '@/views/shop/CasesView.vue'
 import ClanView from "@/views/clan/ClanView.vue";
 import ForumView from '@/views/forum/ForumView.vue'
 
@@ -68,6 +69,7 @@ const router = createRouter({
     { path: '/news/:id', name: 'news-item', component: () => import('@/views/news/NewsItemView.vue'), meta: { title: 'Новость' } },
     { path: '/shop', name: 'shop', component: ShopView, meta: { title: 'Магазин' } },
     { path: '/inventory', name: 'inventory', component: InventoryView, meta: { title: 'Инвентарь', auth: true } },
+    { path: '/cases', name: 'cases', component: CasesView, meta: { title: 'Кейсы' } },
     { path: '/wallet', name: 'wallet', component: () => import('@/views/shop/WalletView.vue'), meta: { title: 'Кошелёк', auth: true } },
     { path: '/forum', name: 'forum', component: ForumView, meta: { title: 'Форум' } },
     { path: '/changelog/:slug?', name: 'changelog', component: () => import('@/views/info/ChangelogView.vue'), meta: { title: 'Что нового' } },

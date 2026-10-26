@@ -5,6 +5,7 @@ import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/core/auth.js'
 import { notificationsApi } from '@/services/notifications/notification.js'
 import { chatApi } from '@/services/chat/chat.js'
+import { casesApi } from '@/services/shop/cases.js'
 
 import UserName from '@/components/players/UserName.vue'
 import VerifyEmailBanner from '@/components/notifications/VerifyEmailBanner.vue'
@@ -61,6 +62,21 @@ watch(
     (inClan) => (inClan ? refreshClanPulse() : clearClanPulse()),
     { immediate: true },
 )
+
+// Бесплатный сундук ждёт — подсвечиваем «Кейсы» в меню
+const dailyCaseAvailable = ref(false)
+
+async function loadCaseStatus() {
+  if (!auth.isAuthenticated) return
+
+  try {
+    dailyCaseAvailable.value = (await casesApi.status()).daily_available
+  } catch {
+    dailyCaseAvailable.value = false
+  }
+}
+
+watch(menuOpen, (open) => open && loadCaseStatus())
 
 /** Служебные разделы: показываем только ролям с доступом. */
 const STAFF_LINKS = [
@@ -518,6 +534,15 @@ watch(mobileMenuOpen, (open) => {
                     <span class="dropdown-clan__arrow">→</span>
                   </RouterLink>
 
+                  <RouterLink to="/cases" class="dropdown-item" @click="menuOpen = false">
+                    <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="8" width="18" height="13" rx="2" />
+                      <path d="M3 12h18M12 8v13M7.5 8a2.5 2.5 0 1 1 4.5-1.5A2.5 2.5 0 1 1 16.5 8" />
+                    </svg>
+                    <span>Кейсы</span>
+                    <span v-if="dailyCaseAvailable" class="dropdown-free">Бесплатно</span>
+                  </RouterLink>
+
                   <RouterLink to="/support" class="dropdown-item" @click="menuOpen = false">
                     <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                       <circle cx="12" cy="12" r="9" />
@@ -621,6 +646,11 @@ watch(mobileMenuOpen, (open) => {
           >
             <span class="mobile-icon">◆</span>
             <span>Мой клан</span>
+          </RouterLink>
+
+          <RouterLink to="/cases" class="mobile-nav-link">
+            <span class="mobile-icon">▣</span>
+            <span>Кейсы</span>
           </RouterLink>
 
         </nav>

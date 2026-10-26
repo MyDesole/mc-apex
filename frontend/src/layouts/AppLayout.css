@@ -750,6 +750,21 @@
   font-weight: 800;
 }
 
+.dropdown-free {
+  margin-left: auto;
+  padding: 3px 8px;
+
+  color: #052e16;
+  background: #4ade80;
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+
+  animation: clan-chip-pulse 1.8s ease-in-out infinite;
+}
+
 .dropdown-label {
   padding: 8px 10px 2px;
 

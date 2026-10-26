@@ -39,6 +39,8 @@ export const SOURCE_LABELS = {
     gift_out: 'Подарки друзьям',
     purchase: 'Покупки в магазине',
     clan_fee: 'Плата за вступление в клан',
+    clan_treasury: 'Казна клана',
+    case: 'Кейсы',
     admin: 'Начисления от админа',
     other: 'Прочее',
 }

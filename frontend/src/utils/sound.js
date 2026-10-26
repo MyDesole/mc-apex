@@ -86,6 +86,44 @@ export function playSound(kind = 'notification') {
     tone(ctx, { freq: 1760, start: t + 0.09, duration: 0.3, type: 'sine', volume: 0.08 })
 }
 
+/** Щелчок рулетки кейса: карточка прошла под указателем. */
+export function playCaseTick() {
+    if (!isSoundEnabled()) return
+
+    const ctx = audio()
+    if (!ctx) return
+
+    tone(ctx, { freq: 1900, start: ctx.currentTime + 0.001, duration: 0.03, type: 'square', volume: 0.018 })
+}
+
+/** Выигрыш из кейса: чем реже исход, тем богаче аккорд. */
+export function playCaseWin(outcome = 'common') {
+    if (!isSoundEnabled()) return
+
+    const ctx = audio()
+    if (!ctx) return
+
+    const t = ctx.currentTime + 0.01
+
+    if (outcome === 'nothing') {
+        tone(ctx, { freq: 330, start: t, duration: 0.18, type: 'triangle', volume: 0.08 })
+        tone(ctx, { freq: 247, start: t + 0.14, duration: 0.3, type: 'triangle', volume: 0.07 })
+        return
+    }
+
+    const chords = {
+        coins: [880, 1175],
+        common: [523, 659, 784],
+        rare: [587, 740, 880, 1175],
+        epic: [523, 659, 784, 1047, 1319],
+        legendary: [523, 659, 784, 1047, 1319, 1568, 2093],
+    }
+
+    ;(chords[outcome] || chords.common).forEach((freq, i) => {
+        tone(ctx, { freq, start: t + i * 0.07, duration: 0.5, type: i % 2 ? 'sine' : 'triangle', volume: 0.07 })
+    })
+}
+
 /** Первый клик по странице «будит» звук, чтобы первое уведомление не потерялось. */
 export function unlockSoundOnFirstGesture() {
     if (typeof window === 'undefined') return

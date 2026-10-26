@@ -20,6 +20,8 @@ class CoinTransaction extends Model
     public const SOURCE_CLAN_FEE = 'clan_fee';
     public const SOURCE_CLAN_TREASURY = 'clan_treasury';
     public const SOURCE_OTHER = 'other';
+    // Кейсы: оплата открытия и выигранные монеты
+    public const SOURCE_CASE = 'case';
 
     protected $fillable = [
         'user_id', 'amount', 'balance_after', 'source', 'description',

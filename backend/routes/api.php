@@ -99,6 +99,10 @@ Route::get('/shop/priority-candidates', [ShopController::class, 'priorityCandida
 Route::get('/shop/inventory', [ShopController::class, 'inventory'])
     ->middleware('auth:sanctum');
 Route::get('/shop/{shopItem}', [ShopController::class, 'show'])->whereNumber('shopItem');
+
+// Кейсы с косметикой: витрина видна и гостям
+Route::get('/cases', [\App\Domains\Shop\Controllers\Api\LootCaseController::class, 'index']);
+Route::get('/cases/status', [\App\Domains\Shop\Controllers\Api\LootCaseController::class, 'status']);
 Route::get('/players/{user}/recommendations', [ProfileRecommendationController::class, 'index'])
     ->whereNumber('user');
 
@@ -349,6 +353,9 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     Route::prefix('shop')->group(function () {
         Route::post('/{shopItem}/purchase', [ShopController::class, 'purchase'])->whereNumber('shopItem')->middleware('feature:shop');
+        Route::post('/cases/{slug}/open', [\App\Domains\Shop\Controllers\Api\LootCaseController::class, 'open'])
+            ->where('slug', '[a-z_]+')
+            ->middleware(['feature:shop', 'throttle:20,1']);
         Route::post('/{shopItem}/equip', [ShopController::class, 'equip'])->whereNumber('shopItem');
         Route::post('/{shopItem}/unequip', [ShopController::class, 'unequip'])->whereNumber('shopItem');
     });
