@@ -991,48 +991,96 @@
 }
 
 /* =========================================================
-   СТЕКЛО — матовые панели на цветных пятнах, витрина сверху
+   СТЕКЛО — матовые панели над мягкими светящимися сферами
+   Тёмная подложка, три сферы по краям медленно плывут; панели —
+   полупрозрачные с размытием, бликом по верхней кромке и тонкой
+   светлой обводкой. Всё содержимое на одном «стекле», без пятен.
    ========================================================= */
 
 .profile-layout.profile-layout--glass {
-  --layout-accent: #f0abfc;
-  --layout-edge: rgba(255, 255, 255, 0.18);
-  --layout-radius: 22px;
-  --layout-page:
-      radial-gradient(circle at 15% 20%, #db2777 0, transparent 35%),
-      radial-gradient(circle at 85% 15%, #2563eb 0, transparent 38%),
-      radial-gradient(circle at 60% 85%, #7c3aed 0, transparent 40%),
-      #1e1b4b;
+  --layout-accent: #c4b5fd;
+  --layout-edge: rgba(255, 255, 255, 0.14);
+  --layout-radius: 20px;
+  --layout-page: linear-gradient(160deg, #0b1024 0%, #0a0d1c 55%, #070914 100%);
 
-  --bg-card: rgba(255, 255, 255, 0.08);
-  --bg: rgba(255, 255, 255, 0.05);
-  --border: rgba(255, 255, 255, 0.16);
-  --border-hover: rgba(255, 255, 255, 0.35);
-  --text: #ffffff;
-  --text-dim: #e0e7ff;
-  --text-muted: #c7d2fe;
-  --accent-light: #f5d0fe;
+  --bg-card: rgba(255, 255, 255, 0.055);
+  --bg: rgba(255, 255, 255, 0.04);
+  --border: rgba(255, 255, 255, 0.12);
+  --border-hover: rgba(255, 255, 255, 0.28);
+  --text: #f8fafc;
+  --text-dim: #e2e8f0;
+  --text-muted: #94a3b8;
+  --accent-light: #ddd6fe;
+
+  overflow: hidden;
 }
 
+/* Сферы света: по краям, не на тексте; медленно дрейфуют */
+.profile-layout.profile-layout--glass::before {
+  inset: -10%;
+
+  background:
+      radial-gradient(circle at 8% 12%, rgba(139, 92, 246, 0.55) 0, transparent 22%),
+      radial-gradient(circle at 92% 8%, rgba(56, 189, 248, 0.45) 0, transparent 20%),
+      radial-gradient(circle at 78% 92%, rgba(236, 72, 153, 0.4) 0, transparent 22%),
+      radial-gradient(circle at 20% 85%, rgba(45, 212, 191, 0.3) 0, transparent 18%);
+  filter: blur(24px);
+  opacity: 1;
+
+  animation: glass-orbs 18s ease-in-out infinite alternate;
+}
+
+@keyframes glass-orbs {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(2%, -2%) scale(1.06); }
+}
+
+/* Панели: матовое стекло с бликом по верхней кромке */
 .profile-layout.profile-layout--glass .player-card,
 .profile-layout.profile-layout--glass .side-panel {
-  backdrop-filter: blur(18px) saturate(1.4);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 20px 40px rgba(15, 10, 40, 0.35);
-}
-
-/* Пятна медленно плавают под стеклом */
-.profile-layout.profile-layout--glass::before {
   background:
-      radial-gradient(circle at 30% 60%, rgba(244, 114, 182, 0.45), transparent 30%),
-      radial-gradient(circle at 75% 40%, rgba(56, 189, 248, 0.4), transparent 30%);
-  filter: blur(30px);
-  animation: layout-blobs 14s ease-in-out infinite alternate;
+      linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  backdrop-filter: blur(22px) saturate(1.5);
+  -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+      0 24px 50px rgba(2, 6, 23, 0.55);
 }
 
-@keyframes layout-blobs {
-  from { transform: translate(-4%, 0) scale(1); }
-  to { transform: translate(4%, -3%) scale(1.1); }
+/* Шапка — тоже стекло, а не тёмная плашка поверх */
+.profile-layout.profile-layout--glass .profile-header {
+  background: transparent !important;
+}
+
+.profile-layout.profile-layout--glass .profile-header::before,
+.profile-layout.profile-layout--glass .profile-header__backdrop {
+  opacity: 0.35;
+}
+
+/* Плитки статистики и прочие вложенные карточки — светлее фона панели */
+.profile-layout.profile-layout--glass .stat-card,
+.profile-layout.profile-layout--glass .profile-stat,
+.profile-layout.profile-layout--glass .profile-header__stat,
+.profile-layout.profile-layout--glass .profile-header__edit {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.profile-layout.profile-layout--glass .section-heading h3 {
+  color: #f8fafc;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.profile-layout.profile-layout--glass .profile-header__name {
+  background: linear-gradient(180deg, #ffffff, #c7d2fe);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* =========================================================

@@ -37,7 +37,7 @@ class TournamentController extends Controller
     {
         $tournament->load([
             'creator:id,username,avatar',
-            'participants.user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode',
+            'participants.user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect',
             'participants.clan:id,name,tag,banner_color,avatar',
             'matches.participant1.user:id,username,avatar',
             'matches.participant1.clan:id,name,tag',

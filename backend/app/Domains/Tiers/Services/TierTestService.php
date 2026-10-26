@@ -33,7 +33,7 @@ class TierTestService
     ];
 
     private const QUEUE_RELATIONS = [
-        'user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,tier_score',
+        'user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,tier_score',
         'user.clanMember.clan:id,tag,banner_color',
         'tester:id,username',
         'claimer:id,username',
@@ -80,7 +80,7 @@ class TierTestService
     public function find(TierTest $tierTest): array
     {
         $tierTest->load([
-            'user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,tier_score',
+            'user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,tier_score',
             // 'user.aspects' — аксессор, а не связь: загрузка падала с 500
             'user.clanMember.clan',
             'user.aspectPvp',

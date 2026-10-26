@@ -43,6 +43,9 @@ class ShopController extends Controller
                 ShopItem::TYPE_COIN_BUNDLE,
                 ShopItem::TYPE_PROFILE_LAYOUT,
                 ShopItem::TYPE_BUNDLE,
+                ShopItem::TYPE_NAME_EFFECT,
+                ShopItem::TYPE_PROFILE_ENTRANCE,
+                ShopItem::TYPE_CURSOR_TRAIL,
             ],
             'rarities' => ['common', 'rare', 'epic', 'legendary'],
         ]);

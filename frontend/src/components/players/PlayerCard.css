@@ -3,6 +3,9 @@
    ========================================================= */
 
 .profile-layout {
+  /* Опора для слоёв появления профиля и следа курсора */
+  position: relative;
+
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: 20px;

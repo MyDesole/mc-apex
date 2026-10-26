@@ -804,7 +804,19 @@ const coverStyle = computed(() => {
         <div class="profile-header__name-row">
 
           <h1 class="profile-header__name">
-            {{ displayNameWithClan }}
+            <!-- Эффект ника из магазина — тот же, что в UserName -->
+            <span v-if="user.name_effect" class="name-fx" :class="`name-fx--${user.name_effect}`">
+              <template v-if="user.name_effect === 'wave'">
+                <span
+                    v-for="(char, i) in [...displayNameWithClan]"
+                    :key="i"
+                    class="name-fx__char"
+                    :style="{ '--i': i }"
+                >{{ char }}</span>
+              </template>
+              <template v-else>{{ displayNameWithClan }}</template>
+            </span>
+            <template v-else>{{ displayNameWithClan }}</template>
           </h1>
 
           <span

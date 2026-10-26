@@ -1,0 +1,182 @@
+/* =========================================================
+   ЭФФЕКТЫ НИКА (магазин, тип name_effect)
+
+   Класс .name-fx--{id} на тексте ника. Подключено глобально: ник
+   показывает компонент UserName везде — рейтинг, форум, чат, кланы.
+   ========================================================= */
+
+.name-fx {
+  display: inline-block;
+  max-width: 100%;
+
+  /* Текст с градиентом: место под тень и свечение, чтобы не обрезалось */
+  padding-inline: 0.05em;
+}
+
+/* Градиентные ники: заливка градиентом, текст прозрачный */
+.name-fx--rainbow,
+.name-fx--fire,
+.name-fx--gold,
+.name-fx--ice,
+.name-fx--galaxy,
+.name-fx--chrome,
+.name-fx--sakura {
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ---------- Радуга ---------- */
+.name-fx--rainbow {
+  background-image: linear-gradient(90deg, #ff3d81, #ffb03d, #f6ff3d, #3dffa0, #3dd9ff, #a855f7, #ff3d81);
+  background-size: 200% 100%;
+  animation: nfx-slide 3s linear infinite;
+}
+
+/* ---------- Пламя ---------- */
+.name-fx--fire {
+  background-image: linear-gradient(0deg, #dc2626, #f97316 35%, #fde047 70%, #fef9c3);
+  background-size: 100% 200%;
+  filter: drop-shadow(0 0 4px rgba(249, 115, 22, 0.7));
+  animation: nfx-rise 1.2s ease-in-out infinite alternate;
+}
+
+/* ---------- Неон ---------- */
+.name-fx--neon {
+  color: #fdf4ff !important;
+  text-shadow: 0 0 3px #fff, 0 0 8px #e879f9, 0 0 16px #d946ef, 0 0 28px #a21caf;
+  animation: nfx-flicker 4.5s linear infinite;
+}
+
+/* ---------- Глитч ---------- */
+.name-fx--glitch {
+  color: #fff !important;
+  text-shadow: 2px 0 #ff2a6d, -2px 0 #05d9e8;
+  animation: nfx-glitch 2.4s steps(1) infinite;
+}
+
+/* ---------- Золото ---------- */
+.name-fx--gold {
+  background-image: linear-gradient(110deg, #b45309 0%, #facc15 30%, #fff7cc 45%, #facc15 60%, #b45309 100%);
+  background-size: 250% 100%;
+  filter: drop-shadow(0 0 3px rgba(250, 204, 21, 0.45));
+  animation: nfx-shine 3s ease-in-out infinite;
+}
+
+/* ---------- Лёд ---------- */
+.name-fx--ice {
+  background-image: linear-gradient(110deg, #0ea5e9 0%, #bae6fd 35%, #ffffff 50%, #bae6fd 65%, #0ea5e9 100%);
+  background-size: 250% 100%;
+  filter: drop-shadow(0 0 3px rgba(125, 211, 252, 0.6));
+  animation: nfx-shine 4s ease-in-out infinite;
+}
+
+/* ---------- Галактика ---------- */
+.name-fx--galaxy {
+  background-image:
+      radial-gradient(1px 1px at 20% 30%, #fff, transparent),
+      radial-gradient(1px 1px at 70% 60%, #fff, transparent),
+      linear-gradient(90deg, #6d28d9, #db2777, #2563eb, #7c3aed, #6d28d9);
+  background-size: 100% 100%, 100% 100%, 300% 100%;
+  filter: drop-shadow(0 0 4px rgba(167, 139, 250, 0.6));
+  animation: nfx-galaxy 6s linear infinite;
+}
+
+/* ---------- Токсин ---------- */
+.name-fx--toxic {
+  color: #d9f99d !important;
+  text-shadow: 0 0 4px #a3e635, 0 0 12px #65a30d, 0 2px 0 #3f6212;
+  animation: nfx-pulse 1.8s ease-in-out infinite;
+}
+
+/* ---------- Хром ---------- */
+.name-fx--chrome {
+  background-image: linear-gradient(180deg, #ffffff 0%, #94a3b8 45%, #1e293b 50%, #cbd5e1 55%, #ffffff 100%);
+  background-size: 100% 200%;
+  animation: nfx-rise 2.6s ease-in-out infinite alternate;
+}
+
+/* ---------- Сакура ---------- */
+.name-fx--sakura {
+  background-image: linear-gradient(90deg, #f9a8d4, #fbcfe8, #f472b6, #fbcfe8, #f9a8d4);
+  background-size: 200% 100%;
+  filter: drop-shadow(0 0 4px rgba(244, 114, 182, 0.55));
+  animation: nfx-slide 4s linear infinite;
+}
+
+/* ---------- Тень: тёмная дымка вокруг ---------- */
+.name-fx--shadow {
+  color: #ede9fe !important;
+  text-shadow: 0 0 6px #6b21a8, 0 0 14px #3b0764, 0 0 24px #000;
+  animation: nfx-smoke 3s ease-in-out infinite alternate;
+}
+
+/* ---------- Волна: буквы прыгают по очереди ---------- */
+.name-fx--wave {
+  color: #a5f3fc !important;
+  text-shadow: 0 0 6px rgba(34, 211, 238, 0.6);
+}
+
+.name-fx__char {
+  display: inline-block;
+  white-space: pre;
+  animation: nfx-wave 1.6s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.08s);
+}
+
+/* ---------- Анимации ---------- */
+
+@keyframes nfx-slide {
+  to { background-position: 200% 0; }
+}
+
+@keyframes nfx-rise {
+  from { background-position: 0 100%; }
+  to { background-position: 0 0; }
+}
+
+@keyframes nfx-shine {
+  0%, 100% { background-position: 100% 0; }
+  50% { background-position: 0 0; }
+}
+
+@keyframes nfx-galaxy {
+  to { background-position: 0 0, 0 0, 300% 0; }
+}
+
+@keyframes nfx-flicker {
+  0%, 17%, 21%, 64%, 66%, 100% { opacity: 1; }
+  18%, 20%, 65% { opacity: 0.45; }
+}
+
+@keyframes nfx-glitch {
+  0%, 100% { transform: translate(0); text-shadow: 2px 0 #ff2a6d, -2px 0 #05d9e8; }
+  6% { transform: translate(-1px, 1px); text-shadow: -3px 0 #ff2a6d, 3px 0 #05d9e8; }
+  8% { transform: translate(1px, -1px); }
+  10% { transform: translate(0); }
+  58% { text-shadow: 3px 1px #ff2a6d, -3px -1px #05d9e8; }
+  60% { text-shadow: 2px 0 #ff2a6d, -2px 0 #05d9e8; }
+}
+
+@keyframes nfx-pulse {
+  0%, 100% { text-shadow: 0 0 4px #a3e635, 0 0 10px #65a30d, 0 2px 0 #3f6212; }
+  50% { text-shadow: 0 0 8px #bef264, 0 0 20px #84cc16, 0 2px 0 #3f6212; }
+}
+
+@keyframes nfx-smoke {
+  from { text-shadow: 0 0 4px #6b21a8, 0 0 10px #3b0764, 0 0 18px #000; }
+  to { text-shadow: 0 0 10px #7e22ce, 0 0 22px #581c87, 0 0 36px #000; }
+}
+
+@keyframes nfx-wave {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-0.28em); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .name-fx,
+  .name-fx__char {
+    animation: none !important;
+  }
+}

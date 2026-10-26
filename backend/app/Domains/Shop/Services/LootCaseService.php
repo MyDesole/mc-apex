@@ -31,6 +31,9 @@ class LootCaseService
         ShopItem::TYPE_SKIN_BACKDROP,
         ShopItem::TYPE_CARD_THEME,
         ShopItem::TYPE_PROFILE_LAYOUT,
+        ShopItem::TYPE_NAME_EFFECT,
+        ShopItem::TYPE_PROFILE_ENTRANCE,
+        ShopItem::TYPE_CURSOR_TRAIL,
     ];
 
     public const REEL_LENGTH = 50;

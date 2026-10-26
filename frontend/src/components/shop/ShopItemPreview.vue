@@ -16,6 +16,8 @@ import AvatarFrameDecor from '@/components/players/AvatarFrameDecor.vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
 import { bundleTheme } from '@/data/shop/bundleThemes.js'
 import '@/components/shop/badgeStyles.css'
+import ProfileEntrance from '@/components/players/ProfileEntrance.vue'
+import CursorTrail from '@/components/players/CursorTrail.vue'
 import { cardTheme } from '@/data/shop/cosmetics.js'
 import { profileLayout } from '@/data/players/profileLayouts.js'
 import { loadSkin, renderSkinHead } from '@/utils/minecraftSkin.js'
@@ -52,6 +54,8 @@ const hasLayer = computed(() => !!layerEffect(value.value))
 const bundleLook = computed(() => bundleTheme(props.item.bundle?.theme || props.item.metadata?.theme))
 
 const initial = computed(() => (auth.user?.username || 'A').charAt(0).toUpperCase())
+
+const previewName = computed(() => auth.user?.username || 'ApexPlayer')
 
 onMounted(async () => {
   // Голова из скина нужна только рамкам и фонам — остальным не грузим
@@ -167,6 +171,33 @@ onMounted(async () => {
       <AppIcon v-else :icon="item.icon" :size="15" />
       {{ item.name.replace(/^Бейдж\s+/, '').replace(/[«»]/g, '') }}
     </span>
+
+    <!-- Эффект ника: ник игрока крупно -->
+    <div v-else-if="item.type === 'name_effect'" class="preview__name">
+      <span class="name-fx" :class="`name-fx--${value}`">
+        <template v-if="value === 'wave'">
+          <span
+              v-for="(char, i) in [...previewName]"
+              :key="i"
+              class="name-fx__char"
+              :style="{ '--i': i }"
+          >{{ char }}</span>
+        </template>
+        <template v-else>{{ previewName }}</template>
+      </span>
+    </div>
+
+    <!-- Появление профиля: мини-профиль, интро по кругу -->
+    <div v-else-if="item.type === 'profile_entrance'" class="preview__mini-profile">
+      <span class="preview__mini-avatar">{{ initial }}</span>
+      <span class="preview__mini-lines"><i></i><i></i></span>
+      <ProfileEntrance :entrance="value" loop />
+    </div>
+
+    <!-- След курсора: курсор сам рисует восьмёрку -->
+    <div v-else-if="item.type === 'cursor_trail'" class="preview__trail">
+      <CursorTrail :trail="value" auto />
+    </div>
 
     <!-- Набор: тематический фон и состав пиксельными значками -->
     <div
@@ -513,6 +544,82 @@ onMounted(async () => {
 
 .preview__badge--sprite {
   padding: 5px 12px 5px 8px;
+}
+
+/* ---------- Эффект ника ---------- */
+
+.preview__name {
+  max-width: 100%;
+  padding: 0 12px;
+
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* ---------- Появление профиля ---------- */
+
+.preview__mini-profile {
+  position: relative;
+  overflow: hidden;
+
+  width: 82%;
+  height: 96px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 0 14px;
+
+  background: linear-gradient(135deg, #1d1a28, #14121c);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+}
+
+.preview__mini-avatar {
+  width: 44px;
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  color: #fff;
+  background: #7c3aed;
+  border-radius: 50%;
+
+  font-weight: 900;
+}
+
+.preview__mini-lines {
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preview__mini-lines i {
+  height: 8px;
+
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+}
+
+.preview__mini-lines i:last-child {
+  width: 60%;
+}
+
+/* ---------- След курсора ---------- */
+
+.preview__trail {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
 }
 
 /* ---------- Набор ---------- */

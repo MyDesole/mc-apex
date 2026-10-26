@@ -16,6 +16,7 @@ import './assets/base.css'
 import './assets/main.css'
 import './assets/transitions.css'
 import './assets/backdrops.css'
+import './assets/nameEffects.css'
 import './assets/content-page.css'
 import './echo'
 

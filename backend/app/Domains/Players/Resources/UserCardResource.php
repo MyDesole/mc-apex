@@ -30,6 +30,8 @@ class UserCardResource extends JsonResource
             'rating_points' => (int) $user->rating_points,
             'is_verified' => (bool) $user->is_verified,
             'accent_color' => $user->accent_color,
+            // Эффект ника из магазина: виден в списках и рейтинге
+            'name_effect' => $user->name_effect,
             'banner_color' => $user->banner_color,
             'clan_tag' => $user->clan_tag,
             'clan_color' => $user->clan_color,

@@ -109,6 +109,9 @@ class ShopService
         ShopItem::TYPE_SKIN_BACKDROP,
         ShopItem::TYPE_CARD_THEME,
         ShopItem::TYPE_PROFILE_LAYOUT,
+        ShopItem::TYPE_NAME_EFFECT,
+        ShopItem::TYPE_PROFILE_ENTRANCE,
+        ShopItem::TYPE_CURSOR_TRAIL,
     ];
 
     /**
@@ -929,6 +932,9 @@ class ShopService
             ShopItem::TYPE_SKIN_BACKDROP => 'skin_backdrop',
             ShopItem::TYPE_CARD_THEME => 'card_theme',
             ShopItem::TYPE_PROFILE_LAYOUT => 'profile_layout',
+            ShopItem::TYPE_NAME_EFFECT => 'name_effect',
+            ShopItem::TYPE_PROFILE_ENTRANCE => 'profile_entrance',
+            ShopItem::TYPE_CURSOR_TRAIL => 'cursor_trail',
             default => null,
         };
     }

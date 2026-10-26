@@ -30,6 +30,11 @@ class ShopItem extends Model
     // Набор: несколько предметов одной темы со скидкой (metadata.items — slug'и)
     public const TYPE_BUNDLE = 'bundle';
 
+    // Видно по всему сайту: эффект ника; гостям профиля: появление и след курсора
+    public const TYPE_NAME_EFFECT = 'name_effect';
+    public const TYPE_PROFILE_ENTRANCE = 'profile_entrance';
+    public const TYPE_CURSOR_TRAIL = 'cursor_trail';
+
     /**
      * Типы, которые при надевании пишутся в поле профиля пользователя.
      */
@@ -41,6 +46,9 @@ class ShopItem extends Model
         self::TYPE_CARD_THEME,
         self::TYPE_PROFILE_LAYOUT,
         self::TYPE_BADGE,
+        self::TYPE_NAME_EFFECT,
+        self::TYPE_PROFILE_ENTRANCE,
+        self::TYPE_CURSOR_TRAIL,
         // Оформление подсветки клана применяется к клану лидера
         self::TYPE_CLAN_HIGHLIGHT_STYLE,
     ];

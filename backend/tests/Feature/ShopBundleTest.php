@@ -148,6 +148,26 @@ class ShopBundleTest extends TestCase
         $this->assertCount(1, $user->equipped_badges);
     }
 
+    public function test_flex_cosmetics_equip_into_user_fields(): void
+    {
+        $user = User::factory()->create(['apex_coins' => 10000]);
+
+        foreach ([
+            [ShopItem::TYPE_NAME_EFFECT, 'gold', 'name_effect'],
+            [ShopItem::TYPE_PROFILE_ENTRANCE, 'portal', 'profile_entrance'],
+            [ShopItem::TYPE_CURSOR_TRAIL, 'sparkles', 'cursor_trail'],
+        ] as [$type, $value, $field]) {
+            $item = $this->item("{$type}-x", $type, $value, 100);
+
+            $this->actingAs($user)->postJson("/api/shop/{$item->id}/purchase")->assertCreated();
+            $this->actingAs($user)->postJson("/api/shop/{$item->id}/equip")->assertOk();
+            $this->assertSame($value, $user->fresh()->{$field});
+
+            $this->actingAs($user)->postJson("/api/shop/{$item->id}/unequip")->assertOk();
+            $this->assertNull($user->fresh()->{$field});
+        }
+    }
+
     public function test_regular_player_cannot_equip_without_buying(): void
     {
         $user = User::factory()->create();

@@ -15,6 +15,8 @@ import PlayerProfileFriends from '@/components/players/profile/PlayerProfileFrie
 import PlayerFriendHoverCard from '@/components/players/profile/PlayerFriendHoverCard.vue'
 import AchievementModal from '@/components/players/profile/AchievementModal.vue'
 import { profileLayout } from '@/data/players/profileLayouts.js'
+import ProfileEntrance from '@/components/players/ProfileEntrance.vue'
+import CursorTrail from '@/components/players/CursorTrail.vue'
 
 const props = defineProps({
   user: {
@@ -335,6 +337,10 @@ const profileCompleteness = computed(() => {
       :class="layoutClass"
       :style="accentStyle"
   >
+    <!-- Появление профиля и след курсора: косметика для гостей профиля -->
+    <ProfileEntrance :key="`entrance-${user?.id}`" :entrance="user?.profile_entrance" />
+    <CursorTrail :key="`trail-${user?.id}-${user?.cursor_trail}`" :trail="user?.cursor_trail" />
+
     <!-- =====================================================
          MAIN PROFILE CARD
          ===================================================== -->

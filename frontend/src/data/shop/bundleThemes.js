@@ -93,6 +93,35 @@ Object.assign(BUNDLE_THEMES, {
     },
 })
 
+// Четвёртая волна
+Object.assign(BUNDLE_THEMES, {
+    legend: {
+        bg: 'conic-gradient(from 0deg at 50% 120%, rgba(250,204,21,.0), rgba(250,204,21,.35), rgba(250,204,21,.0) 30%), radial-gradient(circle at 50% 10%, rgba(253,230,138,.5), transparent 50%), linear-gradient(160deg, #1c1407, #2e1065 60%, #0c0802)',
+        glow: '#facc15',
+        accent: '#fde68a',
+        frame: 'crown',
+    },
+    elements: {
+        bg: 'radial-gradient(circle at 25% 100%, rgba(249,115,22,.6), transparent 50%), radial-gradient(circle at 80% 0%, rgba(165,180,252,.4), transparent 45%), linear-gradient(160deg, #1c0505, #1e1b4b)',
+        glow: '#f97316',
+        accent: '#fde047',
+        frame: 'hellfire',
+    },
+    sweet: {
+        bg: 'radial-gradient(circle at 20% 20%, rgba(255,255,255,.55), transparent 40%), linear-gradient(160deg, #fbcfe8, #f9a8d4 50%, #c4b5fd)',
+        glow: '#ec4899',
+        accent: '#831843',
+        frame: 'sakura',
+        light: true,
+    },
+    frost: {
+        bg: 'radial-gradient(circle at 70% 20%, rgba(255,255,255,.45), transparent 40%), linear-gradient(160deg, #0c4a6e, #38bdf8 60%, #e0f2fe)',
+        glow: '#7dd3fc',
+        accent: '#0c4a6e',
+        frame: 'diamond',
+    },
+})
+
 export function bundleTheme(key) {
     return BUNDLE_THEMES[key] ?? BUNDLE_THEMES.royal
 }

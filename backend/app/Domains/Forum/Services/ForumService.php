@@ -93,7 +93,7 @@ class ForumService
         $query = ForumTopic::query()
             ->visible()
             ->with([
-                'author:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,role,is_verified',
+                'author:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,role,is_verified',
                 'category:id,slug,name,color,icon',
                 'lastReplyUser:id,username',
             ]);

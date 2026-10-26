@@ -26,7 +26,7 @@ class TierTestController extends Controller
 
         // Мои заявки (как игрока)
         $myTests = TierTest::where('user_id', $userId)
-            ->with(['tester:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode'])
+            ->with(['tester:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect'])
             ->latest()
             ->get();
 
@@ -34,7 +34,7 @@ class TierTestController extends Controller
 
         // Заявки, где я тестер
         $asTester = TierTest::where('tester_id', $userId)
-            ->with(['user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode'])
+            ->with(['user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect'])
             ->latest()
             ->get();
 
