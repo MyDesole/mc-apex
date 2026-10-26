@@ -66,9 +66,10 @@
   text-shadow: 0 0 4px #fff;
 }
 
+/* Светлый пузырь: текст и время внутри — тёмно-вишнёвые, иначе не читается */
 .msg__bubble.bubble-fx--sakura a,
 .msg__bubble.bubble-fx--sakura * {
-  color: inherit;
+  color: inherit !important;
 }
 
 /* ---------- Глитч ---------- */

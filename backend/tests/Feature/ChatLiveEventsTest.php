@@ -149,4 +149,22 @@ class ChatLiveEventsTest extends TestCase
         $this->assertArrayHasKey('reads', $payload['message']);
         $this->assertArrayHasKey('attachments', $payload['message']);
     }
+
+    public function test_message_carries_author_chat_bubble(): void
+    {
+        // Без этого поля оформление сообщений из магазина никто не видел
+        $author = User::factory()->create(['chat_bubble' => 'neon', 'name_effect' => 'gold']);
+        $reader = User::factory()->create();
+
+        $conversation = $this->direct($author, $reader);
+        $message = app(ChatService::class)->send($conversation, $author, 'светится');
+
+        $payload = (new \App\Domains\Chat\Events\MessageSent($message))->broadcastWith();
+        $this->assertSame('neon', $payload['message']['user']['chat_bubble']);
+        $this->assertSame('gold', $payload['message']['user']['name_effect']);
+
+        Sanctum::actingAs($reader);
+        $history = $this->getJson("/api/chat/conversations/{$conversation->id}")->assertOk();
+        $this->assertStringContainsString('"chat_bubble":"neon"', $history->getContent());
+    }
 }

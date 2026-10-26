@@ -56,6 +56,10 @@ class MessageResource extends JsonResource
             'tier' => $user->tier,
             'display_rank' => $user->display_rank,
             'is_verified' => (bool) $user->is_verified,
+            // Косметика автора: оформление сообщений видит собеседник
+            'chat_bubble' => $user->chat_bubble,
+            'name_effect' => $user->name_effect,
+            'profile_title' => $user->profile_title,
         ];
     }
 
