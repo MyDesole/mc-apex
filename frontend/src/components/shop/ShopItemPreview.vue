@@ -12,6 +12,7 @@ import { computed, onMounted, ref } from 'vue'
 import AppIcon from '@/components/core/AppIcon.vue'
 import { frameById, layerEffect } from '@/data/players/profileCustomization.js'
 import ProfileEffectLayer from '@/components/players/ProfileEffectLayer.vue'
+import AvatarFrameDecor from '@/components/players/AvatarFrameDecor.vue'
 import { cardTheme } from '@/data/shop/cosmetics.js'
 import { profileLayout } from '@/data/players/profileLayouts.js'
 import { loadSkin, renderSkinHead } from '@/utils/minecraftSkin.js'
@@ -61,6 +62,7 @@ onMounted(async () => {
   <div class="preview" :class="`preview--${item.type}`">
     <!-- Рамка аватара -->
     <div v-if="item.type === 'avatar_frame'" class="preview__frame" :style="frameStyle">
+      <AvatarFrameDecor :frame="value" />
       <span class="preview__avatar">
         <img v-if="head" :src="head" alt="" />
         <span v-else>{{ initial }}</span>
@@ -176,6 +178,8 @@ onMounted(async () => {
 /* ---------- Рамка ---------- */
 
 .preview__frame {
+  position: relative;
+
   padding: 4px;
 
   background: var(--preview-frame);

@@ -343,84 +343,32 @@
   --accent-light: #9a3412;
 }
 
-.profile-layout.profile-layout--book .player-card,
-.profile-layout.profile-layout--book .side-panel {
-  /* Старая бумага: светлый центр, затемнённые края */
-  background:
-      radial-gradient(ellipse at 50% 40%, #f8eed8 0%, #efe0c2 60%, #e3cfa6 100%);
-  box-shadow:
-      inset 0 0 0 1px rgba(255, 255, 255, 0.5),
-      inset 0 0 40px rgba(120, 80, 30, 0.18),
-      0 10px 30px rgba(0, 0, 0, 0.45);
-}
 
-/*
- * Купленный фон карточки остаётся, но под пергаментной вуалью:
- * иначе тёмные чернила на картинке не читаются.
- */
-.profile-layout.profile-layout--book .player-card::before {
-  background: radial-gradient(ellipse at 50% 40%, rgba(248, 238, 216, 0.9) 0%, rgba(239, 224, 194, 0.93) 60%, rgba(227, 207, 166, 0.96) 100%);
+/* Палитра светлой темы для книги */
+.profile-layout.profile-layout--book {
+  --paper-surface: radial-gradient(ellipse at 50% 40%, #f8eed8 0%, #efe0c2 60%, #e3cfa6 100%);
+  --paper-veil: radial-gradient(ellipse at 50% 40%, rgba(248, 238, 216, 0.9) 0%, rgba(239, 224, 194, 0.93) 60%, rgba(227, 207, 166, 0.96) 100%);
+  --paper-shadow: rgba(120, 80, 30, 0.18);
+  --paper-shadow-soft: rgba(120, 80, 30, 0.08);
+  --paper-line: #c9ad83;
+  --paper-chip: rgba(255, 250, 238, 0.68);
+  --paper-track: rgba(90, 60, 30, 0.14);
+  --paper-watermark: rgba(90, 60, 30, 0.08);
+  --ink: #2a1d12;
+  --ink-soft: #4a2a12;
+  --ink-muted: #7a6148;
 }
-
-/* Тёмные декоративные слои шапки на бумаге не нужны */
-.profile-layout.profile-layout--book .player-card__glow,
-.profile-layout.profile-layout--book .player-card__grid,
-.profile-layout.profile-layout--book .profile-header__aurora,
-.profile-layout.profile-layout--book .profile-header__grid,
-.profile-layout.profile-layout--book .profile-header__noise {
-  display: none;
-}
-
-.profile-layout.profile-layout--book .profile-header {
-  background: transparent;
-  border-bottom: 3px double #8b6b45;
-  box-shadow: none;
-}
-
-.profile-layout.profile-layout--book .profile-header__cover:not(.profile-header__cover--image) {
-  opacity: 0;
-}
-
 /* Своя обложка — как старая гравюра: бледная и в сепии */
 .profile-layout.profile-layout--book .profile-header__cover--image {
   opacity: 0.16;
   filter: sepia(0.8) contrast(0.9);
 }
 
-.profile-layout.profile-layout--book .profile-header__cover::after {
-  display: none;
-}
-
-.profile-layout.profile-layout--book .profile-header__name,
-.profile-layout.profile-layout--book .profile-header__username,
-.profile-layout.profile-layout--book .profile-header__bio,
-.profile-layout.profile-layout--book .profile-header__quote-text,
-.profile-layout.profile-layout--book .profile-header__status-text,
-.profile-layout.profile-layout--book .tier-display__name,
-.profile-layout.profile-layout--book .bridge-display__name {
-  color: #2a1d12;
-  text-shadow: none;
-}
-
-.profile-layout.profile-layout--book .profile-header__tier-watermark {
-  color: rgba(90, 60, 30, 0.08);
-}
-
-.profile-layout.profile-layout--book .profile-stat {
-  background: rgba(255, 250, 238, 0.6);
-}
-
 /* Заголовки с буквицей и чернильной линией */
-.profile-layout.profile-layout--book .section-heading {
-  border-bottom: 1px solid #c9ad83;
-  padding-bottom: 6px;
-}
-
 .profile-layout.profile-layout--book .section-heading h3 {
   font-size: 19px;
   font-style: italic;
   font-weight: 700;
-  color: #4a2a12;
 }
 
 .profile-layout.profile-layout--book .section-heading h3::first-letter {
@@ -428,98 +376,186 @@
   font-size: 1.35em;
 }
 
+.profile-layout.profile-layout--book .profile-header {
+  border-bottom-style: double;
+  border-bottom-width: 3px;
+}
+
+/* =========================================================
+   СВЕТЛЫЕ МАКЕТЫ (.profile-layout--light): книга, сакура, клубничное молоко
+
+   Блоки профиля рисуются тёмными цветами «по умолчанию», поэтому
+   на светлом фоне перекрашиваем их на переменные макета:
+     --paper-surface — фон карточек, --paper-veil — вуаль над своим фоном,
+     --ink / --ink-soft / --ink-muted — текст, --paper-line — линии,
+     --paper-chip — плашки, --paper-track — дорожки полосок.
+   ========================================================= */
+.profile-layout.profile-layout--light .player-card,
+.profile-layout.profile-layout--light .side-panel {
+  /* Старая бумага: светлый центр, затемнённые края */
+  background:
+      var(--paper-surface);
+  box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+      inset 0 0 40px var(--paper-shadow),
+      0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+/*
+ * Купленный фон карточки остаётся, но под пергаментной вуалью:
+ * иначе тёмные чернила на картинке не читаются.
+ */
+.profile-layout.profile-layout--light .player-card::before {
+  background: var(--paper-veil);
+}
+
+/* Тёмные декоративные слои шапки на бумаге не нужны */
+.profile-layout.profile-layout--light .player-card__glow,
+.profile-layout.profile-layout--light .player-card__grid,
+.profile-layout.profile-layout--light .profile-header__aurora,
+.profile-layout.profile-layout--light .profile-header__grid,
+.profile-layout.profile-layout--light .profile-header__noise {
+  display: none;
+}
+
+.profile-layout.profile-layout--light .profile-header {
+  background: transparent;
+  border-bottom: 1px solid var(--paper-line);
+  box-shadow: none;
+}
+
+.profile-layout.profile-layout--light .profile-header__cover:not(.profile-header__cover--image) {
+  opacity: 0;
+}
+
+.profile-layout.profile-layout--light .profile-header__cover::after {
+  display: none;
+}
+
+.profile-layout.profile-layout--light .profile-header__name,
+.profile-layout.profile-layout--light .profile-header__username,
+.profile-layout.profile-layout--light .profile-header__bio,
+.profile-layout.profile-layout--light .profile-header__quote-text,
+.profile-layout.profile-layout--light .profile-header__status-text,
+.profile-layout.profile-layout--light .tier-display__name,
+.profile-layout.profile-layout--light .bridge-display__name {
+  color: var(--ink);
+  text-shadow: none;
+}
+
+.profile-layout.profile-layout--light .profile-header__tier-watermark {
+  color: var(--paper-watermark);
+}
+
+.profile-layout.profile-layout--light .profile-stat {
+  background: var(--paper-chip);
+}
+
 /*
  * Вложенные блоки с «зашитыми» тёмными цветами (аспекты, соцсети,
  * плашки в шапке): на пергаменте они выпадали тёмным пятном или
  * становились нечитаемыми — перекрашиваем в бумагу и чернила.
  */
-.profile-layout.profile-layout--book .aspects,
-.profile-layout.profile-layout--book .socials {
+.profile-layout.profile-layout--light .aspects,
+.profile-layout.profile-layout--light .socials {
   background: transparent;
   border-color: transparent;
   box-shadow: none;
   padding-inline: 0;
 }
 
-.profile-layout.profile-layout--book .section-line,
-.profile-layout.profile-layout--book .socials__eyebrow-line {
-  background: linear-gradient(90deg, #c9ad83, transparent);
+.profile-layout.profile-layout--light .section-line,
+.profile-layout.profile-layout--light .socials__eyebrow-line {
+  background: linear-gradient(90deg, var(--paper-line), transparent);
 }
 
-.profile-layout.profile-layout--book .aspect-card,
-.profile-layout.profile-layout--book .social-card {
-  background: rgba(255, 250, 238, 0.65);
-  border: 1px solid #c9ad83;
-  box-shadow: inset 0 0 20px rgba(120, 80, 30, 0.08);
+.profile-layout.profile-layout--light .aspect-card,
+.profile-layout.profile-layout--light .social-card {
+  background: var(--paper-chip);
+  border: 1px solid var(--paper-line);
+  box-shadow: inset 0 0 20px var(--paper-shadow-soft);
 }
 
-.profile-layout.profile-layout--book .aspect-card__glow,
-.profile-layout.profile-layout--book .social-card__glow {
+.profile-layout.profile-layout--light .aspect-card__glow,
+.profile-layout.profile-layout--light .social-card__glow {
   display: none;
 }
 
-.profile-layout.profile-layout--book .section-title,
-.profile-layout.profile-layout--book .aspect-info h4,
-.profile-layout.profile-layout--book .stat-top strong,
-.profile-layout.profile-layout--book .socials__title,
-.profile-layout.profile-layout--book .social-card__label {
-  color: #2a1d12;
+.profile-layout.profile-layout--light .section-title,
+.profile-layout.profile-layout--light .aspect-info h4,
+.profile-layout.profile-layout--light .stat-top strong,
+.profile-layout.profile-layout--light .socials__title,
+.profile-layout.profile-layout--light .social-card__label {
+  color: var(--ink);
 }
 
-.profile-layout.profile-layout--book .section-kicker,
-.profile-layout.profile-layout--book .aspect-label,
-.profile-layout.profile-layout--book .aspect-total span,
-.profile-layout.profile-layout--book .stat-top span,
-.profile-layout.profile-layout--book .stat-top small,
-.profile-layout.profile-layout--book .socials__eyebrow,
-.profile-layout.profile-layout--book .socials__count,
-.profile-layout.profile-layout--book .social-card__value,
-.profile-layout.profile-layout--book .social-card__arrow {
-  color: #7a6148;
+.profile-layout.profile-layout--light .section-kicker,
+.profile-layout.profile-layout--light .aspect-label,
+.profile-layout.profile-layout--light .aspect-total span,
+.profile-layout.profile-layout--light .stat-top span,
+.profile-layout.profile-layout--light .stat-top small,
+.profile-layout.profile-layout--light .socials__eyebrow,
+.profile-layout.profile-layout--light .socials__count,
+.profile-layout.profile-layout--light .social-card__value,
+.profile-layout.profile-layout--light .social-card__arrow {
+  color: var(--ink-muted);
 }
 
 /* Цвет режима (жёлтый BedWars) на бумаге бледный — делаем «чернилами» того же цвета */
-.profile-layout.profile-layout--book .aspect-total strong {
+.profile-layout.profile-layout--light .aspect-total strong {
   filter: brightness(0.62) saturate(1.3);
 }
 
-.profile-layout.profile-layout--book .stat-track {
-  background: rgba(90, 60, 30, 0.14);
+.profile-layout.profile-layout--light .stat-track {
+  background: var(--paper-track);
 }
 
 /* Плашки «Клан / Дней», подпись очков тира, кнопка «Настроить» */
-.profile-layout.profile-layout--book .profile-header__stat,
-.profile-layout.profile-layout--book .profile-header__edit {
-  color: #4a2a12;
-  background: rgba(255, 250, 238, 0.7);
-  border: 1px solid #c9ad83;
+.profile-layout.profile-layout--light .profile-header__stat,
+.profile-layout.profile-layout--light .profile-header__edit {
+  color: var(--ink-soft);
+  background: var(--paper-chip);
+  border: 1px solid var(--paper-line);
   box-shadow: none;
 }
 
-.profile-layout.profile-layout--book .profile-header__stat-label,
-.profile-layout.profile-layout--book .tier-progress__head {
-  color: #7a6148;
+.profile-layout.profile-layout--light .profile-header__stat-label,
+.profile-layout.profile-layout--light .tier-progress__head {
+  color: var(--ink-muted);
 }
 
-.profile-layout.profile-layout--book .profile-header__stat strong,
-.profile-layout.profile-layout--book .tier-progress__head strong {
-  color: #2a1d12;
+.profile-layout.profile-layout--light .profile-header__stat strong,
+.profile-layout.profile-layout--light .tier-progress__head strong {
+  color: var(--ink);
 }
 
-.profile-layout.profile-layout--book .tier-progress__track {
-  background: rgba(90, 60, 30, 0.15);
+.profile-layout.profile-layout--light .tier-progress__track {
+  background: var(--paper-track);
 }
 
-.profile-layout.profile-layout--book .bio,
-.profile-layout.profile-layout--book .quote,
-.profile-layout.profile-layout--book .meta-pill {
-  color: #3f2a1a;
+.profile-layout.profile-layout--light .bio,
+.profile-layout.profile-layout--light .quote,
+.profile-layout.profile-layout--light .meta-pill {
+  color: var(--ink-soft);
 }
 
-.profile-layout.profile-layout--book .meta-pill {
-  background: rgba(255, 250, 238, 0.7);
+.profile-layout.profile-layout--light .meta-pill {
+  background: var(--paper-chip);
 }
 
+/* Заголовки разделов и своя обложка на светлом фоне */
+.profile-layout.profile-layout--light .section-heading {
+  border-bottom: 1px solid var(--paper-line);
+  padding-bottom: 6px;
+}
+
+.profile-layout.profile-layout--light .section-heading h3 {
+  color: var(--ink-soft);
+}
+
+.profile-layout.profile-layout--light .profile-header__cover--image {
+  opacity: 0.22;
+}
 /* =========================================================
    СИНТВЕЙВ — неоновый закат и сетка до горизонта
    ========================================================= */
@@ -733,6 +769,158 @@
   letter-spacing: 0.02em;
 }
 
+/* =========================================================
+   САКУРА — розовые лепестки, белая бумага, круглые углы
+   ========================================================= */
+
+.profile-layout.profile-layout--sakura {
+  --layout-accent: #ec4899;
+  --layout-edge: #f4b6cf;
+  --layout-radius: 22px;
+  --layout-page: linear-gradient(160deg, #fbd3e3 0%, #f6c1d8 45%, #fde2ec 100%);
+
+  /* Лепестки: розовые овалы под углом, рассыпаны по фону */
+  --layout-pattern:
+      radial-gradient(ellipse 7px 4px at 20% 30%, rgba(236, 72, 153, 0.35), transparent 70%) 0 0 / 90px 90px,
+      radial-gradient(ellipse 5px 3px at 70% 60%, rgba(244, 114, 182, 0.4), transparent 70%) 0 0 / 70px 70px,
+      radial-gradient(ellipse 6px 4px at 45% 85%, rgba(251, 207, 232, 0.9), transparent 70%) 0 0 / 110px 110px;
+  --layout-pattern-opacity: 1;
+
+  --bg-card: #fff5f9;
+  --bg: #ffe9f2;
+  --border: #f3c4d8;
+  --border-hover: #ec4899;
+  --text: #5b2140;
+  --text-dim: #8a4a68;
+  --text-muted: #b07592;
+  --accent-light: #db2777;
+
+  --paper-surface: linear-gradient(180deg, #fffafc 0%, #fff1f7 100%);
+  --paper-veil: linear-gradient(180deg, rgba(255, 250, 252, 0.9), rgba(255, 241, 247, 0.94));
+  --paper-shadow: rgba(236, 72, 153, 0.12);
+  --paper-shadow-soft: rgba(236, 72, 153, 0.06);
+  --paper-line: #f3c4d8;
+  --paper-chip: rgba(255, 255, 255, 0.75);
+  --paper-track: rgba(236, 72, 153, 0.12);
+  --paper-watermark: rgba(236, 72, 153, 0.08);
+  --ink: #5b2140;
+  --ink-soft: #7a2d55;
+  --ink-muted: #b07592;
+}
+
+.profile-layout.profile-layout--sakura .player-card,
+.profile-layout.profile-layout--sakura .side-panel {
+  box-shadow: 0 10px 30px rgba(236, 72, 153, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+}
+
+.profile-layout.profile-layout--sakura .section-heading h3::before {
+  content: '❀ ';
+  color: #f472b6;
+}
+
+/* =========================================================
+   КЛУБНИЧНОЕ МОЛОКО — пастель, горошек, ачивки сверху
+   ========================================================= */
+
+.profile-layout.profile-layout--strawberry_milk {
+  --layout-accent: #f472b6;
+  --layout-edge: #fbc4d4;
+  --layout-radius: 26px;
+  --layout-page: #ffe1e8;
+
+  /* Горошек, как на коробке молока */
+  --layout-pattern:
+      radial-gradient(circle, rgba(255, 255, 255, 0.85) 0 5px, transparent 6px) 0 0 / 36px 36px,
+      radial-gradient(circle, rgba(244, 114, 182, 0.25) 0 4px, transparent 5px) 18px 18px / 36px 36px;
+  --layout-pattern-opacity: 1;
+
+  --bg-card: #fffaf5;
+  --bg: #fff1f3;
+  --border: #f9cdd8;
+  --border-hover: #f472b6;
+  --text: #6b2a3a;
+  --text-dim: #9b5466;
+  --text-muted: #c08795;
+  --accent-light: #ec4899;
+
+  --paper-surface: linear-gradient(180deg, #fffdf9 0%, #fff4f0 100%);
+  --paper-veil: linear-gradient(180deg, rgba(255, 253, 249, 0.9), rgba(255, 244, 240, 0.94));
+  --paper-shadow: rgba(244, 114, 182, 0.14);
+  --paper-shadow-soft: rgba(244, 114, 182, 0.06);
+  --paper-line: #f9cdd8;
+  --paper-chip: rgba(255, 255, 255, 0.8);
+  --paper-track: rgba(244, 114, 182, 0.14);
+  --paper-watermark: rgba(244, 114, 182, 0.08);
+  --ink: #6b2a3a;
+  --ink-soft: #8b3a4e;
+  --ink-muted: #c08795;
+}
+
+.profile-layout.profile-layout--strawberry_milk .player-card,
+.profile-layout.profile-layout--strawberry_milk .side-panel {
+  border-width: 2px;
+  box-shadow: 0 8px 0 #f9cdd8, 0 14px 30px rgba(244, 114, 182, 0.18);
+}
+
+.profile-layout.profile-layout--strawberry_milk .section-heading h3::before {
+  content: '♡ ';
+  color: #f472b6;
+}
+
+.profile-layout.profile-layout--strawberry_milk .profile-stat {
+  border-radius: 16px;
+}
+
+/* =========================================================
+   САХАРНАЯ ВАТА — облака на сиреневом небе, пастельный неон
+   ========================================================= */
+
+.profile-layout.profile-layout--cotton_candy {
+  --layout-accent: #f9a8d4;
+  --layout-edge: #6d5aa8;
+  --layout-radius: 20px;
+  --layout-page: linear-gradient(180deg, #2a1f45 0%, #3b2a63 55%, #4b3576 100%);
+
+  /* Облачка: пушистые пятна розового и голубого */
+  --layout-pattern:
+      radial-gradient(circle at 15% 25%, rgba(249, 168, 212, 0.28) 0 40px, transparent 70px),
+      radial-gradient(circle at 80% 15%, rgba(186, 230, 253, 0.22) 0 50px, transparent 90px),
+      radial-gradient(circle at 60% 80%, rgba(249, 168, 212, 0.18) 0 60px, transparent 110px),
+      radial-gradient(circle, rgba(255, 255, 255, 0.5) 0 1px, transparent 1.5px) 0 0 / 28px 28px;
+  --layout-pattern-opacity: 1;
+
+  --bg-card: rgba(53, 42, 90, 0.85);
+  --bg: #2a1f45;
+  --border: #5b4a90;
+  --border-hover: #f9a8d4;
+  --text: #fdf2f8;
+  --text-dim: #e9d5ff;
+  --text-muted: #b8a3dd;
+  --accent-light: #bae6fd;
+}
+
+.profile-layout.profile-layout--cotton_candy .player-card,
+.profile-layout.profile-layout--cotton_candy .side-panel {
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 0 1px rgba(249, 168, 212, 0.2), 0 12px 36px rgba(20, 10, 40, 0.5);
+}
+
+.profile-layout.profile-layout--cotton_candy .profile-header__name {
+  background: linear-gradient(90deg, #f9a8d4, #c4b5fd, #bae6fd);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+}
+
+.profile-layout.profile-layout--cotton_candy .section-heading h3 {
+  color: #fbcfe8;
+}
+
+.profile-layout.profile-layout--cotton_candy .section-heading h3::before {
+  content: '☁ ';
+  color: #bae6fd;
+}
 /* ---------- Телефон: комната без лишних отступов ---------- */
 
 @media (max-width: 600px) {

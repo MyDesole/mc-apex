@@ -27,6 +27,7 @@ export const PROFILE_LAYOUTS = {
     book: {
         name: 'Книга и перо',
         arrangement: 'bottom',
+        light: true,
         preview: { page: '#2b2118', card: '#f3e7cf', side: '#eadbbd', accent: '#7c2d12', line: '#3f2a1a' },
     },
     synthwave: {
@@ -48,6 +49,25 @@ export const PROFILE_LAYOUTS = {
         name: 'Ледяной пик',
         arrangement: 'top',
         preview: { page: '#0b1622', card: '#13263a', side: '#1a3149', accent: '#7dd3fc', line: '#e0f2fe' },
+    },
+
+    // Милые макеты: светлые пастельные, круглые углы, мягкие тени
+    sakura: {
+        name: 'Сакура',
+        arrangement: 'right',
+        light: true,
+        preview: { page: '#f9d5e5', card: '#fff5f9', side: '#ffe4ef', accent: '#ec4899', line: '#9d4b6e' },
+    },
+    strawberry_milk: {
+        name: 'Клубничное молоко',
+        arrangement: 'top',
+        light: true,
+        preview: { page: '#ffe1e8', card: '#fffaf5', side: '#ffeef2', accent: '#f472b6', line: '#a0525f' },
+    },
+    cotton_candy: {
+        name: 'Сахарная вата',
+        arrangement: 'left',
+        preview: { page: '#2a1f45', card: '#352a5a', side: '#3d2f66', accent: '#f9a8d4', line: '#bae6fd' },
     },
 }
 

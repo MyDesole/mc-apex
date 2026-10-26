@@ -19,6 +19,15 @@ export const AVATAR_FRAMES = [
     { id: 'obsidian', name: 'Обсидиановая', color: '#6d28d9', gradient: 'linear-gradient(135deg, #1e1b2e, #6d28d9, #1e1b2e)', rarity: 'epic' },
     { id: 'ender', name: 'Края', color: '#14b8a6', gradient: 'linear-gradient(135deg, #14b8a6, #0f172a, #a855f7)', rarity: 'epic' },
     { id: 'netherite', name: 'Незеритовая', color: '#a8a29e', gradient: 'linear-gradient(135deg, #57534e, #a8a29e, #44403c, #78716c)', rarity: 'legendary', glow: true },
+
+    /*
+     * Милые рамки с украшениями: decor рисует AvatarFrameDecor —
+     * цветочки, сердечки или звёздочки по кругу аватара.
+     */
+    { id: 'sakura', name: 'Сакура', color: '#f9a8d4', gradient: 'linear-gradient(135deg, #fbcfe8, #f472b6, #fce7f3)', rarity: 'epic', decor: { shape: 'flower', colors: ['#fbcfe8', '#f9a8d4', '#fdf2f8'], center: '#fbbf24' } },
+    { id: 'daisy', name: 'Ромашки', color: '#fde68a', gradient: 'linear-gradient(135deg, #bbf7d0, #fef9c3, #86efac)', rarity: 'rare', decor: { shape: 'flower', colors: ['#ffffff', '#fefce8'], center: '#facc15' } },
+    { id: 'hearts', name: 'Сердечки', color: '#fb7185', gradient: 'linear-gradient(135deg, #fda4af, #fb7185, #fecdd3)', rarity: 'rare', decor: { shape: 'heart', colors: ['#fb7185', '#f43f5e', '#fda4af'] } },
+    { id: 'marshmallow', name: 'Зефир', color: '#c4b5fd', gradient: 'linear-gradient(135deg, #fbcfe8, #c4b5fd, #bae6fd, #bbf7d0)', rarity: 'legendary', glow: true, decor: { shape: 'star', colors: ['#fde68a', '#f9a8d4', '#bae6fd'] } },
 ]
 
 /** Рамка по id: цвет или градиент. */
@@ -49,6 +58,12 @@ export const PROFILE_EFFECTS = [
     { id: 'enchant', name: 'Зачарование', color: '#a78bfa', color2: '#f0abfc', rarity: 'epic', layer: { sheet: true } },
     { id: 'aurora', name: 'Северное сияние', color: '#34d399', color2: '#22d3ee', rarity: 'legendary', layer: { sheet: true } },
     { id: 'sculk', name: 'Скалк', color: '#2dd4bf', rarity: 'legendary', layer: { sheet: true, particles: 10, size: [2, 3], duration: [3, 6] } },
+
+    // Милые эффекты: форму частиц задаёт ProfileEffectLayer по id
+    { id: 'sakura_petals', name: 'Лепестки сакуры', color: '#f9a8d4', color2: '#fce7f3', rarity: 'epic', layer: { particles: 18, size: [8, 13], duration: [7, 12] } },
+    { id: 'hearts', name: 'Сердечки', color: '#fb7185', color2: '#fda4af', rarity: 'rare', layer: { particles: 12, size: [10, 16], duration: [5, 9] } },
+    { id: 'sparkles', name: 'Блёстки', color: '#fde68a', color2: '#f9a8d4', rarity: 'rare', layer: { particles: 22, size: [8, 14], duration: [1.8, 3.6] } },
+    { id: 'bubbles', name: 'Мыльные пузыри', color: '#bae6fd', color2: '#f9a8d4', rarity: 'common', layer: { particles: 12, size: [10, 22], duration: [6, 11] } },
 ]
 
 /**

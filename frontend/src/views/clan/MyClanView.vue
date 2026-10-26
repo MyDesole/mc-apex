@@ -1,7 +1,7 @@
 <script setup>
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/core/auth.js'
 import { myClanApi } from '@/services/clan/myClan.js'
 import { clansApi } from '@/services/clan/clans.js'
@@ -17,11 +17,13 @@ import ClanEditModal from '@/components/clan/dialogs/ClanEditModal.vue'
 import TabTransition from '@/components/core/TabTransition.vue'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
 
 const loading = ref(true)
 const data = ref(null)
-const tab = ref('forum')
+// Вкладку можно открыть ссылкой (?tab=wars) — так ведут уведомления о КВ
+const tab = ref(typeof route.query.tab === 'string' ? route.query.tab : 'forum')
 const leaving = ref(false)
 const leaveError = ref('')
 const showSettings = ref(false)

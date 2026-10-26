@@ -42,6 +42,8 @@ class ModerationLog extends Model
         'control.promo' => 'Новый промокод',
         'bridge.submission_updated' => 'Бридж: правка оценок',
         'bridge.submission_deleted' => 'Бридж: заявка удалена',
+        'changelog.create' => 'Чейнджлог: новая запись',
+        'changelog.delete' => 'Чейнджлог: запись удалена',
     ];
 
     protected $fillable = [

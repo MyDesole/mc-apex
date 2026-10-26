@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { tierColor } from '@/composables/players/useTier.js'
 import AppIcon from '@/components/core/AppIcon.vue'
 import ProfileEffectLayer from '@/components/players/ProfileEffectLayer.vue'
+import AvatarFrameDecor from '@/components/players/AvatarFrameDecor.vue'
 import {
   AVATAR_FRAMES,
   PROFILE_EFFECTS,
@@ -555,6 +556,8 @@ const coverStyle = computed(() => {
               '--avatar-frame-color': avatarFrameGlow,
             }"
         >
+          <AvatarFrameDecor :frame="user.avatar_frame" />
+
           <div class="profile-header__avatar-frame-inner">
 
             <div class="profile-header__avatar">
@@ -710,6 +713,8 @@ const coverStyle = computed(() => {
               '--avatar-frame-color': avatarFrameGlow,
             }"
         >
+
+          <AvatarFrameDecor :frame="user.avatar_frame" />
 
           <div class="profile-header__avatar-frame-inner">
 

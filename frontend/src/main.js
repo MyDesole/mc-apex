@@ -21,6 +21,7 @@ import './echo'
 
 import { useAuthStore } from '@/stores/core/auth.js'
 import { initSentry, setSentryUser } from '@/sentry.js'
+import { unlockSoundOnFirstGesture } from '@/utils/sound.js'
 import { watch } from 'vue'
 
 const app = createApp(App)
@@ -53,3 +54,6 @@ router.beforeEach((to) => {
 })
 
 app.mount('#app')
+
+// Браузер разрешает звук только после действия игрока
+unlockSoundOnFirstGesture()

@@ -6,6 +6,7 @@
  * пятисот строк внутри вкладки.
  */
 import { useClanWar, STATUS_SHORT_LABELS } from '@/composables/clan/useClanWar.js'
+import { useAuthStore } from '@/stores/core/auth.js'
 
 const props = defineProps({
   war: { type: Object, required: true },
@@ -20,7 +21,10 @@ const props = defineProps({
  * Действия, которые меняют список войн, выполняет родитель: карточка
  * только сообщает о намерении. Так у неё нет своей копии состояния.
  */
-const emit = defineEmits(['open-result', 'accept', 'decline'])
+const emit = defineEmits(['open-result', 'accept', 'decline', 'call'])
+
+// Шаблон отмечал «вы» среди участников через auth, но стор не был подключён
+const auth = useAuthStore()
 
 /* Короткие подписи статусов для карточки */
 const statusShortLabels = STATUS_SHORT_LABELS
@@ -54,6 +58,11 @@ function accept() {
 
 function decline() {
   emit('decline', props.war)
+}
+
+/** Позвать участников своего клана на эту войну. */
+function callMembers() {
+  emit('call', props.war)
 }
 
 function formatDate(value) {
@@ -108,7 +117,8 @@ function formatDate(value) {
         <div class="team team--mine">
           <div class="team__identity">
             <div class="team__avatar team__avatar--mine">
-              {{ props.clan.tag?.charAt(0) || 'C' }}
+              <img v-if="props.clan.avatar_url" :src="props.clan.avatar_url" :alt="props.clan.name" />
+              <template v-else>{{ props.clan.tag?.charAt(0) || 'C' }}</template>
             </div>
 
             <div class="team__copy">
@@ -148,7 +158,8 @@ function formatDate(value) {
                 background: `linear-gradient(135deg, ${getOpponentColor(war)}, rgba(255,255,255,.12))`
               }"
             >
-              {{ getOpponentTag(war).charAt(0) || 'C' }}
+              <img v-if="getOpponent(war)?.avatar_url" :src="getOpponent(war).avatar_url" :alt="getOpponentName(war)" />
+              <template v-else>{{ getOpponentTag(war).charAt(0) || 'C' }}</template>
             </div>
 
             <div class="team__copy">
@@ -263,9 +274,37 @@ function formatDate(value) {
         <span>{{ war.notes }}</span>
       </div>
 
-      <!-- Pending actions -->
+      <!-- Призыв участников: руководство зовёт бойцов уведомлением -->
       <div
-          v-if="war.status === 'pending' && permissions.wars"
+          v-if="permissions.wars && ['pending', 'accepted'].includes(war.status)"
+          class="war-call"
+      >
+        <button
+            type="button"
+            class="active-action active-action--call"
+            @click="callMembers"
+        >
+          <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+          >
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+          </svg>
+
+          Позвать участников
+        </button>
+      </div>
+
+      <!-- Pending actions (только для того, кого вызвали) -->
+      <div
+          v-if="war.status === 'pending' && permissions.wars && war.direction === 'incoming'"
           class="war-actions"
       >
         <button
@@ -931,6 +970,28 @@ function formatDate(value) {
   color: #f87171;
   background: rgba(239, 68, 68, 0.045);
   border: 1px solid rgba(239, 68, 68, 0.16);
+}
+
+.war-call {
+  padding: 0 14px 12px;
+}
+
+.war-call .active-action {
+  width: 100%;
+}
+
+.active-action--call {
+  color: #fde68a;
+  background: rgba(250, 204, 21, 0.06);
+  border: 1px solid rgba(250, 204, 21, 0.22);
+}
+
+.team__avatar img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  border-radius: inherit;
 }
 
 .active-action--result {

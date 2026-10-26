@@ -1124,8 +1124,31 @@
   font-size: 13px;
   font-weight: 800;
 
+  overflow: hidden;
+
   box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.clan-option__avatar img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.clans-search {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 9px 12px;
+
+  color: inherit;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+
+  font: inherit;
+  font-size: 13px;
 }
 
 .clan-option__info {
@@ -1590,4 +1613,32 @@
   .btn-save {
     flex: 1;
   }
+}
+
+/* ---------- Призыв участников ---------- */
+
+.call-all {
+  padding: 0;
+
+  color: var(--accent-light);
+  background: none;
+  border: 0;
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.call-option {
+  cursor: pointer;
+}
+
+.call-option__check {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+
+  accent-color: var(--accent);
 }

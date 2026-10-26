@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/core/auth.js'
 import { notificationsApi } from '@/services/notifications/notification.js'
 import { useRealtimeNotifications } from '@/composables/notifications/useRealtimeNotifications.js'
 import AppIcon from '@/components/core/AppIcon.vue'
+import { isSoundEnabled, playSound, setSoundEnabled } from '@/utils/sound.js'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -16,6 +17,16 @@ const loading = ref(true)
 const notifications = ref([])
 const unread = ref(0)
 const markingAll = ref(false)
+
+// Звук новых уведомлений и сообщений — выбор хранится в браузере
+const soundOn = ref(isSoundEnabled())
+
+function toggleSound() {
+  soundOn.value = !soundOn.value
+  setSoundEnabled(soundOn.value)
+  // Сразу даём услышать, как звучит
+  if (soundOn.value) playSound('notification')
+}
 const openingId = ref(null)
 
 const hasUnread = computed(() => unread.value > 0)
@@ -47,6 +58,8 @@ function notificationIcon(notification) {
     forum_reply: 'send',
     forum_reply_to_you: 'send',
     support_reply: 'info',
+    clan_war_call: 'sword',
+    clan_war_challenge: 'sword',
     support_player_reply: 'info',
 
     clan_application: 'shield',
@@ -78,6 +91,8 @@ function notificationType(notification) {
     forum_reply: 'Форум',
     forum_reply_to_you: 'Форум',
     support_reply: 'Поддержка',
+    clan_war_call: 'Клановая война',
+    clan_war_challenge: 'Клановая война',
     support_player_reply: 'Поддержка',
 
     clan_application: 'Клан',
@@ -185,6 +200,10 @@ async function open(notification) {
 
     else if (type === 'tier_test_completed' || type === 'tier_test_appeal_resolved') {
       await router.push('/profile')
+    }
+
+    else if (type === 'clan_war_call' || type === 'clan_war_challenge') {
+      await router.push('/my-clan?tab=wars')
     }
 
     else if (type === 'support_reply' && data.ticket_id) {
@@ -302,6 +321,25 @@ onMounted(load)
           </div>
         </div>
       </div>
+
+      <button
+          type="button"
+          class="sound-toggle"
+          :class="{ 'is-off': !soundOn }"
+          :aria-pressed="soundOn"
+          :title="soundOn ? 'Выключить звук уведомлений и сообщений' : 'Включить звук уведомлений и сообщений'"
+          @click="toggleSound"
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M11 5 6 9H2v6h4l5 4V5z" />
+          <template v-if="soundOn">
+            <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+            <path d="M19 5a10 10 0 0 1 0 14" />
+          </template>
+          <path v-else d="m22 9-6 6M16 9l6 6" />
+        </svg>
+        <span>{{ soundOn ? 'Звук включён' : 'Звук выключен' }}</span>
+      </button>
 
       <button
           v-if="hasUnread"
@@ -474,6 +512,11 @@ onMounted(load)
 
             <div class="notif__message">
               {{ notification.data?.message || 'Новое уведомление' }}
+            </div>
+
+            <!-- Приписка к призыву на КВ от лидера или офицера -->
+            <div v-if="notification.data?.note" class="notif__note">
+              «{{ notification.data.note }}»
             </div>
 
             <div class="notif__bottom">

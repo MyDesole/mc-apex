@@ -144,6 +144,11 @@ Route::get('/activity', [ActivityController::class, 'index']);
 // Публичная статистика проекта
 Route::get('/stats', [\App\Domains\Players\Controllers\Api\StatsController::class, 'index']);
 
+// Чейнджлог и роадмап — публичные страницы
+Route::get('/changelog', [\App\Domains\Project\Controllers\ProjectController::class, 'changelog']);
+Route::get('/changelog/{slug}', [\App\Domains\Project\Controllers\ProjectController::class, 'entry'])->where('slug', '[a-z0-9-]+');
+Route::get('/roadmap', [\App\Domains\Project\Controllers\ProjectController::class, 'roadmap']);
+
 // Сезоны рейтинга
 Route::get('/seasons', [\App\Domains\Seasons\Controllers\SeasonController::class, 'index']);
 Route::get('/seasons/{season}', [\App\Domains\Seasons\Controllers\SeasonController::class, 'show'])->whereNumber('season');
@@ -458,6 +463,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{war}', [ClanWarController::class, 'show'])->whereNumber('war');
         Route::post('/{war}/join', [ClanWarController::class, 'join'])->whereNumber('war');
         Route::post('/{war}/leave', [ClanWarController::class, 'leave'])->whereNumber('war');
+        // Лидер/офицер зовёт участников клана на войну (уведомления)
+        Route::post('/{war}/call', [ClanWarController::class, 'call'])->whereNumber('war')->middleware('throttle:10,1');
         Route::post('/{war}/accept', [ClanWarController::class, 'accept'])->whereNumber('war');
         Route::post('/{war}/decline', [ClanWarController::class, 'decline'])->whereNumber('war');
         Route::post('/{war}/complete', [ClanWarController::class, 'complete'])->whereNumber('war');
@@ -736,6 +743,19 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/referrals', [\App\Domains\Moderation\Controllers\PlayerAdminController::class, 'referrals']);
 
         // «Пульт»: объявление, переключатели, событие xN, раздачи, промокоды
+        // Чейнджлог и роадмап
+        Route::prefix('project')->group(function () {
+            $project = \App\Domains\Project\Controllers\AdminProjectController::class;
+            Route::get('/changelog', [$project, 'changelog']);
+            Route::post('/changelog', [$project, 'storeEntry']);
+            Route::put('/changelog/{entry}', [$project, 'updateEntry'])->whereNumber('entry');
+            Route::delete('/changelog/{entry}', [$project, 'destroyEntry'])->whereNumber('entry');
+            Route::get('/roadmap', [$project, 'roadmap']);
+            Route::post('/roadmap', [$project, 'storeItem']);
+            Route::put('/roadmap/{item}', [$project, 'updateItem'])->whereNumber('item');
+            Route::delete('/roadmap/{item}', [$project, 'destroyItem'])->whereNumber('item');
+        });
+
         Route::prefix('control')->group(function () {
             $control = \App\Domains\Control\Controllers\ControlController::class;
             Route::get('/', [$control, 'show']);

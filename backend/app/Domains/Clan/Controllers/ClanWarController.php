@@ -50,6 +50,23 @@ class ClanWarController extends Controller
         ]);
     }
 
+    /** Лидер или офицер зовёт участников своего клана на войну. */
+    public function call(Request $request, ClanWar $war): JsonResponse
+    {
+        $data = $request->validate([
+            'user_ids' => ['required', 'array', 'min:1', 'max:' . ClanWarService::MAX_CALLED],
+            'user_ids.*' => ['integer'],
+            'message' => ['nullable', 'string', 'max:300'],
+        ]);
+
+        $sent = $this->wars->callMembers($request->user(), $war, $data['user_ids'], $data['message'] ?? null);
+
+        return response()->json([
+            'sent' => $sent,
+            'message' => "Позвали на войну: {$sent}.",
+        ]);
+    }
+
     public function join(Request $request, ClanWar $war): JsonResponse
     {
         $this->wars->join($request->user(), $war);

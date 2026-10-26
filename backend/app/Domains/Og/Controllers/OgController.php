@@ -4,6 +4,7 @@ namespace App\Domains\Og\Controllers;
 
 use App\Domains\Clan\Models\Clan;
 use App\Domains\Og\Services\OgImageRenderer;
+use App\Domains\Project\Models\ChangelogEntry;
 use App\Domains\Users\Models\User;
 use App\Http\Controllers\Controller;
 use App\Support\Concerns\ResolvesFromUrl;
@@ -83,6 +84,43 @@ class OgController extends Controller
         ]));
     }
 
+    /** Пост чейнджлога: ссылку отправляют в Telegram-канал — нужна карточка. */
+    public function changelog(string $slug): Response
+    {
+        $entry = $this->entry($slug);
+        $excerpt = mb_strimwidth(trim(preg_replace('/\s+/u', ' ', strip_tags($entry->body))), 0, 200, '…');
+
+        return $this->page(
+            title: $entry->title.($entry->version ? " · {$entry->version}" : '').' — обновление APEX TIERS',
+            description: $excerpt,
+            path: '/changelog/'.$entry->slug,
+            image: url('/og/changelog/'.$entry->slug.'/image.png').'?v='.$entry->updated_at?->timestamp,
+            type: 'article',
+        );
+    }
+
+    public function changelogImage(string $slug): Response
+    {
+        $entry = $this->entry($slug);
+        $colors = ['feature' => '#22c55e', 'improvement' => '#a78bfa', 'fix' => '#f59e0b'];
+
+        return $this->png($this->renderer->render([
+            'title' => $entry->title,
+            'lines' => array_values(array_filter([
+                ['text' => (ChangelogEntry::CATEGORIES[$entry->category] ?? 'Обновление').($entry->version ? " · версия {$entry->version}" : '')],
+                ['text' => ($entry->published_at ?? $entry->created_at)?->translatedFormat('j F Y'), 'color' => '#a29eb0'],
+            ], fn ($line) => filled($line['text']))),
+            'badge' => 'NEW',
+            'badge_color' => $colors[$entry->category] ?? '#7c3aed',
+            'footer' => $this->domain().'/changelog',
+        ]));
+    }
+
+    private function entry(string $slug): ChangelogEntry
+    {
+        return ChangelogEntry::query()->published()->where('slug', $slug)->firstOrFail();
+    }
+
     /* ----------------------------- Данные карточек ----------------------------- */
 
     private function userCard(User $player): array
@@ -130,7 +168,7 @@ class OgController extends Controller
 
     /* ----------------------------- Ответы ----------------------------- */
 
-    private function page(string $title, string $description, string $path, string $image): Response
+    private function page(string $title, string $description, string $path, string $image, string $type = 'profile'): Response
     {
         $url = rtrim(config('app.frontend_url'), '/').$path;
 
@@ -139,6 +177,7 @@ class OgController extends Controller
             'description' => $description,
             'url' => $url,
             'image' => $image,
+            'type' => $type,
         ])->render();
 
         return response($html)->header('Content-Type', 'text/html; charset=utf-8');

@@ -1,8 +1,9 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { shopApi } from '@/services/shop/shop.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import AppIcon from '@/components/core/AppIcon.vue'
+import ShopItemPreview from '@/components/shop/ShopItemPreview.vue'
 import {
   TYPE_LABELS,
   RARITY_LABELS,
@@ -26,30 +27,110 @@ const applyItem = ref(null)
 const applyTargetId = ref(null)
 const applyBusy = ref(false)
 
-const groups = computed(() => {
-  const byType = {}
+/* ---------- Поиск, вкладки, сортировка ---------- */
 
-  for (const item of items.value) {
-    if (!byType[item.type]) {
-      byType[item.type] = []
-    }
+// Порядок вкладок: сначала то, что меняет вид профиля
+const TYPE_ORDER = [
+  'profile_layout', 'avatar_frame', 'profile_effect', 'skin_backdrop',
+  'card_theme', 'accent_color', 'card_background', 'badge', 'tier_priority',
+]
 
-    byType[item.type].push(item)
+const RARITY_RANK = { legendary: 4, epic: 3, rare: 2, common: 1 }
+
+const search = ref('')
+const activeTab = ref('all')
+const sortBy = ref('rarity')
+
+function readView() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('apex:inventory-view') || '{}')
+    if (saved.sortBy) sortBy.value = saved.sortBy
+  } catch {
+    // нет доступа к хранилищу — сортировка по умолчанию
   }
+}
 
-  return Object.entries(byType).map(([type, list]) => ({
-    type,
-    label: TYPE_LABELS[type] || type,
-    items: list,
-  }))
+watch(sortBy, (value) => {
+  try {
+    localStorage.setItem('apex:inventory-view', JSON.stringify({ sortBy: value }))
+  } catch {
+    // не запомним — не страшно
+  }
 })
+
+const tabs = computed(() => {
+  const counts = {}
+  for (const item of items.value) counts[item.type] = (counts[item.type] || 0) + 1
+
+  const types = Object.keys(counts).sort((a, b) => {
+    const ia = TYPE_ORDER.indexOf(a)
+    const ib = TYPE_ORDER.indexOf(b)
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib)
+  })
+
+  return [
+    { key: 'all', label: 'Все', count: items.value.length },
+    { key: 'equipped', label: 'Надето', count: items.value.filter((i) => i.equipped).length },
+    ...types.map((type) => ({ key: type, label: TYPE_LABELS[type] || type, count: counts[type] })),
+  ]
+})
+
+const visibleItems = computed(() => {
+  const query = search.value.trim().toLowerCase()
+
+  let list = items.value.filter((item) => {
+    if (activeTab.value === 'equipped' && !item.equipped) return false
+    if (!['all', 'equipped'].includes(activeTab.value) && item.type !== activeTab.value) return false
+    if (!query) return true
+
+    return [item.name, item.description, TYPE_LABELS[item.type]]
+        .filter(Boolean)
+        .some((text) => text.toLowerCase().includes(query))
+  })
+
+  const byName = (a, b) => a.name.localeCompare(b.name, 'ru')
+
+  list = [...list].sort((a, b) => {
+    // Надетое всегда первым — его ищут чаще всего
+    if (a.equipped !== b.equipped) return a.equipped ? -1 : 1
+
+    if (sortBy.value === 'new') return new Date(b.acquired_at || 0) - new Date(a.acquired_at || 0)
+    if (sortBy.value === 'name') return byName(a, b)
+
+    return (RARITY_RANK[b.rarity] || 0) - (RARITY_RANK[a.rarity] || 0) || byName(a, b)
+  })
+
+  return list
+})
+
+/* ---------- «Сейчас надето»: слоты образа ---------- */
+
+const SLOTS = [
+  { type: 'profile_layout', label: 'Макет', icon: 'frame' },
+  { type: 'avatar_frame', label: 'Рамка', icon: 'frame' },
+  { type: 'profile_effect', label: 'Эффект', icon: 'sparkles' },
+  { type: 'skin_backdrop', label: 'Фон скина', icon: 'globe' },
+  { type: 'card_theme', label: 'Карточка', icon: 'doc' },
+  { type: 'accent_color', label: 'Акцент', icon: 'palette' },
+]
+
+const loadout = computed(() =>
+    SLOTS.map((slot) => ({
+      ...slot,
+      item: items.value.find((i) => i.type === slot.type && i.equipped) ?? null,
+      owned: items.value.filter((i) => i.type === slot.type).length,
+    })).filter((slot) => slot.owned > 0),
+)
+
+const equippedBadges = computed(() => items.value.filter((i) => i.type === 'badge' && i.equipped))
+
+function openTab(key) {
+  activeTab.value = key
+  search.value = ''
+}
 
 const equippedCount = computed(() =>
     items.value.filter((item) => item.equipped).length,
-)
-
-const equippedItems = computed(() =>
-    items.value.filter((item) => item.equipped),
 )
 
 const hasPriorityItems = computed(() =>
@@ -146,25 +227,10 @@ function rarityStyle(item) {
   }
 }
 
-function iconForItem(item) {
-  if (item.type === 'tier_priority') {
-    return 'bolt'
-  }
-
-  return item.icon
-}
-
-function groupIcon(type) {
-  if (type === 'tier_priority') return 'bolt'
-  if (type.includes('badge')) return 'medal'
-  if (type.includes('frame')) return 'frame'
-  if (type.includes('color')) return 'gem'
-  if (type.includes('effect')) return 'sparkles'
-
-  return 'box'
-}
-
-onMounted(load)
+onMounted(() => {
+  readView()
+  load()
+})
 </script>
 
 <template>
@@ -235,7 +301,7 @@ onMounted(load)
           </span>
 
           <strong class="inventory-stat__value">
-            {{ equippedCount }}/{{ maxBadges }}
+            {{ equippedBadges.length }}/{{ maxBadges }}
           </strong>
 
           <span class="inventory-stat__hint">
@@ -392,37 +458,88 @@ onMounted(load)
     ====================================================== -->
 
     <template v-else>
-      <section
-          v-for="group in groups"
-          :key="group.type"
-          class="inventory-group"
-      >
-        <div class="inventory-group__header">
-          <div class="inventory-group__heading">
-            <div class="inventory-group__icon">
-              <AppIcon
-                  :icon="groupIcon(group.type)"
-                  :size="17"
-              />
-            </div>
+      <!-- ===== Сейчас надето: слоты образа ===== -->
+      <section class="loadout">
+        <h2 class="loadout__title">Сейчас надето</h2>
 
-            <div>
+        <div class="loadout__slots">
+          <button
+              v-for="slot in loadout"
+              :key="slot.type"
+              type="button"
+              class="loadout__slot"
+              :class="{ 'is-empty': !slot.item, 'is-active': activeTab === slot.type }"
+              :style="slot.item ? rarityStyle(slot.item) : null"
+              @click="openTab(slot.type)"
+          >
+            <span class="loadout__icon"><AppIcon :icon="slot.icon" :size="16" /></span>
+            <span class="loadout__text">
+              <small>{{ slot.label }}</small>
+              <b>{{ slot.item?.name ?? 'Не надето' }}</b>
+            </span>
+            <span class="loadout__count">{{ slot.owned }}</span>
+          </button>
 
-              <h2 class="inventory-group__title">
-                {{ group.label }}
-              </h2>
-            </div>
-          </div>
+          <button
+              v-if="items.some((i) => i.type === 'badge')"
+              type="button"
+              class="loadout__slot"
+              :class="{ 'is-empty': !equippedBadges.length, 'is-active': activeTab === 'badge' }"
+              @click="openTab('badge')"
+          >
+            <span class="loadout__icon"><AppIcon icon="medal" :size="16" /></span>
+            <span class="loadout__text">
+              <small>Бейджи {{ equippedBadges.length }}/{{ maxBadges }}</small>
+              <b>{{ equippedBadges.map((b) => b.name).join(', ') || 'Не надето' }}</b>
+            </span>
+          </button>
+        </div>
+      </section>
 
-          <div class="inventory-group__count">
-            {{ String(group.items.length).padStart(2, '0') }}
-            <span>предметов</span>
-          </div>
+      <!-- ===== Поиск, вкладки, сортировка ===== -->
+      <section class="inventory-toolbar">
+        <div class="inventory-toolbar__row">
+          <label class="inventory-search">
+            <AppIcon icon="target" :size="15" />
+            <input
+                v-model="search"
+                type="search"
+                placeholder="Найти предмет по названию"
+                aria-label="Поиск по инвентарю"
+            >
+          </label>
+
+          <select v-model="sortBy" class="inventory-sort" aria-label="Сортировка">
+            <option value="rarity">Сначала редкие</option>
+            <option value="new">Сначала новые</option>
+            <option value="name">По названию</option>
+          </select>
         </div>
 
-        <div class="inventory-grid">
+        <div class="inventory-tabs" role="tablist">
+          <button
+              v-for="tab in tabs"
+              :key="tab.key"
+              type="button"
+              role="tab"
+              class="inventory-tab"
+              :class="{ 'is-active': activeTab === tab.key }"
+              :aria-selected="activeTab === tab.key"
+              @click="openTab(tab.key)"
+          >
+            {{ tab.label }}
+            <span>{{ tab.count }}</span>
+          </button>
+        </div>
+      </section>
+
+      <p v-if="!visibleItems.length" class="inventory-nothing">
+        Ничего не нашлось<template v-if="search.trim()"> по «{{ search.trim() }}»</template>.
+      </p>
+
+      <div class="inventory-grid">
           <article
-              v-for="item in group.items"
+              v-for="item in visibleItems"
               :key="item.inventory_id"
               class="inventory-card"
               :class="{
@@ -436,14 +553,7 @@ onMounted(load)
 
             <!-- Top -->
             <div class="inventory-card__top">
-              <div class="inventory-card__icon">
-                <div class="inventory-card__icon-bg"></div>
-
-                <AppIcon
-                    :icon="iconForItem(item)"
-                    :size="26"
-                />
-              </div>
+              <span class="inventory-card__type">{{ TYPE_LABELS[item.type] || item.type }}</span>
 
               <div class="inventory-card__badges">
                 <span
@@ -463,6 +573,9 @@ onMounted(load)
                 </span>
               </div>
             </div>
+
+            <!-- Живое превью: видно, что это за предмет, без чтения названий -->
+            <ShopItemPreview :item="item" class="inventory-card__preview" />
 
             <!-- Info -->
             <div class="inventory-card__content">
@@ -541,10 +654,8 @@ onMounted(load)
               <AppIcon icon="check" :size="12" />
             </div>
           </article>
-        </div>
-      </section>
+      </div>
     </template>
-
     <!-- =====================================================
          PRIORITY MODAL
     ====================================================== -->

@@ -80,6 +80,10 @@ export const clansApi = {
     challenge(clanId, payload) {
         return api.post(`/clans/${clanId}/wars`, payload)
     },
+    /** Позвать участников своего клана на войну (уведомления). */
+    callWar(warId, userIds, message = null) {
+        return api.post(`/wars/${warId}/call`, { user_ids: userIds, message })
+    },
     acceptWar(warId) {
         return api.post(`/wars/${warId}/accept`)
     },

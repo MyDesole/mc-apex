@@ -6,6 +6,7 @@ use App\Domains\Clan\Models\Clan;
 use App\Domains\Clan\Models\ClanMember;
 use App\Domains\Clan\Models\ClanWar;
 use App\Domains\Clan\Models\ClanWarParticipant;
+use App\Domains\Clan\Notifications\ClanWarNotification;
 use App\Domains\Users\Models\User;
 use App\Support\Concerns\AbortsWithMessage;
 use Illuminate\Support\Facades\DB;
@@ -47,7 +48,7 @@ class ClanWarService
 
         $this->assertCanManage($myClan, $user);
 
-        return ClanWar::create([
+        $war = ClanWar::create([
             'challenger_clan_id' => $myClan->id,
             'opponent_clan_id' => $opponent->id,
             'created_by' => $user->id,
@@ -55,6 +56,68 @@ class ClanWarService
             'scheduled_at' => $data['scheduled_at'] ?? null,
             'notes' => $data['notes'] ?? null,
         ])->load(['challenger', 'opponent']);
+
+        // Лидер соперника узнаёт о вызове сразу, а не когда зайдёт во вкладку
+        $opponent->leader?->notify(new ClanWarNotification(
+            'clan_war_challenge',
+            "Клан [{$myClan->tag}] {$myClan->name} вызывает вас на клановую войну",
+            $war->id,
+            $data['notes'] ?? null,
+        ));
+
+        return $war;
+    }
+
+    /* ----------------------------- Призыв бойцов ----------------------------- */
+
+    /** Сколько участников можно позвать одним призывом. */
+    public const MAX_CALLED = 50;
+
+    /**
+     * Лидер или офицер зовёт конкретных участников своего клана на войну.
+     * Уже записавшимся и самому себе уведомление не шлём.
+     *
+     * @param  array<int, int>  $userIds
+     * @return int сколько уведомлений отправлено
+     */
+    public function callMembers(User $user, ClanWar $war, array $userIds, ?string $message = null): int
+    {
+        $myClan = $this->myClan($user);
+
+        $this->assertParticipatingClan($myClan, $war);
+        $this->assertCanManage($myClan, $user);
+
+        if (in_array($war->status, self::FINISHED_STATUSES, true)) {
+            $this->abortUnprocessable('Война уже завершена — звать некого.');
+        }
+
+        $joined = ClanWarParticipant::where('clan_war_id', $war->id)->pluck('user_id')->all();
+
+        // Только участники своего клана: чужих сюда не подсунуть
+        $recipients = User::query()
+            ->whereIn('id', array_slice(array_unique(array_map('intval', $userIds)), 0, self::MAX_CALLED))
+            ->whereIn('id', ClanMember::where('clan_id', $myClan->id)->select('user_id'))
+            ->whereNotIn('id', [...$joined, $user->id])
+            ->get();
+
+        if ($recipients->isEmpty()) {
+            $this->abortUnprocessable('Некого звать: выбранные игроки уже записались или не состоят в клане.');
+        }
+
+        $war->loadMissing(['challenger:id,name,tag', 'opponent:id,name,tag']);
+        $enemy = $war->challenger_clan_id === $myClan->id ? $war->opponent : $war->challenger;
+        $when = $war->scheduled_at ? ' · ' . $war->scheduled_at->format('d.m H:i') : '';
+
+        foreach ($recipients as $recipient) {
+            $recipient->notify(new ClanWarNotification(
+                'clan_war_call',
+                "{$user->username} зовёт вас на КВ против [{$enemy?->tag}] {$enemy?->name}{$when}",
+                $war->id,
+                $message ? mb_substr($message, 0, 300) : null,
+            ));
+        }
+
+        return $recipients->count();
     }
 
     public function accept(User $user, ClanWar $war): ClanWar

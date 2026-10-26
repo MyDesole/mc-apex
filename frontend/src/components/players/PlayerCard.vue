@@ -106,7 +106,13 @@ const cardStyle = computed(() => {
 const layout = computed(() => profileLayout(props.user.profile_layout))
 
 const layoutClass = computed(() => (layout.value
-    ? ['profile-layout--themed', `profile-layout--${props.user.profile_layout}`, `profile-layout--side-${layout.value.arrangement}`]
+    ? [
+      'profile-layout--themed',
+      `profile-layout--${props.user.profile_layout}`,
+      `profile-layout--side-${layout.value.arrangement}`,
+      // Светлые макеты перекрашивают тёмные по умолчанию блоки (см. profileLayouts.css)
+      { 'profile-layout--light': layout.value.light },
+    ]
     : []))
 
 const accentStyle = computed(() => ({

@@ -33,6 +33,7 @@ import AdminAppeals from '@/components/admin/AdminAppeals.vue'
 import AdminReferrals from '@/components/admin/AdminReferrals.vue'
 import AdminControl from '@/components/admin/AdminControl.vue'
 import AdminSupport from '@/components/admin/AdminSupport.vue'
+import AdminProject from '@/components/admin/AdminProject.vue'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -56,6 +57,7 @@ const SECTIONS = [
     items: [
       { key: 'dashboard', label: 'Дашборд', icon: 'chart', component: AdminDashboard },
       { key: 'control', label: 'Пульт', icon: 'bolt', component: AdminControl, adminOnly: true },
+      { key: 'project', label: 'Чейнджлог и роадмап', icon: 'rocket', component: AdminProject, adminOnly: true },
     ],
   },
   {

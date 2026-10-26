@@ -59,6 +59,8 @@ onMounted(async () => {
         <RouterLink to="/stats">Статистика</RouterLink>
         <RouterLink to="/status">Статус сервера</RouterLink>
         <RouterLink to="/news">Новости</RouterLink>
+        <RouterLink to="/changelog">Что нового</RouterLink>
+        <RouterLink to="/roadmap">Роадмап</RouterLink>
         <RouterLink to="/support">Техподдержка</RouterLink>
       </nav>
 

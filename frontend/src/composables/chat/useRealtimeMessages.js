@@ -1,6 +1,7 @@
 import { onUnmounted, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/core/auth.js'
 import { echoGeneration } from '@/echo.js'
+import { playSound } from '@/utils/sound.js'
 
 // Общие ref — одни на всё приложение
 const latestMessage = ref(null)
@@ -60,6 +61,10 @@ export function useRealtimeMessages() {
 
         channel.listen('.message.sent', (payload) => {
             latestMessage.value = payload.message
+
+            // Свои сообщения (с другой вкладки) не озвучиваем
+            const senderId = payload.message?.user_id ?? payload.message?.user?.id
+            if (senderId !== auth.user?.id) playSound('message')
             newMessageArrived.value = true
 
             setTimeout(() => {

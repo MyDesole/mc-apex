@@ -1,6 +1,6 @@
 <script setup>
 import { alert as alertDialog, confirm as confirmDialog } from '@/utils/dialog.js'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import ClanWarCard from '@/components/clan/ClanWarCard.vue'
 import { clansApi } from '@/services/clan/clans.js'
@@ -18,6 +18,10 @@ const outgoing = ref([])
 const loading = ref(true)
 const error = ref('')
 
+// Что сейчас отправляется: 'challenge', 'result' или id войны.
+// Переменной не было — кнопки вызова, принятия и отказа падали с ошибкой
+const processing = ref(null)
+
 const showChallenge = ref(false)
 const challengeForm = ref({
   opponent_id: null,
@@ -27,6 +31,9 @@ const challengeForm = ref({
 
 const availableClans = ref([])
 const clansLoading = ref(false)
+// В выборе соперника — поиск: список кланов приходит постранично
+const clanSearch = ref('')
+let searchTimer = null
 
 const showResult = ref(false)
 const resultWar = ref(null)
@@ -37,6 +44,62 @@ const resultForm = ref({
 })
 
 const myClanId = computed(() => props.clan.id)
+
+/* ---------- Призыв участников на войну ---------- */
+
+const callWar = ref(null)
+const callMembers = ref([])
+const callSelected = ref([])
+const callMessage = ref('')
+const callLoading = ref(false)
+
+// Уже записавшихся звать незачем — их не показываем
+const callCandidates = computed(() => {
+  const joined = new Set((callWar.value?.participants || []).map((p) => p.user_id))
+
+  return callMembers.value.filter((m) => m.user_id !== auth.user?.id && !joined.has(m.user_id))
+})
+
+const allCallSelected = computed(() =>
+    callCandidates.value.length > 0 && callSelected.value.length === callCandidates.value.length,
+)
+
+async function openCall(war) {
+  callWar.value = war
+  callSelected.value = []
+  callMessage.value = ''
+  callLoading.value = true
+
+  try {
+    const data = await clansApi.show(props.clan.id)
+    callMembers.value = data.members || data.clan?.members || []
+  } catch (e) {
+    await alertDialog(e.message || 'Не удалось загрузить участников.')
+    callWar.value = null
+  } finally {
+    callLoading.value = false
+  }
+}
+
+function toggleAllCall() {
+  callSelected.value = allCallSelected.value ? [] : callCandidates.value.map((m) => m.user_id)
+}
+
+async function submitCall() {
+  if (!callSelected.value.length) return
+
+  processing.value = 'call'
+
+  try {
+    const result = await clansApi.callWar(callWar.value.id, callSelected.value, callMessage.value.trim() || null)
+    callWar.value = null
+    await alertDialog(result.message || 'Участники получили уведомление.', { title: 'Призыв отправлен' })
+  } catch (e) {
+    await alertDialog(e.message || 'Не удалось позвать участников.')
+  } finally {
+    processing.value = null
+  }
+}
 
 const allWars = computed(() => {
   const incomingWars = incoming.value.map(war => ({
@@ -98,7 +161,8 @@ async function loadAvailableClans() {
   clansLoading.value = true
 
   try {
-    const data = await clansApi.list()
+    const query = clanSearch.value.trim()
+    const data = await clansApi.list(query ? { search: query } : {})
 
     availableClans.value = (data.data || []).filter(
         clan => clan.id !== props.clan.id && !clan.is_banned
@@ -110,8 +174,14 @@ async function loadAvailableClans() {
   }
 }
 
+watch(clanSearch, () => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(loadAvailableClans, 300)
+})
+
 function openChallenge() {
   showChallenge.value = true
+  clanSearch.value = ''
 
   challengeForm.value = {
     opponent_id: null,
@@ -414,6 +484,7 @@ onMounted(load)
             @open-result="openResult"
             @accept="accept"
             @decline="decline"
+            @call="openCall"
         />
       </div>
     </template>
@@ -463,6 +534,14 @@ onMounted(load)
               </span>
             </div>
 
+            <input
+                v-model="clanSearch"
+                class="clans-search"
+                type="search"
+                placeholder="Поиск по названию или тегу"
+                aria-label="Поиск клана"
+            />
+
             <div
                 v-if="clansLoading"
                 class="picker-loading"
@@ -489,7 +568,13 @@ onMounted(load)
                   @click="challengeForm.opponent_id = clan.id"
               >
                 <div class="clan-option__avatar">
-                  {{ clan.tag?.charAt(0) || 'C' }}
+                  <img
+                      v-if="clan.avatar_url"
+                      :src="clan.avatar_url"
+                      :alt="clan.name"
+                      loading="lazy"
+                  />
+                  <template v-else>{{ clan.tag?.charAt(0) || 'C' }}</template>
                 </div>
 
                 <div class="clan-option__info">
@@ -525,7 +610,7 @@ onMounted(load)
                 v-else
                 class="picker-empty"
             >
-              Нет доступных кланов для вызова.
+              {{ clanSearch.trim() ? 'Ничего не нашлось.' : 'Нет доступных кланов для вызова.' }}
             </div>
           </div>
 
@@ -591,6 +676,99 @@ onMounted(load)
                 <path d="m13 6 6 6-6 6" />
               </svg>
             </template>
+          </button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- =========================
+         CALL MODAL
+    ========================== -->
+
+    <div
+        v-if="callWar"
+        class="modal-bg"
+        @click.self="processing !== 'call' && (callWar = null)"
+    >
+      <div class="modal">
+        <header class="modal-head">
+          <div>
+            <h3>Позвать на войну</h3>
+            <p>Отметь участников — им придёт уведомление со ссылкой на войну.</p>
+          </div>
+
+          <button class="close" aria-label="Закрыть" @click="callWar = null">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </header>
+
+        <div class="modal-body">
+          <div class="field">
+            <div class="field-head">
+              <label>Участники клана</label>
+              <button
+                  v-if="callCandidates.length"
+                  type="button"
+                  class="call-all"
+                  @click="toggleAllCall"
+              >
+                {{ allCallSelected ? 'Снять всех' : 'Выбрать всех' }}
+              </button>
+            </div>
+
+            <div v-if="callLoading" class="picker-loading">
+              <div class="spinner spinner--small" />
+              <span>Загружаем участников...</span>
+            </div>
+
+            <div v-else-if="callCandidates.length" class="clans-picker">
+              <label
+                  v-for="m in callCandidates"
+                  :key="m.user_id"
+                  class="clan-option call-option"
+                  :class="{ active: callSelected.includes(m.user_id) }"
+              >
+                <input v-model="callSelected" type="checkbox" :value="m.user_id" class="call-option__check" />
+
+                <div class="clan-option__avatar">
+                  <img v-if="m.user?.avatar_url" :src="m.user.avatar_url" :alt="m.user?.username" loading="lazy" />
+                  <template v-else>{{ m.user?.username?.charAt(0)?.toUpperCase() || '?' }}</template>
+                </div>
+
+                <div class="clan-option__info">
+                  <strong>{{ m.user?.username }}</strong>
+                  <span>{{ { leader: 'Лидер', officer: 'Офицер' }[m.role] || 'Участник' }}</span>
+                </div>
+              </label>
+            </div>
+
+            <div v-else class="picker-empty">
+              Все участники уже записались на эту войну.
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Сообщение (необязательно)</label>
+            <textarea
+                v-model="callMessage"
+                rows="2"
+                maxlength="300"
+                placeholder="Например: сбор в 20:00 в дискорде"
+            />
+          </div>
+        </div>
+
+        <footer class="modal-foot">
+          <button class="btn-cancel" @click="callWar = null">Отмена</button>
+
+          <button
+              class="btn-save"
+              :disabled="processing === 'call' || !callSelected.length"
+              @click="submitCall"
+          >
+            {{ processing === 'call' ? '...' : `Позвать (${callSelected.length})` }}
           </button>
         </footer>
       </div>

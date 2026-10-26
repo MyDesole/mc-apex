@@ -34,14 +34,14 @@ class ProfileLayoutTest extends TestCase
         $this->assertNull($user->fresh()->profile_layout);
     }
 
-    public function test_shop_lists_eight_layouts(): void
+    public function test_shop_lists_all_layouts(): void
     {
         $this->seed(\Database\Seeders\ShopItemSeeder::class);
 
         $layouts = collect($this->getJson('/api/shop')->assertOk()->json('items'))
             ->where('type', 'profile_layout');
 
-        $this->assertCount(8, $layouts);
+        $this->assertCount(11, $layouts);
         $this->assertTrue($layouts->every(fn ($i) => $i['is_equippable']));
     }
 }

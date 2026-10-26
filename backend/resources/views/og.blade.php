@@ -6,7 +6,7 @@
     <meta name="description" content="{{ $description }}">
     <meta name="theme-color" content="#7c3aed">
 
-    <meta property="og:type" content="profile">
+    <meta property="og:type" content="{{ $type ?? 'profile' }}">
     <meta property="og:site_name" content="APEX TIERS">
     <meta property="og:locale" content="ru_RU">
     <meta property="og:title" content="{{ $title }}">

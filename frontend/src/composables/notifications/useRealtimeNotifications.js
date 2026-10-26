@@ -1,6 +1,7 @@
 import { onUnmounted, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/core/auth.js'
 import { echoGeneration } from '@/echo.js'
+import { playSound } from '@/utils/sound.js'
 
 /*
  * Состояние на уровне модуля: все компоненты, которые вызывают
@@ -62,6 +63,7 @@ export function useRealtimeNotifications() {
         channel.listen('.notification.created', (payload) => {
             unreadCount.value++
             latestNotification.value = payload
+            playSound('notification')
             newNotificationArrived.value = true
 
             setTimeout(() => {
