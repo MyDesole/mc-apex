@@ -24,6 +24,10 @@ export async function renderSkin3d(skin, { width, height }) {
             canvas: document.createElement('canvas'),
             width,
             height,
+            // Кадр нужен ровно width×height: по умолчанию холст берёт
+            // devicePixelRatio, и на телефоне (2–3x) в карточку попадал
+            // только левый верхний угол фигуры
+            pixelRatio: 1,
             // Без этого кадр после render() будет пустым при копировании
             preserveDrawingBuffer: true,
         })
@@ -51,7 +55,8 @@ export async function renderSkin3d(skin, { width, height }) {
         const frame = document.createElement('canvas')
         frame.width = width
         frame.height = height
-        frame.getContext('2d').drawImage(viewer.canvas, 0, 0)
+        // Масштабируем весь холст в кадр — на случай, если плотность всё же учлась
+        frame.getContext('2d').drawImage(viewer.canvas, 0, 0, width, height)
 
         return frame
     } catch {

@@ -371,6 +371,9 @@ watch(mobileMenuOpen, (open) => {
                   @click.stop="menuOpen = !menuOpen"
               >
 
+                <!-- На телефоне кнопки клана нет — «есть дела в клане» точкой здесь -->
+                <i v-if="clanAttention > 0" class="user-button__dot"></i>
+
                 <span class="user-avatar">
                   <img
                       v-if="auth.user?.avatar_url"

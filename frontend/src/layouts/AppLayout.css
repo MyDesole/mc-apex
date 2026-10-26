@@ -873,6 +873,50 @@
   }
 }
 
+/* Телефон: кнопке клана в шапке места нет — клан есть в меню профиля
+   и в мобильном меню, а точку «есть дела» показываем на аватарке */
+@media (max-width: 600px) {
+  .header-clan {
+    display: none;
+  }
+
+  .user-button .user-button__dot {
+    display: block;
+  }
+
+  /* Меню профиля — листом во всю ширину под шапкой */
+  .dropdown {
+    position: fixed;
+    top: 62px;
+    left: 10px;
+    right: 10px;
+
+    width: auto;
+    max-height: calc(100dvh - 76px);
+  }
+}
+
+.user-button {
+  position: relative;
+}
+
+.user-button__dot {
+  position: absolute;
+  top: 2px;
+  left: 26px;
+
+  display: none;
+
+  width: 10px;
+  height: 10px;
+
+  background: #a78bfa;
+  border: 2px solid var(--bg-main, #0d0c12);
+  border-radius: 50%;
+
+  animation: clan-chip-pulse 1.8s ease-in-out infinite;
+}
+
 .dropdown-item:hover .dropdown-icon {
   color: #a78bfa;
 }
