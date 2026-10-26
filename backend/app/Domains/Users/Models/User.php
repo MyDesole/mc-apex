@@ -38,7 +38,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'minecraft_uuid', 'minecraft_username', 'minecraft_linked_at',
         'skin_backdrop', 'card_theme', 'profile_layout',
         'name_effect', 'profile_entrance', 'cursor_trail',
-        'profile_pet', 'chat_bubble', 'profile_title',
+        'profile_pet', 'chat_bubble', 'profile_title', 'name_icon',
         'apex_coins', 'apex_coins_spent', 'equipped_badges',
         'referral_code', 'referred_by',
         'is_verified', 'verified_reason', 'clan_joined_at',

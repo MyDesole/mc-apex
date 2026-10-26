@@ -37,6 +37,8 @@ class LootCaseService
         ShopItem::TYPE_PROFILE_PET,
         ShopItem::TYPE_CHAT_BUBBLE,
         ShopItem::TYPE_PROFILE_TITLE,
+        ShopItem::TYPE_NAME_ICON,
+        ShopItem::TYPE_STICKER_PACK,
     ];
 
     public const REEL_LENGTH = 50;

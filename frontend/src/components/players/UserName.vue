@@ -1,5 +1,7 @@
 <script setup>
 import { computed, useSlots } from 'vue'
+import PixelSprite from '@/components/shop/PixelSprite.vue'
+import { nameIcon } from '@/data/players/flair.js'
 
 const props = defineProps({
   user: { type: Object, default: null },
@@ -16,6 +18,8 @@ const color = props.clanColor ?? props.user?.clan_color ?? props.user?.clan_memb
 
 // Эффект ника из магазина: класс name-fx--{id} из assets/nameEffects.css
 const effect = computed(() => props.user?.name_effect || null)
+
+const icon = computed(() => nameIcon(props.user?.name_icon))
 
 // «Волна» анимирует каждую букву отдельно — только для обычного ника без слота
 const waveChars = computed(() =>
@@ -43,6 +47,15 @@ const waveChars = computed(() =>
             </template>
             <slot v-else>{{ user?.username ?? '—' }}</slot>
         </span>
+        <!-- Значок у ника из магазина -->
+        <PixelSprite
+            v-if="icon"
+            class="username__icon"
+            :sprite="icon.sprite"
+            :anim="icon.anim"
+            :glow="icon.glow"
+            :size="compact ? 12 : 14"
+        />
     </span>
 </template>
 
@@ -71,6 +84,10 @@ const waveChars = computed(() =>
 /* Свечению и прыгающим буквам нужно место над и под строкой */
 .username__name.name-fx {
   overflow: visible;
+}
+
+.username__icon {
+  align-self: center;
 }
 
 .username--compact .username__tag {

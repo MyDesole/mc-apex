@@ -60,6 +60,7 @@ class MessageResource extends JsonResource
             'chat_bubble' => $user->chat_bubble,
             'name_effect' => $user->name_effect,
             'profile_title' => $user->profile_title,
+            'name_icon' => $user->name_icon,
         ];
     }
 

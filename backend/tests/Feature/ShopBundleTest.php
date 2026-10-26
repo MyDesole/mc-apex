@@ -159,6 +159,7 @@ class ShopBundleTest extends TestCase
             [ShopItem::TYPE_PROFILE_PET, 'cat', 'profile_pet'],
             [ShopItem::TYPE_CHAT_BUBBLE, 'neon', 'chat_bubble'],
             [ShopItem::TYPE_PROFILE_TITLE, 'pvp_god', 'profile_title'],
+            [ShopItem::TYPE_NAME_ICON, 'crown', 'name_icon'],
         ] as [$type, $value, $field]) {
             $item = $this->item("{$type}-x", $type, $value, 100);
 

@@ -461,6 +461,12 @@
   animation: pulse 2s ease-in-out infinite;
 }
 
+/* Значок у ника */
+.profile-header__name-icon {
+  margin-left: 10px;
+  vertical-align: middle;
+}
+
 /* Титул под ником */
 .profile-header__title {
   margin: 2px 0 6px;

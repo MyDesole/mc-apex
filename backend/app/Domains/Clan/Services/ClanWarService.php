@@ -27,7 +27,7 @@ class ClanWarService
         'challenger:id,name,tag,power,banner_color,avatar',
         'opponent:id,name,tag,power,banner_color,avatar',
         // minecraft_username — чтобы показать голову скина в составе
-        'participants.user:id,username,avatar,minecraft_username,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title',
+        'participants.user:id,username,avatar,minecraft_username,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,name_icon',
         'participants.clan:id,name,tag,banner_color',
     ];
 

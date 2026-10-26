@@ -23,6 +23,11 @@ export const shopApi = {
         return api.post(`/shop/${id}/equip`)
     },
 
+    /** Стикерпаки игрока для выбора в чате. */
+    stickers() {
+        return api.get('/shop/stickers')
+    },
+
     /** «Рандом»: случайные предметы из своих во все слоты профиля. */
     randomize() {
         return api.post('/shop/randomize')

@@ -10,6 +10,7 @@ import PixelSprite from '@/components/shop/PixelSprite.vue'
 import '@/components/shop/badgeStyles.css'
 import ProfilePet from '@/components/players/ProfilePet.vue'
 import ProfileTitle from '@/components/players/ProfileTitle.vue'
+import { nameIcon } from '@/data/players/flair.js'
 import {
   AVATAR_FRAMES,
   PROFILE_EFFECTS,
@@ -76,6 +77,10 @@ const emit = defineEmits(['edit'])
  * инвентаря, профиль берёт свежие данные из стора после fetchMe().
  */
 const auth = useAuthStore()
+
+// Значок у ника из магазина
+const nameIconData = computed(() => nameIcon(props.user?.name_icon))
+
 const randomizing = ref(false)
 const randomMessage = ref('')
 
@@ -822,6 +827,14 @@ const coverStyle = computed(() => {
               <template v-else>{{ displayNameWithClan }}</template>
             </span>
             <template v-else>{{ displayNameWithClan }}</template>
+            <PixelSprite
+                v-if="nameIconData"
+                class="profile-header__name-icon"
+                :sprite="nameIconData.sprite"
+                :anim="nameIconData.anim"
+                :glow="nameIconData.glow"
+                :size="26"
+            />
           </h1>
 
           <span

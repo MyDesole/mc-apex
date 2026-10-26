@@ -33,7 +33,7 @@ class ChatService
     public const CONVERSATION_LIMIT = 50;
 
     private const MESSAGE_RELATIONS = [
-        'user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,is_verified',
+        'user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,name_icon,is_verified',
         'reads:id,message_id,user_id',
         'replyTo.user:id,username,avatar',
         'replyTo.attachments',
@@ -42,9 +42,9 @@ class ChatService
     ];
 
     private const CONVERSATION_RELATIONS = [
-        'users:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,is_verified',
+        'users:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,name_icon,is_verified',
         'clan:id,name,tag,banner_color,avatar',
-        'author:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,is_verified',
+        'author:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,name_icon,is_verified',
     ];
 
     /* ----------------------------- Диалоги ----------------------------- */
@@ -243,6 +243,11 @@ class ChatService
 
         if ($replyToId) {
             $this->assertReplyTargetInConversation($conversation, $replyToId);
+        }
+
+        // Стикер — только из своих наборов; пересланный стикер не проверяем
+        if (! $forwardedFromUserId) {
+            app(\App\Domains\Shop\Services\StickerService::class)->guard($me, $body);
         }
 
         $message = DB::transaction(function () use (
@@ -479,7 +484,7 @@ class ChatService
         $users = User::query()
             ->where('id', '!=', $me->id)
             ->where('username', 'like', $like)
-            ->select('id', 'username', 'avatar', 'tier', 'bridge_primary', 'bridge_rank_id', 'profile_mode', 'is_verified', 'name_effect', 'chat_bubble', 'profile_title')
+            ->select('id', 'username', 'avatar', 'tier', 'bridge_primary', 'bridge_rank_id', 'profile_mode', 'is_verified', 'name_effect', 'chat_bubble', 'profile_title', 'name_icon')
             ->orderByDesc('tier_score')
             ->limit(10)
             ->get();
@@ -514,7 +519,7 @@ class ChatService
             ->where('conversation_id', $conversation->id)
             ->whereNotNull('body')
             ->where('body', 'like', '%' . $query . '%')
-            ->with(['user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,is_verified'])
+            ->with(['user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,name_icon,is_verified'])
             ->orderByDesc('id')
             ->limit($limit)
             ->get();
@@ -575,7 +580,7 @@ class ChatService
 
         return User::query()
             ->whereIn('id', $friendIds)
-            ->select('id', 'username', 'avatar', 'tier', 'bridge_primary', 'bridge_rank_id', 'profile_mode', 'is_verified', 'name_effect', 'chat_bubble', 'profile_title')
+            ->select('id', 'username', 'avatar', 'tier', 'bridge_primary', 'bridge_rank_id', 'profile_mode', 'is_verified', 'name_effect', 'chat_bubble', 'profile_title', 'name_icon')
             ->orderByDesc('tier_score')
             ->get();
     }

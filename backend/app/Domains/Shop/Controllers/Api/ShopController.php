@@ -9,6 +9,7 @@ use App\Domains\Tiers\Models\TierTest;
 use App\Domains\Wallet\Services\RewardService;
 use App\Domains\Shop\Services\BundleService;
 use App\Domains\Shop\Services\ShopService;
+use App\Domains\Shop\Services\StickerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use RuntimeException;
@@ -59,6 +60,12 @@ class ShopController extends Controller
             // Наборы, из которых что-то есть: надеваются одной кнопкой
             'bundles' => BundleService::forInventory($user),
         ]);
+    }
+
+    /** Стикерпаки игрока для выбора в чате. */
+    public function stickers(Request $request, StickerService $stickers): JsonResponse
+    {
+        return response()->json(['packs' => $stickers->ownedPacks($request->user())]);
     }
 
     /** «Рандом»: надеть случайные предметы из своих во все слоты. */

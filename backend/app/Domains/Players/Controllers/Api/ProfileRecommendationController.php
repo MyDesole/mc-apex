@@ -19,7 +19,7 @@ class ProfileRecommendationController extends Controller
     {
         $recommendations = ProfileRecommendation::where('target_id', $user->id)
             ->where('is_hidden', false)
-            ->with('author:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,is_verified,accent_color,banner_color')
+            ->with('author:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,name_icon,is_verified,accent_color,banner_color')
             ->latest()
             ->get();
 
@@ -70,7 +70,7 @@ class ProfileRecommendationController extends Controller
             ]
         );
 
-        $rec->load('author:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,is_verified,accent_color,banner_color');
+        $rec->load('author:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,name_icon,is_verified,accent_color,banner_color');
 
         return response()->json([
             'recommendation' => $rec,

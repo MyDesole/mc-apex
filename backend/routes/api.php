@@ -359,6 +359,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{shopItem}/equip', [ShopController::class, 'equip'])->whereNumber('shopItem');
         Route::post('/{shopItem}/equip-bundle', [ShopController::class, 'equipBundle'])->whereNumber('shopItem');
         Route::post('/randomize', [ShopController::class, 'randomize'])->middleware('throttle:30,1');
+        Route::get('/stickers', [ShopController::class, 'stickers']);
         Route::post('/{shopItem}/unequip', [ShopController::class, 'unequip'])->whereNumber('shopItem');
     });
 

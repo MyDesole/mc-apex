@@ -20,6 +20,8 @@ import ProfileEntrance from '@/components/players/ProfileEntrance.vue'
 import CursorTrail from '@/components/players/CursorTrail.vue'
 import ProfilePet from '@/components/players/ProfilePet.vue'
 import ProfileTitle from '@/components/players/ProfileTitle.vue'
+import ChatSticker from '@/components/chat/ChatSticker.vue'
+import { STICKER_PACKS } from '@/data/shop/stickers.js'
 import { cardTheme } from '@/data/shop/cosmetics.js'
 import { profileLayout } from '@/data/players/profileLayouts.js'
 import { loadSkin, renderSkinHead } from '@/utils/minecraftSkin.js'
@@ -199,6 +201,30 @@ onMounted(async () => {
     <!-- След курсора: курсор сам рисует восьмёрку -->
     <div v-else-if="item.type === 'cursor_trail'" class="preview__trail">
       <CursorTrail :trail="value" auto />
+    </div>
+
+    <!-- Значок у ника: ник со значком -->
+    <div v-else-if="item.type === 'name_icon'" class="preview__title">
+      <span class="preview__title-name preview__icon-name">
+        {{ previewName }}
+        <PixelSprite
+            v-if="item.metadata?.sprite"
+            :sprite="item.metadata.sprite"
+            :anim="item.metadata.anim"
+            :glow="color"
+            :size="24"
+        />
+      </span>
+    </div>
+
+    <!-- Стикерпак: первые три стикера -->
+    <div v-else-if="item.type === 'sticker_pack'" class="preview__stickers">
+      <ChatSticker
+          v-for="id in (item.metadata?.stickers || []).slice(0, 3)"
+          :key="id"
+          :sticker="STICKER_PACKS[value]?.[id] || { sprite: 'creeper', caption: id }"
+          :size="34"
+      />
     </div>
 
     <!-- Питомец: живёт прямо в превью -->
@@ -695,6 +721,18 @@ onMounted(async () => {
   font-family: var(--font-display);
   font-size: 18px;
   font-weight: 800;
+}
+
+.preview__icon-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.preview__stickers {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
 }
 
 /* ---------- Набор ---------- */

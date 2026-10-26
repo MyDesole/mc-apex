@@ -45,6 +45,28 @@ export const PROFILE_TITLES = {
     creeper_friend: { text: 'Друг криперов', style: 'wave' },
 }
 
+/** Значки у ника: пиксельный спрайт и его анимация. */
+export const NAME_ICONS = {
+    crown: { sprite: 'crown', anim: 'glow', glow: '#facc15' },
+    flame: { sprite: 'flame', anim: 'bounce', glow: '#f97316' },
+    diamond: { sprite: 'diamond', anim: 'spin', glow: '#67e8f9' },
+    heart: { sprite: 'heart', anim: 'pulse', glow: '#ef4444' },
+    skull: { sprite: 'skull', anim: 'glow', glow: '#ef4444' },
+    creeper: { sprite: 'creeper', anim: 'wiggle' },
+    bee: { sprite: 'bee', anim: 'bounce' },
+    cat: { sprite: 'cat', anim: 'wiggle' },
+    totem: { sprite: 'totem', anim: 'glow', glow: '#facc15' },
+    tnt: { sprite: 'tnt', anim: 'shake' },
+    warden: { sprite: 'warden', anim: 'pulse' },
+    ghost: { sprite: 'ghost', anim: 'bounce' },
+    dragon: { sprite: 'dragon', anim: 'glow', glow: '#8b5cf6' },
+    axolotl: { sprite: 'axolotl', anim: 'bounce' },
+}
+
+export function nameIcon(id) {
+    return id ? NAME_ICONS[id] ?? null : null
+}
+
 export function profileTitle(id) {
     return id ? PROFILE_TITLES[id] ?? null : null
 }

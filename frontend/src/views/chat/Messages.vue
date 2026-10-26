@@ -7,6 +7,9 @@ import { useAuthStore } from '@/stores/core/auth.js'
 import { useRealtimeMessages } from '@/composables/chat/useRealtimeMessages.js'
 import UserName from '@/components/players/UserName.vue'
 import ChatAttachmentsInput from '@/components/chat/ChatAttachmentsInput.vue'
+import ChatSticker from '@/components/chat/ChatSticker.vue'
+import { STICKER_PACKS, parseSticker, stickerToken } from '@/data/shop/stickers.js'
+import { shopApi } from '@/services/shop/shop.js'
 import { userLink } from '@/utils/links.js'
 import { usePresence } from '@/composables/chat/presence.js'
 import { useMessagePolling } from '@/composables/chat/useMessagePolling.js'
@@ -425,6 +428,38 @@ async function sendMessage() {
   } finally {
     sending.value = false
   }
+}
+
+// ============================================
+// СТИКЕРЫ
+// ============================================
+
+const stickerPanel = ref(false)
+const stickerPacks = ref([])
+const stickersLoading = ref(false)
+let stickersLoaded = false
+
+async function toggleStickers() {
+  stickerPanel.value = !stickerPanel.value
+
+  if (!stickerPanel.value || stickersLoaded) return
+
+  stickersLoading.value = true
+  try {
+    stickerPacks.value = (await shopApi.stickers()).packs ?? []
+    stickersLoaded = true
+  } catch {
+    stickerPacks.value = []
+  } finally {
+    stickersLoading.value = false
+  }
+}
+
+/** Стикер уходит обычным сообщением-меткой; сервер проверит, что набор есть. */
+async function sendSticker(pack, id) {
+  stickerPanel.value = false
+  body.value = stickerToken(pack, id)
+  await sendMessage()
 }
 
 // ============================================
@@ -1505,7 +1540,7 @@ onUnmounted(() => {
                     {{ c.last_message.user?.username }}:
                   </span>
 
-                  {{ c.last_message.body }}
+                  {{ parseSticker(c.last_message.body) ? `Стикер «${parseSticker(c.last_message.body).caption}»` : c.last_message.body }}
                 </template>
 
                 <template v-else>
@@ -1820,7 +1855,10 @@ onUnmounted(() => {
                 <!-- Оформление сообщений автора из магазина: видно собеседнику -->
                 <div
                     class="msg__bubble"
-                    :class="m.user?.chat_bubble ? ['bubble-fx', `bubble-fx--${m.user.chat_bubble}`] : null"
+                    :class="[
+                      m.user?.chat_bubble && !parseSticker(m.body) ? ['bubble-fx', `bubble-fx--${m.user.chat_bubble}`] : null,
+                      { 'msg__bubble--sticker': parseSticker(m.body) },
+                    ]"
                 >
                   <div
                       v-if="m.forwarded_from"
@@ -1960,7 +1998,9 @@ onUnmounted(() => {
                       class="msg__content"
                   >
                     <span class="msg__text">
-                      {{ m.body }}
+                      <!-- Стикер из магазина: картинка вместо текста-метки -->
+                      <ChatSticker v-if="parseSticker(m.body)" :sticker="parseSticker(m.body)" />
+                      <template v-else>{{ m.body }}</template>
                     </span>
 
                     <span
@@ -2320,6 +2360,51 @@ onUnmounted(() => {
               class="chat__form"
               @submit.prevent="sendMessage"
           >
+            <!-- Стикеры: свои наборы из магазина -->
+            <div class="sticker-picker">
+              <button
+                  type="button"
+                  class="sticker-picker__toggle"
+                  :class="{ 'is-open': stickerPanel }"
+                  title="Стикеры"
+                  @click="toggleStickers"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M15.5 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3Z" />
+                  <path d="M15 3v6h6" />
+                  <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                  <path d="M9 9h.01M12 9h.01" />
+                </svg>
+              </button>
+
+              <div v-if="stickerPanel" class="sticker-picker__panel">
+                <div v-if="stickersLoading" class="sticker-picker__empty">Загружаем…</div>
+
+                <div v-else-if="!stickerPacks.length" class="sticker-picker__empty">
+                  Стикеров пока нет.
+                  <RouterLink to="/shop?type=sticker_pack">Купить в магазине →</RouterLink>
+                </div>
+
+                <template v-else>
+                  <div v-for="pack in stickerPacks" :key="pack.id" class="sticker-picker__pack">
+                    <span class="sticker-picker__title">{{ pack.name.replace(/^Стикеры\s+/, '').replace(/[«»]/g, '') }}</span>
+                    <div class="sticker-picker__grid">
+                      <button
+                          v-for="id in pack.stickers"
+                          :key="id"
+                          type="button"
+                          class="sticker-picker__item"
+                          :disabled="sending"
+                          @click="sendSticker(pack.id, id)"
+                      >
+                        <ChatSticker v-if="STICKER_PACKS[pack.id]?.[id]" :sticker="STICKER_PACKS[pack.id][id]" :size="40" />
+                      </button>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+
             <textarea
                 ref="inputEl"
                 v-model="body"

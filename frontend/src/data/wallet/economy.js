@@ -31,6 +31,8 @@ export const TYPE_LABELS = {
     profile_pet: 'Питомец',
     chat_bubble: 'Сообщения в чате',
     profile_title: 'Титул',
+    name_icon: 'Значок у ника',
+    sticker_pack: 'Стикеры для чата',
     badge: 'Бейдж',
     tier_priority: 'Приоритет тир-теста',
     coin_bundle: 'Набор монет',

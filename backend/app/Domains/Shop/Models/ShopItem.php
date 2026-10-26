@@ -40,6 +40,10 @@ class ShopItem extends Model
     public const TYPE_CHAT_BUBBLE = 'chat_bubble';
     public const TYPE_PROFILE_TITLE = 'profile_title';
 
+    // Значок у ника везде на сайте; набор стикеров для чата (не надевается — коллекция)
+    public const TYPE_NAME_ICON = 'name_icon';
+    public const TYPE_STICKER_PACK = 'sticker_pack';
+
     /**
      * Типы, которые при надевании пишутся в поле профиля пользователя.
      */
@@ -57,6 +61,7 @@ class ShopItem extends Model
         self::TYPE_PROFILE_PET,
         self::TYPE_CHAT_BUBBLE,
         self::TYPE_PROFILE_TITLE,
+        self::TYPE_NAME_ICON,
         // Оформление подсветки клана применяется к клану лидера
         self::TYPE_CLAN_HIGHLIGHT_STYLE,
     ];
@@ -121,6 +126,12 @@ class ShopItem extends Model
     public function isPersonalCosmetic(): bool
     {
         return $this->isEquippable() && ! $this->isClanItem();
+    }
+
+    /** Админу бесплатно: вся личная косметика и стикерпаки. */
+    public function isFreeForAdmin(): bool
+    {
+        return $this->isPersonalCosmetic() || $this->type === self::TYPE_STICKER_PACK;
     }
 
     /** Предмет для клана: покупает лидер, можно оплатить из казны. */

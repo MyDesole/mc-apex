@@ -70,7 +70,7 @@ class ShopService
             }
 
             // Админу вся личная косметика доступна без покупки
-            if ($ownsEverything && $item->isPersonalCosmetic()) {
+            if ($ownsEverything && $item->isFreeForAdmin()) {
                 return self::presentItem($item, [
                     'owned' => true,
                     'quantity' => 1,
@@ -115,6 +115,7 @@ class ShopService
         ShopItem::TYPE_PROFILE_PET,
         ShopItem::TYPE_CHAT_BUBBLE,
         ShopItem::TYPE_PROFILE_TITLE,
+        ShopItem::TYPE_NAME_ICON,
     ];
 
     /**
@@ -238,11 +239,11 @@ class ShopService
         $have = $rows->pluck('shop_item_id')->all();
 
         $free = ShopItem::query()
-            ->whereIn('type', ShopItem::EQUIPPABLE)
+            ->whereIn('type', [...ShopItem::EQUIPPABLE, ShopItem::TYPE_STICKER_PACK])
             ->whereNotIn('id', $have)
             ->orderBy('sort_order')
             ->get()
-            ->filter(fn (ShopItem $item) => $item->isPersonalCosmetic())
+            ->filter(fn (ShopItem $item) => $item->isFreeForAdmin())
             ->map(fn (ShopItem $item) => array_merge(self::presentItem($item), [
                 'inventory_id' => "free-{$item->id}",
                 'shop_item_id' => $item->id,
@@ -313,7 +314,7 @@ class ShopService
             return BundleService::purchase($user, $item);
         }
 
-        if (self::ownsAllCosmetics($user) && $item->isPersonalCosmetic()) {
+        if (self::ownsAllCosmetics($user) && $item->isFreeForAdmin()) {
             throw new RuntimeException('Вам вся косметика доступна бесплатно — просто наденьте её в инвентаре.');
         }
 
@@ -941,6 +942,7 @@ class ShopService
             ShopItem::TYPE_PROFILE_PET => 'profile_pet',
             ShopItem::TYPE_CHAT_BUBBLE => 'chat_bubble',
             ShopItem::TYPE_PROFILE_TITLE => 'profile_title',
+            ShopItem::TYPE_NAME_ICON => 'name_icon',
             default => null,
         };
     }
