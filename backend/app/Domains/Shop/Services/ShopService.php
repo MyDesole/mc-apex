@@ -101,6 +101,62 @@ class ShopService
         });
     }
 
+    /** Слоты профиля, которые перемешивает кнопка «Рандом». */
+    private const RANDOM_SLOTS = [
+        ShopItem::TYPE_AVATAR_FRAME,
+        ShopItem::TYPE_PROFILE_EFFECT,
+        ShopItem::TYPE_ACCENT_COLOR,
+        ShopItem::TYPE_SKIN_BACKDROP,
+        ShopItem::TYPE_CARD_THEME,
+        ShopItem::TYPE_PROFILE_LAYOUT,
+    ];
+
+    /**
+     * «Рандом»: в каждом слоте надеть случайный предмет из своих и
+     * случайные бейджи до лимита. Возвращает, сколько предметов надето.
+     */
+    public static function randomize(User $user): int
+    {
+        $items = self::ownsAllCosmetics($user)
+            ? ShopItem::whereIn('type', [...self::RANDOM_SLOTS, ShopItem::TYPE_BADGE])->get()
+            : ShopItem::whereIn('id', UserInventory::where('user_id', $user->id)->pluck('shop_item_id'))->get();
+
+        $items = $items->filter(fn (ShopItem $item) => $item->isPersonalCosmetic());
+
+        if ($items->isEmpty()) {
+            throw new RuntimeException('Пока нечего перемешивать — загляните в магазин или откройте кейс.');
+        }
+
+        $count = 0;
+
+        foreach (self::RANDOM_SLOTS as $type) {
+            $pick = $items->where('type', $type)->shuffle()->first();
+
+            if ($pick) {
+                self::equip($user->fresh(), $pick);
+                $count++;
+            }
+        }
+
+        // Бейджи: снимаем все и надеваем случайные до лимита
+        $badges = $items->where('type', ShopItem::TYPE_BADGE)->shuffle()
+            ->take((int) config('apex.shop.max_equipped_badges', 3));
+
+        if ($badges->isNotEmpty()) {
+            UserInventory::where('user_id', $user->id)
+                ->whereNotNull('equipped_at')
+                ->whereHas('item', fn ($q) => $q->where('type', ShopItem::TYPE_BADGE))
+                ->update(['equipped_at' => null]);
+
+            foreach ($badges as $badge) {
+                self::equip($user->fresh(), $badge);
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
     /**
      * Админам вся личная косметика доступна сразу, без покупки:
      * в инвентаре видна целиком, надевается без записи о покупке.

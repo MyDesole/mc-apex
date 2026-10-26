@@ -69,6 +69,33 @@ export const PROFILE_LAYOUTS = {
         arrangement: 'left',
         preview: { page: '#2a1f45', card: '#352a5a', side: '#3d2f66', accent: '#f9a8d4', line: '#bae6fd' },
     },
+
+    // Третья волна: без Майнкрафта
+    cyberpunk: {
+        name: 'Киберпанк',
+        arrangement: 'left',
+        preview: { page: '#0a0a12', card: '#12121e', side: '#181826', accent: '#fcee0a', line: '#05d9e8' },
+    },
+    glass: {
+        name: 'Стекло',
+        arrangement: 'top',
+        preview: { page: '#1e1b4b', card: '#3b3670', side: '#4b4485', accent: '#f0abfc', line: '#e0e7ff' },
+    },
+    noir: {
+        name: 'Нуар',
+        arrangement: 'bottom',
+        preview: { page: '#050505', card: '#111111', side: '#181818', accent: '#fafafa', line: '#a3a3a3' },
+    },
+    galaxy: {
+        name: 'Галактика',
+        arrangement: 'top',
+        preview: { page: '#05031a', card: '#120c33', side: '#1a1245', accent: '#a78bfa', line: '#f0abfc' },
+    },
+    abyss: {
+        name: 'Бездна',
+        arrangement: 'right',
+        preview: { page: '#020b16', card: '#06182b', side: '#08203a', accent: '#38bdf8', line: '#5eead4' },
+    },
 }
 
 /** Макет по ключу или null — обычный профиль. */

@@ -1325,3 +1325,214 @@
   }
 }
 
+
+/* ============================================================
+   НОВЫЕ ЭФФЕКТЫ ПОДСВЕТКИ: неон, голограмма, гроза, матрица,
+   галактика, лава, глитч, блик. Слои .clan-effect-bg и
+   .clan-effect-glow, цвет клана — var(--clan-color).
+   ============================================================ */
+
+/* ---------- Неон: светящаяся трубка по краю, иногда моргает ---------- */
+.effect-neon {
+  border-color: var(--clan-color);
+  box-shadow:
+      0 0 6px color-mix(in srgb, var(--clan-color) 70%, transparent),
+      0 0 18px color-mix(in srgb, var(--clan-color) 40%, transparent),
+      inset 0 0 14px color-mix(in srgb, var(--clan-color) 25%, transparent);
+  animation: clan-neon 5s linear infinite;
+}
+
+.effect-neon .clan-effect-bg {
+  opacity: 1;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--clan-color) 14%, transparent), transparent 50%);
+}
+
+@keyframes clan-neon {
+  0%, 30%, 34%, 70%, 100% { box-shadow: 0 0 6px color-mix(in srgb, var(--clan-color) 70%, transparent), 0 0 18px color-mix(in srgb, var(--clan-color) 40%, transparent), inset 0 0 14px color-mix(in srgb, var(--clan-color) 25%, transparent); }
+  31%, 33% { box-shadow: none; }
+}
+
+/* ---------- Голограмма: радужный перелив по рамке и фону ---------- */
+.effect-holo {
+  border-color: transparent;
+  background:
+      linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+      linear-gradient(90deg, #ff3d81, #ffb03d, #3dffa0, #3dd9ff, #6b3dff, #ff3d81) border-box;
+  background-size: auto, 300% 100%;
+  animation: clan-holo 5s linear infinite;
+}
+
+.effect-holo .clan-effect-bg {
+  opacity: 1;
+  background: linear-gradient(110deg, rgba(255, 61, 129, 0.08), rgba(61, 255, 160, 0.08), rgba(61, 217, 255, 0.1), rgba(107, 61, 255, 0.08));
+  background-size: 200% 100%;
+  animation: clan-gradient 6s ease-in-out infinite;
+}
+
+.effect-holo .clan-effect-glow {
+  opacity: 1;
+  background: linear-gradient(110deg, transparent 40%, rgba(255, 255, 255, 0.12) 50%, transparent 60%);
+  animation: clan-shine 3.5s ease-in-out infinite;
+}
+
+@keyframes clan-holo {
+  to { background-position: 0 0, 300% 0; }
+}
+
+/* ---------- Гроза: тёмное небо и вспышки ---------- */
+.effect-storm {
+  border-color: color-mix(in srgb, var(--clan-color) 35%, rgba(255, 255, 255, 0.06));
+}
+
+.effect-storm .clan-effect-bg {
+  opacity: 1;
+  background:
+      repeating-linear-gradient(105deg, transparent 0 14px, rgba(199, 210, 254, 0.06) 14px 15px),
+      radial-gradient(ellipse 60% 100% at 20% 0%, rgba(30, 41, 59, 0.6), transparent 70%);
+}
+
+.effect-storm .clan-effect-glow {
+  opacity: 0;
+  background: color-mix(in srgb, var(--clan-color) 22%, rgba(224, 231, 255, 0.25));
+  animation: clan-storm 6s linear infinite;
+}
+
+@keyframes clan-storm {
+  0%, 60%, 63%, 66%, 100% { opacity: 0; }
+  61%, 64% { opacity: 1; }
+}
+
+/* ---------- Матрица: строки стекают по фону ---------- */
+.effect-matrix {
+  border-color: color-mix(in srgb, var(--clan-color) 40%, rgba(255, 255, 255, 0.06));
+}
+
+.effect-matrix .clan-effect-bg {
+  opacity: 0.9;
+  background:
+      repeating-linear-gradient(90deg, transparent 0 16px, color-mix(in srgb, var(--clan-color) 18%, transparent) 16px 18px, transparent 18px 34px),
+      linear-gradient(transparent, color-mix(in srgb, var(--clan-color) 8%, transparent));
+  background-size: 100% 60px, 100% 100%;
+  -webkit-mask-image: repeating-linear-gradient(transparent 0 6px, #000 6px 9px);
+  mask-image: repeating-linear-gradient(transparent 0 6px, #000 6px 9px);
+  animation: clan-matrix 2.2s linear infinite;
+}
+
+@keyframes clan-matrix {
+  to { background-position: 0 60px, 0 0; }
+}
+
+/* ---------- Галактика: звёзды и туманность ---------- */
+.effect-galaxy {
+  border-color: color-mix(in srgb, var(--clan-color) 35%, rgba(255, 255, 255, 0.06));
+}
+
+.effect-galaxy .clan-effect-bg {
+  opacity: 1;
+  background:
+      radial-gradient(1px 1px at 12% 30%, #fff, transparent),
+      radial-gradient(1px 1px at 38% 70%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 66% 40%, #fff, transparent),
+      radial-gradient(1px 1px at 84% 75%, #fff, transparent),
+      radial-gradient(ellipse 40% 90% at 25% 50%, color-mix(in srgb, var(--clan-color) 22%, transparent), transparent 70%),
+      radial-gradient(ellipse 35% 80% at 75% 50%, rgba(236, 72, 153, 0.12), transparent 70%);
+  animation: clan-galaxy 10s ease-in-out infinite alternate;
+}
+
+@keyframes clan-galaxy {
+  from { background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0; }
+  to { background-position: 0 0, 0 0, 0 0, 0 0, 30px 0, -30px 0; }
+}
+
+/* ---------- Лава: раскалённое дно, жар поднимается ---------- */
+.effect-lava {
+  border-color: rgba(249, 115, 22, 0.4);
+}
+
+.effect-lava .clan-effect-bg {
+  opacity: 1;
+  background: linear-gradient(transparent 55%, rgba(220, 38, 38, 0.22) 80%, rgba(249, 115, 22, 0.35));
+  animation: clan-lava 3s ease-in-out infinite alternate;
+}
+
+.effect-lava .clan-effect-glow {
+  opacity: 0.8;
+  background: radial-gradient(ellipse 50% 60% at 50% 120%, rgba(253, 224, 71, 0.35), transparent 70%);
+  filter: blur(14px);
+  animation: clan-fire 2.4s ease-in-out infinite;
+}
+
+@keyframes clan-lava {
+  from { filter: brightness(0.9); }
+  to { filter: brightness(1.25); }
+}
+
+/* ---------- Глитч: красно-бирюзовые помехи ---------- */
+.effect-glitch {
+  border-color: rgba(5, 217, 232, 0.4);
+  animation: clan-glitch-border 2.8s steps(1) infinite;
+}
+
+.effect-glitch .clan-effect-bg {
+  opacity: 1;
+  background:
+      linear-gradient(90deg, rgba(255, 42, 109, 0.14), transparent 30%),
+      repeating-linear-gradient(transparent 0 3px, rgba(255, 255, 255, 0.025) 3px 4px);
+}
+
+.effect-glitch .clan-effect-glow {
+  opacity: 0;
+  background: linear-gradient(90deg, transparent, rgba(5, 217, 232, 0.25), rgba(255, 42, 109, 0.25), transparent);
+  height: 18%;
+  animation: clan-glitch-bar 2.8s steps(1) infinite;
+}
+
+@keyframes clan-glitch-border {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-2px, 0); }
+  21% { transform: translate(2px, 0); }
+  22% { transform: translate(0); }
+}
+
+@keyframes clan-glitch-bar {
+  0%, 19%, 24%, 100% { opacity: 0; }
+  20% { opacity: 1; top: 20%; }
+  22% { opacity: 1; top: 64%; }
+}
+
+/* ---------- Блик: белая полоса пробегает по карточке ---------- */
+.effect-shine {
+  border-color: color-mix(in srgb, var(--clan-color) 45%, rgba(255, 255, 255, 0.06));
+}
+
+.effect-shine .clan-effect-bg {
+  opacity: 1;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--clan-color) 12%, transparent), transparent 60%);
+}
+
+.effect-shine .clan-effect-glow {
+  opacity: 1;
+  background: linear-gradient(110deg, transparent 40%, rgba(255, 255, 255, 0.16) 50%, transparent 60%);
+  animation: clan-shine 3s ease-in-out infinite;
+}
+
+@keyframes clan-shine {
+  0% { transform: translateX(-100%); }
+  60%, 100% { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .effect-neon,
+  .effect-holo,
+  .effect-glitch,
+  .effect-neon *,
+  .effect-holo *,
+  .effect-storm *,
+  .effect-matrix *,
+  .effect-galaxy *,
+  .effect-lava *,
+  .effect-glitch *,
+  .effect-shine * {
+    animation: none !important;
+  }
+}

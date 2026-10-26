@@ -424,6 +424,14 @@ const EFFECT_LABELS = {
   ice: 'Ice',
   aurora: 'Aurora',
   legendary: 'Legendary',
+  neon: 'Neon',
+  holo: 'Holo',
+  storm: 'Storm',
+  matrix: 'Matrix',
+  galaxy: 'Galaxy',
+  lava: 'Lava',
+  glitch: 'Glitch',
+  shine: 'Shine',
 }
 
 /** Цвета подсветки — те же ключи, что продаются в магазине. */
@@ -434,6 +442,14 @@ const HIGHLIGHT_COLORS = {
   violet: '#8b5cf6',
   emerald: '#22c55e',
   rose: '#ec4899',
+  midnight: '#6366f1',
+  sunset: '#fb923c',
+  frost: '#7dd3fc',
+  mint: '#5eead4',
+  blood: '#b91c1c',
+  lavender: '#c4b5fd',
+  chrome: '#e2e8f0',
+  toxic: '#a3e635',
 }
 
 /*

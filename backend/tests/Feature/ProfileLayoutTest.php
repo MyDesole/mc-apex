@@ -41,7 +41,7 @@ class ProfileLayoutTest extends TestCase
         $layouts = collect($this->getJson('/api/shop')->assertOk()->json('items'))
             ->where('type', 'profile_layout');
 
-        $this->assertCount(11, $layouts);
+        $this->assertCount(16, $layouts);
         $this->assertTrue($layouts->every(fn ($i) => $i['is_equippable']));
     }
 }

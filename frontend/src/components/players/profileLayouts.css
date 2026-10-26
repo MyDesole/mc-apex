@@ -945,3 +945,228 @@
     animation: none !important;
   }
 }
+
+/* =========================================================
+   КИБЕРПАНК — жёлтый и бирюзовый неон, рубленые углы, колонка слева
+   ========================================================= */
+
+.profile-layout.profile-layout--cyberpunk {
+  --layout-accent: #fcee0a;
+  --layout-edge: #2a2a3a;
+  --layout-radius: 0;
+  --layout-page: linear-gradient(160deg, #0a0a12 0%, #12091f 60%, #050508 100%);
+
+  /* Развёртка экрана и диагональные штрихи */
+  --layout-pattern:
+      repeating-linear-gradient(0deg, rgba(5, 217, 232, 0.05) 0 1px, transparent 1px 4px),
+      repeating-linear-gradient(135deg, transparent 0 22px, rgba(252, 238, 10, 0.04) 22px 24px);
+  --layout-heading-font: ui-monospace, 'Cascadia Code', monospace;
+
+  --bg-card: #10101a;
+  --bg: #0a0a12;
+  --border: #23233a;
+  --border-hover: #05d9e8;
+  --text: #f4f4f5;
+  --text-dim: #c7f9ff;
+  --text-muted: #7c8aa0;
+  --accent-light: #fcee0a;
+}
+
+/* Срезанный угол карточек, как в интерфейсах из будущего */
+.profile-layout.profile-layout--cyberpunk .player-card,
+.profile-layout.profile-layout--cyberpunk .side-panel {
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+  box-shadow: inset 0 0 0 1px rgba(5, 217, 232, 0.25);
+}
+
+.profile-layout.profile-layout--cyberpunk .section-heading h3 {
+  color: #fcee0a;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-shadow: 2px 0 #ff2a6d, -2px 0 #05d9e8;
+}
+
+.profile-layout.profile-layout--cyberpunk .profile-header__name {
+  text-shadow: 3px 0 #ff2a6d, -3px 0 #05d9e8;
+}
+
+/* =========================================================
+   СТЕКЛО — матовые панели на цветных пятнах, витрина сверху
+   ========================================================= */
+
+.profile-layout.profile-layout--glass {
+  --layout-accent: #f0abfc;
+  --layout-edge: rgba(255, 255, 255, 0.18);
+  --layout-radius: 22px;
+  --layout-page:
+      radial-gradient(circle at 15% 20%, #db2777 0, transparent 35%),
+      radial-gradient(circle at 85% 15%, #2563eb 0, transparent 38%),
+      radial-gradient(circle at 60% 85%, #7c3aed 0, transparent 40%),
+      #1e1b4b;
+
+  --bg-card: rgba(255, 255, 255, 0.08);
+  --bg: rgba(255, 255, 255, 0.05);
+  --border: rgba(255, 255, 255, 0.16);
+  --border-hover: rgba(255, 255, 255, 0.35);
+  --text: #ffffff;
+  --text-dim: #e0e7ff;
+  --text-muted: #c7d2fe;
+  --accent-light: #f5d0fe;
+}
+
+.profile-layout.profile-layout--glass .player-card,
+.profile-layout.profile-layout--glass .side-panel {
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 20px 40px rgba(15, 10, 40, 0.35);
+}
+
+/* Пятна медленно плавают под стеклом */
+.profile-layout.profile-layout--glass::before {
+  background:
+      radial-gradient(circle at 30% 60%, rgba(244, 114, 182, 0.45), transparent 30%),
+      radial-gradient(circle at 75% 40%, rgba(56, 189, 248, 0.4), transparent 30%);
+  filter: blur(30px);
+  animation: layout-blobs 14s ease-in-out infinite alternate;
+}
+
+@keyframes layout-blobs {
+  from { transform: translate(-4%, 0) scale(1); }
+  to { transform: translate(4%, -3%) scale(1.1); }
+}
+
+/* =========================================================
+   НУАР — чёрно-белый журнал, засечки, колонка снизу
+   ========================================================= */
+
+.profile-layout.profile-layout--noir {
+  --layout-accent: #fafafa;
+  --layout-edge: #2a2a2a;
+  --layout-radius: 2px;
+  --layout-page: linear-gradient(180deg, #0b0b0b, #000);
+
+  /* Зерно плёнки */
+  --layout-pattern:
+      radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px) 0 0 / 3px 3px;
+  --layout-heading-font: Georgia, 'Times New Roman', serif;
+
+  --bg-card: #0f0f0f;
+  --bg: #080808;
+  --border: #262626;
+  --border-hover: #737373;
+  --text: #f5f5f5;
+  --text-dim: #d4d4d4;
+  --text-muted: #8a8a8a;
+  --accent-light: #ffffff;
+}
+
+.profile-layout.profile-layout--noir .profile-header__name {
+  font-style: italic;
+  letter-spacing: -0.02em;
+}
+
+.profile-layout.profile-layout--noir .section-heading h3 {
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  font-size: 13px;
+  border-bottom: 1px solid #404040;
+  padding-bottom: 6px;
+}
+
+/* Всё цветное в профиле — в оттенках серого, кроме аватара */
+.profile-layout.profile-layout--noir .player-card > :not([data-block="header"]) {
+  filter: grayscale(1);
+}
+
+/* =========================================================
+   ГАЛАКТИКА — туманность и звёзды, витрина сверху
+   ========================================================= */
+
+.profile-layout.profile-layout--galaxy {
+  --layout-accent: #a78bfa;
+  --layout-edge: #2e2263;
+  --layout-radius: 16px;
+  --layout-page:
+      radial-gradient(ellipse at 20% 10%, rgba(167, 139, 250, 0.4), transparent 45%),
+      radial-gradient(ellipse at 85% 60%, rgba(236, 72, 153, 0.28), transparent 45%),
+      radial-gradient(ellipse at 40% 95%, rgba(34, 211, 238, 0.2), transparent 45%),
+      #05031a;
+
+  --layout-pattern:
+      radial-gradient(1px 1px at 10px 20px, #fff, transparent) 0 0 / 90px 90px,
+      radial-gradient(1.5px 1.5px at 60px 50px, #f0abfc, transparent) 0 0 / 140px 140px,
+      radial-gradient(1px 1px at 30px 80px, #c7d2fe, transparent) 0 0 / 110px 110px;
+
+  --bg-card: rgba(18, 12, 51, 0.82);
+  --bg: #0b0726;
+  --border: #2e2263;
+  --border-hover: #7c3aed;
+  --text: #f5f3ff;
+  --text-dim: #ddd6fe;
+  --text-muted: #a5a0c8;
+  --accent-light: #f0abfc;
+}
+
+.profile-layout.profile-layout--galaxy::before {
+  animation: layout-twinkle 4s ease-in-out infinite alternate;
+}
+
+@keyframes layout-twinkle {
+  from { opacity: 0.55; }
+  to { opacity: 1; }
+}
+
+.profile-layout.profile-layout--galaxy .section-heading h3 {
+  background: linear-gradient(90deg, #c4b5fd, #f0abfc, #67e8f9);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* =========================================================
+   БЕЗДНА — глубина океана, блики-каустики, мягкое свечение
+   ========================================================= */
+
+.profile-layout.profile-layout--abyss {
+  --layout-accent: #38bdf8;
+  --layout-edge: #0c3354;
+  --layout-radius: 14px;
+  --layout-page: linear-gradient(180deg, #06345a 0%, #031a30 40%, #010812 100%);
+
+  /* Каустики: светлые волнистые пятна сверху */
+  --layout-pattern:
+      radial-gradient(ellipse 30px 10px at 20% 6%, rgba(125, 211, 252, 0.25), transparent),
+      radial-gradient(ellipse 40px 12px at 60% 3%, rgba(94, 234, 212, 0.2), transparent),
+      radial-gradient(ellipse 26px 8px at 85% 9%, rgba(125, 211, 252, 0.2), transparent);
+
+  --bg-card: rgba(6, 24, 43, 0.9);
+  --bg: #031322;
+  --border: #0c3354;
+  --border-hover: #0ea5e9;
+  --text: #e0f2fe;
+  --text-dim: #bae6fd;
+  --text-muted: #6b93b3;
+  --accent-light: #5eead4;
+}
+
+.profile-layout.profile-layout--abyss::before {
+  animation: layout-caustics 6s ease-in-out infinite alternate;
+}
+
+@keyframes layout-caustics {
+  from { transform: translateX(-2%); opacity: 0.6; }
+  to { transform: translateX(2%); opacity: 1; }
+}
+
+.profile-layout.profile-layout--abyss .player-card,
+.profile-layout.profile-layout--abyss .side-panel {
+  box-shadow: 0 0 30px rgba(14, 165, 233, 0.12), inset 0 1px 0 rgba(125, 211, 252, 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-layout.profile-layout--glass::before,
+  .profile-layout.profile-layout--galaxy::before,
+  .profile-layout.profile-layout--abyss::before {
+    animation: none;
+  }
+}

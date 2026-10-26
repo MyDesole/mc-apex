@@ -18,6 +18,14 @@ class ClanHighlight
         'violet',
         'emerald',
         'rose',
+        'midnight',
+        'sunset',
+        'frost',
+        'mint',
+        'blood',
+        'lavender',
+        'chrome',
+        'toxic',
     ];
 
     /**
@@ -35,6 +43,14 @@ class ClanHighlight
         'ice',        // лёд
         'aurora',     // северное сияние
         'legendary',  // золотое сияние
+        'neon',       // неоновая трубка по краю
+        'holo',       // радужный голографический перелив
+        'storm',      // вспышки молний
+        'matrix',     // стекающие зелёные строки
+        'galaxy',     // звёзды и туманность
+        'lava',       // раскалённое дно
+        'glitch',     // RGB-помехи
+        'shine',      // блик пробегает по карточке
     ];
 
     /** Цвет по умолчанию, если игрок не выбирал. */

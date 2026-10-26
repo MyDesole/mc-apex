@@ -61,6 +61,21 @@ class ShopController extends Controller
         ]);
     }
 
+    /** «Рандом»: надеть случайные предметы из своих во все слоты. */
+    public function randomize(Request $request): JsonResponse
+    {
+        try {
+            $count = ShopService::randomize($request->user());
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json([
+            'message' => "Образ перемешан — надето предметов: {$count}.",
+            'items' => ShopService::inventory($request->user()->fresh()),
+        ]);
+    }
+
     /** Надеть набор целиком. */
     public function equipBundle(Request $request, ShopItem $shopItem): JsonResponse
     {

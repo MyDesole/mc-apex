@@ -15,6 +15,14 @@ export const HIGHLIGHT_COLORS = {
     violet: { name: 'Фиолетовая', color: '#8b5cf6', glow: 'rgba(139, 92, 246, 0.42)' },
     emerald: { name: 'Изумрудная', color: '#22c55e', glow: 'rgba(34, 197, 94, 0.42)' },
     rose: { name: 'Розовая', color: '#ec4899', glow: 'rgba(236, 72, 153, 0.42)' },
+    midnight: { name: 'Полночная', color: '#6366f1', glow: 'rgba(99, 102, 241, 0.42)' },
+    sunset: { name: 'Закатная', color: '#fb923c', glow: 'rgba(251, 146, 60, 0.42)' },
+    frost: { name: 'Морозная', color: '#7dd3fc', glow: 'rgba(125, 211, 252, 0.42)' },
+    mint: { name: 'Мятная', color: '#5eead4', glow: 'rgba(94, 234, 212, 0.42)' },
+    blood: { name: 'Кровавая', color: '#b91c1c', glow: 'rgba(185, 28, 28, 0.5)' },
+    lavender: { name: 'Лавандовая', color: '#c4b5fd', glow: 'rgba(196, 181, 253, 0.42)' },
+    chrome: { name: 'Хромовая', color: '#e2e8f0', glow: 'rgba(226, 232, 240, 0.4)' },
+    toxic: { name: 'Токсичная', color: '#a3e635', glow: 'rgba(163, 230, 53, 0.45)' },
 }
 
 /**
@@ -29,6 +37,14 @@ export const HIGHLIGHT_EFFECTS = {
     ice: { name: 'Лёд', animated: false },
     aurora: { name: 'Северное сияние', animated: true },
     legendary: { name: 'Легендарный', animated: true },
+    neon: { name: 'Неон', animated: true },
+    holo: { name: 'Голограмма', animated: true },
+    storm: { name: 'Гроза', animated: true },
+    matrix: { name: 'Матрица', animated: true },
+    galaxy: { name: 'Галактика', animated: true },
+    lava: { name: 'Лава', animated: true },
+    glitch: { name: 'Глитч', animated: true },
+    shine: { name: 'Блик', animated: true },
 }
 
 /** Базовый эффект, если игрок ничего не покупал. */

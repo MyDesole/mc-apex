@@ -1,6 +1,8 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { tierColor } from '@/composables/players/useTier.js'
+import { useAuthStore } from '@/stores/core/auth.js'
+import { shopApi } from '@/services/shop/shop.js'
 import AppIcon from '@/components/core/AppIcon.vue'
 import ProfileEffectLayer from '@/components/players/ProfileEffectLayer.vue'
 import AvatarFrameDecor from '@/components/players/AvatarFrameDecor.vue'
@@ -66,6 +68,33 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['edit'])
+
+/*
+ * «Рандом» на своём профиле: сервер надевает случайные предметы из
+ * инвентаря, профиль берёт свежие данные из стора после fetchMe().
+ */
+const auth = useAuthStore()
+const randomizing = ref(false)
+const randomMessage = ref('')
+
+async function randomize() {
+  if (randomizing.value) return
+
+  randomizing.value = true
+  randomMessage.value = ''
+
+  try {
+    const result = await shopApi.randomize()
+    randomMessage.value = result.message
+    await auth.fetchMe()
+  } catch (e) {
+    randomMessage.value = e.message || 'Не удалось перемешать образ.'
+  } finally {
+    randomizing.value = false
+    // Подсказка висит пару секунд и пропадает
+    setTimeout(() => { randomMessage.value = '' }, 3500)
+  }
+}
 
 /* ---------- Звание бриджера: сводка для эмблемы в шапке ---------- */
 
@@ -495,6 +524,30 @@ const coverStyle = computed(() => {
 
     <div class="profile-header__topline">
 
+      <!-- Рандом: случайный образ из своих предметов -->
+      <button
+          v-if="editable"
+          class="profile-header__edit profile-header__random"
+          :class="{ 'is-rolling': randomizing }"
+          type="button"
+          :disabled="randomizing"
+          :title="randomMessage || 'Надеть случайные рамку, эффект, фон, макет и бейджи из своих'"
+          @click="randomize"
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="4" />
+          <circle cx="8.5" cy="8.5" r="1.2" fill="currentColor" />
+          <circle cx="15.5" cy="15.5" r="1.2" fill="currentColor" />
+          <circle cx="15.5" cy="8.5" r="1.2" fill="currentColor" />
+          <circle cx="8.5" cy="15.5" r="1.2" fill="currentColor" />
+          <circle cx="12" cy="12" r="1.2" fill="currentColor" />
+        </svg>
+        Рандом
+      </button>
+
+      <Transition name="random-note">
+        <span v-if="randomMessage" class="profile-header__random-note">{{ randomMessage }}</span>
+      </Transition>
 
       <button
           v-if="editable"

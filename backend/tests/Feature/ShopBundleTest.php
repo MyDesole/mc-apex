@@ -131,6 +131,23 @@ class ShopBundleTest extends TestCase
         $this->actingAs($user)->postJson("/api/shop/{$this->bundle->id}/equip-bundle")->assertStatus(422);
     }
 
+    public function test_randomize_equips_random_owned_items(): void
+    {
+        $user = User::factory()->create(['apex_coins' => 5000]);
+
+        // Пусто — перемешивать нечего
+        $this->actingAs($user)->postJson('/api/shop/randomize')->assertStatus(422);
+
+        $this->actingAs($user)->postJson("/api/shop/{$this->bundle->id}/purchase")->assertCreated();
+
+        $this->actingAs($user)->postJson('/api/shop/randomize')->assertOk();
+
+        $user->refresh();
+        $this->assertSame('test', $user->avatar_frame);
+        $this->assertSame('test', $user->profile_effect);
+        $this->assertCount(1, $user->equipped_badges);
+    }
+
     public function test_regular_player_cannot_equip_without_buying(): void
     {
         $user = User::factory()->create();

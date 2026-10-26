@@ -10,6 +10,13 @@ export const SKIN_BACKDROPS = {
     nether: { name: 'Незер' },
     end: { name: 'Край' },
     deep_dark: { name: 'Глубокая тьма' },
+    sunset: { name: 'Закат' },
+    synthwave: { name: 'Синтвейв' },
+    cyber_city: { name: 'Кибергород' },
+    space: { name: 'Открытый космос' },
+    aurora_night: { name: 'Полярная ночь' },
+    sakura_garden: { name: 'Сад сакуры' },
+    snow_peaks: { name: 'Снежные пики' },
 }
 
 /**
@@ -61,6 +68,72 @@ export const CARD_THEMES = {
         panelAlt: '#3a2e0a',
         border: '#ca8a04',
         accent: '#facc15',
+    },
+
+    // Третья волна: темы без Майнкрафта — неон, лёд, сакура, полночь…
+    neon: {
+        name: 'Неон',
+        bg: '#0c0618',
+        panel: '#1a0b2e',
+        panelAlt: '#24103d',
+        border: '#e879f9',
+        accent: '#22d3ee',
+    },
+    frost: {
+        name: 'Иней',
+        bg: '#0b1620',
+        panel: '#11253a',
+        panelAlt: '#163049',
+        border: '#7dd3fc',
+        accent: '#bae6fd',
+    },
+    sakura: {
+        name: 'Сакура',
+        bg: '#1f0f17',
+        panel: '#3a1a2a',
+        panelAlt: '#4a2236',
+        border: '#f9a8d4',
+        accent: '#f472b6',
+    },
+    midnight: {
+        name: 'Полночь',
+        bg: '#070a1a',
+        panel: '#111735',
+        panelAlt: '#161e44',
+        border: '#6366f1',
+        accent: '#a5b4fc',
+    },
+    blood: {
+        name: 'Кровавая луна',
+        bg: '#120405',
+        panel: '#2a080b',
+        panelAlt: '#360b0f',
+        border: '#b91c1c',
+        accent: '#ef4444',
+    },
+    toxic: {
+        name: 'Токсин',
+        bg: '#0c1404',
+        panel: '#16240a',
+        panelAlt: '#1d300d',
+        border: '#65a30d',
+        accent: '#a3e635',
+    },
+    mono: {
+        name: 'Монохром',
+        bg: '#0a0a0a',
+        panel: '#171717',
+        panelAlt: '#202020',
+        border: '#e5e5e5',
+        accent: '#fafafa',
+    },
+    sunset: {
+        name: 'Закат',
+        bg: '#1a0d0a',
+        panel: '#33150f',
+        panelAlt: '#421c12',
+        border: '#fb923c',
+        accent: '#fbbf24',
     },
 }
 
