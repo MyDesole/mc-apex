@@ -165,7 +165,7 @@ class PlayerProfileService
     {
         return ProfileRecommendation::where('target_id', $player->id)
             ->where('is_hidden', false)
-            ->with('author:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,is_verified,accent_color,banner_color')
+            ->with('author:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,is_verified,accent_color,banner_color')
             ->latest()
             ->limit(20)
             ->get();

@@ -461,6 +461,11 @@
   animation: pulse 2s ease-in-out infinite;
 }
 
+/* Титул под ником */
+.profile-header__title {
+  margin: 2px 0 6px;
+}
+
 /* «Рандом»: кубик крутится, пока сервер подбирает образ */
 /* Рядом с «Настроить», а не у левого края шапки */
 .profile-header__random {

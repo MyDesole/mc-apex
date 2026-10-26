@@ -8,6 +8,8 @@ import ProfileEffectLayer from '@/components/players/ProfileEffectLayer.vue'
 import AvatarFrameDecor from '@/components/players/AvatarFrameDecor.vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
 import '@/components/shop/badgeStyles.css'
+import ProfilePet from '@/components/players/ProfilePet.vue'
+import ProfileTitle from '@/components/players/ProfileTitle.vue'
 import {
   AVATAR_FRAMES,
   PROFILE_EFFECTS,
@@ -476,6 +478,9 @@ const coverStyle = computed(() => {
          Works for both normal and compact modes
          ===================================================== -->
 
+    <!-- Питомец живёт в полной шапке, в компактной ему тесно -->
+    <ProfilePet v-if="!compact && user.profile_pet" :pet="user.profile_pet" />
+
     <!-- Эффекты-слои (снег, искры, сияние…) — свой компонент с частицами -->
     <ProfileEffectLayer
         v-if="hasProfileEffect && profileEffect.layer"
@@ -853,8 +858,8 @@ const coverStyle = computed(() => {
 
         </div>
 
-
-
+        <!-- Титул под ником (магазин) -->
+        <ProfileTitle v-if="user.profile_title" :title="user.profile_title" class="profile-header__title" />
 
         <!-- Badges (купленные в магазине) -->
         <div

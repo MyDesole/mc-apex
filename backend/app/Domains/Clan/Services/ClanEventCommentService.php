@@ -23,8 +23,8 @@ class ClanEventCommentService
         return ClanEventComment::where('clan_event_id', $event->id)
             ->whereNull('parent_id')
             ->with([
-                'user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect',
-                'replies.user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect',
+                'user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title',
+                'replies.user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title',
             ])
             ->latest()
             ->get();
@@ -52,7 +52,7 @@ class ClanEventCommentService
             'body' => trim($data['body']),
         ]);
 
-        return $comment->load('user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect');
+        return $comment->load('user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title');
     }
 
     public function delete(Clan $clan, ClanEvent $event, ClanEventComment $comment, User $user, ClanService $clans): void

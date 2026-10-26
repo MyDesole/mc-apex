@@ -1817,7 +1817,11 @@ onUnmounted(() => {
               </div>
 
               <div class="msg__body">
-                <div class="msg__bubble">
+                <!-- Оформление сообщений автора из магазина: видно собеседнику -->
+                <div
+                    class="msg__bubble"
+                    :class="m.user?.chat_bubble ? ['bubble-fx', `bubble-fx--${m.user.chat_bubble}`] : null"
+                >
                   <div
                       v-if="m.forwarded_from"
                       class="msg__forwarded"

@@ -164,9 +164,9 @@ class ClanService
     public function view(Clan $clan, ?User $me): array
     {
         $clan->load([
-            'leader:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect',
+            'leader:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title',
             // rating_points и role — для вклада участника (ClanMember::contribution)
-            'members.user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,rating_points,role',
+            'members.user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,rating_points,role',
             'events.author:id,username,avatar',
         ]);
 
@@ -188,7 +188,7 @@ class ClanService
             ->with([
                 'challenger:id,name,tag,power,banner_color,avatar',
                 'opponent:id,name,tag,power,banner_color,avatar',
-                'participants.user:id,username,avatar,minecraft_username,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect',
+                'participants.user:id,username,avatar,minecraft_username,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title',
                 'participants.clan:id,name,tag,banner_color',
             ])
             ->latest()
@@ -317,7 +317,7 @@ class ClanService
     {
         return ClanApplication::where('clan_id', $clan->id)
             ->where('status', 'pending')
-            ->with('user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,tier_score')
+            ->with('user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,tier_score')
             ->latest()
             ->get();
     }

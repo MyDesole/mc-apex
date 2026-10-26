@@ -35,6 +35,11 @@ class ShopItem extends Model
     public const TYPE_PROFILE_ENTRANCE = 'profile_entrance';
     public const TYPE_CURSOR_TRAIL = 'cursor_trail';
 
+    // Питомец в шапке профиля, оформление своих сообщений в чате, титул под ником
+    public const TYPE_PROFILE_PET = 'profile_pet';
+    public const TYPE_CHAT_BUBBLE = 'chat_bubble';
+    public const TYPE_PROFILE_TITLE = 'profile_title';
+
     /**
      * Типы, которые при надевании пишутся в поле профиля пользователя.
      */
@@ -49,6 +54,9 @@ class ShopItem extends Model
         self::TYPE_NAME_EFFECT,
         self::TYPE_PROFILE_ENTRANCE,
         self::TYPE_CURSOR_TRAIL,
+        self::TYPE_PROFILE_PET,
+        self::TYPE_CHAT_BUBBLE,
+        self::TYPE_PROFILE_TITLE,
         // Оформление подсветки клана применяется к клану лидера
         self::TYPE_CLAN_HIGHLIGHT_STYLE,
     ];

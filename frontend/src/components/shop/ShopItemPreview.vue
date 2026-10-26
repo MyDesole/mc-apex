@@ -18,6 +18,8 @@ import { bundleTheme } from '@/data/shop/bundleThemes.js'
 import '@/components/shop/badgeStyles.css'
 import ProfileEntrance from '@/components/players/ProfileEntrance.vue'
 import CursorTrail from '@/components/players/CursorTrail.vue'
+import ProfilePet from '@/components/players/ProfilePet.vue'
+import ProfileTitle from '@/components/players/ProfileTitle.vue'
 import { cardTheme } from '@/data/shop/cosmetics.js'
 import { profileLayout } from '@/data/players/profileLayouts.js'
 import { loadSkin, renderSkinHead } from '@/utils/minecraftSkin.js'
@@ -197,6 +199,23 @@ onMounted(async () => {
     <!-- След курсора: курсор сам рисует восьмёрку -->
     <div v-else-if="item.type === 'cursor_trail'" class="preview__trail">
       <CursorTrail :trail="value" auto />
+    </div>
+
+    <!-- Питомец: живёт прямо в превью -->
+    <div v-else-if="item.type === 'profile_pet'" class="preview__pet">
+      <ProfilePet :pet="value" :size="34" />
+    </div>
+
+    <!-- Оформление сообщений: пара пузырей чата -->
+    <div v-else-if="item.type === 'chat_bubble'" class="preview__chat">
+      <span class="preview__bubble preview__bubble--other">Го на КВ?</span>
+      <span class="preview__bubble msg__bubble bubble-fx" :class="`bubble-fx--${value}`">Уже бегу 🔥</span>
+    </div>
+
+    <!-- Титул под ником -->
+    <div v-else-if="item.type === 'profile_title'" class="preview__title">
+      <span class="preview__title-name">{{ previewName }}</span>
+      <ProfileTitle :title="value" />
     </div>
 
     <!-- Набор: тематический фон и состав пиксельными значками -->
@@ -620,6 +639,62 @@ onMounted(async () => {
 
   width: 100%;
   height: 100%;
+}
+
+/* ---------- Питомец ---------- */
+
+.preview__pet {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+
+  background: linear-gradient(transparent 70%, rgba(255, 255, 255, 0.04));
+}
+
+/* ---------- Сообщения ---------- */
+
+.preview__chat {
+  width: 86%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preview__bubble {
+  max-width: 80%;
+  padding: 8px 12px;
+
+  color: #e6e3ee;
+  background: #2a2638;
+  border: 1px solid transparent;
+  border-radius: 14px 14px 14px 4px;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.preview__bubble:not(.preview__bubble--other) {
+  align-self: flex-end;
+  border-radius: 14px 14px 4px 14px;
+}
+
+/* ---------- Титул ---------- */
+
+.preview__title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.preview__title-name {
+  color: #fff;
+
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
 }
 
 /* ---------- Набор ---------- */

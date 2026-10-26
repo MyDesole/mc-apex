@@ -1,0 +1,154 @@
+/* =========================================================
+   ОФОРМЛЕНИЕ СООБЩЕНИЙ (магазин, тип chat_bubble)
+
+   Класс .bubble-fx--{id} на пузыре сообщения автора — его видит и
+   собеседник. Глобально и с !important: стили чата scoped.
+   ========================================================= */
+
+.bubble-fx {
+  position: relative;
+  isolation: isolate;
+}
+
+/* ---------- Неон ---------- */
+.msg__bubble.bubble-fx--neon {
+  background: rgba(24, 10, 40, 0.92) !important;
+  border: 1.5px solid #f0abfc !important;
+  box-shadow: 0 0 6px #e879f9, 0 0 16px rgba(217, 70, 239, 0.45), inset 0 0 10px rgba(217, 70, 239, 0.25) !important;
+  color: #fdf4ff !important;
+}
+
+/* ---------- Золото ---------- */
+.msg__bubble.bubble-fx--gold {
+  overflow: hidden;
+  background: linear-gradient(135deg, #3b2a07, #1c1407) !important;
+  border: 1.5px solid #facc15 !important;
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.35) !important;
+  color: #fef3c7 !important;
+}
+
+.msg__bubble.bubble-fx--gold::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(110deg, transparent 40%, rgba(253, 230, 138, 0.25) 50%, transparent 60%);
+  transform: translateX(-100%);
+  animation: bfx-shine 3.2s ease-in-out infinite;
+}
+
+/* ---------- Голограмма ---------- */
+.msg__bubble.bubble-fx--holo {
+  border: 1.5px solid transparent !important;
+  background:
+      linear-gradient(rgba(18, 15, 28, 0.94), rgba(18, 15, 28, 0.94)) padding-box,
+      linear-gradient(90deg, #ff3d81, #ffb03d, #3dffa0, #3dd9ff, #6b3dff, #ff3d81) border-box !important;
+  background-size: auto, 300% 100% !important;
+  box-shadow: 0 0 14px rgba(192, 132, 252, 0.35) !important;
+  color: #fff !important;
+  animation: bfx-holo 4s linear infinite;
+}
+
+/* ---------- Сакура ---------- */
+.msg__bubble.bubble-fx--sakura {
+  background: linear-gradient(135deg, #fce7f3, #fbcfe8) !important;
+  border: 1.5px solid #f9a8d4 !important;
+  color: #831843 !important;
+}
+
+.msg__bubble.bubble-fx--sakura::before {
+  content: '❀';
+  position: absolute;
+  top: -9px;
+  right: 8px;
+  color: #ec4899;
+  font-size: 14px;
+  text-shadow: 0 0 4px #fff;
+}
+
+.msg__bubble.bubble-fx--sakura a,
+.msg__bubble.bubble-fx--sakura * {
+  color: inherit;
+}
+
+/* ---------- Глитч ---------- */
+.msg__bubble.bubble-fx--glitch {
+  background:
+      repeating-linear-gradient(transparent 0 3px, rgba(255, 255, 255, 0.03) 3px 4px),
+      #0b0b14 !important;
+  border: 1.5px solid #05d9e8 !important;
+  box-shadow: -3px 0 0 rgba(255, 42, 109, 0.75), 3px 0 0 rgba(5, 217, 232, 0.6) !important;
+  color: #f4f4f5 !important;
+  animation: bfx-glitch 3s steps(1) infinite;
+}
+
+/* ---------- Галактика ---------- */
+.msg__bubble.bubble-fx--galaxy {
+  background:
+      radial-gradient(1px 1px at 20% 30%, #fff, transparent),
+      radial-gradient(1px 1px at 70% 70%, #fff, transparent),
+      radial-gradient(1px 1px at 45% 15%, #c7d2fe, transparent),
+      radial-gradient(ellipse at 30% 60%, rgba(139, 92, 246, 0.55), transparent 60%),
+      radial-gradient(ellipse at 80% 30%, rgba(236, 72, 153, 0.4), transparent 60%),
+      #0b0726 !important;
+  border: 1.5px solid rgba(167, 139, 250, 0.6) !important;
+  color: #f5f3ff !important;
+}
+
+/* ---------- Пламя ---------- */
+.msg__bubble.bubble-fx--fire {
+  overflow: hidden;
+  background: linear-gradient(0deg, rgba(220, 38, 38, 0.45), rgba(28, 10, 8, 0.95) 70%) !important;
+  border: 1.5px solid #f97316 !important;
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.45) !important;
+  color: #fff7ed !important;
+}
+
+.msg__bubble.bubble-fx--fire::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  z-index: -1;
+  height: 60%;
+  background: radial-gradient(ellipse 60% 100% at 50% 100%, rgba(253, 224, 71, 0.45), transparent 70%);
+  animation: bfx-fire 1.4s ease-in-out infinite alternate;
+}
+
+/* ---------- Лёд ---------- */
+.msg__bubble.bubble-fx--ice {
+  background: linear-gradient(135deg, rgba(14, 116, 144, 0.55), rgba(8, 47, 73, 0.9)) !important;
+  border: 1.5px solid #bae6fd !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 12px rgba(125, 211, 252, 0.3) !important;
+  color: #f0f9ff !important;
+  backdrop-filter: blur(6px);
+}
+
+/* ---------- Анимации ---------- */
+
+@keyframes bfx-shine {
+  0%, 30% { transform: translateX(-100%); }
+  70%, 100% { transform: translateX(100%); }
+}
+
+@keyframes bfx-holo {
+  to { background-position: 0 0, 300% 0; }
+}
+
+@keyframes bfx-glitch {
+  0%, 100% { transform: translate(0); }
+  12% { transform: translate(-2px, 0); }
+  13% { transform: translate(2px, 0); }
+  14% { transform: translate(0); }
+}
+
+@keyframes bfx-fire {
+  from { opacity: 0.6; transform: scaleY(0.9); }
+  to { opacity: 1; transform: scaleY(1.1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble-fx,
+  .bubble-fx::after {
+    animation: none !important;
+  }
+}

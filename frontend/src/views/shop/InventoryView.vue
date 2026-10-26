@@ -31,7 +31,8 @@ const applyBusy = ref(false)
 
 // Порядок вкладок: сначала то, что меняет вид профиля
 const TYPE_ORDER = [
-  'profile_layout', 'name_effect', 'profile_entrance', 'cursor_trail',
+  'profile_layout', 'profile_pet', 'profile_title', 'chat_bubble',
+  'name_effect', 'profile_entrance', 'cursor_trail',
   'avatar_frame', 'profile_effect', 'skin_backdrop',
   'card_theme', 'accent_color', 'card_background', 'badge', 'tier_priority',
 ]
@@ -108,6 +109,9 @@ const visibleItems = computed(() => {
 
 const SLOTS = [
   { type: 'profile_layout', label: 'Макет', icon: 'frame' },
+  { type: 'profile_pet', label: 'Питомец', icon: 'heart' },
+  { type: 'profile_title', label: 'Титул', icon: 'crown' },
+  { type: 'chat_bubble', label: 'Сообщения', icon: 'sparkles' },
   { type: 'name_effect', label: 'Ник', icon: 'sparkles' },
   { type: 'profile_entrance', label: 'Появление', icon: 'bolt' },
   { type: 'cursor_trail', label: 'След', icon: 'star' },

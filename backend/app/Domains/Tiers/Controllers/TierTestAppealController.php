@@ -20,7 +20,7 @@ class TierTestAppealController extends Controller
         'tierTest:id,user_id,tester_id,mode,result_tier,result_score,aspects,notes,completed_at',
         'tierTest.tester:id,username',
         'revisedTest:id,result_tier,result_score',
-        'user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect',
+        'user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title',
         'reviewer:id,username',
     ];
 

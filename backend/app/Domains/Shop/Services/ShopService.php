@@ -112,6 +112,9 @@ class ShopService
         ShopItem::TYPE_NAME_EFFECT,
         ShopItem::TYPE_PROFILE_ENTRANCE,
         ShopItem::TYPE_CURSOR_TRAIL,
+        ShopItem::TYPE_PROFILE_PET,
+        ShopItem::TYPE_CHAT_BUBBLE,
+        ShopItem::TYPE_PROFILE_TITLE,
     ];
 
     /**
@@ -935,6 +938,9 @@ class ShopService
             ShopItem::TYPE_NAME_EFFECT => 'name_effect',
             ShopItem::TYPE_PROFILE_ENTRANCE => 'profile_entrance',
             ShopItem::TYPE_CURSOR_TRAIL => 'cursor_trail',
+            ShopItem::TYPE_PROFILE_PET => 'profile_pet',
+            ShopItem::TYPE_CHAT_BUBBLE => 'chat_bubble',
+            ShopItem::TYPE_PROFILE_TITLE => 'profile_title',
             default => null,
         };
     }

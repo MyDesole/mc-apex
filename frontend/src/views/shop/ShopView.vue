@@ -30,6 +30,9 @@ const dailyBonusAmount = ref(0)
 
 const TABS = [
   { value: 'all', label: 'Всё' },
+  { value: 'profile_pet', label: 'Питомцы' },
+  { value: 'profile_title', label: 'Титулы' },
+  { value: 'chat_bubble', label: 'Сообщения' },
   { value: 'name_effect', label: 'Эффекты ника' },
   { value: 'profile_entrance', label: 'Появление' },
   { value: 'cursor_trail', label: 'След курсора' },

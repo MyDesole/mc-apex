@@ -46,6 +46,9 @@ class ShopController extends Controller
                 ShopItem::TYPE_NAME_EFFECT,
                 ShopItem::TYPE_PROFILE_ENTRANCE,
                 ShopItem::TYPE_CURSOR_TRAIL,
+                ShopItem::TYPE_PROFILE_PET,
+                ShopItem::TYPE_CHAT_BUBBLE,
+                ShopItem::TYPE_PROFILE_TITLE,
             ],
             'rarities' => ['common', 'rare', 'epic', 'legendary'],
         ]);

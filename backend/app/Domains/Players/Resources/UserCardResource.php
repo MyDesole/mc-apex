@@ -32,6 +32,7 @@ class UserCardResource extends JsonResource
             'accent_color' => $user->accent_color,
             // Эффект ника из магазина: виден в списках и рейтинге
             'name_effect' => $user->name_effect,
+            'profile_title' => $user->profile_title,
             'banner_color' => $user->banner_color,
             'clan_tag' => $user->clan_tag,
             'clan_color' => $user->clan_color,

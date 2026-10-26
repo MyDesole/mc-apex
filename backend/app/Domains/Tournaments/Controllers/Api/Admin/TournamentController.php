@@ -77,7 +77,7 @@ class TournamentController extends Controller
     public function participants(Request $request, Tournament $tournament): JsonResponse
     {
         $participants = $tournament->participants()
-            ->with(['user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect', 'clan:id,name,tag,banner_color'])
+            ->with(['user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title', 'clan:id,name,tag,banner_color'])
             ->orderBy('seed')
             ->get();
 
