@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 
 import { useAuthStore } from '@/stores/core/auth.js'
@@ -22,6 +22,7 @@ import { startSitePresence, stopSitePresence } from '@/composables/chat/presence
 import { useRealtimeNotifications } from '@/composables/notifications/useRealtimeNotifications.js'
 import { useRealtimeMessages } from '@/composables/chat/useRealtimeMessages.js'
 import { useTitleBlink } from '@/composables/core/useTitleBlink.js'
+import { useClanPulse, refreshClanPulse, clearClanPulse } from '@/composables/clan/useClanPulse.js'
 
 const { startBlink, stopBlink } = useTitleBlink()
 
@@ -51,6 +52,25 @@ const {
 } = useRealtimeNotifications()
 
 const { latestMessage } = useRealtimeMessages()
+
+const { pulse: clanPulse, attention: clanAttention } = useClanPulse()
+
+// Сводку клана грузим, когда игрок в клане; вышел — убираем
+watch(
+    () => auth.user?.clan_member?.clan_id ?? auth.user?.clan_member?.id ?? null,
+    (inClan) => (inClan ? refreshClanPulse() : clearClanPulse()),
+    { immediate: true },
+)
+
+/** Служебные разделы: показываем только ролям с доступом. */
+const STAFF_LINKS = [
+  { to: '/tester', label: 'Панель тестера', roles: ['tester', 'admin'], icon: 'M20 6 9 17l-5-5' },
+  { to: '/bridge-review', label: 'Проверка бриджа', roles: ['bridge_tester', 'admin'], icon: 'M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11' },
+  { to: '/bridge-curator', label: 'Виды бриджа', roles: ['bridge_curator', 'admin'], icon: 'M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z' },
+  { to: '/admin', label: 'Админка', roles: ['moderator', 'admin'], icon: 'M12 2 3 6v6c0 5 3.8 9.3 9 10 5.2-.7 9-5 9-10V6l-9-4Z' },
+]
+
+const staffLinks = computed(() => STAFF_LINKS.filter((link) => link.roles.includes(auth.user?.role)))
 
 const chatUnread = ref(0)
 
@@ -263,6 +283,21 @@ watch(mobileMenuOpen, (open) => {
             <!-- APEXCOIN -->
             <CoinBadge />
 
+            <!-- МОЙ КЛАН: тег на виду, точка — есть что сделать -->
+            <RouterLink
+                v-if="clanPulse"
+                to="/my-clan"
+                class="header-clan"
+                :style="{ '--clan-color': clanPulse.clan.banner_color || '#8b5cf6' }"
+                :title="clanPulse.checked_in ? 'Мой клан' : 'Мой клан — отметьтесь сегодня'"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+                <path d="M12 2 3 6v6c0 5 3.8 9.3 9 10 5.2-.7 9-5 9-10V6l-9-4Z" />
+              </svg>
+              <span>{{ clanPulse.clan.tag }}</span>
+              <i v-if="clanAttention > 0" class="header-clan__dot" />
+            </RouterLink>
+
             <!-- ЧАТ -->
             <RouterLink
                 to="/messages"
@@ -371,7 +406,7 @@ watch(mobileMenuOpen, (open) => {
               <Transition name="dropdown">
                 <div v-if="menuOpen" class="dropdown">
 
-                  <div class="dropdown-head">
+                  <RouterLink to="/profile" class="dropdown-head" @click="menuOpen = false">
                     <span class="dropdown-avatar">
                       <img
                           v-if="auth.user?.avatar_url"
@@ -387,126 +422,127 @@ watch(mobileMenuOpen, (open) => {
                       <strong>
                         <UserName :user="auth.user" compact />
                       </strong>
-                      <span>Личный кабинет</span>
+                      <span>Открыть профиль →</span>
                     </div>
+                  </RouterLink>
+
+                  <!-- Главное — плитками -->
+                  <div class="dropdown-tiles">
+                    <RouterLink to="/inventory" class="dropdown-tile" @click="menuOpen = false">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 8 12 3 3 8v8l9 5 9-5V8Z" />
+                        <path d="m3 8 9 5 9-5M12 13v8" />
+                      </svg>
+                      <span>Инвентарь</span>
+                    </RouterLink>
+
+                    <RouterLink to="/messages" class="dropdown-tile" @click="menuOpen = false">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                      </svg>
+                      <span>Сообщения</span>
+                      <b v-if="chatUnread > 0" class="dropdown-tile__count">{{ chatUnread > 99 ? '99+' : chatUnread }}</b>
+                    </RouterLink>
+
+                    <RouterLink to="/notifications" class="dropdown-tile" @click="menuOpen = false">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                      </svg>
+                      <span>Уведомления</span>
+                      <b v-if="unreadCount > 0" class="dropdown-tile__count">{{ unreadCount > 99 ? '99+' : unreadCount }}</b>
+                    </RouterLink>
+
+                    <RouterLink to="/friends" class="dropdown-tile" @click="menuOpen = false">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                      </svg>
+                      <span>Друзья</span>
+                    </RouterLink>
                   </div>
 
-                  <div class="dropdown-divider"></div>
+                  <!-- Клан: заметная карточка, чтобы о «Моём клане» знали -->
+                  <RouterLink
+                      v-if="auth.user?.clan_member && clanPulse"
+                      to="/my-clan"
+                      class="dropdown-clan"
+                      :style="{ '--clan-color': clanPulse.clan.banner_color || '#8b5cf6' }"
+                      @click="menuOpen = false"
+                  >
+                    <span class="dropdown-clan__avatar">
+                      <img v-if="clanPulse.clan.avatar_url" :src="clanPulse.clan.avatar_url" :alt="clanPulse.clan.name" />
+                      <template v-else>{{ clanPulse.clan.tag?.charAt(0) }}</template>
+                    </span>
+
+                    <span class="dropdown-clan__info">
+                      <strong>[{{ clanPulse.clan.tag }}] {{ clanPulse.clan.name }}</strong>
+                      <span>Мой клан · {{ clanPulse.level }} ур.</span>
+                    </span>
+
+                    <span v-if="!clanPulse.checked_in" class="dropdown-clan__chip dropdown-clan__chip--pulse">
+                      Отметься
+                    </span>
+                    <span v-else-if="clanPulse.wars_active" class="dropdown-clan__chip">
+                      КВ: {{ clanPulse.wars_active }}
+                    </span>
+                    <span v-else class="dropdown-clan__arrow">→</span>
+                  </RouterLink>
 
                   <RouterLink
-                      to="/profile"
-                      class="dropdown-item"
+                      v-else-if="auth.user?.clan_member"
+                      to="/my-clan"
+                      class="dropdown-clan"
                       @click="menuOpen = false"
                   >
-                    <span class="dropdown-icon">◉</span>
-                    <span>Профиль</span>
+                    <span class="dropdown-clan__avatar">◆</span>
+                    <span class="dropdown-clan__info">
+                      <strong>Мой клан</strong>
+                      <span>Отметки, войны, казна</span>
+                    </span>
+                    <span class="dropdown-clan__arrow">→</span>
                   </RouterLink>
+
                   <RouterLink
-                      to="/inventory"
-                      class="dropdown-item"
+                      v-else
+                      to="/clans"
+                      class="dropdown-clan dropdown-clan--join"
                       @click="menuOpen = false"
                   >
-                    <span class="dropdown-icon">◇</span>
-                    <span>Инвентарь</span>
+                    <span class="dropdown-clan__avatar">＋</span>
+                    <span class="dropdown-clan__info">
+                      <strong>Найти клан</strong>
+                      <span>Клановые войны, казна и уровень</span>
+                    </span>
+                    <span class="dropdown-clan__arrow">→</span>
                   </RouterLink>
-                  <RouterLink
-                      to="/support"
-                      class="dropdown-item"
-                      @click="menuOpen = false"
-                  >
-                    <span class="dropdown-icon">?</span>
+
+                  <RouterLink to="/support" class="dropdown-item" @click="menuOpen = false">
+                    <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4M12 17h.01" />
+                    </svg>
                     <span>Техподдержка</span>
                   </RouterLink>
-                  <RouterLink
-                      to="/friends"
-                      class="dropdown-item"
-                      @click="menuOpen = false"
-                  >
-                    <span class="dropdown-icon">♧</span>
-                    <span>Друзья</span>
-                  </RouterLink>
 
-                  <RouterLink
-                      to="/messages"
-                      class="dropdown-item"
-                      @click="menuOpen = false"
-                  >
-                    <span class="dropdown-icon">◌</span>
-                    <span>Сообщения</span>
+                  <!-- Служебное: только для ролей с доступом -->
+                  <template v-if="staffLinks.length">
+                    <div class="dropdown-label">Служебное</div>
 
-                    <span
-                        v-if="chatUnread > 0"
-                        class="dropdown-count"
+                    <RouterLink
+                        v-for="link in staffLinks"
+                        :key="link.to"
+                        :to="link.to"
+                        class="dropdown-item"
+                        @click="menuOpen = false"
                     >
-                      {{ chatUnread > 99 ? '99+' : chatUnread }}
-                    </span>
-                  </RouterLink>
-
-                  <RouterLink
-                      to="/notifications"
-                      class="dropdown-item"
-                      @click="menuOpen = false"
-                  >
-                    <span class="dropdown-icon">♢</span>
-                    <span>Уведомления</span>
-
-                    <span
-                        v-if="unreadCount > 0"
-                        class="dropdown-count"
-                    >
-                      {{ unreadCount > 99 ? '99+' : unreadCount }}
-                    </span>
-                  </RouterLink>
-
-                  <RouterLink
-                      v-if="auth.user?.clan_member"
-                      to="/my-clan"
-                      class="dropdown-item"
-                      @click="menuOpen = false"
-                  >
-                    <span class="dropdown-icon">◆</span>
-                    <span>Мой клан</span>
-                  </RouterLink>
-
-                  <RouterLink
-                      v-if="auth.user && ['tester', 'admin'].includes(auth.user.role)"
-                      to="/tester"
-                      class="dropdown-item"
-                      @click="menuOpen = false"
-                  >
-                    <span class="dropdown-icon">✓</span>
-                    <span>Панель тестера</span>
-                  </RouterLink>
-
-                  <RouterLink
-                      v-if="auth.user && ['bridge_tester', 'admin'].includes(auth.user.role)"
-                      to="/bridge-review"
-                      class="dropdown-item"
-                      @click="menuOpen = false"
-                  >
-                    <span class="dropdown-icon">⌁</span>
-                    <span>Проверка бриджа</span>
-                  </RouterLink>
-
-                  <RouterLink
-                      v-if="auth.user && ['bridge_curator', 'admin'].includes(auth.user.role)"
-                      to="/bridge-curator"
-                      class="dropdown-item"
-                      @click="menuOpen = false"
-                  >
-                    <span class="dropdown-icon">▦</span>
-                    <span>Виды бриджа</span>
-                  </RouterLink>
-
-                  <RouterLink
-                      v-if="auth.user && ['moderator', 'admin'].includes(auth.user.role)"
-                      to="/admin"
-                      class="dropdown-item"
-                      @click="menuOpen = false"
-                  >
-                    <span class="dropdown-icon">⚙</span>
-                    <span>Админка</span>
-                  </RouterLink>
+                      <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path :d="link.icon" />
+                      </svg>
+                      <span>{{ link.label }}</span>
+                    </RouterLink>
+                  </template>
 
                   <div class="dropdown-divider"></div>
 
@@ -514,7 +550,9 @@ watch(mobileMenuOpen, (open) => {
                       class="dropdown-item danger"
                       @click="logout"
                   >
-                    <span class="dropdown-icon">↪</span>
+                    <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+                    </svg>
                     <span>Выйти</span>
                   </button>
 

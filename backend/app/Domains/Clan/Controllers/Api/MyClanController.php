@@ -3,6 +3,7 @@
 namespace App\Domains\Clan\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Domains\Clan\Services\ClanOverviewService;
 use App\Domains\Clan\Services\ClanTreasuryService;
 use App\Domains\Shop\Services\ShopService;
 use Illuminate\Http\JsonResponse;
@@ -55,6 +56,54 @@ class MyClanController extends Controller
             // Купленное оформление подсветки: лидер выбирает из него
             'highlight_styles' => ShopService::clanHighlightStyles($request->user()),
         ]);
+    }
+
+    /** Вкладка «Обзор»: объявление, отметки, уровень, цели, лента. */
+    public function overview(Request $request, ClanOverviewService $overview): JsonResponse
+    {
+        return response()->json($overview->overview($request->user()->clanMember));
+    }
+
+    /** Ежедневная отметка участника — опыт для уровня клана. */
+    public function checkIn(Request $request, ClanOverviewService $overview): JsonResponse
+    {
+        $user = $request->user();
+
+        try {
+            $result = $overview->checkIn($user, $user->clanMember->clan);
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        $message = "Отметка засчитана: +{$result['xp']} опыта клану";
+        $message .= $result['coins'] > 0 ? " и +{$result['coins']} ApexCoin в казну." : '.';
+
+        if ($result['level_up']) {
+            $message .= " Клан достиг {$result['level']['level']} уровня!";
+        }
+
+        return response()->json([
+            'message' => $message,
+            ...$result,
+        ]);
+    }
+
+    /** Объявление клана: пишут лидер и те, кому можно публиковать новости. */
+    public function updateMotd(Request $request, ClanOverviewService $overview): JsonResponse
+    {
+        $data = $request->validate([
+            'text' => ['nullable', 'string', 'max:' . ClanOverviewService::MOTD_MAX],
+        ]);
+
+        return response()->json([
+            'motd' => $overview->updateMotd($request->user()->clanMember, $data['text'] ?? null),
+        ]);
+    }
+
+    /** Сводка для меню сайта: отметка, войны, заявки. */
+    public function pulse(Request $request, ClanOverviewService $overview): JsonResponse
+    {
+        return response()->json($overview->pulse($request->user()->clanMember));
     }
 
     /** Казна клана: баланс, вкладчики и история. */

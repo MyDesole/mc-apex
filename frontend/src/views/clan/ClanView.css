@@ -198,6 +198,7 @@
 }
 .btn-apply {
   color: #fff;
+  text-decoration: none;
   background: var(--accent);
   box-shadow: none;
 }

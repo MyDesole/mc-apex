@@ -16,9 +16,11 @@ class Clan extends Model
         'is_open', 'entry_fee', 'is_highlighted', 'highlight_until',
         'highlight_color', 'highlight_effect', 'socials', 'max_members',
         'is_banned', 'ban_reason',
-
+        'motd', 'motd_updated_at', 'motd_by',
     ];
 
+    // Объявление клана — только для своих: в публичной карточке его нет
+    protected $hidden = ['motd', 'motd_updated_at', 'motd_by'];
 
     protected $casts = [
         'is_open' => 'boolean',
@@ -27,6 +29,7 @@ class Clan extends Model
         'entry_fee' => 'integer',
         'is_banned' => 'boolean',
         'socials' => 'array',
+        'motd_updated_at' => 'datetime',
     ];
 
     /**

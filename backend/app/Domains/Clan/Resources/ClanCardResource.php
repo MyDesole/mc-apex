@@ -2,6 +2,7 @@
 
 namespace App\Domains\Clan\Resources;
 
+use App\Domains\Clan\Support\ClanLevel;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Domains\Players\Resources\UserCardResource;
@@ -23,7 +24,9 @@ class ClanCardResource extends JsonResource
             'tag' => $clan->tag,
             // Описание и лимит участников нужны карточке в списке кланов
             'description' => $clan->description,
-            'max_members' => (int) $clan->max_members,
+            // Лимит с учётом бонусных мест за уровень клана
+            'max_members' => ClanLevel::memberCap($clan),
+            'level' => (int) ($clan->level ?: 1),
             'avatar' => $clan->avatar,
             'avatar_url' => $clan->avatar_url,
             'banner_color' => $clan->banner_color,

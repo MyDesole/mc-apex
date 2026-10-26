@@ -45,6 +45,12 @@ class ClanTreasuryService
         });
     }
 
+    /** Бонус в казну от сайта: например, за отметку участника. */
+    public function reward(Clan $clan, User $user, int $amount, string $description): Clan
+    {
+        return DB::transaction(fn () => $this->move($clan, $user, abs($amount), ClanTreasuryTransaction::TYPE_REWARD, $description));
+    }
+
     /** Списать из казны: вызывается внутри транзакции покупки. */
     public function spend(Clan $clan, User $leader, int $amount, string $description): Clan
     {

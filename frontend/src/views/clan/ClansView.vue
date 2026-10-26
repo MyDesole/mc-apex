@@ -188,6 +188,14 @@
             </span>
 
             <span
+                v-if="clan.level > 1"
+                class="clan-level"
+                title="Уровень клана: растёт от отметок участников и побед в КВ"
+            >
+              {{ clan.level }} ур.
+            </span>
+
+            <span
                 v-if="isMine(clan)"
                 class="my-badge"
             >

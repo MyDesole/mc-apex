@@ -77,7 +77,9 @@ class ClanService
             })
             ->when(! empty($filters['open']), fn ($q) => $q->where('is_open', true))
             ->when(! empty($filters['has_slots']), fn ($q) => $q->whereRaw(
-                '(SELECT COUNT(*) FROM clan_members cm WHERE cm.clan_id = clans.id) < clans.max_members'
+                // Уровень добавляет места — та же формула, что ClanLevel::memberCap
+                '(SELECT COUNT(*) FROM clan_members cm WHERE cm.clan_id = clans.id) < clans.max_members + ? * (clans.level - 1)',
+                [\App\Domains\Clan\Support\ClanLevel::SLOTS_PER_LEVEL]
             ));
 
         match ($sort) {
@@ -186,7 +188,7 @@ class ClanService
             ->with([
                 'challenger:id,name,tag,power,banner_color,avatar',
                 'opponent:id,name,tag,power,banner_color,avatar',
-                'participants.user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode',
+                'participants.user:id,username,avatar,minecraft_username,tier,bridge_primary,bridge_rank_id,profile_mode',
                 'participants.clan:id,name,tag,banner_color',
             ])
             ->latest()
@@ -325,7 +327,7 @@ class ClanService
      */
     public function acceptApplication(Clan $clan, ClanApplication $application): void
     {
-        if ($clan->members()->count() >= $clan->max_members) {
+        if ($clan->members()->count() >= \App\Domains\Clan\Support\ClanLevel::memberCap($clan)) {
             $this->abortUnprocessable('Клан заполнен.');
         }
 

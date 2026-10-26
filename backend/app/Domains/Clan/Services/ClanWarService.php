@@ -26,7 +26,8 @@ class ClanWarService
     private const WAR_RELATIONS = [
         'challenger:id,name,tag,power,banner_color,avatar',
         'opponent:id,name,tag,power,banner_color,avatar',
-        'participants.user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode',
+        // minecraft_username — чтобы показать голову скина в составе
+        'participants.user:id,username,avatar,minecraft_username,tier,bridge_primary,bridge_rank_id,profile_mode',
         'participants.clan:id,name,tag,banner_color',
     ];
 
@@ -192,6 +193,10 @@ class ClanWarService
 
             $challenger->recalculatePower();
             $opponent->recalculatePower();
+
+            // Победа даёт опыт: уровень клана мог вырасти
+            \App\Domains\Clan\Support\ClanLevel::sync($challenger->fresh());
+            \App\Domains\Clan\Support\ClanLevel::sync($opponent->fresh());
 
             AchievementService::check($challenger->leader);
             AchievementService::check($opponent->leader);

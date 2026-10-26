@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/core/auth.js'
 import { myClanApi } from '@/services/clan/myClan.js'
 import { clansApi } from '@/services/clan/clans.js'
 
+import ClanOverviewTab from '@/components/clan/tabs/ClanOverviewTab.vue'
 import ClanNewsTab from '@/components/clan/tabs/ClanNewsTab.vue'
 import ClanForumTab from '@/components/clan/tabs/ClanForumTab.vue'
 import ClanMembersTab from '@/components/clan/tabs/ClanMembersTab.vue'
@@ -23,7 +24,7 @@ const auth = useAuthStore()
 const loading = ref(true)
 const data = ref(null)
 // Вкладку можно открыть ссылкой (?tab=wars) — так ведут уведомления о КВ
-const tab = ref(typeof route.query.tab === 'string' ? route.query.tab : 'forum')
+const tab = ref(typeof route.query.tab === 'string' ? route.query.tab : 'overview')
 const leaving = ref(false)
 const leaveError = ref('')
 const showSettings = ref(false)
@@ -82,6 +83,7 @@ function goToMembers() {
 
 const tabs = computed(() => {
   const base = [
+    { id: 'overview', label: 'Обзор' },
     { id: 'forum', label: 'Форум' },
     { id: 'resources', label: 'Ресурсы' },
     { id: 'members', label: 'Участники' },
@@ -92,7 +94,7 @@ const tabs = computed(() => {
 
   // Заявки — только для тех, кто может их принимать (лидер/офицер)
   if (permissions.value.applications) {
-    base.splice(3, 0, {
+    base.splice(4, 0, {
       id: 'applications',
       label: 'Заявки',
       badge: data.value?.stats?.applications || null,
@@ -435,9 +437,22 @@ onMounted(load)
               @click="tab = item.id"
           >
             <span class="tab-icon">
+              <!-- Overview -->
+              <svg
+                  v-if="item.id === 'overview'"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+              >
+                <rect x="3" y="3" width="7" height="9" rx="1.5" />
+                <rect x="14" y="3" width="7" height="5" rx="1.5" />
+                <rect x="14" y="12" width="7" height="9" rx="1.5" />
+                <rect x="3" y="16" width="7" height="5" rx="1.5" />
+              </svg>
               <!-- Forum -->
               <svg
-                  v-if="item.id === 'forum'"
+                  v-else-if="item.id === 'forum'"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -576,7 +591,9 @@ onMounted(load)
 
         <div class="content-body">
           <TabTransition :active="tab">
-            <ClanForumTab v-if="tab === 'forum'" :permissions="permissions" :clan="clan" />
+            <ClanOverviewTab v-if="tab === 'overview'" :clan="clan" @go="tab = $event" />
+
+            <ClanForumTab v-else-if="tab === 'forum'" :permissions="permissions" :clan="clan" />
 
             <ClanResourcesTab
                 v-else-if="tab === 'resources'"

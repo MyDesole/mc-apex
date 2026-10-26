@@ -203,6 +203,15 @@ onMounted(load)
           Заявка отправлена
         </div>
 
+        <!-- Свой клан: ведём во внутренний раздел с отметками и войнами -->
+        <RouterLink
+            v-if="isMember"
+            to="/my-clan"
+            class="btn-apply"
+        >
+          Открыть «Мой клан»
+        </RouterLink>
+
         <button
             v-if="isMember && !isLeader"
             class="btn-leave"

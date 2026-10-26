@@ -106,7 +106,7 @@ onMounted(load)
       <ul class="treasury__list">
         <li v-for="h in data?.history ?? []" :key="h.id">
           <span>
-            {{ h.user?.username ?? '—' }} · {{ h.type === 'donation' ? 'взнос' : h.description }}
+            {{ h.user?.username ?? '—' }} · {{ h.type === 'donation' ? 'взнос' : h.type === 'reward' ? 'бонус за отметку' : h.description }}
             <small class="treasury__muted">{{ date(h.created_at) }}</small>
           </span>
           <b :class="h.amount > 0 ? 'treasury__plus' : 'treasury__minus'">

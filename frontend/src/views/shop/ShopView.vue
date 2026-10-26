@@ -90,8 +90,14 @@ const isPriorityPurchase = computed(() => {
   return purchaseItem.value?.type === 'tier_priority'
 })
 
+// Из казны клан платит со скидкой за уровень (цену считает сервер)
+const payingFromTreasury = computed(() => isClanPurchase.value && payFrom.value === 'treasury')
+
 const totalPrice = computed(() => {
-  return (purchaseItem.value?.price ?? 0) * purchaseQuantity.value
+  const item = purchaseItem.value
+  const unit = payingFromTreasury.value && item?.treasury_price != null ? item.treasury_price : (item?.price ?? 0)
+
+  return unit * purchaseQuantity.value
 })
 
 const canPay = computed(() => {
@@ -168,7 +174,7 @@ function openPurchase(item) {
   purchaseQuantity.value = 1
   purchaseError.value = ''
   // Если на балансе не хватает, а в казне хватает — сразу предлагаем казну
-  payFrom.value = clan.value && item.price > balance.value && item.price <= clan.value.treasury
+  payFrom.value = clan.value && item.price > balance.value && (item.treasury_price ?? item.price) <= clan.value.treasury
       ? 'treasury'
       : 'balance'
   priorityTargetId.value = null
@@ -487,7 +493,15 @@ onMounted(load)
           </label>
           <label class="pay-from__option">
             <input v-model="payFrom" type="radio" value="treasury">
-            <span>Казна клана [{{ clan.tag }}] · ₳ {{ formatCoins(clan.treasury) }}</span>
+            <span>
+              Казна клана [{{ clan.tag }}] · ₳ {{ formatCoins(clan.treasury) }}
+              <b
+                  v-if="purchaseItem.treasury_price != null && purchaseItem.treasury_price < purchaseItem.price"
+                  class="pay-from__discount"
+              >
+                −{{ Math.round((1 - purchaseItem.treasury_price / purchaseItem.price) * 100) }}% за уровень клана
+              </b>
+            </span>
           </label>
         </div>
 

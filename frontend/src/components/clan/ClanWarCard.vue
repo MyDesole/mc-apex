@@ -7,6 +7,7 @@
  */
 import { useClanWar, STATUS_SHORT_LABELS } from '@/composables/clan/useClanWar.js'
 import { useAuthStore } from '@/stores/core/auth.js'
+import PlayerHead from '@/components/players/PlayerHead.vue'
 
 const props = defineProps({
   war: { type: Object, required: true },
@@ -42,7 +43,6 @@ const {
   getEnemyScore,
   didWin,
   isDraw,
-  toggleExpanded,
   isExpanded,
   joinWar,
   leaveWar,
@@ -351,195 +351,78 @@ function formatDate(value) {
       </div>
 
       <!--
-        Состав и запись «В бой». Записаться можно и пока соперник не
-        принял вызов: иначе создатель войны не мог в ней участвовать.
+        Составы двух кланов и запись на войну. Записаться можно и пока
+        соперник не принял вызов: иначе создатель войны не мог участвовать.
       -->
       <div
           v-if="['pending', 'accepted'].includes(war.status)"
-          class="active-war"
+          class="roster"
       >
-        <button
-            class="participants-toggle"
-            @click="toggleExpanded(war)"
-        >
-          <span class="participants-toggle__left">
-            <span class="participants-toggle__icon">
-              <svg
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-              >
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
-            </span>
+        <div class="roster__title">
+          Составы
+          <b>{{ (war.participants || []).length }}</b>
+        </div>
 
-            <span>
-              Участники
-              <b>{{ (war.participants || []).length }}</b>
-            </span>
-          </span>
-
-          <svg
-              class="participants-toggle__chevron"
-              :class="{ rotated: isExpanded(war) }"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-          >
-            <path d="m6 9 6 6 6-6" />
-          </svg>
-        </button>
-
-        <div
-            v-if="isExpanded(war)"
-            class="participants"
-        >
-          <div class="participants__team">
-            <div class="participants__head">
-              <span class="participants__team-name">
-                <i class="team-dot team-dot--mine" />
-                {{ props.clan.tag }}
-              </span>
-
-              <span class="participants__count">
-                {{ myParticipants(war).length }}
-              </span>
-            </div>
-
-            <div
-                v-if="!myParticipants(war).length"
-                class="participants__empty"
-            >
-              Пока никто не присоединился
+        <div class="roster__grid">
+          <!-- Наш клан -->
+          <div class="roster__side roster__side--mine">
+            <div class="roster__head">
+              <i class="team-dot team-dot--mine" />
+              <span>[{{ props.clan.tag }}]</span>
+              <b>{{ myParticipants(war).length }}</b>
             </div>
 
             <div
                 v-for="participant in myParticipants(war)"
                 :key="participant.id"
-                class="participant"
+                class="fighter"
+                :class="{ 'fighter--you': participant.user_id === auth.user?.id }"
             >
-              <div class="participant__avatar">
-                <img
-                    v-if="participant.user.avatar_url"
-                    :src="participant.user.avatar_url"
-                />
+              <PlayerHead :user="participant.user || {}" :size="30" />
+              <span class="fighter__name">{{ participant.user?.username || 'Игрок' }}</span>
+              <span v-if="participant.user_id === auth.user?.id" class="fighter__you">вы</span>
+            </div>
 
-                <template v-else>
-                  {{ participant.user.username?.charAt(0).toUpperCase() }}
-                </template>
-              </div>
-
-              <span>{{ participant.user.username }}</span>
-
-              <span
-                  v-if="participant.user_id === auth.user?.id"
-                  class="participant__you"
-              >
-                вы
-              </span>
+            <div v-if="!myParticipants(war).length" class="fighter fighter--empty">
+              Пока никто не записался
             </div>
           </div>
 
-          <div class="participants__divider">
-            <span>VS</span>
-          </div>
+          <div class="roster__vs">VS</div>
 
-          <div class="participants__team">
-            <div class="participants__head">
-              <span class="participants__team-name">
-                <i class="team-dot team-dot--enemy" />
-                {{ getOpponentTag(war) }}
-              </span>
-
-              <span class="participants__count">
-                {{ enemyParticipants(war).length }}
-              </span>
-            </div>
-
-            <div
-                v-if="!enemyParticipants(war).length"
-                class="participants__empty"
-            >
-              Пока никто не присоединился
+          <!-- Соперник -->
+          <div class="roster__side roster__side--enemy">
+            <div class="roster__head">
+              <b>{{ enemyParticipants(war).length }}</b>
+              <span>[{{ getOpponentTag(war) }}]</span>
+              <i class="team-dot team-dot--enemy" />
             </div>
 
             <div
                 v-for="participant in enemyParticipants(war)"
                 :key="participant.id"
-                class="participant"
+                class="fighter"
             >
-              <div
-                  class="participant__avatar"
-                  :style="{
-                  background: `linear-gradient(135deg, ${getOpponentColor(war)}, #1a1a24)`
-                }"
-              >
-                <img
-                    v-if="participant.user.avatar_url"
-                    :src="participant.user.avatar_url"
-                />
+              <PlayerHead :user="participant.user || {}" :size="30" />
+              <span class="fighter__name">{{ participant.user?.username || 'Игрок' }}</span>
+            </div>
 
-                <template v-else>
-                  {{ participant.user.username?.charAt(0).toUpperCase() }}
-                </template>
-              </div>
-
-              <span>{{ participant.user.username }}</span>
+            <div v-if="!enemyParticipants(war).length" class="fighter fighter--empty">
+              Пока никто не записался
             </div>
           </div>
         </div>
 
-        <div class="active-actions">
+        <div class="roster__actions">
           <button
               v-if="!isParticipant(war)"
-              class="active-action active-action--join"
+              class="roster-button roster-button--join"
               :disabled="processing === `join-${war.id}`"
               @click="joinWar(war)"
           >
-            <template v-if="processing === `join-${war.id}`">
-              ...
-            </template>
-
-            <template v-else>
-              <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-              >
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-
-              В бой
-            </template>
-          </button>
-
-          <button
-              v-else
-              class="active-action active-action--leave"
-              :disabled="processing === `leave-${war.id}`"
-              @click="leaveWar(war)"
-          >
             <svg
-                width="14"
-                height="14"
+                width="16"
+                height="16"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -547,22 +430,45 @@ function formatDate(value) {
                 stroke-linecap="round"
                 stroke-linejoin="round"
             >
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <path d="m16 17 5-5-5-5" />
-              <path d="M21 12H9" />
+              <path d="M14.5 17.5 3 6V3h3l11.5 11.5" />
+              <path d="m13 19 6-6" />
+              <path d="m16 16 4 4" />
+              <path d="m19 21 2-2" />
             </svg>
 
-            Покинуть
+            {{ processing === `join-${war.id}` ? 'Записываем…' : 'Принять участие' }}
+          </button>
+
+          <button
+              v-else
+              class="roster-button roster-button--leave"
+              :disabled="processing === `leave-${war.id}`"
+              @click="leaveWar(war)"
+          >
+            <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+
+            {{ processing === `leave-${war.id}` ? 'Выходим…' : 'Отказаться от участия' }}
           </button>
 
           <button
               v-if="permissions.wars && war.status === 'accepted'"
-              class="active-action active-action--result"
+              class="roster-button roster-button--result"
               @click="openResult"
           >
             <svg
-                width="14"
-                height="14"
+                width="15"
+                height="15"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -574,7 +480,7 @@ function formatDate(value) {
               <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
             </svg>
 
-            Результат
+            Внести результат
           </button>
         </div>
       </div>

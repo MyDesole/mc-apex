@@ -798,6 +798,13 @@ Route::middleware(['auth:sanctum', 'clan.member'])->prefix('my-clan')->group(fun
     // Дашборд
     Route::get('/', [\App\Domains\Clan\Controllers\Api\MyClanController::class, 'index']);
 
+    // Обзор: объявление, отметки, уровень, цели недели, лента
+    Route::get('/overview', [\App\Domains\Clan\Controllers\Api\MyClanController::class, 'overview']);
+    Route::get('/pulse', [\App\Domains\Clan\Controllers\Api\MyClanController::class, 'pulse']);
+    Route::post('/checkin', [\App\Domains\Clan\Controllers\Api\MyClanController::class, 'checkIn'])->middleware('throttle:10,1');
+    Route::put('/motd', [\App\Domains\Clan\Controllers\Api\MyClanController::class, 'updateMotd'])
+        ->middleware(['clan.member:news', 'throttle:20,1']);
+
     // Казна: участники скидываются, лидер тратит на клановые предметы
     Route::get('/treasury', [\App\Domains\Clan\Controllers\Api\MyClanController::class, 'treasury']);
     Route::post('/treasury/donate', [\App\Domains\Clan\Controllers\Api\MyClanController::class, 'donate'])->middleware('throttle:20,1');

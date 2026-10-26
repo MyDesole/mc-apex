@@ -11,6 +11,7 @@ use App\Domains\Tiers\Models\TierTest;
 use App\Domains\Users\Models\User;
 use App\Domains\Shop\Models\UserInventory;
 use App\Domains\Clan\Support\ClanHighlight;
+use App\Domains\Clan\Support\ClanLevel;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -56,15 +57,21 @@ class ShopService
                 ? $clanOwned->get($item->id)
                 : $owned->get($item->id);
 
-            $canAfford = (int) $user->apex_coins >= (int) $item->price
-                || ($item->isClanItem() && (int) $leaderClan?->treasury >= (int) $item->price);
+            // Из казны клан платит со скидкой за уровень
+            $treasuryPrice = $item->isClanItem() && $leaderClan
+                ? ClanLevel::discounted((int) $item->price, (int) ($leaderClan->level ?: 1))
+                : null;
 
-            return self::presentItem($item, [
+            $canAfford = (int) $user->apex_coins >= (int) $item->price
+                || ($treasuryPrice !== null && (int) $leaderClan->treasury >= $treasuryPrice);
+
+            return self::presentItem($item, array_filter([
                 'owned' => $row !== null,
                 'quantity' => $row?->quantity ?? ($row ? 1 : 0),
                 'equipped' => (bool) $row?->equipped_at,
                 'can_afford' => $canAfford,
-            ]);
+                'treasury_price' => $treasuryPrice,
+            ], fn ($value) => $value !== null));
         });
     }
 
@@ -224,6 +231,9 @@ class ShopService
         $price = $item->price * $quantity;
 
         if ($fromTreasury) {
+            // Уровень клана даёт скидку на покупки из казны
+            $price = ClanLevel::discounted($price, (int) ($clan->level ?: 1));
+
             if ((int) $clan->treasury < $price) {
                 throw new RuntimeException('В казне клана недостаточно ApexCoin. Не хватает ' . ($price - (int) $clan->treasury) . '.');
             }

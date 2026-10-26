@@ -5,6 +5,24 @@ export const myClanApi = {
         return api.get('/my-clan')
     },
 
+    /** Обзор: объявление, отметки, уровень, цели недели, лента. */
+    overview() {
+        return api.get('/my-clan/overview')
+    },
+
+    /** Короткая сводка для меню: отметка, войны, заявки. */
+    pulse() {
+        return api.get('/my-clan/pulse')
+    },
+
+    checkIn() {
+        return api.post('/my-clan/checkin')
+    },
+
+    updateMotd(text) {
+        return api.put('/my-clan/motd', { text })
+    },
+
     /** Казна: баланс, вкладчики, история. */
     treasury() {
         return api.get('/my-clan/treasury')
