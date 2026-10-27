@@ -37,8 +37,11 @@ class PetService
             ? collect($owner->profile_pets ?? [])->firstWhere('inventory_id', $inventoryId)
             : null;
 
-        $counts = DB::table('pet_interactions')
-            ->where('owner_id', $owner->id)
+        // У каждого питомца свой опыт: считаем только действия с этим экземпляром
+        $pet = $this->instanceKey($owner, $inventoryId);
+        $scope = fn () => DB::table('pet_interactions')->where('owner_id', $owner->id)->where('inventory_id', $pet);
+
+        $counts = $scope()
             ->selectRaw('action, count(*) as total')
             ->groupBy('action')
             ->pluck('total', 'action');
@@ -50,14 +53,9 @@ class PetService
 
         $level = $this->levelFor($xp);
 
-        $lastFed = DB::table('pet_interactions')
-            ->where('owner_id', $owner->id)
-            ->where('action', 'feed')
-            ->max('created_at');
+        $lastFed = $scope()->where('action', 'feed')->max('created_at');
 
-        $lastAny = DB::table('pet_interactions')
-            ->where('owner_id', $owner->id)
-            ->max('created_at');
+        $lastAny = $scope()->max('created_at');
 
         $mood = match (true) {
             ! $lastFed || now()->diffInHours($lastFed, true) >= self::HUNGRY_AFTER_HOURS => 'hungry',
@@ -67,8 +65,7 @@ class PetService
 
         // Что зритель уже сделал сегодня
         $doneToday = $viewer
-            ? DB::table('pet_interactions')
-                ->where('owner_id', $owner->id)
+            ? $scope()
                 ->where('actor_id', $viewer->id)
                 ->where('day', today()->toDateString())
                 ->pluck('action')
@@ -79,6 +76,7 @@ class PetService
         $friends = DB::table('pet_interactions as pi')
             ->join('users as u', 'u.id', '=', 'pi.actor_id')
             ->where('pi.owner_id', $owner->id)
+            ->where('pi.inventory_id', $pet)
             ->where('pi.actor_id', '!=', $owner->id)
             ->orderByDesc('pi.created_at')
             ->limit(30)
@@ -113,7 +111,7 @@ class PetService
         ];
     }
 
-    public function interact(User $owner, User $actor, string $action): array
+    public function interact(User $owner, User $actor, string $action, ?int $inventoryId = null): array
     {
         if (! isset(self::ACTIONS[$action])) {
             throw ValidationException::withMessages(['action' => ['Такого с питомцем сделать нельзя.']]);
@@ -123,11 +121,13 @@ class PetService
             throw ValidationException::withMessages(['action' => ['У игрока нет питомца.']]);
         }
 
-        $levelBefore = $this->stats($owner)['level'];
+        $pet = $this->instanceKey($owner, $inventoryId);
+        $levelBefore = $this->stats($owner, null, $pet ?: null)['level'];
 
         try {
             DB::table('pet_interactions')->insert([
                 'owner_id' => $owner->id,
+                'inventory_id' => $pet,
                 'actor_id' => $actor->id,
                 'action' => $action,
                 'day' => today()->toDateString(),
@@ -138,10 +138,25 @@ class PetService
             throw ValidationException::withMessages(['action' => ['Сегодня ты уже это делал — приходи завтра.']]);
         }
 
-        $stats = $this->stats($owner, $actor);
+        $stats = $this->stats($owner, $actor, $pet ?: null);
         $stats['level_up'] = $stats['level'] > $levelBefore;
 
         return $stats;
+    }
+
+    /**
+     * Какой экземпляр: из гуляющих питомцев хозяина (чужой id — нельзя),
+     * без id — первый; 0 — питомец без записи в инвентаре.
+     */
+    private function instanceKey(User $owner, ?int $inventoryId): int
+    {
+        $walking = collect($owner->profile_pets ?? [])->pluck('inventory_id')->filter()->map(fn ($id) => (int) $id);
+
+        if ($inventoryId && $walking->contains($inventoryId)) {
+            return $inventoryId;
+        }
+
+        return (int) ($walking->first() ?? 0);
     }
 
     /**

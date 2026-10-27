@@ -200,6 +200,9 @@ const mood = computed(() => MOODS[stats.value?.mood] ?? MOODS.calm)
 
 // Уникальный экземпляр: окрас, фон, аксессуар, номер
 const traits = computed(() => stats.value?.traits ?? props.traits ?? null)
+
+// Питомец растёт с уровнем: +3 % за уровень, максимум в 1,6 раза
+const grownSize = computed(() => Math.round(props.size * (1 + Math.min(20, (stats.value?.level ?? 1) - 1) * 0.03)))
 const skinStyle = computed(() => petModelStyle(traits.value))
 const aura = computed(() => petBackdrop(traits.value))
 const accessory = computed(() => petAccessory(traits.value))
@@ -285,7 +288,7 @@ async function act(action) {
 
   let result = null
   try {
-    result = await api.post(`/players/${props.owner.id}/pet/${action}`)
+    result = await api.post(`/players/${props.owner.id}/pet/${action}`, { pet: props.instanceId })
   } catch (e) {
     panelError.value = e.message || 'Не получилось.'
     panelOpen.value = true
@@ -461,14 +464,14 @@ onUnmounted(() => {
         <!-- Фон экземпляра: сияние позади -->
         <span v-if="aura" class="pet__aura" :style="{ background: aura }"></span>
         <span class="pet__skin" :style="skinStyle">
-          <PixelSprite :sprite="data.sprite" :size="size" />
+          <PixelSprite :sprite="data.sprite" :size="grownSize" />
         </span>
         <!-- Аксессуар поверх головы -->
         <span
             v-if="accessory"
             class="pet__acc"
             :class="{ 'pet__acc--halo': accessory.halo }"
-            :style="{ bottom: `${accessory.dy * size}px`, fontSize: `${Math.round(size * 0.42)}px` }"
+            :style="{ bottom: `${accessory.dy * grownSize}px`, fontSize: `${Math.round(grownSize * 0.42)}px` }"
         >{{ accessory.halo ? '' : accessory.icon }}</span>
       </span>
       <span class="pet__shadow"></span>

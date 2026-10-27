@@ -28,7 +28,12 @@ class PetController extends Controller
 
     public function interact(Request $request, User $user, string $action): JsonResponse
     {
-        return response()->json($this->pets->interact($user, $request->user(), $action));
+        return response()->json($this->pets->interact(
+            $user,
+            $request->user(),
+            $action,
+            $request->filled('pet') ? $request->integer('pet') : null,
+        ));
     }
 
     public function rename(Request $request): JsonResponse

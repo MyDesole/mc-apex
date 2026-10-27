@@ -102,6 +102,14 @@ class ProfilePetTest extends TestCase
         $this->assertSame([$rows[1]->id, $rows[2]->id, $rows[3]->id], array_column($pets, 'inventory_id'));
         $this->assertSame('fox', $user->fresh()->profile_pet);
 
+        // У каждого питомца свой уровень: кормим одного — у второго опыта нет,
+        // и его тоже можно покормить в тот же день
+        $guest = User::factory()->create();
+        $this->actingAs($guest)->postJson("/api/players/{$user->id}/pet/feed", ['pet' => $rows[1]->id])->assertOk()->assertJsonPath('xp', 2);
+        $this->getJson("/api/players/{$user->id}/pet?pet={$rows[2]->id}")->assertJsonPath('xp', 0);
+        $this->actingAs($guest)->postJson("/api/players/{$user->id}/pet/feed", ['pet' => $rows[2]->id])->assertOk();
+        $this->actingAs($guest)->postJson("/api/players/{$user->id}/pet/feed", ['pet' => $rows[2]->id])->assertStatus(422);
+
         // Имя конкретному экземпляру
         $this->actingAs($user)->putJson('/api/players/me/pet-name', ['name' => 'Рыжик', 'inventory_id' => $rows[2]->id])->assertOk();
         $this->assertSame('Рыжик', collect($user->fresh()->profile_pets)->firstWhere('inventory_id', $rows[2]->id)['name']);
