@@ -13,8 +13,17 @@ class TournamentController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Tournament::query()
-            ->with('creator:id,username,avatar')
-            ->withCount('participants');
+            ->with([
+                'creator:id,username,avatar',
+                // Первые участники — стопкой аватарок на карточке турнира
+                'participants' => fn ($q) => $q->where('status', 'approved')->orderBy('id')->limit(5),
+                'participants.user:id,username,avatar',
+                'participants.clan:id,name,tag,banner_color,avatar',
+            ])
+            ->withCount([
+                'participants',
+                'participants as approved_count' => fn ($q) => $q->where('status', 'approved'),
+            ]);
 
         if ($search = $request->query('search')) {
             $query->where('name', 'like', "%{$search}%");
@@ -28,7 +37,11 @@ class TournamentController extends Controller
             $query->where('status', $status);
         }
 
-        $tournaments = $query->orderByDesc('created_at')->paginate(12);
+        // Сначала то, где можно участвовать или смотреть: регистрация, идёт, потом остальное
+        $tournaments = $query
+            ->orderByRaw("case status when 'registration' then 0 when 'ongoing' then 1 when 'completed' then 2 else 3 end")
+            ->orderByDesc('created_at')
+            ->paginate(12);
 
         return response()->json($tournaments);
     }
