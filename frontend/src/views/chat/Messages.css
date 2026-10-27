@@ -3884,3 +3884,57 @@ opacity: 0.35;
     opacity: 1;
   }
 }
+
+/* ---------- Реакции прижаты к пузырю ---------- */
+
+.msg__reactions {
+  position: relative;
+  z-index: 1;
+
+  margin-top: -6px;
+  padding: 0 8px;
+}
+
+.msg__reaction {
+  padding: 1px 7px;
+
+  background: #1d1a27;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 2px var(--bg-card, #15131c);
+
+  font-size: 12px;
+}
+
+.msg__reaction.is-mine {
+  background: #3b2470;
+}
+
+.msg__action--on {
+  color: #c4b5fd !important;
+  background: rgba(139, 92, 246, 0.2) !important;
+}
+
+.chat__pinned-icon {
+  display: flex;
+  color: #c4b5fd;
+}
+
+/* ---------- Открытая клавиатура на телефоне ---------- */
+
+@media (max-width: 900px) {
+  .messages-page.messages-page--kb {
+    position: fixed;
+    top: var(--kb-top);
+    right: 0;
+    left: 0;
+    z-index: 1500;
+
+    height: var(--kb-height);
+    min-height: 0;
+    margin: 0;
+  }
+
+  .messages-page--kb .chat__pinned {
+    display: none;
+  }
+}

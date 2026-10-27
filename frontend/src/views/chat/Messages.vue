@@ -1372,6 +1372,37 @@ function measurePageTop() {
 
 let topObserver = null
 
+/*
+ * Клавиатура на телефоне (особенно iPhone): Safari не уменьшает
+ * страницу, а только видимую область и прокручивает страницу — поле
+ * ввода повисало посередине с пустотой снизу. Пока клавиатура открыта,
+ * чат ровно накрывает видимую область (visualViewport).
+ */
+const keyboard = ref({ open: false, top: 0, height: 0 })
+
+function onViewportChange() {
+  const vv = window.visualViewport
+  if (!vv) return
+
+  const phone = window.matchMedia('(max-width: 900px)').matches
+  const open = phone && window.innerHeight - vv.height > 120
+
+  const wasOpen = keyboard.value.open
+  keyboard.value = { open, top: Math.round(vv.offsetTop), height: Math.round(vv.height) }
+
+  if (open && !wasOpen) nextTick(() => scrollToBottom())
+}
+
+onMounted(() => {
+  window.visualViewport?.addEventListener('resize', onViewportChange)
+  window.visualViewport?.addEventListener('scroll', onViewportChange)
+})
+
+onUnmounted(() => {
+  window.visualViewport?.removeEventListener('resize', onViewportChange)
+  window.visualViewport?.removeEventListener('scroll', onViewportChange)
+})
+
 onMounted(() => {
   loadConversations()
 
@@ -1432,8 +1463,13 @@ onUnmounted(() => {
       class="messages-page"
       :class="{
       'messages-page--chat-open': showChatOnMobile,
+      'messages-page--kb': keyboard.open,
     }"
-      :style="{ '--messages-top': `${pageTop}px` }"
+      :style="{
+        '--messages-top': `${pageTop}px`,
+        '--kb-top': `${keyboard.top}px`,
+        '--kb-height': `${keyboard.height}px`,
+      }"
   >
     <!-- ==========================================
          СПИСОК ДИАЛОГОВ
@@ -1876,7 +1912,7 @@ onUnmounted(() => {
         <!-- Закреплённое сообщение: клик — перейти к нему -->
         <div v-if="activeConversation?.pinned_message" class="chat__pinned">
           <button type="button" class="chat__pinned-body" @click="scrollToMessage(activeConversation.pinned_message.id)">
-            <span class="chat__pinned-icon">📌</span>
+            <span class="chat__pinned-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5" /><path d="M9 10.8V4h6v6.8l3 3.2v2H6v-2z" /></svg></span>
             <span class="chat__pinned-text">
               <b>Закреплено{{ activeConversation.pinned_message.user ? ` · ${activeConversation.pinned_message.user.username}` : '' }}</b>
               <span>{{ activeConversation.pinned_message.body || 'Вложение' }}</span>
@@ -2273,13 +2309,25 @@ onUnmounted(() => {
                     type="button"
                     title="Реакция"
                     @click="reactPickerId = reactPickerId === m.id ? null : m.id"
-                >😊</button>
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M8.5 14.5s1.3 1.8 3.5 1.8 3.5-1.8 3.5-1.8" />
+                    <path d="M9 9.5h.01M15 9.5h.01" />
+                  </svg>
+                </button>
                 <button
                     class="msg__action"
+                    :class="{ 'msg__action--on': activeConversation?.pinned_message_id === m.id }"
                     type="button"
                     :title="activeConversation?.pinned_message_id === m.id ? 'Открепить' : 'Закрепить'"
                     @click="togglePin(m)"
-                >📌</button>
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 17v5" />
+                    <path d="M9 10.8V4h6v6.8l3 3.2v2H6v-2z" />
+                  </svg>
+                </button>
                 <button
                     class="msg__action"
                     type="button"
@@ -3278,7 +3326,7 @@ onUnmounted(() => {
                 class="action-sheet__item"
                 @click="togglePin(actionSheetMessage); closeActionSheet()"
             >
-              <span class="action-sheet__icon">📌</span>
+              <span class="action-sheet__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5" /><path d="M9 10.8V4h6v6.8l3 3.2v2H6v-2z" /></svg></span>
               {{ activeConversation?.pinned_message_id === actionSheetMessage.id ? 'Открепить' : 'Закрепить' }}
             </button>
 
