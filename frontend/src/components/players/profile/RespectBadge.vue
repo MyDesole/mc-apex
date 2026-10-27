@@ -11,6 +11,7 @@ import { RouterLink } from 'vue-router'
 import { api } from '@/services/core/api.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import UserName from '@/components/players/UserName.vue'
+import AppIcon from '@/components/core/AppIcon.vue'
 import { userLink } from '@/utils/links.js'
 
 const props = defineProps({
@@ -47,7 +48,7 @@ function burst() {
     dx: `${Math.round(Math.random() * 90 - 45)}px`,
     dy: `${Math.round(-40 - Math.random() * 50)}px`,
     rot: `${Math.round(Math.random() * 60 - 30)}deg`,
-    icon: ['🔥', '🔥', '✨', '💥'][Math.floor(Math.random() * 4)],
+    icon: ['flame', 'flame', 'sparkles', 'bolt'][Math.floor(Math.random() * 4)],
   }))
   flames.value.push(...pack)
   popped.value = true
@@ -139,10 +140,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
         :title="data.can_give ? (data.given_today ? 'Респект на сегодня дан — приходи завтра' : 'Дать респект') : 'Твои респекты и гости профиля'"
         @click="data.can_give ? (data.given_today ? openPanel() : give()) : openPanel()"
     >
-      <span class="respect__fire">🔥</span>
+      <span class="respect__fire"><AppIcon icon="flame" :size="16" /></span>
       <b>{{ data.total }}</b>
       <span v-if="data.can_give && !data.given_today" class="respect__cta">Респект</span>
-      <span v-else-if="data.can_give" class="respect__done">✓</span>
+      <span v-else-if="data.can_give" class="respect__done"><AppIcon icon="check" :size="14" /></span>
       <span v-if="data.rank && data.rank <= 10" class="respect__rank">#{{ data.rank }} недели</span>
 
       <span
@@ -150,7 +151,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
           :key="f.id"
           class="respect__flame"
           :style="{ '--dx': f.dx, '--dy': f.dy, '--rot': f.rot }"
-      >{{ f.icon }}</span>
+      ><AppIcon :icon="f.icon" :size="16" /></span>
       <span v-if="popped" class="respect__plus">+1</span>
     </button>
 
@@ -165,7 +166,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
           :style="{ left: `${panelPos.left}px`, top: `${panelPos.top}px` }"
       >
         <header class="respect-panel__head">
-          <span class="respect-panel__fire">🔥</span>
+          <span class="respect-panel__fire"><AppIcon icon="flame" :size="26" /></span>
           <div>
             <strong>{{ data.total }} респектов</strong>
             <small>{{ data.week }} за неделю<template v-if="data.rank"> · #{{ data.rank }} в топе недели</template></small>
@@ -208,7 +209,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
           </RouterLink>
         </template>
 
-        <RouterLink to="/respects" class="respect-panel__top" @click="panelOpen = false">🏆 Топ уважаемых недели →</RouterLink>
+        <RouterLink to="/respects" class="respect-panel__top" @click="panelOpen = false"><AppIcon icon="trophy" :size="15" /> Топ уважаемых недели →</RouterLink>
       </div>
     </Teleport>
   </div>
@@ -486,5 +487,42 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   font-weight: 900;
   text-align: center;
   text-decoration: none;
+}
+</style>
+
+<style>
+/* Векторные иконки респектов: огонь — тёплым градиентом */
+.respect__fire svg,
+.respect-panel__fire svg,
+.respect__flame svg {
+  color: #fb923c;
+  filter: drop-shadow(0 0 6px rgba(249, 115, 22, 0.6));
+}
+
+.respect__flame {
+  color: #fdba74;
+}
+
+.respect__done {
+  display: inline-flex;
+}
+
+.respect-panel__fire {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 44px;
+  height: 44px;
+
+  background: radial-gradient(circle, rgba(249, 115, 22, 0.3), rgba(249, 115, 22, 0.05));
+  border-radius: 14px;
+}
+
+.respect-panel__top {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 </style>
