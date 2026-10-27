@@ -186,6 +186,27 @@
   flex-direction: row-reverse;
 }
 
+/* Клан — ссылка на его страницу */
+.team__identity--link {
+  margin: -6px;
+  padding: 6px;
+
+  color: inherit;
+  border-radius: 12px;
+  text-decoration: none;
+
+  transition: background 0.15s ease;
+}
+
+.team__identity--link:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.team__identity--link:hover .team__name {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .team__avatar {
   width: 42px;
   height: 42px;
@@ -498,6 +519,25 @@
 
   font-size: 13px;
   font-weight: 650;
+}
+
+/* Участник — ссылка на профиль */
+.fighter--link {
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.fighter--link:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.roster__side--mine .fighter--link:hover {
+  transform: translateX(3px);
+}
+
+.roster__side--enemy .fighter--link:hover {
+  transform: translateX(-3px);
 }
 
 /* Соперники зеркально: голова у своего края */

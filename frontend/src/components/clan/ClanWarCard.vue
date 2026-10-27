@@ -8,6 +8,7 @@
 import { useClanWar, STATUS_SHORT_LABELS } from '@/composables/clan/useClanWar.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import PlayerHead from '@/components/players/PlayerHead.vue'
+import { clanLink, userLink } from '@/utils/links.js'
 
 const props = defineProps({
   war: { type: Object, required: true },
@@ -115,7 +116,8 @@ function formatDate(value) {
       <div class="match">
         <!-- My clan -->
         <div class="team team--mine">
-          <div class="team__identity">
+          <!-- Ссылка на публичную страницу клана — как его видят соперники -->
+          <RouterLink :to="clanLink(props.clan)" class="team__identity team__identity--link">
             <div class="team__avatar team__avatar--mine">
               <img v-if="props.clan.avatar_url" :src="props.clan.avatar_url" :alt="props.clan.name" />
               <template v-else>{{ props.clan.tag?.charAt(0) || 'C' }}</template>
@@ -128,7 +130,7 @@ function formatDate(value) {
                 {{ props.clan.name }}
               </strong>
             </div>
-          </div>
+          </RouterLink>
 
           <div
               v-if="war.status === 'completed'"
@@ -151,7 +153,13 @@ function formatDate(value) {
 
         <!-- Opponent -->
         <div class="team team--enemy">
-          <div class="team__identity">
+          <component
+              :is="getOpponent(war) ? 'RouterLink' : 'div'"
+              :to="getOpponent(war) ? clanLink(getOpponent(war)) : undefined"
+              class="team__identity"
+              :class="{ 'team__identity--link': getOpponent(war) }"
+              :title="getOpponent(war) ? 'Открыть клан соперника' : undefined"
+          >
             <div
                 class="team__avatar"
                 :style="{
@@ -178,7 +186,7 @@ function formatDate(value) {
                 {{ getOpponentName(war) }}
               </strong>
             </div>
-          </div>
+          </component>
 
           <div
               v-if="war.status === 'completed'"
@@ -372,16 +380,17 @@ function formatDate(value) {
               <b>{{ myParticipants(war).length }}</b>
             </div>
 
-            <div
+            <RouterLink
                 v-for="participant in myParticipants(war)"
                 :key="participant.id"
-                class="fighter"
+                :to="userLink(participant.user)"
+                class="fighter fighter--link"
                 :class="{ 'fighter--you': participant.user_id === auth.user?.id }"
             >
               <PlayerHead :user="participant.user || {}" :size="30" />
               <span class="fighter__name">{{ participant.user?.username || 'Игрок' }}</span>
               <span v-if="participant.user_id === auth.user?.id" class="fighter__you">вы</span>
-            </div>
+            </RouterLink>
 
             <div v-if="!myParticipants(war).length" class="fighter fighter--empty">
               Пока никто не записался
@@ -398,14 +407,15 @@ function formatDate(value) {
               <i class="team-dot team-dot--enemy" />
             </div>
 
-            <div
+            <RouterLink
                 v-for="participant in enemyParticipants(war)"
                 :key="participant.id"
-                class="fighter"
+                :to="userLink(participant.user)"
+                class="fighter fighter--link"
             >
               <PlayerHead :user="participant.user || {}" :size="30" />
               <span class="fighter__name">{{ participant.user?.username || 'Игрок' }}</span>
-            </div>
+            </RouterLink>
 
             <div v-if="!enemyParticipants(war).length" class="fighter fighter--empty">
               Пока никто не записался
