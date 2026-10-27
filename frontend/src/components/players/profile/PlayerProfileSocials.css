@@ -87,6 +87,14 @@
   gap: 8px;
 }
 
+/* Ник без ссылки (Discord) — кнопка «скопировать», выглядит как карточка */
+.social-card--copy {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  cursor: copy;
+}
+
 .social-card {
   --social-accent: #7c3aed;
 

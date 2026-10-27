@@ -53,10 +53,11 @@ const form = ref({
 const SOCIAL_FIELDS = [
   { key: 'discord', label: 'Discord', placeholder: 'ник или ссылка-приглашение' },
   { key: 'telegram', label: 'Telegram', placeholder: '@username' },
-  { key: 'youtube', label: 'YouTube', placeholder: 'ссылка на канал' },
-  { key: 'twitch', label: 'Twitch', placeholder: 'ссылка на канал' },
-  { key: 'vk', label: 'VK', placeholder: 'ссылка на страницу' },
-  { key: 'steam', label: 'Steam', placeholder: 'ссылка на профиль' },
+  // Хватит и ника — ссылку соберёт utils/socialLinks.js
+  { key: 'youtube', label: 'YouTube', placeholder: '@канал или ссылка' },
+  { key: 'twitch', label: 'Twitch', placeholder: 'ник или ссылка' },
+  { key: 'vk', label: 'VK', placeholder: 'ник или ссылка' },
+  { key: 'steam', label: 'Steam', placeholder: 'ник, SteamID или ссылка' },
   { key: 'website', label: 'Сайт', placeholder: 'example.com' },
 ]
 

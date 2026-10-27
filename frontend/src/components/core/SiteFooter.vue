@@ -9,6 +9,7 @@ import { RouterLink } from 'vue-router'
 import BrandCube from '@/components/core/BrandCube.vue'
 import ServerAddress from '@/components/core/ServerAddress.vue'
 import { siteApi } from '@/services/site/site.js'
+import { socialHref } from '@/utils/socialLinks.js'
 
 const SOCIAL_LABELS = {
   social_discord: 'Discord',
@@ -23,8 +24,9 @@ const info = ref({ socials: {}, footer_text: null, server_address: null })
 
 const socials = computed(() =>
     Object.entries(info.value.socials ?? {})
-        .filter(([, url]) => url)
-        .map(([key, url]) => ({ key, url, label: SOCIAL_LABELS[key] ?? key }))
+        // «@канал» в настройках сайта тоже становится ссылкой
+        .map(([key, value]) => ({ key, url: socialHref(key, value), label: SOCIAL_LABELS[key] ?? key }))
+        .filter((social) => social.url)
 )
 
 const year = new Date().getFullYear()

@@ -1,5 +1,6 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { socialDisplay, socialHref } from '@/utils/socialLinks.js'
 
 const props = defineProps({
   socials: {
@@ -63,37 +64,29 @@ const socialItems = computed(() => {
     },
   ]
 
-  return items.filter(item => item.value)
+  return items
+      .filter(item => item.value)
+      // «@ник» превращаем в ссылку на профиль в этой сети
+      .map(item => ({
+        ...item,
+        href: socialHref(item.key, item.value),
+        display: socialDisplay(item.key, item.value),
+      }))
 })
 
-function normalizeUrl(value) {
-  if (!value) return '#'
+// Ник без ссылки (Discord) копируем по клику
+const copiedKey = ref(null)
+let copiedTimer = null
 
-  if (
-      value.startsWith('http://') ||
-      value.startsWith('https://')
-  ) {
-    return value
+async function copyHandle(item) {
+  try {
+    await navigator.clipboard.writeText(item.display)
+    copiedKey.value = item.key
+    clearTimeout(copiedTimer)
+    copiedTimer = setTimeout(() => { copiedKey.value = null }, 1600)
+  } catch {
+    // Буфер обмена недоступен — ник и так виден на карточке
   }
-
-  return `https://${value}`
-}
-
-function displayValue(item) {
-  if (!item.value) return ''
-
-  if (
-      item.value.startsWith('http://') ||
-      item.value.startsWith('https://')
-  ) {
-    try {
-      return new URL(item.value).hostname.replace(/^www\./, '')
-    } catch {
-      return item.value
-    }
-  }
-
-  return item.value
 }
 </script>
 
@@ -116,14 +109,19 @@ function displayValue(item) {
     </div>
 
     <div class="socials__grid">
-      <a
+      <component
+          :is="item.href ? 'a' : 'button'"
           v-for="item in socialItems"
           :key="item.key"
           class="social-card"
-          :href="normalizeUrl(item.value)"
-          target="_blank"
-          rel="noopener noreferrer"
+          :class="{ 'social-card--copy': !item.href }"
+          :href="item.href || undefined"
+          :target="item.href ? '_blank' : undefined"
+          :rel="item.href ? 'noopener noreferrer' : undefined"
+          :type="item.href ? undefined : 'button'"
+          :title="item.href ? undefined : 'Скопировать'"
           :style="{ '--social-accent': item.accent }"
+          @click="!item.href && copyHandle(item)"
       >
         <span class="social-card__glow" />
 
@@ -205,12 +203,14 @@ function displayValue(item) {
           </span>
 
           <span class="social-card__value">
-            {{ displayValue(item) }}
+            {{ copiedKey === item.key ? 'Скопировано ✓' : item.display }}
           </span>
         </span>
 
         <span class="social-card__arrow">
+          <!-- Ссылка — стрелка наружу, ник без ссылки — «скопировать» -->
           <svg
+              v-if="item.href"
               width="14"
               height="14"
               viewBox="0 0 24 24"
@@ -223,8 +223,22 @@ function displayValue(item) {
             <path d="M7 17 17 7" />
             <path d="M7 7h10v10" />
           </svg>
+          <svg
+              v-else
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+          >
+            <rect x="9" y="9" width="12" height="12" rx="2" />
+            <path d="M5 15V5a2 2 0 0 1 2-2h10" />
+          </svg>
         </span>
-      </a>
+      </component>
     </div>
   </section>
 </template>

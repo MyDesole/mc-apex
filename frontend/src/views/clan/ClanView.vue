@@ -1,5 +1,6 @@
 <script setup>
 import PageLoader from '@/components/core/PageLoader.vue'
+import { socialHref } from '@/utils/socialLinks.js'
 import { confirm as confirmDialog, prompt as promptDialog } from '@/utils/dialog.js'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -164,19 +165,21 @@ onMounted(load)
         </div>
 
         <div v-if="hasSocials" class="clan-socials">
-          <a
+          <!-- «@канал» и ссылки без https превращаем в рабочие ссылки -->
+          <component
+              :is="socialHref(key, url) ? 'a' : 'span'"
               v-for="(url, key) in clan.socials"
               :key="key"
               v-show="url"
-              :href="url"
-              target="_blank"
-              rel="noopener"
+              :href="socialHref(key, url) || undefined"
+              :target="socialHref(key, url) ? '_blank' : undefined"
+              :rel="socialHref(key, url) ? 'noopener' : undefined"
               class="social-link"
               :class="key"
-              :title="socialLabels[key]"
+              :title="socialHref(key, url) ? socialLabels[key] : `${socialLabels[key]}: ${url}`"
           >
             <span class="social-label">{{ socialLabels[key] }}</span>
-          </a>
+          </component>
         </div>
       </div>
 
