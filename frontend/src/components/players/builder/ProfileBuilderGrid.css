@@ -318,7 +318,9 @@
 @keyframes pb-cascade { from { opacity: 0; transform: translateX(-28px) rotate(-1.5deg); } }
 
 .pb-empty {
-  grid-column: span 12;
+  /* От края до края: span 12 в одноколоночной сетке телефона создавал
+     лишние колонки и сжимал все блоки */
+  grid-column: 1 / -1;
 
   padding: 40px 16px;
 
