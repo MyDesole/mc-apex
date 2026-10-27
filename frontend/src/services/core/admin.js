@@ -63,6 +63,23 @@ export const adminApi = {
         return api.post(`/admin/users/${userId}/give-item`, { shop_item_id: shopItemId })
     },
 
+    // Инвентарь игрока в досье
+    userInventory(userId) {
+        return api.get(`/admin/users/${userId}/inventory`)
+    },
+    userInventoryEquip(userId, shopItemId, equip = true) {
+        return api.post(`/admin/users/${userId}/inventory/items/${shopItemId}/${equip ? 'equip' : 'unequip'}`)
+    },
+    userInventoryQuantity(userId, rowId, quantity) {
+        return api.put(`/admin/users/${userId}/inventory/${rowId}`, { quantity })
+    },
+    userInventoryRemove(userId, rowId) {
+        return api.delete(`/admin/users/${userId}/inventory/${rowId}`)
+    },
+    userInventoryRerollPet(userId, rowId) {
+        return api.post(`/admin/users/${userId}/inventory/${rowId}/reroll-pet`)
+    },
+
     // Юзеры
     users(params = {}) {
         const q = new URLSearchParams(params).toString()

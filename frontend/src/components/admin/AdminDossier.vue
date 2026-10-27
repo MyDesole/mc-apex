@@ -18,6 +18,7 @@ import AdminRoleModal from '@/components/admin/AdminRoleModal.vue'
 import AdminAchievementsModal from '@/components/admin/AdminAchievementsModal.vue'
 import AdminTierTestModal from '@/components/admin/AdminTierTestModal.vue'
 import AdminDossierBridge from '@/components/admin/AdminDossierBridge.vue'
+import AdminDossierInventory from '@/components/admin/AdminDossierInventory.vue'
 
 const props = defineProps({
   userId: { type: Number, required: true },
@@ -192,6 +193,9 @@ async function grantCoins() {
 const giftItems = ref(null)
 const giftItemId = ref(null)
 
+// Подарили предмет — секция инвентаря перечитывает список
+const inventoryKey = ref(0)
+
 async function openGift() {
   try {
     giftItems.value = (await adminApi.control()).items ?? []
@@ -208,6 +212,7 @@ async function giveItem() {
   if (done) {
     giftItems.value = null
     giftItemId.value = null
+    inventoryKey.value++
     await alert('Подарок в инвентаре игрока, уведомление отправлено', { title: 'Готово' })
   }
 }
@@ -510,6 +515,14 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               </li>
             </ul>
           </section>
+
+          <!-- Инвентарь: посмотреть и управлять -->
+          <AdminDossierInventory
+              v-if="auth.user?.role === 'admin'"
+              :user-id="user.id"
+              :username="user.username"
+              :refresh-key="inventoryKey"
+          />
         </template>
       </aside>
     </div>

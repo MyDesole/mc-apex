@@ -774,6 +774,15 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/logout-everywhere', [$player, 'logoutEverywhere']);
             Route::post('/unlink-minecraft', [$player, 'unlinkMinecraft']);
             Route::get('/bridge', [\App\Domains\Bridge\Controllers\Api\Admin\BridgeAdminController::class, 'show']);
+
+            // Инвентарь игрока: посмотреть, надеть/снять, количество, забрать, питомец
+            $inventory = \App\Domains\Shop\Controllers\Api\AdminInventoryController::class;
+            Route::get('/inventory', [$inventory, 'index']);
+            Route::post('/inventory/items/{shopItem}/equip', [$inventory, 'equip'])->whereNumber('shopItem');
+            Route::post('/inventory/items/{shopItem}/unequip', [$inventory, 'unequip'])->whereNumber('shopItem');
+            Route::put('/inventory/{row}', [$inventory, 'quantity'])->whereNumber('row');
+            Route::delete('/inventory/{row}', [$inventory, 'destroy'])->whereNumber('row');
+            Route::post('/inventory/{row}/reroll-pet', [$inventory, 'rerollPet'])->whereNumber('row');
         });
 
         // Бридж игрока: исправить оценки тестера, статус или удалить заявку
