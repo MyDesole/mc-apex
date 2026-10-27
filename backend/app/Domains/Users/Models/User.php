@@ -130,6 +130,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'apex_coins' => 'integer',
         'apex_coins_spent' => 'integer',
         'equipped_badges' => 'array',
+        // Конструктор профиля: блоки по порядку (см. ProfileBlocksService)
+        'profile_blocks' => 'array',
         'referred_by' => 'integer',
         'clan_joined_at' => 'datetime',
         'last_seen_at' => 'datetime',

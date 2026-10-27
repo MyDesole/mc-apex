@@ -479,6 +479,19 @@
   margin-right: -8px;
 }
 
+.profile-header__build {
+  margin-right: -8px;
+}
+
+@media (max-width: 560px) {
+  /* На телефоне три кнопки — только иконки */
+  .profile-header__random,
+  .profile-header__build {
+    font-size: 0;
+    gap: 0;
+  }
+}
+
 .profile-header__random.is-rolling svg {
   animation: random-roll 0.5s linear infinite;
 }

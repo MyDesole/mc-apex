@@ -17,6 +17,9 @@ import AchievementModal from '@/components/players/profile/AchievementModal.vue'
 import { profileLayout } from '@/data/players/profileLayouts.js'
 import ProfileEntrance from '@/components/players/ProfileEntrance.vue'
 import CursorTrail from '@/components/players/CursorTrail.vue'
+import ProfileBuilderGrid from '@/components/players/builder/ProfileBuilderGrid.vue'
+import { useAuthStore } from '@/stores/core/auth.js'
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 
 const props = defineProps({
   user: {
@@ -310,6 +313,48 @@ const hasAnyExtraInfo = computed(() =>
 )
 
 /* =========================================================
+   КОНСТРУКТОР ПРОФИЛЯ
+   ========================================================= */
+
+const auth = useAuthStore()
+
+// Редактирование открывает кнопка «Конструктор» в шапке своего профиля
+const building = ref(false)
+const savingBlocks = ref(false)
+const blocksError = ref('')
+
+// Профиль рисуется блоками, если игрок их настроил или сейчас настраивает
+const builderMode = computed(() =>
+    building.value || (Array.isArray(props.user.profile_blocks) && props.user.profile_blocks.length > 0)
+)
+
+async function persistBlocks(blocks) {
+  savingBlocks.value = true
+  blocksError.value = ''
+
+  try {
+    await api.put('/players/me/blocks', { blocks })
+    // Свой профиль берёт данные из стора: обновляем его
+    await auth.fetchMe()
+    building.value = false
+  } catch (e) {
+    blocksError.value = e.message || 'Не удалось сохранить профиль.'
+  } finally {
+    savingBlocks.value = false
+  }
+}
+
+function saveBlocks(blocks) {
+  persistBlocks(blocks)
+}
+
+async function resetBlocks() {
+  if (!await confirmDialog('Вернуть обычный профиль? Свои блоки и их настройки пропадут.')) return
+
+  persistBlocks(null)
+}
+
+/* =========================================================
    PROFILE COMPLETENESS
    ========================================================= */
 
@@ -334,7 +379,7 @@ const profileCompleteness = computed(() => {
 <template>
   <div
       class="profile-layout"
-      :class="layoutClass"
+      :class="[layoutClass, { 'profile-layout--builder': builderMode }]"
       :style="accentStyle"
   >
     <!-- Появление профиля и след курсора: косметика для гостей профиля -->
@@ -342,9 +387,135 @@ const profileCompleteness = computed(() => {
     <CursorTrail :key="`trail-${user?.id}-${user?.cursor_trail}`" :trail="user?.cursor_trail" />
 
     <!-- =====================================================
+         КОНСТРУКТОР: шапка сверху, дальше блоки игрока
+         ===================================================== -->
+
+    <template v-if="builderMode">
+      <main class="player-card player-card--builder-head" :style="cardStyle">
+        <PlayerProfileHeader
+            data-block="header"
+            :user="user"
+            :editable="editable"
+            :cover-url="user.cover_url"
+            :accent="accent"
+            :bridge-mode="bridgeMode"
+            :bridge-rank="bridgeRank"
+            :bridge-techniques="bridgeTechniques"
+            @edit="emit('edit')"
+            @build="building = true"
+        />
+      </main>
+
+      <p v-if="blocksError" class="builder-error">{{ blocksError }}</p>
+
+      <ProfileBuilderGrid
+          :blocks="user.profile_blocks"
+          :user="user"
+          :editing="building"
+          :saving="savingBlocks"
+          @save="saveBlocks"
+          @cancel="building = false"
+          @reset="resetBlocks"
+      >
+        <template #builtin="{ block }">
+          <!-- Статистика -->
+          <div v-if="block.type === 'stats'" class="profile-stats">
+            <div
+                v-for="stat in profileStats"
+                :key="stat.key"
+                class="profile-stat"
+                :class="{ 'profile-stat--accent': stat.accent }"
+            >
+              <div class="profile-stat__icon">{{ stat.icon }}</div>
+              <div class="profile-stat__content">
+                <strong>{{ stat.value }}</strong>
+                <span>{{ stat.label }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Соцсети -->
+          <div v-else-if="block.type === 'socials'">
+            <h3 class="block-title">Соцсети</h3>
+            <PlayerProfileSocials v-if="hasSocials" :socials="user.socials" />
+            <p v-else class="builder-muted">
+              {{ editable ? 'Добавь соцсети в «Настроить».' : 'Соцсетей пока нет.' }}
+            </p>
+          </div>
+
+          <!-- История тиров / виды бриджа -->
+          <div v-else-if="block.type === 'games'">
+            <template v-if="bridgeMode">
+              <h3 class="block-title">Виды бриджа</h3>
+              <ul v-if="bridgeTechniques.length" class="bridge-card-list">
+                <li v-for="row in bridgeTechniques" :key="row.id" class="bridge-card-item">
+                  <div class="bridge-card-item__main">
+                    <span class="bridge-card-item__name">{{ row.technique?.label }}</span>
+                  </div>
+                  <div class="bridge-card-item__scores">
+                    <span class="bridge-card-item__score"><b>{{ row.score }}</b>/10</span>
+                  </div>
+                </li>
+              </ul>
+              <p v-else class="builder-muted">Пока нет подтверждённых видов.</p>
+            </template>
+            <template v-else>
+              <h3 class="block-title">История тиров</h3>
+              <div v-if="history.length" class="chart-section">
+                <TierHistoryChart :history="history" />
+              </div>
+              <p v-else class="builder-muted">Истории тиров пока нет.</p>
+            </template>
+          </div>
+
+          <!-- Аспекты -->
+          <div v-else-if="block.type === 'aspects'">
+            <h3 class="block-title">Аспекты</h3>
+            <PlayerProfileAspects v-if="hasAspects" :aspects="user.aspects" />
+            <p v-else class="builder-muted">Аспектов пока нет.</p>
+          </div>
+
+          <!-- Ачивки -->
+          <div v-else-if="block.type === 'achievements'" class="side-panel">
+            <PlayerProfileShowcase
+                v-if="allAchievements.length"
+                :achievements="allAchievements"
+                @open="openAchievement"
+            />
+            <p v-else class="builder-muted">Ачивок пока нет.</p>
+          </div>
+
+          <!-- Друзья -->
+          <div v-else-if="block.type === 'friends'" class="side-panel">
+            <PlayerProfileFriends
+                v-if="allFriends.length"
+                :friends="allFriends"
+                @enter="onFriendEnter"
+                @leave="onFriendLeave"
+            />
+            <p v-else class="builder-muted">Друзей пока нет.</p>
+          </div>
+
+          <!-- Рекомендации -->
+          <div v-else-if="block.type === 'recommendations'" class="side-panel side-panel--recommendations">
+            <ProfileRecommendations
+                :target-user="user"
+                :recommendations="recommendations"
+                :my-recommendation="myRecommendation"
+                :can-recommend="canRecommend"
+                :is-owner="isOwner"
+                @updated="emit('recommendationsUpdated')"
+            />
+          </div>
+        </template>
+      </ProfileBuilderGrid>
+    </template>
+
+    <!-- =====================================================
          MAIN PROFILE CARD
          ===================================================== -->
 
+    <template v-else>
     <main
         class="player-card"
         :style="cardStyle"
@@ -360,6 +531,7 @@ const profileCompleteness = computed(() => {
           :bridge-rank="bridgeRank"
           :bridge-techniques="bridgeTechniques"
           @edit="emit('edit')"
+          @build="building = true"
       />
 
       <!-- ===================================================
@@ -720,6 +892,7 @@ const profileCompleteness = computed(() => {
         />
       </section>
     </aside>
+    </template>
 
     <!-- =====================================================
          FRIEND HOVER

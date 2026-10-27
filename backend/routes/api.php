@@ -100,6 +100,10 @@ Route::get('/shop/inventory', [ShopController::class, 'inventory'])
     ->middleware('auth:sanctum');
 Route::get('/shop/{shopItem}', [ShopController::class, 'show'])->whereNumber('shopItem');
 
+// Гостевая книга профиля: читать могут все
+Route::get('/players/{user}/guestbook', [\App\Domains\Players\Controllers\Api\ProfileBuilderController::class, 'guestbook'])
+    ->whereNumber('user');
+
 // Кейсы с косметикой: витрина видна и гостям
 Route::get('/cases', [\App\Domains\Shop\Controllers\Api\LootCaseController::class, 'index']);
 Route::get('/cases/status', [\App\Domains\Shop\Controllers\Api\LootCaseController::class, 'status']);
@@ -243,6 +247,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::match(['put', 'post'], '/', [PlayerController::class, 'updateMe']);
         Route::match(['put', 'post'], '/profile', [PlayerController::class, 'updateProfile']);
 
+        // Конструктор профиля: порядок, ширина и настройки блоков
+        Route::put('/blocks', [\App\Domains\Players\Controllers\Api\ProfileBuilderController::class, 'update'])
+            ->middleware('throttle:30,1');
+
         /*
         |------------------------------------------------------------------
         | Привязка майнкрафта: игрок вводит код, полученный в игре
@@ -382,6 +390,13 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::get('/players/{user}/achievements', [AchievementController::class, 'user'])->whereNumber('user');
     Route::get('/players/{user}/tier-history', [TierTestController::class, 'history'])->whereNumber('user');
+
+    // Гостевая книга профиля: писать — только авторизованным
+    Route::post('/players/{user}/guestbook', [\App\Domains\Players\Controllers\Api\ProfileBuilderController::class, 'writeGuestbook'])
+        ->whereNumber('user')
+        ->middleware('throttle:6,1');
+    Route::delete('/guestbook/{entry}', [\App\Domains\Players\Controllers\Api\ProfileBuilderController::class, 'deleteGuestbook'])
+        ->whereNumber('entry');
 
     /*
     |----------------------------------------------------------------------

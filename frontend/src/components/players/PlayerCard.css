@@ -2,6 +2,23 @@
    ROOT
    ========================================================= */
 
+/* Конструктор: одна колонка — шапка, панель редактора и сетка блоков */
+.profile-layout.profile-layout--builder {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.builder-error {
+  margin: 0;
+  color: #f87171;
+  font-size: 13px;
+}
+
+.builder-muted {
+  margin: 0;
+  color: var(--text-muted, #8a8598);
+  font-size: 13px;
+}
+
 .profile-layout {
   /* Опора для слоёв появления профиля и следа курсора */
   position: relative;
