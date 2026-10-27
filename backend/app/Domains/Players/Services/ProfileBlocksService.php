@@ -14,21 +14,53 @@ use Illuminate\Validation\ValidationException;
  * настройки. Пишет её сам игрок, поэтому всё приходящее приводим к
  * известной форме: лишние поля отбрасываем, длины режем, ссылки
  * пропускаем только http(s), видео — только с YouTube.
+ *
+ * У каждого блока ещё есть оформление (style): цвет, выравнивание, высота,
+ * узор, скругление, шрифт, свой заголовок. У страницы целиком — отступы,
+ * вид шапки и анимация появления (users.profile_page).
  */
 class ProfileBlocksService
 {
     public const MAX_BLOCKS = 24;
 
     public const TYPES = [
-        // Готовые блоки профиля
+        // Готовые части профиля: каждую можно поставить один раз
         'stats', 'socials', 'games', 'aspects', 'achievements', 'friends', 'recommendations',
-        // Новые, со своими настройками
-        'text', 'quote', 'links', 'now', 'countdown', 'video', 'guestbook', 'sticker', 'divider', 'clan',
+        'showcase', 'clan', 'rank', 'rating', 'seasons',
+        // Свои блоки, со своими настройками
+        'text', 'quote', 'countdown', 'video', 'guestbook', 'sticker', 'divider', 'spacer',
+        'facts', 'bars', 'timeline', 'players',
     ];
 
-    public const WIDTHS = ['third', 'half', 'two_thirds', 'full'];
+    /** Блоки, которые бывают в профиле только в одном экземпляре. */
+    private const SINGLE = [
+        'stats', 'socials', 'games', 'aspects', 'achievements', 'friends', 'recommendations',
+        'showcase', 'clan', 'rank', 'rating', 'seasons', 'guestbook',
+    ];
 
-    public const TONES = ['default', 'accent', 'glass', 'outline', 'transparent'];
+    public const WIDTHS = ['quarter', 'third', 'half', 'two_thirds', 'three_quarters', 'full'];
+
+    public const TONES = ['default', 'accent', 'glass', 'outline', 'transparent', 'gradient', 'neon', 'paper'];
+
+    /** Оформление блока: поле => допустимые значения (первое — по умолчанию). */
+    private const STYLE = [
+        'color' => ['auto', 'violet', 'blue', 'cyan', 'green', 'lime', 'yellow', 'orange', 'red', 'pink', 'white'],
+        'align' => ['left', 'center', 'right'],
+        'height' => ['auto', 'compact', 'tall', 'huge'],
+        'pattern' => ['none', 'dots', 'grid', 'stripes', 'aurora', 'noise'],
+        'radius' => ['inherit', 'sharp', 'round', 'pill'],
+        'hover' => ['none', 'lift', 'glow', 'tilt'],
+        'font' => ['default', 'display', 'mono', 'serif'],
+    ];
+
+    /** Настройки всей страницы. */
+    private const PAGE = [
+        'gap' => ['normal', 'tight', 'loose'],
+        'header' => ['full', 'compact'],
+        'appear' => ['rise', 'none', 'fade', 'zoom', 'cascade'],
+        'radius' => ['round', 'sharp', 'soft'],
+        'backdrop' => ['none', 'dim', 'blur'],
+    ];
 
     private const STICKER_SPRITES = [
         'creeper', 'bee', 'axolotl', 'tnt', 'diamond', 'heart', 'skull', 'warden', 'totem', 'cat',
@@ -36,17 +68,47 @@ class ProfileBlocksService
     ];
 
     /**
-     * Сохранить раскладку. null — вернуть профиль по умолчанию.
+     * Сохранить раскладку и настройки страницы. blocks = null — вернуть
+     * профиль по умолчанию (настройки страницы тогда тоже сбрасываются).
      *
      * @param  array<int, mixed>|null  $blocks
      */
-    public function save(User $user, ?array $blocks): ?array
+    public function save(User $user, ?array $blocks, ?array $page = null): ?array
     {
         $clean = $blocks === null ? null : $this->normalize($blocks);
 
-        $user->forceFill(['profile_blocks' => $clean])->save();
+        $user->forceFill([
+            'profile_blocks' => $clean,
+            'profile_page' => $clean === null ? null : $this->page($page ?? []),
+        ])->save();
 
         return $clean;
+    }
+
+    public function page(array $page): array
+    {
+        return $this->pick(self::PAGE, $page);
+    }
+
+    /** Каждое поле — только из своего списка, иначе значение по умолчанию. */
+    private function pick(array $schema, array $input): array
+    {
+        $result = [];
+
+        foreach ($schema as $key => $allowed) {
+            $result[$key] = in_array($input[$key] ?? null, $allowed, true) ? $input[$key] : $allowed[0];
+        }
+
+        return $result;
+    }
+
+    private function style(array $style): array
+    {
+        return $this->pick(self::STYLE, $style) + [
+            'title' => $this->str($style['title'] ?? '', 60),
+            'hide_title' => (bool) ($style['hide_title'] ?? false),
+            'hide_mobile' => (bool) ($style['hide_mobile'] ?? false),
+        ];
     }
 
     /** @param array<int, mixed> $blocks */
@@ -59,11 +121,20 @@ class ProfileBlocksService
         }
 
         $seen = [];
+        $builtins = [];
         $result = [];
 
         foreach ($blocks as $block) {
             if (! is_array($block) || ! in_array($block['type'] ?? null, self::TYPES, true)) {
                 continue;
+            }
+
+            // Готовая часть профиля — только один раз
+            if (in_array($block['type'], self::SINGLE, true)) {
+                if (isset($builtins[$block['type']])) {
+                    continue;
+                }
+                $builtins[$block['type']] = true;
             }
 
             $id = preg_replace('/[^a-z0-9]/', '', strtolower((string) ($block['id'] ?? '')));
@@ -81,6 +152,7 @@ class ProfileBlocksService
                 'width' => in_array($block['width'] ?? null, self::WIDTHS, true) ? $block['width'] : 'full',
                 'tone' => in_array($block['tone'] ?? null, self::TONES, true) ? $block['tone'] : 'default',
                 'settings' => $this->settings($block['type'], is_array($block['settings'] ?? null) ? $block['settings'] : []),
+                'style' => $this->style(is_array($block['style'] ?? null) ? $block['style'] : []),
             ];
         }
 
@@ -91,27 +163,39 @@ class ProfileBlocksService
     {
         return match ($type) {
             'text' => [
-                'title' => $this->str($s['title'] ?? '', 80),
                 'body' => $this->str($s['body'] ?? '', 2000),
+                'size' => in_array($s['size'] ?? null, ['s', 'm', 'l', 'xl'], true) ? $s['size'] : 'm',
             ],
             'quote' => [
                 'text' => $this->str($s['text'] ?? '', 300),
                 'author' => $this->str($s['author'] ?? '', 60),
             ],
-            'links' => [
-                'items' => collect(is_array($s['items'] ?? null) ? $s['items'] : [])
-                    ->take(8)
-                    ->map(fn ($item) => [
-                        'label' => $this->str($item['label'] ?? '', 40),
-                        'url' => $this->url($item['url'] ?? ''),
-                    ])
-                    ->filter(fn ($item) => $item['label'] !== '' && $item['url'] !== '')
-                    ->values()
-                    ->all(),
+            'facts' => [
+                'items' => $this->items($s, 10, fn ($item) => [
+                    'label' => $this->str($item['label'] ?? '', 30),
+                    'value' => $this->str($item['value'] ?? '', 80),
+                ], 'label'),
             ],
-            'now' => [
-                'emoji' => $this->str($s['emoji'] ?? '', 8),
-                'text' => $this->str($s['text'] ?? '', 120),
+            'bars' => [
+                'items' => $this->items($s, 8, fn ($item) => [
+                    'label' => $this->str($item['label'] ?? '', 30),
+                    'value' => max(0, min(100, (int) ($item['value'] ?? 0))),
+                ], 'label'),
+            ],
+            'timeline' => [
+                'items' => $this->items($s, 10, fn ($item) => [
+                    'when' => $this->str($item['when'] ?? '', 20),
+                    'text' => $this->str($item['text'] ?? '', 120),
+                ], 'text'),
+            ],
+            'players' => [
+                'items' => $this->items($s, 8, fn ($item) => [
+                    'username' => preg_replace('/[^A-Za-z0-9_]/', '', mb_substr((string) ($item['username'] ?? ''), 0, 32)),
+                    'note' => $this->str($item['note'] ?? '', 30),
+                ], 'username'),
+            ],
+            'spacer' => [
+                'size' => in_array($s['size'] ?? null, ['s', 'm', 'l'], true) ? $s['size'] : 'm',
             ],
             'countdown' => [
                 'title' => $this->str($s['title'] ?? '', 80),
@@ -125,13 +209,22 @@ class ProfileBlocksService
                 'caption' => $this->str($s['caption'] ?? '', 40),
             ],
             'divider' => [
-                'style' => in_array($s['style'] ?? null, ['line', 'dots', 'glow'], true) ? $s['style'] : 'line',
-            ],
-            'guestbook' => [
-                'title' => $this->str($s['title'] ?? '', 60),
+                'style' => in_array($s['style'] ?? null, ['line', 'dots', 'glow', 'zigzag', 'blocks'], true) ? $s['style'] : 'line',
             ],
             default => [],
         };
+    }
+
+    /** Список строк блока: не больше $max, пустые (без $required) выкидываем. */
+    private function items(array $s, int $max, callable $map, string $required): array
+    {
+        return collect(is_array($s['items'] ?? null) ? $s['items'] : [])
+            ->filter(fn ($item) => is_array($item))
+            ->take($max)
+            ->map($map)
+            ->filter(fn ($item) => $item[$required] !== '')
+            ->values()
+            ->all();
     }
 
     private function str(mixed $value, int $max): string

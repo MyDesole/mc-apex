@@ -76,6 +76,7 @@ const props = defineProps({
 const emit = defineEmits([
   'edit',
   'recommendationsUpdated',
+  'builder',
 ])
 
 /* =========================================================
@@ -328,12 +329,22 @@ const builderMode = computed(() =>
     building.value || (Array.isArray(props.user.profile_blocks) && props.user.profile_blocks.length > 0)
 )
 
-async function persistBlocks(blocks) {
+// Страница прячет свои блоки (Minecraft-карточку, клан…): они теперь в сетке
+watch(builderMode, (on) => emit('builder', on), { immediate: true })
+
+// Настройки страницы из конструктора видны сразу, ещё до сохранения
+const previewPage = ref(null)
+
+const compactHeader = computed(() =>
+    (previewPage.value ?? props.user.profile_page ?? {}).header === 'compact'
+)
+
+async function persistBlocks(blocks, page = null) {
   savingBlocks.value = true
   blocksError.value = ''
 
   try {
-    await api.put('/players/me/blocks', { blocks })
+    await api.put('/players/me/blocks', { blocks, page })
     // Свой профиль берёт данные из стора: обновляем его
     await auth.fetchMe()
     building.value = false
@@ -344,8 +355,8 @@ async function persistBlocks(blocks) {
   }
 }
 
-function saveBlocks(blocks) {
-  persistBlocks(blocks)
+function saveBlocks({ blocks, page }) {
+  persistBlocks(blocks, page)
 }
 
 async function resetBlocks() {
@@ -395,6 +406,7 @@ const profileCompleteness = computed(() => {
         <PlayerProfileHeader
             data-block="header"
             :user="user"
+            :compact="compactHeader"
             :editable="editable"
             :cover-url="user.cover_url"
             :accent="accent"
@@ -406,16 +418,26 @@ const profileCompleteness = computed(() => {
         />
       </main>
 
+      <!-- В компактной шапке нет кнопок: открываем конструктор отсюда -->
+      <button
+          v-if="editable && compactHeader && !building"
+          type="button"
+          class="builder-open"
+          @click="building = true"
+      >⚙ Конструктор профиля</button>
+
       <p v-if="blocksError" class="builder-error">{{ blocksError }}</p>
 
       <ProfileBuilderGrid
           :blocks="user.profile_blocks"
+          :page="user.profile_page"
           :user="user"
           :editing="building"
           :saving="savingBlocks"
           @save="saveBlocks"
-          @cancel="building = false"
+          @cancel="building = false; previewPage = null"
           @reset="resetBlocks"
+          @preview-page="previewPage = $event"
       >
         <template #builtin="{ block }">
           <!-- Статистика -->
@@ -436,7 +458,6 @@ const profileCompleteness = computed(() => {
 
           <!-- Соцсети -->
           <div v-else-if="block.type === 'socials'">
-            <h3 class="block-title">Соцсети</h3>
             <PlayerProfileSocials v-if="hasSocials" :socials="user.socials" />
             <p v-else class="builder-muted">
               {{ editable ? 'Добавь соцсети в «Настроить».' : 'Соцсетей пока нет.' }}
@@ -470,7 +491,6 @@ const profileCompleteness = computed(() => {
 
           <!-- Аспекты -->
           <div v-else-if="block.type === 'aspects'">
-            <h3 class="block-title">Аспекты</h3>
             <PlayerProfileAspects v-if="hasAspects" :aspects="user.aspects" />
             <p v-else class="builder-muted">Аспектов пока нет.</p>
           </div>
@@ -507,6 +527,9 @@ const profileCompleteness = computed(() => {
                 @updated="emit('recommendationsUpdated')"
             />
           </div>
+
+          <!-- Minecraft-карточка, клан, место, рейтинг, сезоны: данные у страницы -->
+          <slot v-else name="block" :block="block" />
         </template>
       </ProfileBuilderGrid>
     </template>

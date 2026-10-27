@@ -132,6 +132,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'equipped_badges' => 'array',
         // Конструктор профиля: блоки по порядку (см. ProfileBlocksService)
         'profile_blocks' => 'array',
+        'profile_page' => 'array',
         'referred_by' => 'integer',
         'clan_joined_at' => 'datetime',
         'last_seen_at' => 'datetime',

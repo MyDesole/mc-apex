@@ -81,7 +81,7 @@ onMounted(load)
 
 <template>
   <div class="guestbook">
-    <h3 class="block-title">{{ title || 'Гостевая книга' }}</h3>
+    <h3 v-if="title" class="block-title">{{ title }}</h3>
 
     <form
         v-if="auth.isAuthenticated && !isOwner && !preview"

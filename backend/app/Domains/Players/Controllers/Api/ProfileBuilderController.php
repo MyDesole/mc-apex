@@ -18,18 +18,23 @@ class ProfileBuilderController extends Controller
     {
     }
 
-    /** Сохранить раскладку блоков; blocks = null — профиль по умолчанию. */
+    /**
+     * Сохранить раскладку блоков и настройки страницы;
+     * blocks = null — профиль по умолчанию.
+     */
     public function update(Request $request): JsonResponse
     {
         $request->validate([
             'blocks' => ['present', 'nullable', 'array', 'max:' . ProfileBlocksService::MAX_BLOCKS],
+            'page' => ['sometimes', 'nullable', 'array'],
         ]);
 
-        $saved = $this->blocks->save($request->user(), $request->input('blocks'));
+        $saved = $this->blocks->save($request->user(), $request->input('blocks'), $request->input('page'));
 
         return response()->json([
             'message' => $saved === null ? 'Профиль вернулся к обычному виду.' : 'Профиль сохранён.',
             'blocks' => $saved,
+            'page' => $request->user()->profile_page,
         ]);
     }
 

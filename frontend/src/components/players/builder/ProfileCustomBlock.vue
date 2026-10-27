@@ -1,7 +1,8 @@
 <script setup>
 /**
- * Новые блоки конструктора профиля: текст, цитата, ссылки, статус,
- * обратный отсчёт, видео, гостевая книга, пиксель-арт, клан, разделитель.
+ * Свои блоки конструктора профиля: текст, цитата, факты, навыки, путь,
+ * тиммейты, обратный отсчёт, видео, гостевая книга, пиксель-арт,
+ * разделитель и пустое место. Заголовок блока рисует сетка.
  */
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
@@ -48,9 +49,9 @@ onUnmounted(() => clearInterval(clock))
 
 const videoId = computed(() => youtubeId(s.value.url))
 
-/* ---------- Клан ---------- */
+/* ---------- Списки: факты, навыки, путь, тиммейты ---------- */
 
-const clan = computed(() => props.user.clan_member?.clan ?? null)
+const items = computed(() => s.value.items || [])
 
 function pad(n) {
   return String(n).padStart(2, '0')
@@ -60,8 +61,7 @@ function pad(n) {
 <template>
   <!-- Текст -->
   <div v-if="block.type === 'text'" class="cb-text">
-    <h3 v-if="s.title" class="block-title">{{ s.title }}</h3>
-    <p v-if="s.body" class="cb-text__body">{{ s.body }}</p>
+    <p v-if="s.body" class="cb-text__body" :class="`cb-text__body--${s.size || 'm'}`">{{ s.body }}</p>
     <p v-else-if="editing" class="cb-placeholder">Напиши что-нибудь в настройках блока ⚙</p>
   </div>
 
@@ -72,29 +72,52 @@ function pad(n) {
     <figcaption v-if="s.author">— {{ s.author }}</figcaption>
   </figure>
 
-  <!-- Кнопки-ссылки -->
-  <div v-else-if="block.type === 'links'" class="cb-links">
-    <a
-        v-for="(item, i) in s.items || []"
-        :key="i"
-        :href="item.url"
-        class="cb-links__item"
-        target="_blank"
-        rel="noopener nofollow ugc"
-    >
-      {{ item.label }}
-      <span>↗</span>
-    </a>
-    <p v-if="!(s.items || []).length && editing" class="cb-placeholder">Добавь кнопки в настройках ⚙</p>
+  <!-- Факты -->
+  <dl v-else-if="block.type === 'facts'" class="cb-facts">
+    <div v-for="(item, i) in items" :key="i" class="cb-facts__row">
+      <dt>{{ item.label }}</dt>
+      <dd>{{ item.value || '—' }}</dd>
+    </div>
+    <p v-if="!items.length && editing" class="cb-placeholder">Добавь строки в настройках ⚙</p>
+  </dl>
+
+  <!-- Навыки -->
+  <div v-else-if="block.type === 'bars'" class="cb-bars">
+    <div v-for="(item, i) in items" :key="i" class="cb-bars__row">
+      <div class="cb-bars__head">
+        <span>{{ item.label }}</span>
+        <b>{{ item.value }}</b>
+      </div>
+      <div class="cb-bars__track">
+        <i :style="{ width: `${item.value}%`, animationDelay: `${i * 90}ms` }"></i>
+      </div>
+    </div>
+    <p v-if="!items.length && editing" class="cb-placeholder">Добавь навыки в настройках ⚙</p>
   </div>
 
-  <!-- Сейчас -->
-  <div v-else-if="block.type === 'now'" class="cb-now">
-    <span class="cb-now__label"><i></i>Сейчас</span>
-    <div class="cb-now__main">
-      <span class="cb-now__emoji">{{ s.emoji || '🎮' }}</span>
-      <strong>{{ s.text || (editing ? 'Чем ты сейчас занят?' : '—') }}</strong>
-    </div>
+  <!-- Мой путь -->
+  <ol v-else-if="block.type === 'timeline'" class="cb-timeline">
+    <li v-for="(item, i) in items" :key="i">
+      <span v-if="item.when" class="cb-timeline__when">{{ item.when }}</span>
+      <span class="cb-timeline__text">{{ item.text || (editing ? 'Что случилось?' : '') }}</span>
+    </li>
+  </ol>
+
+  <!-- Тиммейты -->
+  <div v-else-if="block.type === 'players'" class="cb-players">
+    <RouterLink
+        v-for="(item, i) in items.filter((p) => p.username)"
+        :key="i"
+        :to="`/user/${encodeURIComponent(item.username)}`"
+        class="cb-players__item"
+    >
+      <i class="cb-players__avatar">{{ item.username.charAt(0).toUpperCase() }}</i>
+      <span>
+        <strong>{{ item.username }}</strong>
+        <small v-if="item.note">{{ item.note }}</small>
+      </span>
+    </RouterLink>
+    <p v-if="!items.length && editing" class="cb-placeholder">Добавь ники в настройках ⚙</p>
   </div>
 
   <!-- Обратный отсчёт -->
@@ -130,7 +153,6 @@ function pad(n) {
   <GuestbookBlock
       v-else-if="block.type === 'guestbook'"
       :owner="user"
-      :title="s.title"
       :preview="editing"
   />
 
@@ -140,22 +162,13 @@ function pad(n) {
     <span v-if="s.caption" class="cb-sticker__caption">{{ s.caption }}</span>
   </div>
 
-  <!-- Клан -->
-  <RouterLink v-else-if="block.type === 'clan' && clan" :to="`/clans/${clan.id}`" class="cb-clan">
-    <span class="cb-clan__avatar" :style="{ background: clan.banner_color || '#7c3aed' }">
-      <img v-if="clan.avatar_url" :src="clan.avatar_url" :alt="clan.name" />
-      <template v-else>{{ clan.tag?.charAt(0) }}</template>
-    </span>
-    <span class="cb-clan__info">
-      <small>Клан</small>
-      <strong>[{{ clan.tag }}] {{ clan.name }}</strong>
-    </span>
-    <span class="cb-clan__arrow">→</span>
-  </RouterLink>
-  <div v-else-if="block.type === 'clan'" class="cb-placeholder">Ты пока не в клане</div>
-
   <!-- Разделитель -->
   <div v-else-if="block.type === 'divider'" class="cb-divider" :class="`cb-divider--${s.style || 'line'}`"></div>
+
+  <!-- Пустое место -->
+  <div v-else-if="block.type === 'spacer'" class="cb-spacer" :class="`cb-spacer--${s.size || 'm'}`">
+    <span v-if="editing">пустое место</span>
+  </div>
 </template>
 
 <style scoped>
@@ -211,82 +224,215 @@ function pad(n) {
   font-size: 13px;
 }
 
-/* Ссылки */
-.cb-links {
+.cb-text__body--s { font-size: 12px; }
+.cb-text__body--l { font-size: 18px; }
+.cb-text__body--xl {
+  color: var(--text, #fff);
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+/* Факты */
+.cb-facts {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cb-facts__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 9px 0;
+
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.cb-facts__row:last-child {
+  border-bottom: 0;
+}
+
+.cb-facts dt {
+  color: var(--text-muted, #8a8598);
+  font-size: 13px;
+}
+
+.cb-facts dd {
+  margin: 0;
+  color: var(--text, #fff);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+/* Навыки */
+.cb-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cb-bars__head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+
+  color: var(--text-dim, #d4d0de);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.cb-bars__head b {
+  color: var(--accent-color, #a78bfa);
+  font-variant-numeric: tabular-nums;
+}
+
+.cb-bars__track {
+  height: 8px;
+  overflow: hidden;
+
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 99px;
+}
+
+.cb-bars__track i {
+  display: block;
+  height: 100%;
+
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent-color, #8b5cf6) 55%, #000), var(--accent-color, #8b5cf6));
+  border-radius: inherit;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent-color, #8b5cf6) 60%, transparent);
+
+  transform-origin: left;
+  animation: cb-bar-fill 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes cb-bar-fill {
+  from { transform: scaleX(0); }
+}
+
+/* Мой путь */
+.cb-timeline {
+  margin: 0;
+  padding: 0 0 0 18px;
+
+  list-style: none;
+  border-left: 2px solid color-mix(in srgb, var(--accent-color, #8b5cf6) 45%, transparent);
+}
+
+.cb-timeline li {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  padding: 0 0 14px;
+}
+
+.cb-timeline li::before {
+  content: "";
+
+  position: absolute;
+  top: 4px;
+  left: -25px;
+
+  width: 12px;
+  height: 12px;
+
+  background: var(--accent-color, #8b5cf6);
+  border: 3px solid var(--bg-card, #15131c);
+  border-radius: 50%;
+}
+
+.cb-timeline__when {
+  color: var(--accent-color, #a78bfa);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cb-timeline__text {
+  color: var(--text, #fff);
+  font-size: 14px;
+}
+
+/* Тиммейты */
+.cb-players {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.cb-links__item {
+.cb-players__item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 10px;
 
-  padding: 11px 14px;
+  padding: 6px;
 
-  color: var(--text, #fff);
-  background: color-mix(in srgb, var(--accent-color, #8b5cf6) 14%, rgba(255, 255, 255, 0.03));
-  border: 1px solid color-mix(in srgb, var(--accent-color, #8b5cf6) 40%, transparent);
-  border-radius: 12px;
-
-  font-weight: 800;
+  color: inherit;
+  border-radius: 10px;
   text-decoration: none;
 
-  transition: transform 0.15s ease, background 0.15s ease;
+  transition: background 0.15s ease;
 }
 
-.cb-links__item:hover {
-  transform: translateX(3px);
-  background: color-mix(in srgb, var(--accent-color, #8b5cf6) 24%, transparent);
+.cb-players__item:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
-/* Сейчас */
-.cb-now__label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.cb-players__avatar {
+  width: 34px;
+  height: 34px;
 
-  color: #4ade80;
-
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.cb-now__label i {
-  width: 8px;
-  height: 8px;
-
-  background: #4ade80;
-  border-radius: 50%;
-  box-shadow: 0 0 8px #4ade80;
-
-  animation: cb-live 1.6s ease-in-out infinite;
-}
-
-@keyframes cb-live {
-  50% { opacity: 0.35; }
-}
-
-.cb-now__main {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 10px;
+  justify-content: center;
+  flex-shrink: 0;
+
+  color: #fff;
+  background: color-mix(in srgb, var(--accent-color, #8b5cf6) 40%, #1f1b2b);
+  border-radius: 9px;
+
+  font-style: normal;
+  font-weight: 900;
 }
 
-.cb-now__emoji {
-  font-size: 32px;
-  line-height: 1;
+.cb-players__item span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.cb-now__main strong {
+.cb-players__item strong {
   color: var(--text, #fff);
-  font-size: 15px;
-  line-height: 1.35;
+  font-size: 14px;
 }
+
+.cb-players__item small {
+  color: var(--text-muted, #8a8598);
+  font-size: 11px;
+}
+
+/* Пустое место */
+.cb-spacer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--text-muted, #8a8598);
+  font-size: 11px;
+}
+
+.cb-spacer--s { height: 12px; }
+.cb-spacer--m { height: 40px; }
+.cb-spacer--l { height: 96px; }
 
 /* Обратный отсчёт */
 .cb-countdown__title {
@@ -405,67 +551,6 @@ function pad(n) {
   text-align: center;
 }
 
-/* Клан */
-.cb-clan {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-
-  color: inherit;
-  text-decoration: none;
-}
-
-.cb-clan__avatar {
-  width: 48px;
-  height: 48px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  overflow: hidden;
-
-  color: #fff;
-  border-radius: 12px;
-
-  font-size: 20px;
-  font-weight: 900;
-}
-
-.cb-clan__avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.cb-clan__info {
-  min-width: 0;
-  flex: 1;
-
-  display: flex;
-  flex-direction: column;
-}
-
-.cb-clan__info small {
-  color: var(--text-muted, #8a8598);
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.cb-clan__info strong {
-  overflow: hidden;
-  color: var(--text, #fff);
-  font-size: 15px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.cb-clan__arrow {
-  color: var(--accent-color, #a78bfa);
-  font-weight: 900;
-}
-
 /* Разделитель */
 .cb-divider {
   height: 2px;
@@ -488,8 +573,22 @@ function pad(n) {
   border-radius: 2px;
 }
 
+.cb-divider--zigzag {
+  height: 10px;
+  background:
+      linear-gradient(135deg, var(--accent-color, #8b5cf6) 25%, transparent 25%) -5px 0 / 10px 10px repeat-x,
+      linear-gradient(225deg, var(--accent-color, #8b5cf6) 25%, transparent 25%) -5px 0 / 10px 10px repeat-x;
+  opacity: 0.7;
+}
+
+.cb-divider--blocks {
+  height: 8px;
+  background: repeating-linear-gradient(90deg, var(--accent-color, #8b5cf6) 0 8px, transparent 8px 12px);
+  opacity: 0.6;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .cb-now__label i {
+  .cb-bars__track i {
     animation: none;
   }
 }

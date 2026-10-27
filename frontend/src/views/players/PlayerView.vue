@@ -27,6 +27,9 @@ const bridge = ref({ techniques: [], summary: {}, rank: { position: null, total:
 const profileMode = ref('pvp')
 const bridgeRank = ref(null)
 
+// Профиль собран в конструкторе: витрина и факты стоят в его сетке
+const builderOn = ref(false)
+
 const isBridgeProfile = computed(() => profileMode.value === 'bridge')
 const recommendations = ref([])
 const myRecommendation = ref(null)
@@ -122,13 +125,47 @@ watch(
         :bridge-rank="bridgeRank"
         :bridge-techniques="bridge.techniques"
         @recommendations-updated="load(route.params.id)"
-    />
+        @builder="builderOn = $event"
+    >
+      <!-- Части страницы для конструктора профиля -->
+      <template #block="{ block }">
+        <PlayerShowcase v-if="block.type === 'showcase'" :user="user" :rank="rank" :is-me="isMe" />
+        <ClanBadge v-else-if="block.type === 'clan'" :clan-member="clanMember" />
+        <template v-else-if="isStaff">
+          <p class="builder-staff">Персонал не участвует в рейтинге.</p>
+        </template>
+        <RankBadge
+            v-else-if="block.type === 'rank'"
+            :position="isBridgeProfile ? bridge.rank.position : rank.position"
+            :total="isBridgeProfile ? bridge.rank.total : rank.total"
+        />
+        <PlayerRatingBreakdown v-else-if="block.type === 'rating'" :rating="rating" title-class="block-title" />
+        <PlayerSeasons v-else-if="block.type === 'seasons'" :user-id="user.id" title-class="block-title" />
+      </template>
+    </PlayerCard>
+
+    <!-- Профиль из конструктора: дружба и жалоба остаются под сеткой -->
+    <div v-if="builderOn && !isMe" class="builder-actions">
+      <FriendButton
+          :user-id="user.id"
+          :friendship="friendship"
+          @update="onFriendshipUpdate"
+      />
+      <button
+          v-if="auth.isAuthenticated"
+          type="button"
+          class="report-link"
+          @click="openReport({ type: 'user', id: user.id, name: user.username })"
+      >
+        Пожаловаться на игрока
+      </button>
+    </div>
 
     <!--
       Minecraft-витрина и факты об игроке одним рядом: раньше клан, место
       и дружба шли отдельными блоками друг под другом.
     -->
-    <div class="profile-row">
+    <div v-else-if="!builderOn" class="profile-row">
       <PlayerShowcase
           :user="user"
           :rank="rank"

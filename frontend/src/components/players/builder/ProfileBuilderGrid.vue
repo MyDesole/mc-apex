@@ -2,36 +2,41 @@
 /**
  * Сетка профиля из блоков и её редактор.
  *
- * Показ: блоки по порядку на сетке из 12 колонок; ширина блока — треть,
- * половина, две трети или вся строка; на телефоне все во всю ширину.
+ * Показ: блоки по порядку на сетке из 12 колонок; ширина блока — от
+ * четверти до всей строки; на телефоне все во всю ширину. У каждого блока
+ * своё оформление (фон, цвет, узор, высота, углы, шрифт, заголовок), у
+ * страницы — отступы, углы, фон под блоками и анимация появления.
  *
  * Редактор (editing): блоки перетаскиваются мышью или стрелками, ширина
- * меняется кнопками, у каждого блока — оформление, настройки и удаление;
- * «Добавить блок» открывает палитру. Сохраняет родитель (emit save).
+ * меняется кнопками, блок можно скопировать, настроить и убрать; «＋ Блок»
+ * открывает палитру, «Шаблоны» — готовые раскладки, «Страница» — общие
+ * настройки. Сохраняет родитель (emit save { blocks, page }).
  *
- * Содержимое готовых блоков (статистика, друзья…) рисует родитель через
- * слот #builtin — их данные живут в PlayerCard.
+ * Содержимое частей профиля (статистика, друзья, клан…) рисует родитель
+ * через слот #builtin — их данные живут в PlayerCard и на странице.
  */
 import { computed, ref, watch } from 'vue'
 import ProfileCustomBlock from '@/components/players/builder/ProfileCustomBlock.vue'
-import PixelSprite from '@/components/shop/PixelSprite.vue'
+import ProfileBlockSettings from '@/components/players/builder/ProfileBlockSettings.vue'
 import {
-  BLOCK_TYPES, WIDTHS, TONES, STICKER_SPRITES,
-  defaultBlocks, makeBlock, widthSpan,
+  BLOCK_TYPES, GROUPS, WIDTHS, COLORS, PAGE_OPTIONS, PRESETS,
+  blockTitle, defaultBlocks, defaultPage, makeBlock, widthSpan, withDefaults,
 } from '@/data/players/profileBlocks.js'
 
 const props = defineProps({
   blocks: { type: Array, default: null },
+  page: { type: Object, default: null },
   user: { type: Object, required: true },
   editing: { type: Boolean, default: false },
   saving: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['save', 'cancel', 'reset'])
+const emit = defineEmits(['save', 'cancel', 'reset', 'preview-page'])
 
 const draft = ref([])
+const pageDraft = ref(defaultPage())
 const openSettings = ref(null)
-const showPalette = ref(false)
+const panel = ref(null) // 'blocks' | 'presets' | 'page'
 const dragId = ref(null)
 const overId = ref(null)
 
@@ -44,16 +49,49 @@ watch(
     () => props.editing,
     (on) => {
       if (on) {
-        draft.value = clone(props.blocks?.length ? props.blocks : defaultBlocks())
+        draft.value = (props.blocks?.length ? clone(props.blocks) : defaultBlocks()).map(withDefaults)
+        pageDraft.value = { ...defaultPage(), ...(props.page ?? {}) }
         openSettings.value = null
       }
     },
     { immediate: true },
 )
 
-const list = computed(() => (props.editing ? draft.value : (props.blocks ?? [])))
+// Шапка профиля живёт у родителя: показываем ему настройки ещё до сохранения
+watch(pageDraft, (page) => emit('preview-page', props.editing ? page : null), { deep: true })
 
-const usedBuiltins = computed(() => new Set(draft.value.filter((b) => BLOCK_TYPES[b.type]?.builtin).map((b) => b.type)))
+const list = computed(() =>
+    (props.editing ? draft.value : (props.blocks ?? []).map(withDefaults))
+        .filter((b) => BLOCK_TYPES[b.type]),
+)
+
+const currentPage = computed(() => (props.editing ? pageDraft.value : { ...defaultPage(), ...(props.page ?? {}) }))
+
+const activeBlock = computed(() => draft.value.find((b) => b.id === openSettings.value) ?? null)
+
+const usedSingles = computed(() => new Set(draft.value.filter((b) => BLOCK_TYPES[b.type]?.single).map((b) => b.type)))
+
+const paletteGroups = computed(() =>
+    GROUPS.map((group) => ({
+      ...group,
+      types: Object.entries(BLOCK_TYPES).filter(([, def]) => def.group === group.id),
+    })),
+)
+
+// Высота блока в мини-макете шаблона: крупные части повыше
+const PREVIEW_HEIGHT = { showcase: 46, video: 40, games: 34, aspects: 30, quote: 18, divider: 4, spacer: 8 }
+
+const presetCards = computed(() =>
+    PRESETS.map((preset) => ({
+      ...preset,
+      map: preset.blocks().map((b) => ({ ...b, height: PREVIEW_HEIGHT[b.type] ?? 24 })),
+      tags: [
+        PAGE_OPTIONS.gap.options.find(([v]) => v === preset.page.gap)?.[1],
+        PAGE_OPTIONS.appear.options.find(([v]) => v === preset.page.appear)?.[1],
+        preset.page.header === 'compact' ? 'Компактная шапка' : null,
+      ].filter(Boolean),
+    })),
+)
 
 function indexOf(id) {
   return draft.value.findIndex((b) => b.id === id)
@@ -101,7 +139,7 @@ function onDragEnd() {
   overId.value = null
 }
 
-/* ---------- Ширина, оформление, удаление ---------- */
+/* ---------- Блоки ---------- */
 
 function resize(block, delta) {
   const i = WIDTHS.findIndex((w) => w.id === block.width)
@@ -109,81 +147,139 @@ function resize(block, delta) {
   block.width = next.id
 }
 
-function cycleTone(block) {
-  const i = TONES.findIndex((t) => t.id === block.tone)
-  block.tone = TONES[(i + 1) % TONES.length].id
-}
-
 function remove(block) {
   draft.value.splice(indexOf(block.id), 1)
   if (openSettings.value === block.id) openSettings.value = null
 }
 
+function duplicate(block) {
+  const copy = makeBlock(block.type, clone({ width: block.width, tone: block.tone, settings: block.settings, style: block.style }))
+  draft.value.splice(indexOf(block.id) + 1, 0, copy)
+}
+
 function add(type) {
   const block = makeBlock(type)
   draft.value.push(block)
-  showPalette.value = false
+  panel.value = null
+  openSettings.value = block.id
 
-  // Новый блок с настройками — сразу открываем их
-  if (Object.keys(block.settings).length) openSettings.value = block.id
+  // Новый блок в конце — докручиваем до него
+  requestAnimationFrame(() => {
+    document.querySelector(`[data-block-id="${block.id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  })
 }
 
-function toneLabel(block) {
-  return TONES.find((t) => t.id === block.tone)?.label ?? 'Обычный'
+function applyPreset(preset) {
+  draft.value = preset.blocks()
+  pageDraft.value = { ...defaultPage(), ...preset.page }
+  openSettings.value = null
+  panel.value = null
 }
 
-/* ---------- Ссылки ---------- */
+function shuffleLook() {
+  // «Удиви меня»: случайное оформление всем блокам
+  const tones = ['default', 'accent', 'glass', 'gradient', 'neon', 'paper', 'outline']
+  const patterns = ['none', 'none', 'dots', 'grid', 'stripes', 'aurora', 'noise']
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
+  const color = pick(COLORS.slice(1)).id
 
-function addLink(block) {
-  block.settings.items ??= []
-  if (block.settings.items.length < 8) block.settings.items.push({ label: '', url: 'https://' })
+  for (const block of draft.value) {
+    if (['divider', 'spacer'].includes(block.type)) continue
+    block.tone = pick(tones)
+    block.style.pattern = pick(patterns)
+    block.style.color = Math.random() < 0.6 ? color : pick(COLORS).id
+    block.style.hover = pick(['none', 'lift', 'glow', 'tilt'])
+  }
 }
 
-/** Для поля даты: ISO → значение datetime-local и обратно. */
-function toLocalInput(iso) {
-  if (!iso) return ''
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return ''
-  const pad = (n) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+/* ---------- Вид блока ---------- */
+
+function blockClasses(block) {
+  const s = block.style
+  return [
+    `pb-block--${block.type}`,
+    `pb-tone--${block.tone || 'default'}`,
+    `pb-align--${s.align}`,
+    `pb-h--${s.height}`,
+    `pb-pattern--${s.pattern}`,
+    `pb-radius--${s.radius}`,
+    `pb-hover--${s.hover}`,
+    `pb-font--${s.font}`,
+    {
+      'pb-hide-mobile': s.hide_mobile,
+      'is-dragging': dragId.value === block.id,
+      'is-over': overId.value === block.id,
+      'is-active': openSettings.value === block.id,
+    },
+  ]
 }
 
-function setDate(block, value) {
-  block.settings.date = value ? new Date(value).toISOString() : ''
+function blockStyle(block, i) {
+  const hex = COLORS.find((c) => c.id === block.style.color)?.hex
+  return {
+    '--span': widthSpan(block.width),
+    '--i': i,
+    ...(hex ? { '--accent-color': hex } : {}),
+  }
 }
 </script>
 
 <template>
-  <div class="pb" :class="{ 'pb--editing': editing }">
+  <div
+      class="pb"
+      :class="[
+        `pb-gap--${currentPage.gap}`,
+        `pb-page-radius--${currentPage.radius}`,
+        `pb-backdrop--${currentPage.backdrop}`,
+        editing ? 'pb--editing' : `pb-appear--${currentPage.appear}`,
+      ]"
+  >
     <!-- Панель конструктора -->
     <div v-if="editing" class="pb-toolbar">
       <div class="pb-toolbar__title">
         <strong>Конструктор профиля</strong>
-        <span>Перетаскивай блоки, меняй ширину, добавляй новые</span>
+        <span>{{ draft.length }} блоков · тяни за ⠿, ⚙ — всё оформление блока</span>
       </div>
 
       <div class="pb-toolbar__actions">
-        <button type="button" class="pb-btn pb-btn--add" @click="showPalette = true">＋ Блок</button>
+        <button type="button" class="pb-btn pb-btn--add" @click="panel = 'blocks'">＋ Блок</button>
+        <button type="button" class="pb-btn" @click="panel = 'presets'">Шаблоны</button>
+        <button type="button" class="pb-btn" :class="{ 'is-on': panel === 'page' }" @click="panel = panel === 'page' ? null : 'page'">Страница</button>
+        <button type="button" class="pb-btn" title="Случайное оформление всем блокам" @click="shuffleLook">🎲</button>
         <button type="button" class="pb-btn pb-btn--ghost" title="Вернуть обычный профиль" @click="emit('reset')">Сбросить</button>
         <button type="button" class="pb-btn pb-btn--ghost" @click="emit('cancel')">Отмена</button>
-        <button type="button" class="pb-btn pb-btn--save" :disabled="saving" @click="emit('save', clone(draft))">
+        <button type="button" class="pb-btn pb-btn--save" :disabled="saving" @click="emit('save', { blocks: clone(draft), page: clone(pageDraft) })">
           {{ saving ? 'Сохраняем…' : 'Сохранить' }}
         </button>
+      </div>
+
+      <!-- Настройки всей страницы -->
+      <div v-if="panel === 'page'" class="pb-page">
+        <div v-for="(def, key) in PAGE_OPTIONS" :key="key" class="pb-option">
+          <span class="pb-option__label">{{ def.label }}</span>
+          <div class="pb-option__chips">
+            <button
+                v-for="[value, label] in def.options"
+                :key="value"
+                type="button"
+                class="pb-chip"
+                :class="{ 'is-on': pageDraft[key] === value }"
+                @click="pageDraft[key] = value"
+            >{{ label }}</button>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Сетка -->
     <div class="pb-grid">
       <section
-          v-for="block in list"
+          v-for="(block, i) in list"
           :key="block.id"
+          :data-block-id="block.id"
           class="pb-block"
-          :class="[
-            `pb-block--${block.type}`,
-            `pb-tone--${block.tone || 'default'}`,
-            { 'is-dragging': dragId === block.id, 'is-over': overId === block.id },
-          ]"
-          :style="{ '--span': widthSpan(block.width) }"
+          :class="blockClasses(block)"
+          :style="blockStyle(block, i)"
           @dragover.prevent="editing && onDragOver(block)"
           @drop.prevent="editing && onDrop(block)"
           @dragend="onDragEnd"
@@ -197,7 +293,7 @@ function setDate(block, value) {
               draggable="true"
               @dragstart="onDragStart(block, $event)"
           >⠿</span>
-          <span class="pb-controls__name">{{ BLOCK_TYPES[block.type]?.label }}</span>
+          <span class="pb-controls__name">{{ BLOCK_TYPES[block.type].icon }} {{ BLOCK_TYPES[block.type].label }}</span>
 
           <div class="pb-controls__group">
             <button type="button" title="Выше" @click="move(block, -1)">↑</button>
@@ -210,137 +306,124 @@ function setDate(block, value) {
             <button type="button" title="Шире" @click="resize(block, 1)">+</button>
           </div>
 
-          <button type="button" class="pb-controls__tone" title="Оформление блока" @click="cycleTone(block)">
-            ◐ {{ toneLabel(block) }}
-          </button>
+          <button
+              v-if="!BLOCK_TYPES[block.type].single"
+              type="button"
+              title="Копия блока"
+              @click="duplicate(block)"
+          >⧉</button>
 
           <button
-              v-if="Object.keys(block.settings || {}).length"
               type="button"
               :class="{ 'is-on': openSettings === block.id }"
-              title="Настройки"
+              title="Содержимое и оформление"
               @click="openSettings = openSettings === block.id ? null : block.id"
           >⚙</button>
 
           <button type="button" class="pb-controls__remove" title="Убрать блок" @click="remove(block)">✕</button>
         </div>
 
-        <!-- Настройки блока -->
-        <div v-if="editing && openSettings === block.id" class="pb-settings" @mousedown.stop>
-          <template v-if="block.type === 'text'">
-            <input v-model="block.settings.title" maxlength="80" placeholder="Заголовок" />
-            <textarea v-model="block.settings.body" maxlength="2000" rows="4" placeholder="Текст блока"></textarea>
-          </template>
-
-          <template v-else-if="block.type === 'quote'">
-            <textarea v-model="block.settings.text" maxlength="300" rows="3" placeholder="Цитата"></textarea>
-            <input v-model="block.settings.author" maxlength="60" placeholder="Автор (необязательно)" />
-          </template>
-
-          <template v-else-if="block.type === 'links'">
-            <div v-for="(item, i) in block.settings.items" :key="i" class="pb-settings__row">
-              <input v-model="item.label" maxlength="40" placeholder="Надпись" />
-              <input v-model="item.url" maxlength="300" placeholder="https://…" />
-              <button type="button" @click="block.settings.items.splice(i, 1)">✕</button>
-            </div>
-            <button
-                v-if="(block.settings.items || []).length < 8"
-                type="button"
-                class="pb-settings__add"
-                @click="addLink(block)"
-            >＋ Кнопка</button>
-          </template>
-
-          <template v-else-if="block.type === 'now'">
-            <div class="pb-settings__row">
-              <input v-model="block.settings.emoji" maxlength="8" class="pb-settings__emoji" placeholder="🎮" />
-              <input v-model="block.settings.text" maxlength="120" placeholder="Играю в бридж с друзьями" />
-            </div>
-          </template>
-
-          <template v-else-if="block.type === 'countdown'">
-            <input v-model="block.settings.title" maxlength="80" placeholder="До чего отсчёт? (Турнир, стрим…)" />
-            <input
-                type="datetime-local"
-                :value="toLocalInput(block.settings.date)"
-                @input="setDate(block, $event.target.value)"
-            />
-          </template>
-
-          <template v-else-if="block.type === 'video'">
-            <input v-model="block.settings.url" maxlength="300" placeholder="https://youtube.com/watch?v=…" />
-          </template>
-
-          <template v-else-if="block.type === 'guestbook'">
-            <input v-model="block.settings.title" maxlength="60" placeholder="Заголовок книги" />
-          </template>
-
-          <template v-else-if="block.type === 'sticker'">
-            <div class="pb-settings__sprites">
-              <button
-                  v-for="sprite in STICKER_SPRITES"
-                  :key="sprite"
-                  type="button"
-                  :class="{ 'is-on': block.settings.sprite === sprite }"
-                  @click="block.settings.sprite = sprite"
-              >
-                <PixelSprite :sprite="sprite" :size="22" />
-              </button>
-            </div>
-            <input v-model="block.settings.caption" maxlength="40" placeholder="Подпись" />
-          </template>
-
-          <template v-else-if="block.type === 'divider'">
-            <div class="pb-settings__row">
-              <button
-                  v-for="style in [['line', 'Линия'], ['dots', 'Точки'], ['glow', 'Неон']]"
-                  :key="style[0]"
-                  type="button"
-                  class="pb-settings__chip"
-                  :class="{ 'is-on': block.settings.style === style[0] }"
-                  @click="block.settings.style = style[0]"
-              >{{ style[1] }}</button>
-            </div>
-          </template>
-        </div>
-
         <!-- Содержимое -->
         <div class="pb-block__body">
-          <slot v-if="BLOCK_TYPES[block.type]?.builtin" name="builtin" :block="block" />
+          <h3 v-if="blockTitle(block)" class="block-title pb-block__title">{{ blockTitle(block) }}</h3>
+          <slot v-if="BLOCK_TYPES[block.type].group === 'profile'" name="builtin" :block="block" />
           <ProfileCustomBlock v-else :block="block" :user="user" :editing="editing" />
         </div>
       </section>
 
       <div v-if="editing && !list.length" class="pb-empty">
-        Профиль пуст — добавь первый блок кнопкой «＋ Блок».
+        Профиль пуст — добавь первый блок кнопкой «＋ Блок» или возьми шаблон.
       </div>
     </div>
 
-    <!-- Палитра блоков -->
+    <!-- Настройки блока: боковая панель, блок при этом виден целиком -->
     <Teleport to="body">
-      <div v-if="showPalette" class="pb-palette" @click.self="showPalette = false">
+      <Transition name="pb-drawer">
+        <aside v-if="editing && activeBlock" :key="activeBlock.id" class="pb-drawer">
+          <header class="pb-drawer__head">
+            <span class="pb-drawer__icon">{{ BLOCK_TYPES[activeBlock.type].icon }}</span>
+            <div>
+              <strong>{{ BLOCK_TYPES[activeBlock.type].label }}</strong>
+              <small>Изменения сразу видны в профиле</small>
+            </div>
+            <button type="button" title="Закрыть" @click="openSettings = null">✕</button>
+          </header>
+
+          <ProfileBlockSettings :block="activeBlock" />
+        </aside>
+      </Transition>
+    </Teleport>
+
+    <!-- Палитра блоков и шаблоны -->
+    <Teleport to="body">
+      <div v-if="panel === 'blocks' || panel === 'presets'" class="pb-palette" @click.self="panel = null">
         <div class="pb-palette__card">
           <div class="pb-palette__head">
-            <strong>Добавить блок</strong>
-            <button type="button" @click="showPalette = false">✕</button>
+            <strong>{{ panel === 'blocks' ? 'Добавить блок' : 'Шаблоны профиля' }}</strong>
+            <button type="button" @click="panel = null">✕</button>
           </div>
 
-          <div class="pb-palette__grid">
-            <button
-                v-for="(def, type) in BLOCK_TYPES"
-                :key="type"
-                type="button"
-                class="pb-palette__item"
-                :disabled="def.builtin && usedBuiltins.has(type)"
-                @click="add(type)"
-            >
-              <span class="pb-palette__icon">{{ def.icon }}</span>
-              <span class="pb-palette__text">
-                <strong>{{ def.label }}</strong>
-                <small>{{ def.builtin && usedBuiltins.has(type) ? 'Уже в профиле' : def.hint }}</small>
-              </span>
-            </button>
-          </div>
+          <template v-if="panel === 'blocks'">
+            <section v-for="group in paletteGroups" :key="group.id" class="pb-palette__group">
+              <h4>{{ group.label }}</h4>
+              <div class="pb-palette__grid">
+                <button
+                    v-for="[type, def] in group.types"
+                    :key="type"
+                    type="button"
+                    class="pb-palette__item"
+                    :disabled="def.single && usedSingles.has(type)"
+                    @click="add(type)"
+                >
+                  <span class="pb-palette__icon">{{ def.icon }}</span>
+                  <span class="pb-palette__text">
+                    <strong>{{ def.label }}</strong>
+                    <small>{{ def.single && usedSingles.has(type) ? 'Уже в профиле' : def.hint }}</small>
+                  </span>
+                </button>
+              </div>
+            </section>
+          </template>
+
+          <template v-else>
+            <p class="pb-palette__note">Шаблон заменит раскладку и настройки страницы. До «Сохранить» всё можно отменить.</p>
+            <div class="pb-presets">
+              <button
+                  v-for="preset in presetCards"
+                  :key="preset.id"
+                  type="button"
+                  class="pb-preset"
+                  :style="{ '--preset-color': preset.color }"
+                  @click="applyPreset(preset)"
+              >
+                <!-- Мини-макет: шапка профиля и блоки шаблона -->
+                <span class="pb-preset__preview">
+                  <span class="pb-preset__header" :class="{ 'is-compact': preset.page.header === 'compact' }">
+                    <i></i><b></b>
+                  </span>
+                  <span class="pb-preset__grid" :class="`pb-preset__grid--${preset.page.gap || 'normal'}`">
+                    <i
+                        v-for="(b, n) in preset.map"
+                        :key="n"
+                        :class="`is-${b.tone}`"
+                        :style="{ gridColumn: `span ${widthSpan(b.width)}`, height: `${b.height}px` }"
+                    ><em>{{ BLOCK_TYPES[b.type].icon }}</em></i>
+                  </span>
+                </span>
+
+                <span class="pb-preset__info">
+                  <strong>{{ preset.label }}</strong>
+                  <small>{{ preset.hint }}</small>
+                  <span class="pb-preset__tags">
+                    <em>{{ preset.map.length }} блоков</em>
+                    <em v-for="tag in preset.tags" :key="tag">{{ tag }}</em>
+                  </span>
+                </span>
+
+                <span class="pb-preset__apply">Применить →</span>
+              </button>
+            </div>
+          </template>
         </div>
       </div>
     </Teleport>

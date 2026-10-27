@@ -133,6 +133,9 @@ async function loadRecommendations() {
 
 const showCustomize = ref(false)
 
+// Профиль собран в конструкторе: витрина и факты стоят в его сетке
+const builderOn = ref(false)
+
 function onCustomizeUpdated() {
   showCustomize.value = false
 
@@ -290,11 +293,31 @@ onMounted(async () => {
             :bridge-techniques="bridge.techniques"
             @edit="showCustomize = true"
             @recommendations-updated="loadRecommendations"
-        />
+            @builder="builderOn = $event"
+        >
+          <!-- Части страницы для конструктора профиля -->
+          <template #block="{ block }">
+            <PlayerShowcase
+                v-if="block.type === 'showcase'"
+                :user="user"
+                :rank="rank"
+                is-me
+                @link-minecraft="showCustomize = true"
+            />
+            <ClanBadge v-else-if="block.type === 'clan'" :clan-member="clanMember" />
+            <RankBadge
+                v-else-if="block.type === 'rank'"
+                :position="isBridgeProfile ? bridge.rank.position : rank.position"
+                :total="isBridgeProfile ? bridge.rank.total : rank.total"
+            />
+            <PlayerRatingBreakdown v-else-if="block.type === 'rating'" :rating="auth.rating" title-class="block-title" />
+            <PlayerSeasons v-else-if="block.type === 'seasons'" :user-id="user.id" title-class="block-title" />
+          </template>
+        </PlayerCard>
       </section>
 
       <!-- Minecraft-витрина и факты одним рядом, как на странице игрока -->
-      <div class="profile-row">
+      <div v-if="!builderOn" class="profile-row">
         <PlayerShowcase
             :user="user"
             :rank="rank"
