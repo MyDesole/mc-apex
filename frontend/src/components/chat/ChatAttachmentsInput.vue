@@ -12,9 +12,18 @@ import { chatApi } from '@/services/chat/chat.js'
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },
   max: { type: Number, default: 10 },
+  // Кнопка выбора живёт у родителя (в поле ввода), здесь — только файлы
+  inline: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue'])
+
+const fileInput = ref(null)
+
+/** Открыть выбор файлов — для кнопки-скрепки родителя. */
+function open() {
+  if (!uploading.value && files.value.length < props.max) fileInput.value?.click()
+}
 
 const MAX_KILOBYTES = 12288 // 12 МБ
 
@@ -190,10 +199,29 @@ function openPreview(file) {
 function closePreview() {
   previewOpen.value = null
 }
+
+defineExpose({ open, uploading, progress })
 </script>
 
 <template>
-  <div class="attach-bar">
+  <div class="attach-bar" :class="{ 'attach-bar--inline': inline }">
+    <!-- Скрытый выбор файлов для кнопки родителя -->
+    <input
+        v-if="inline"
+        ref="fileInput"
+        class="attach-hidden-input"
+        type="file"
+        multiple
+        :disabled="isBusy || files.length >= max"
+        @change="onPick"
+    >
+
+    <!-- Идёт загрузка (в режиме inline другой индикации нет) -->
+    <div v-if="inline && isBusy" class="attach-uploading">
+      <span class="attach-button__spinner" />
+      {{ progress.total > 1 ? `Загружаем ${progress.done}/${progress.total}…` : 'Загружаем файл…' }}
+    </div>
+
     <!-- Ошибка / предупреждение -->
     <Transition name="attach-fade">
       <div v-if="error" class="attach-error">
@@ -312,7 +340,7 @@ function closePreview() {
     </TransitionGroup>
 
     <!-- Нижняя панель -->
-    <div class="attach-footer">
+    <div v-if="!inline" class="attach-footer">
       <label
           class="attach-button"
           :class="{
@@ -373,7 +401,8 @@ function closePreview() {
     </div>
   </div>
 
-  <!-- Полноэкранный просмотр -->
+  <!-- Полноэкранный просмотр: в body, чтобы быть поверх шапки сайта -->
+  <Teleport to="body">
   <Transition name="attach-preview">
     <div
         v-if="previewOpen"
@@ -416,6 +445,7 @@ function closePreview() {
       </div>
     </div>
   </Transition>
+  </Teleport>
 </template>
 
 <style scoped>

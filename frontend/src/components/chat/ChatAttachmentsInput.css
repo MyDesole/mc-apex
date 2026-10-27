@@ -654,3 +654,35 @@
   line-height: 1;
   cursor: pointer;
 }
+
+/* ─────────────────────────────
+   INLINE: кнопка выбора — скрепка в поле ввода чата
+───────────────────────────── */
+
+.attach-hidden-input {
+  display: none;
+}
+
+/* Пока ничего не выбрано — полосы над полем ввода нет */
+.attach-bar--inline:not(:has(.attach-list, .attach-error, .attach-uploading)) {
+  display: none;
+}
+
+.attach-bar--inline {
+  padding: 2px 2px 10px;
+}
+
+.attach-uploading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  color: #c4b5fd;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.attach-bar--inline .attach-chip {
+  border-radius: 12px;
+}

@@ -216,6 +216,9 @@ const hiddenCount = computed(() =>
 const pendingAttachments = ref([])
 const previewImage = ref(null)
 
+// Выбор файлов: кнопка-скрепка в поле ввода открывает его
+const attachInput = ref(null)
+
 // ============================================
 // ЗАГРУЗКА ДИАЛОГОВ
 // ============================================
@@ -1270,8 +1273,31 @@ function onResizeOrScroll() {
   }
 }
 
+/*
+ * Высота страницы: над чатом бывают объявление и полоса события, их
+ * высота заранее неизвестна. Меряем, где страница начинается, иначе
+ * поле ввода уезжает за нижний край экрана.
+ */
+const pageEl = ref(null)
+const pageTop = ref(0)
+
+function measurePageTop() {
+  if (!pageEl.value) return
+  pageTop.value = Math.max(0, Math.round(pageEl.value.getBoundingClientRect().top + window.scrollY))
+}
+
+let topObserver = null
+
 onMounted(() => {
   loadConversations()
+
+  nextTick(measurePageTop)
+  window.addEventListener('resize', measurePageTop)
+  // Объявление закрыли или подгрузилась полоса события — пересчитываем
+  if (typeof ResizeObserver !== 'undefined') {
+    topObserver = new ResizeObserver(measurePageTop)
+    topObserver.observe(document.body)
+  }
 
   document.addEventListener(
       'click',
@@ -1291,6 +1317,9 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('resize', measurePageTop)
+  topObserver?.disconnect()
+
   document.removeEventListener(
       'click',
       onClickOutsideSearch,
@@ -1315,10 +1344,12 @@ onUnmounted(() => {
 
 <template>
   <div
+      ref="pageEl"
       class="messages-page"
       :class="{
       'messages-page--chat-open': showChatOnMobile,
     }"
+      :style="{ '--messages-top': `${pageTop}px` }"
   >
     <!-- ==========================================
          СПИСОК ДИАЛОГОВ
@@ -2239,8 +2270,9 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- IMAGE PREVIEW -->
+        <!-- IMAGE PREVIEW: в body, иначе картинка уходит под шапку сайта -->
 
+        <Teleport to="body">
         <div
             v-if="previewImage"
             class="chat__image-preview"
@@ -2276,6 +2308,7 @@ onUnmounted(() => {
             </button>
           </div>
         </div>
+        </Teleport>
 
         <!-- FOOTER -->
 
@@ -2351,8 +2384,10 @@ onUnmounted(() => {
               class="chat__attach-row"
           >
             <ChatAttachmentsInput
+                ref="attachInput"
                 v-model="pendingAttachments"
                 :max="10"
+                inline
             />
           </div>
 
@@ -2360,6 +2395,22 @@ onUnmounted(() => {
               class="chat__form"
               @submit.prevent="sendMessage"
           >
+            <!-- Скрепка: файлы до 12 МБ, до 10 штук -->
+            <button
+                v-if="activeConversation"
+                type="button"
+                class="chat__attach"
+                :class="{ 'is-busy': attachInput?.uploading }"
+                :disabled="pendingAttachments.length >= 10"
+                :title="pendingAttachments.length >= 10 ? 'Не больше 10 файлов' : 'Прикрепить файлы (до 12 МБ)'"
+                @click="attachInput?.open()"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+              </svg>
+              <span v-if="pendingAttachments.length" class="chat__attach-count">{{ pendingAttachments.length }}</span>
+            </button>
+
             <!-- Стикеры: свои наборы из магазина -->
             <div class="sticker-picker">
               <button

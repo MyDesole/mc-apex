@@ -7,6 +7,18 @@
   grid-template-columns: minmax(0, 1fr) !important;
 }
 
+/*
+ * В конструкторе от карточки остаётся одна шапка: без нижнего отступа
+ * под ней торчала пустая полоса подложки карточки.
+ */
+.player-card.player-card--builder-head {
+  padding-bottom: 0;
+}
+
+.player-card--builder-head > .profile-header {
+  margin-bottom: 0 !important;
+}
+
 .builder-open {
   justify-self: end;
 
