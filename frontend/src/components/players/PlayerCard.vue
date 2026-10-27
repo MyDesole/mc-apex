@@ -422,14 +422,6 @@ const profileCompleteness = computed(() => {
         />
       </main>
 
-      <!-- В компактной шапке нет кнопок: открываем конструктор отсюда -->
-      <button
-          v-if="editable && compactHeader && !building"
-          type="button"
-          class="builder-open"
-          @click="building = true"
-      >⚙ Конструктор профиля</button>
-
       <p v-if="blocksError" class="builder-error">{{ blocksError }}</p>
 
       <ProfileBuilderGrid

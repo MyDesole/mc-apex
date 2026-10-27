@@ -397,6 +397,17 @@ const tierProgress = computed(() => {
   return Math.max(0, Math.min(100, number))
 })
 
+// «33 дня», «21 день», «11 дней»
+const daysWord = computed(() => {
+  const n = Math.abs(Number(props.user.days_on_platform) || 0)
+  const last = n % 10
+  const lastTwo = n % 100
+
+  if (last === 1 && lastTwo !== 11) return 'день'
+  if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) return 'дня'
+  return 'дней'
+})
+
 const tierSubtitle = computed(() => {
   if (props.bridgeMode) {
     return props.bridgeRank ? 'Звание бриджера' : 'Звание не выдано'
@@ -664,46 +675,57 @@ const coverStyle = computed(() => {
       <!-- Compact identity -->
       <div class="profile-header__compact-identity">
 
-        <div class="profile-header__compact-tier">
-
-          <span class="profile-header__compact-tier-icon">
-            {{ tierShort }}
-          </span>
-
-          <span class="profile-header__compact-tier-info">
-            <span class="profile-header__compact-tier-name">
-              {{ tierLabel }}
-            </span>
-
-            <span class="profile-header__compact-tier-subtitle">
-              {{ tierSubtitle }}
-            </span>
-          </span>
-
-        </div>
-
         <div class="profile-header__compact-name-row">
 
           <h1 class="profile-header__compact-name">
-            {{ displayNameWithClan }}
+            <!-- Эффект ника из магазина — как в полной шапке -->
+            <span v-if="user.name_effect" class="name-fx" :class="`name-fx--${user.name_effect}`">
+              <template v-if="user.name_effect === 'wave'">
+                <span
+                    v-for="(char, i) in [...displayNameWithClan]"
+                    :key="i"
+                    class="name-fx__char"
+                    :style="{ '--i': i }"
+                >{{ char }}</span>
+              </template>
+              <template v-else>{{ displayNameWithClan }}</template>
+            </span>
+            <template v-else>{{ displayNameWithClan }}</template>
+            <PixelSprite
+                v-if="nameIconData"
+                class="profile-header__name-icon"
+                :sprite="nameIconData.sprite"
+                :anim="nameIconData.anim"
+                :glow="nameIconData.glow"
+                :size="20"
+            />
           </h1>
+
+          <span
+              v-if="user.is_verified"
+              class="profile-header__verified"
+              title="Подтверждённый профиль"
+              aria-label="Подтверждённый профиль"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m5 12 4 4L19 6" />
+            </svg>
+          </span>
 
           <span
               v-if="roleLabel"
               class="profile-header__role"
-              :class="`profile-header__role--${user.role}`"
+              :class="{
+                [`profile-header__role--${user.role}`]: true,
+                'profile-header__role--media': isMedia,
+              }"
           >
             {{ roleLabel }}
           </span>
 
         </div>
 
-        <div
-            v-if="user.username && user.username !== displayName"
-            class="profile-header__compact-username"
-        >
-          @{{ user.username }}
-        </div>
+        <ProfileTitle v-if="user.profile_title" :title="user.profile_title" class="profile-header__compact-title" />
 
         <div class="profile-header__compact-meta">
 
@@ -716,45 +738,45 @@ const coverStyle = computed(() => {
           </span>
 
           <span
+              v-if="rankPosition !== null"
+              class="profile-header__compact-chip"
+              title="Место в рейтинге"
+          >
+            <b>#{{ rankPosition }}</b> в топе
+          </span>
+
+          <span
               v-if="level !== null"
               class="profile-header__compact-chip"
           >
-            LVL {{ level }}
+            <b>{{ level }}</b> уровень
           </span>
 
           <span
-              v-if="rankPosition !== null"
+              v-if="user.days_on_platform !== undefined && user.days_on_platform !== null"
               class="profile-header__compact-chip"
+              title="Дней на сайте"
           >
-            #{{ rankPosition }}
-          </span>
-
-          <span
-              v-if="user.days_on_platform !== undefined"
-              class="profile-header__compact-chip"
-          >
-            {{ user.days_on_platform }}D
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="16" rx="3" />
+              <path d="M16 3v4M8 3v4M3 11h18" />
+            </svg>
+            <b>{{ user.days_on_platform }}</b> {{ daysWord }} с нами
           </span>
 
         </div>
 
       </div>
 
-      <!-- Compact progress -->
+      <!-- Тир: буква в кольце, кольцо — очки до следующего тира -->
       <div
-          v-if="tierProgress !== null"
-          class="profile-header__compact-progress"
+          class="profile-header__compact-tier-ring"
+          :class="{ 'is-empty': tier === 'UNRANKED' && !bridgeMode }"
+          :style="{ '--progress': tierProgress ?? 100 }"
+          :title="tierProgress !== null ? `${tierLabel} · очки тира ${Math.round(tierProgress)}%` : `${tierLabel} · ${tierSubtitle}`"
       >
-        <div
-            class="profile-header__compact-progress-value"
-            :style="{
-              height: `${tierProgress}%`,
-            }"
-        />
-
-        <span>
-          {{ Number(tierProgress).toFixed(0) }}
-        </span>
+        <span class="profile-header__compact-tier-letter">{{ tierShort }}</span>
+        <small>{{ bridgeMode ? 'звание' : 'тир' }}</small>
       </div>
 
     </div>
