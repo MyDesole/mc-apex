@@ -6,19 +6,19 @@
  */
 import { ref } from 'vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
+import TeammatePicker from '@/components/players/builder/TeammatePicker.vue'
 import { BLOCK_TYPES, COLORS, STICKER_SPRITES, STYLE_OPTIONS, TONES } from '@/data/players/profileBlocks.js'
 
 const props = defineProps({
   block: { type: Object, required: true },
 })
 
-const LIMITS = { facts: 10, bars: 8, timeline: 10, players: 8 }
+const LIMITS = { facts: 10, bars: 8, timeline: 10 }
 
 const NEW_ROW = {
   facts: () => ({ label: '', value: '' }),
   bars: () => ({ label: '', value: 50 }),
   timeline: () => ({ when: '', text: '' }),
-  players: () => ({ username: '', note: '' }),
 }
 
 const def = BLOCK_TYPES[props.block.type] ?? { group: 'profile', title: null }
@@ -79,6 +79,8 @@ function setDate(value) {
         <input v-model="block.settings.author" maxlength="60" placeholder="Автор (необязательно)" />
       </template>
 
+      <TeammatePicker v-else-if="block.type === 'players'" :block="block" />
+
       <template v-else-if="block.type in LIMITS">
         <div v-for="(item, i) in block.settings.items" :key="i" class="pb-settings__row">
           <template v-if="block.type === 'facts'">
@@ -93,10 +95,6 @@ function setDate(value) {
           <template v-else-if="block.type === 'timeline'">
             <input v-model="item.when" maxlength="20" placeholder="Когда" class="pb-settings__short" />
             <input v-model="item.text" maxlength="120" placeholder="Что случилось" />
-          </template>
-          <template v-else-if="block.type === 'players'">
-            <input v-model="item.username" maxlength="32" placeholder="Ник" />
-            <input v-model="item.note" maxlength="30" placeholder="Подпись (дуо, тренер…)" />
           </template>
           <button type="button" title="Убрать строку" @click="block.settings.items.splice(i, 1)">✕</button>
         </div>

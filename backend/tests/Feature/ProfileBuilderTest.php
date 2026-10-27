@@ -65,6 +65,31 @@ class ProfileBuilderTest extends TestCase
         $this->assertNull($user->fresh()->profile_page);
     }
 
+    public function test_teammates_are_stored_by_id_and_served_fresh(): void
+    {
+        $owner = User::factory()->create();
+        $mate = User::factory()->create(['username' => 'Mate_1']);
+
+        $blocks = $this->actingAs($owner)->putJson('/api/players/me/blocks', ['blocks' => [
+            ['id' => 'p', 'type' => 'players', 'settings' => ['items' => [
+                ['user_id' => $mate->id, 'username' => 'Mate_1', 'role' => 'coach', 'note' => 'Учит клатчить'],
+                ['user_id' => $mate->id, 'username' => 'Mate_1'],
+                ['user_id' => 0, 'username' => 'Old', 'role' => 'boss'],
+            ]]],
+        ]])->assertOk()->json('blocks');
+
+        // Повтор того же игрока выкинут, неизвестная роль — дуо
+        $items = $blocks[0]['settings']['items'];
+        $this->assertCount(2, $items);
+        $this->assertSame('coach', $items[0]['role']);
+        $this->assertSame('duo', $items[1]['role']);
+
+        $this->getJson("/api/players/teammates?ids={$mate->id},999999,abc")
+            ->assertOk()
+            ->assertJsonCount(1, 'players')
+            ->assertJsonPath('players.0.username', 'Mate_1');
+    }
+
     public function test_guestbook_needs_block_and_respects_delete_rights(): void
     {
         $owner = User::factory()->create();

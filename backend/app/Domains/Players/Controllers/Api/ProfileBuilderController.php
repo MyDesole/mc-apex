@@ -38,6 +38,20 @@ class ProfileBuilderController extends Controller
         ]);
     }
 
+    /** Карточки тиммейтов: ?ids=1,2,3 (до 8 игроков). */
+    public function teammates(Request $request): JsonResponse
+    {
+        $ids = collect(explode(',', (string) $request->query('ids', '')))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->take(8)
+            ->values()
+            ->all();
+
+        return response()->json(['players' => $this->blocks->teammates($ids)]);
+    }
+
     public function guestbook(User $user): JsonResponse
     {
         return response()->json(['entries' => $this->blocks->guestbook($user)]);

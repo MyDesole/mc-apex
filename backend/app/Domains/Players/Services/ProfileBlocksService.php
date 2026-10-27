@@ -55,12 +55,17 @@ class ProfileBlocksService
 
     /** Настройки всей страницы. */
     private const PAGE = [
+        // masonry — блоки встают в ближайшее свободное место, без дыр
+        'flow' => ['masonry', 'rows'],
         'gap' => ['normal', 'tight', 'loose'],
         'header' => ['full', 'compact'],
         'appear' => ['rise', 'none', 'fade', 'zoom', 'cascade'],
         'radius' => ['round', 'sharp', 'soft'],
         'backdrop' => ['none', 'dim', 'blur'],
     ];
+
+    /** Кем тиммейт приходится игроку: подпись и цвет карточки. */
+    private const TEAMMATE_ROLES = ['duo', 'squad', 'coach', 'student', 'rival', 'bestie'];
 
     private const STICKER_SPRITES = [
         'creeper', 'bee', 'axolotl', 'tnt', 'diamond', 'heart', 'skull', 'warden', 'totem', 'cat',
@@ -188,11 +193,17 @@ class ProfileBlocksService
                     'text' => $this->str($item['text'] ?? '', 120),
                 ], 'text'),
             ],
+            // Тиммейт — игрок APEX по id; ник храним на случай, если аккаунт удалят
             'players' => [
-                'items' => $this->items($s, 8, fn ($item) => [
+                'items' => collect($this->items($s, 8, fn ($item) => [
+                    'user_id' => max(0, (int) ($item['user_id'] ?? 0)),
                     'username' => preg_replace('/[^A-Za-z0-9_]/', '', mb_substr((string) ($item['username'] ?? ''), 0, 32)),
                     'note' => $this->str($item['note'] ?? '', 30),
-                ], 'username'),
+                    'role' => in_array($item['role'] ?? null, self::TEAMMATE_ROLES, true) ? $item['role'] : 'duo',
+                ], 'username'))
+                    ->unique(fn ($item) => $item['user_id'] ?: $item['username'])
+                    ->values()
+                    ->all(),
             ],
             'spacer' => [
                 'size' => in_array($s['size'] ?? null, ['s', 'm', 'l'], true) ? $s['size'] : 'm',
@@ -252,6 +263,46 @@ class ProfileBlocksService
         $time = strtotime((string) $value);
 
         return $time ? date('c', $time) : '';
+    }
+
+    /* ------------------------------- Тиммейты ------------------------------- */
+
+    /**
+     * Живые данные тиммейтов для блока: в раскладке хранится только id,
+     * аватар, тир и косметика ника берутся свежие. Порядок — как в $ids.
+     *
+     * @param  array<int, int>  $ids
+     */
+    public function teammates(array $ids): array
+    {
+        if (! $ids) {
+            return [];
+        }
+
+        $users = User::query()
+            ->with('clanMember.clan:id,tag,banner_color')
+            ->whereIn('id', $ids)
+            ->get()
+            ->keyBy('id');
+
+        return collect($ids)
+            ->map(fn (int $id) => $users->get($id))
+            ->filter()
+            ->map(fn (User $u) => [
+                'id' => $u->id,
+                'username' => $u->username,
+                'minecraft_username' => $u->minecraft_username,
+                'avatar_url' => $u->avatar_url,
+                'tier' => $u->tier,
+                'display_rank' => $u->display_rank,
+                'name_effect' => $u->name_effect,
+                'name_icon' => $u->name_icon,
+                'accent_color' => $u->accent_color,
+                'clan_tag' => $u->clanMember?->clan?->tag,
+                'clan_color' => $u->clanMember?->clan?->banner_color,
+            ])
+            ->values()
+            ->all();
     }
 
     /* ----------------------------- Гостевая книга ----------------------------- */

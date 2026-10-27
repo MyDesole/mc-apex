@@ -7,6 +7,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
 import GuestbookBlock from '@/components/players/builder/GuestbookBlock.vue'
+import SquadBlock from '@/components/players/builder/SquadBlock.vue'
 import { youtubeId } from '@/data/players/profileBlocks.js'
 
 const props = defineProps({
@@ -104,21 +105,7 @@ function pad(n) {
   </ol>
 
   <!-- Тиммейты -->
-  <div v-else-if="block.type === 'players'" class="cb-players">
-    <RouterLink
-        v-for="(item, i) in items.filter((p) => p.username)"
-        :key="i"
-        :to="`/user/${encodeURIComponent(item.username)}`"
-        class="cb-players__item"
-    >
-      <i class="cb-players__avatar">{{ item.username.charAt(0).toUpperCase() }}</i>
-      <span>
-        <strong>{{ item.username }}</strong>
-        <small v-if="item.note">{{ item.note }}</small>
-      </span>
-    </RouterLink>
-    <p v-if="!items.length && editing" class="cb-placeholder">Добавь ники в настройках ⚙</p>
-  </div>
+  <SquadBlock v-else-if="block.type === 'players'" :items="items" :editing="editing" />
 
   <!-- Обратный отсчёт -->
   <div v-else-if="block.type === 'countdown'" class="cb-countdown">
@@ -360,64 +347,6 @@ function pad(n) {
 .cb-timeline__text {
   color: var(--text, #fff);
   font-size: 14px;
-}
-
-/* Тиммейты */
-.cb-players {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.cb-players__item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  padding: 6px;
-
-  color: inherit;
-  border-radius: 10px;
-  text-decoration: none;
-
-  transition: background 0.15s ease;
-}
-
-.cb-players__item:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.cb-players__avatar {
-  width: 34px;
-  height: 34px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-
-  color: #fff;
-  background: color-mix(in srgb, var(--accent-color, #8b5cf6) 40%, #1f1b2b);
-  border-radius: 9px;
-
-  font-style: normal;
-  font-weight: 900;
-}
-
-.cb-players__item span {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.cb-players__item strong {
-  color: var(--text, #fff);
-  font-size: 14px;
-}
-
-.cb-players__item small {
-  color: var(--text-muted, #8a8598);
-  font-size: 11px;
 }
 
 /* Пустое место */

@@ -26,6 +26,17 @@
   align-items: start;
 }
 
+/* Плотная укладка: строки по 4px, высоту блока в строках ставит скрипт */
+.pb-grid--masonry {
+  grid-auto-rows: 4px;
+  grid-auto-flow: row dense;
+  row-gap: 0;
+}
+
+.pb-grid--masonry > .pb-block {
+  align-self: start;
+}
+
 /* Фон под блоками */
 .pb-backdrop--dim .pb-grid,
 .pb-backdrop--blur .pb-grid {
@@ -1231,8 +1242,11 @@
 /* ---------- Телефон: всё во всю ширину ---------- */
 
 @media (max-width: 760px) {
-  .pb-grid {
+  .pb-grid,
+  .pb-grid--masonry {
     grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: auto;
+    row-gap: var(--pb-gap);
   }
 
   .pb-block {

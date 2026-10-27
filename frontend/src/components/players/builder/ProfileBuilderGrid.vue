@@ -15,7 +15,7 @@
  * Содержимое частей профиля (статистика, друзья, клан…) рисует родитель
  * через слот #builtin — их данные живут в PlayerCard и на странице.
  */
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import ProfileCustomBlock from '@/components/players/builder/ProfileCustomBlock.vue'
 import ProfileBlockSettings from '@/components/players/builder/ProfileBlockSettings.vue'
 import {
@@ -194,6 +194,79 @@ function shuffleLook() {
   }
 }
 
+/* ---------- Плотная укладка ----------
+ * Обычная сетка ставит блоки рядами: короткий блок рядом с длинным
+ * оставляет под собой дыру. Здесь строки сетки по 4px, и каждый блок
+ * занимает столько строк, сколько в нём пикселей (+ отступ) — блоки
+ * встают в ближайшее свободное место, как плитка. Высоту меряем живьём:
+ * подгрузились картинки или открыли настройки — пересчитываем.
+ */
+
+const ROW = 4
+const gridEl = ref(null)
+const masonry = computed(() => currentPage.value.flow !== 'rows')
+
+let resizeObserver = null
+let queued = false
+const phone = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(max-width: 760px)') : null
+
+function packBlocks() {
+  queued = false
+  const grid = gridEl.value
+  if (!grid) return
+
+  const blocks = grid.querySelectorAll(':scope > .pb-block, :scope > .pb-empty')
+  const active = masonry.value && !phone?.matches
+
+  if (!active) {
+    blocks.forEach((el) => el.style.removeProperty('grid-row-end'))
+    return
+  }
+
+  const gap = parseFloat(getComputedStyle(grid).columnGap) || 0
+
+  blocks.forEach((el) => {
+    const height = el.getBoundingClientRect().height
+    el.style.gridRowEnd = `span ${Math.max(1, Math.ceil((height + gap) / ROW))}`
+  })
+}
+
+/*
+ * Пачку изменений считаем один раз. Не через requestAnimationFrame: во
+ * вкладке в фоне он не срабатывает, и блоки остались бы друг на друге.
+ * Высота блока от числа строк не меняется (align-self: start), так что
+ * ResizeObserver не уходит в цикл.
+ */
+function schedulePack() {
+  if (queued) return
+  queued = true
+  queueMicrotask(packBlocks)
+}
+
+function observeBlocks() {
+  if (!resizeObserver || !gridEl.value) return
+  resizeObserver.disconnect()
+  gridEl.value.querySelectorAll(':scope > .pb-block, :scope > .pb-empty').forEach((el) => resizeObserver.observe(el))
+  schedulePack()
+}
+
+onMounted(() => {
+  if (typeof ResizeObserver !== 'undefined') resizeObserver = new ResizeObserver(schedulePack)
+  phone?.addEventListener?.('change', schedulePack)
+  observeBlocks()
+})
+
+onUnmounted(() => {
+  resizeObserver?.disconnect()
+  phone?.removeEventListener?.('change', schedulePack)
+})
+
+// Блоки добавили, убрали, переставили или сменили укладку
+watch(
+    () => [list.value.map((b) => `${b.id}:${b.width}`).join(), masonry.value],
+    () => nextTick(observeBlocks),
+)
+
 /* ---------- Вид блока ---------- */
 
 function blockClasses(block) {
@@ -274,7 +347,7 @@ function blockStyle(block, i) {
     </div>
 
     <!-- Сетка -->
-    <div class="pb-grid">
+    <div ref="gridEl" class="pb-grid" :class="{ 'pb-grid--masonry': masonry }">
       <section
           v-for="(block, i) in list"
           :key="block.id"

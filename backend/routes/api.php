@@ -104,6 +104,10 @@ Route::get('/shop/{shopItem}', [ShopController::class, 'show'])->whereNumber('sh
 Route::get('/players/{user}/guestbook', [\App\Domains\Players\Controllers\Api\ProfileBuilderController::class, 'guestbook'])
     ->whereNumber('user');
 
+// Карточки тиммейтов для блока профиля (до /players/{user}, иначе перехватит)
+Route::get('/players/teammates', [\App\Domains\Players\Controllers\Api\ProfileBuilderController::class, 'teammates'])
+    ->middleware('throttle:60,1');
+
 // Кейсы с косметикой: витрина видна и гостям
 Route::get('/cases', [\App\Domains\Shop\Controllers\Api\LootCaseController::class, 'index']);
 Route::get('/cases/status', [\App\Domains\Shop\Controllers\Api\LootCaseController::class, 'status']);

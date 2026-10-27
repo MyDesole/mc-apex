@@ -29,7 +29,7 @@ export const BLOCK_TYPES = {
     facts: { group: 'content', label: 'Факты', hint: 'Таблица: девайс, пинг, любимый кит…', icon: '☰', width: 'third', title: 'Факты', settings: { items: [{ label: 'Мышь', value: '' }, { label: 'Пинг', value: '' }] } },
     bars: { group: 'content', label: 'Навыки', hint: 'Полоски от 0 до 100', icon: '▤', width: 'third', title: 'Навыки', settings: { items: [{ label: 'Бридж', value: 80 }, { label: 'Клатчи', value: 60 }] } },
     timeline: { group: 'content', label: 'Мой путь', hint: 'Лента событий: когда и что случилось', icon: '⋮', width: 'half', title: 'Мой путь', settings: { items: [{ when: '', text: '' }] } },
-    players: { group: 'content', label: 'Тиммейты', hint: 'Ники игроков со ссылками на профили', icon: '☺', width: 'third', title: 'Тиммейты', settings: { items: [] } },
+    players: { group: 'content', label: 'Тиммейты', hint: 'Игроки APEX, с кем играешь: дуо, сквад, тренер', icon: '⚔', width: 'half', title: 'Мой сквад', settings: { items: [] } },
     countdown: { group: 'content', label: 'Обратный отсчёт', hint: 'До турнира, стрима или дня рождения', icon: '⏱', width: 'third', title: null, settings: { title: '', date: '' } },
     video: { group: 'content', label: 'Видео с YouTube', hint: 'Твой лучший хайлайт прямо в профиле', icon: '▶', width: 'two_thirds', title: null, settings: { url: '' } },
     guestbook: { group: 'content', label: 'Гостевая книга', hint: 'Гости оставляют тебе записи', icon: '✎', single: true, width: 'half', title: 'Гостевая книга' },
@@ -93,11 +93,26 @@ export const STYLE_OPTIONS = {
 
 /** Настройки всей страницы. */
 export const PAGE_OPTIONS = {
+    flow: { label: 'Укладка', options: [['masonry', 'Плотно, без дыр'], ['rows', 'Ровными рядами']] },
     gap: { label: 'Отступы', options: [['normal', 'Обычные'], ['tight', 'Плотно'], ['loose', 'Просторно']] },
     header: { label: 'Шапка', options: [['full', 'Полная'], ['compact', 'Компактная']] },
     appear: { label: 'Появление', options: [['rise', 'Снизу'], ['none', 'Сразу'], ['fade', 'Проявление'], ['zoom', 'Приближение'], ['cascade', 'Каскад']] },
     radius: { label: 'Углы блоков', options: [['round', 'Скруглённые'], ['sharp', 'Острые'], ['soft', 'Мягкие']] },
     backdrop: { label: 'Фон под блоками', options: [['none', 'Нет'], ['dim', 'Затемнить'], ['blur', 'Размыть']] },
+}
+
+/** Кем тиммейт приходится игроку — подпись и цвет карточки. */
+export const TEAMMATE_ROLES = [
+    { id: 'duo', label: 'Дуо', icon: '⚔', color: '#8b5cf6' },
+    { id: 'squad', label: 'Сквад', icon: '⛨', color: '#3b82f6' },
+    { id: 'coach', label: 'Тренер', icon: '★', color: '#eab308' },
+    { id: 'student', label: 'Ученик', icon: '✎', color: '#22c55e' },
+    { id: 'rival', label: 'Соперник', icon: '⚡', color: '#ef4444' },
+    { id: 'bestie', label: 'Лучший друг', icon: '♥', color: '#ec4899' },
+]
+
+export function teammateRole(id) {
+    return TEAMMATE_ROLES.find((r) => r.id === id) ?? TEAMMATE_ROLES[0]
 }
 
 export const STICKER_SPRITES = [
