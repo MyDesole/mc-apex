@@ -10,6 +10,7 @@ use App\Domains\Friends\Models\Friendship;
 use App\Domains\Chat\Models\Message;
 use App\Domains\Chat\Models\MessageAttachment;
 use App\Domains\Chat\Models\MessageRead;
+use App\Domains\Chat\Models\MessageReaction;
 use App\Domains\Users\Models\User;
 use App\Domains\Chat\Resources\MessageResource;
 use Illuminate\Http\UploadedFile;
@@ -39,6 +40,7 @@ class ChatService
         'replyTo.attachments',
         'forwardedFrom',
         'attachments',
+        'reactions:id,message_id,user_id,emoji',
     ];
 
     private const CONVERSATION_RELATIONS = [
@@ -645,6 +647,46 @@ class ChatService
      */
     public function conversationPayload(Conversation $conversation): array
     {
-        return $conversation->load(self::CONVERSATION_RELATIONS)->toArray();
+        return $conversation->load([...self::CONVERSATION_RELATIONS, 'pinnedMessage.user:id,username'])->toArray();
+    }
+
+    /**
+     * Поставить или снять реакцию. Возвращает реакции сообщения
+     * сгруппированно: эмодзи, сколько и стоит ли моя.
+     */
+    public function toggleReaction(Message $message, User $me, string $emoji): array
+    {
+        $existing = MessageReaction::where('message_id', $message->id)
+            ->where('user_id', $me->id)
+            ->where('emoji', $emoji)
+            ->first();
+
+        if ($existing) {
+            $existing->delete();
+        } else {
+            MessageReaction::create(['message_id' => $message->id, 'user_id' => $me->id, 'emoji' => $emoji]);
+        }
+
+        return self::groupReactions($message->reactions()->get(['id', 'message_id', 'user_id', 'emoji']), $me->id);
+    }
+
+    /** Закрепить сообщение диалога (null — открепить). */
+    public function pin(Conversation $conversation, ?Message $message): void
+    {
+        $conversation->forceFill(['pinned_message_id' => $message?->id])->save();
+    }
+
+    /** [{emoji, count, mine}] в порядке первой реакции. */
+    public static function groupReactions($reactions, ?int $meId): array
+    {
+        return collect($reactions)
+            ->groupBy('emoji')
+            ->map(fn ($group, $emoji) => [
+                'emoji' => $emoji,
+                'count' => $group->count(),
+                'mine' => $meId !== null && $group->contains('user_id', $meId),
+            ])
+            ->values()
+            ->all();
     }
 }

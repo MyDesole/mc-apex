@@ -7,6 +7,7 @@
  * подтверждённые виды, чтобы не предлагать пройденное.
  */
 import { computed, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/core/auth.js'
 import TierTestForm from '@/components/tiers/TierTestForm.vue'
 import BridgeTechniqueForm from '@/components/bridge/BridgeTechniqueForm.vue'
@@ -28,10 +29,14 @@ const bridgeConfirmed = computed(() =>
     auth.user?.bridge?.summary?.confirmed_count ?? 0,
 )
 
+// В сообщениях банер внизу закрывал поле ввода — там его не показываем
+const route = useRoute()
+
 const shouldShow = computed(() => {
   if (!auth.initialized) return false
   if (!auth.isAuthenticated) return false
   if (hiddenInSession.value) return false
+  if (String(route.path).startsWith('/messages')) return false
 
   // В бридже зовём подтвердить вид, а не проходить тир-тест
   if (isBridge.value) {

@@ -56,6 +56,16 @@ export const chatApi = {
         return api.delete(`/chat/messages/${messageId}`)
     },
 
+    // Реакция: поставить или снять — сервер вернёт все реакции сообщения
+    react(messageId, emoji) {
+        return api.post(`/chat/messages/${messageId}/reactions`, { emoji })
+    },
+
+    // Закрепить сообщение в диалоге (null — открепить)
+    pin(conversationId, messageId) {
+        return api.post(`/chat/conversations/${conversationId}/pin`, { message_id: messageId })
+    },
+
     forward(messageId, conversationId) {
         return api.post(`/chat/messages/${messageId}/forward`, {
             conversation_id: conversationId,

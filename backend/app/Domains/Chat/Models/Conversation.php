@@ -34,6 +34,12 @@ class Conversation extends Model
         return $this->hasOne(Message::class)->latestOfMany();
     }
 
+    /** Закреплённое сообщение: висит плашкой над лентой. */
+    public function pinnedMessage(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Message::class, 'pinned_message_id');
+    }
+
     public function participants(): HasMany
     {
         return $this->hasMany(ConversationParticipant::class);

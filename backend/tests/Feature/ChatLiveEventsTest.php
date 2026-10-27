@@ -167,4 +167,44 @@ class ChatLiveEventsTest extends TestCase
         $history = $this->getJson("/api/chat/conversations/{$conversation->id}")->assertOk();
         $this->assertStringContainsString('"chat_bubble":"neon"', $history->getContent());
     }
+
+    public function test_reactions_and_pin(): void
+    {
+        $author = User::factory()->create();
+        $reader = User::factory()->create();
+        $stranger = User::factory()->create();
+
+        $conversation = $this->direct($author, $reader);
+        $message = app(ChatService::class)->send($conversation, $author, 'го на кв');
+
+        Sanctum::actingAs($reader);
+        $this->postJson("/api/chat/messages/{$message->id}/reactions", ['emoji' => '🔥'])
+            ->assertOk()
+            ->assertJsonPath('reactions.0.emoji', '🔥')
+            ->assertJsonPath('reactions.0.mine', true);
+
+        // Чужое эмодзи — нельзя
+        $this->postJson("/api/chat/messages/{$message->id}/reactions", ['emoji' => '🍕'])->assertStatus(422);
+
+        // Реакция видна в истории собеседнику
+        Sanctum::actingAs($author);
+        $this->getJson("/api/chat/conversations/{$conversation->id}")
+            ->assertOk()
+            ->assertJsonPath('messages.0.reactions.0.count', 1)
+            ->assertJsonPath('messages.0.reactions.0.mine', false);
+
+        // Повторное нажатие снимает реакцию
+        Sanctum::actingAs($reader);
+        $this->postJson("/api/chat/messages/{$message->id}/reactions", ['emoji' => '🔥'])->assertJsonCount(0, 'reactions');
+
+        // Закреп
+        $this->postJson("/api/chat/conversations/{$conversation->id}/pin", ['message_id' => $message->id])
+            ->assertOk()
+            ->assertJsonPath('conversation.pinned_message.id', $message->id);
+
+        // Посторонний не может ни реагировать, ни закреплять
+        Sanctum::actingAs($stranger);
+        $this->postJson("/api/chat/messages/{$message->id}/reactions", ['emoji' => '🔥'])->assertForbidden();
+        $this->postJson("/api/chat/conversations/{$conversation->id}/pin", ['message_id' => null])->assertForbidden();
+    }
 }

@@ -640,6 +640,90 @@ function autoGrow() {
 // ОТВЕТ
 // ============================================
 
+/* ---------- Фильтры и избранные диалоги ---------- */
+
+const CONV_FILTERS = [
+  { id: 'all', label: 'Все' },
+  { id: 'unread', label: 'Непрочитанные' },
+  { id: 'direct', label: 'Личные' },
+  { id: 'clan', label: 'Кланы' },
+  { id: 'favorites', label: '★' },
+]
+
+const convFilter = ref('all')
+
+// Избранное — удобство одного зрителя, хранится в браузере
+function readFavorites() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem('apex:chat-favorites') || '[]'))
+  } catch {
+    return new Set()
+  }
+}
+
+const favorites = ref(readFavorites())
+
+function toggleFavorite(id) {
+  const next = new Set(favorites.value)
+  next.has(id) ? next.delete(id) : next.add(id)
+  favorites.value = next
+  try {
+    localStorage.setItem('apex:chat-favorites', JSON.stringify([...next]))
+  } catch {
+    // не запомним — не страшно
+  }
+}
+
+const unreadTotal = computed(() => conversations.value.reduce((sum, c) => sum + (c.unread_count || 0), 0))
+
+const filteredConversations = computed(() => {
+  const list = conversations.value.filter((c) => {
+    if (convFilter.value === 'unread') return c.unread_count > 0
+    if (convFilter.value === 'direct') return c.type !== 'clan_message'
+    if (convFilter.value === 'clan') return c.type === 'clan_message'
+    if (convFilter.value === 'favorites') return favorites.value.has(c.id)
+    return true
+  })
+
+  // Избранные — наверху, остальной порядок как пришёл (свежие сверху)
+  return [...list].sort((a, b) => Number(favorites.value.has(b.id)) - Number(favorites.value.has(a.id)))
+})
+
+/* ---------- Реакции и закреп ---------- */
+
+const REACTIONS = ['❤️', '👍', '😂', '😮', '😢', '🔥', '💀', '👑']
+const reactPickerId = ref(null)
+
+async function toggleReaction(message, emoji) {
+  if (!message?.id) return
+
+  try {
+    const res = await chatApi.react(message.id, emoji)
+    message.reactions = res.reactions ?? []
+  } catch (e) {
+    error.value = e.message || 'Не удалось поставить реакцию.'
+  }
+}
+
+async function setPin(messageId) {
+  if (!activeConversation.value) return
+
+  try {
+    const res = await chatApi.pin(activeConversation.value.id, messageId)
+    activeConversation.value = { ...activeConversation.value, ...res.conversation }
+  } catch (e) {
+    error.value = e.message || 'Не удалось закрепить.'
+  }
+}
+
+function togglePin(message) {
+  setPin(activeConversation.value?.pinned_message_id === message.id ? null : message.id)
+}
+
+function unpin() {
+  setPin(null)
+}
+
 const replyTo = ref(null)
 
 function setReply(message) {
@@ -1453,14 +1537,42 @@ onUnmounted(() => {
         </span>
       </div>
 
+      <!-- Фильтры списка -->
+      <div v-if="!loadingList && conversations.length" class="conv-filters">
+        <button
+            v-for="f in CONV_FILTERS"
+            :key="f.id"
+            type="button"
+            class="conv-filters__btn"
+            :class="{ 'is-on': convFilter === f.id }"
+            @click="convFilter = f.id"
+        >
+          {{ f.label }}
+          <b v-if="f.id === 'unread' && unreadTotal">{{ unreadTotal }}</b>
+        </button>
+      </div>
+
+      <p v-if="!loadingList && conversations.length && !filteredConversations.length" class="conv-filters__empty">
+        {{ convFilter === 'favorites' ? 'Отметь диалог звёздочкой — он будет здесь.' : 'Здесь пусто.' }}
+      </p>
+
       <ul
-          v-else
+          v-if="!loadingList && conversations.length"
           class="conversations__list scroll-thin"
       >
         <li
-            v-for="c in conversations"
+            v-for="c in filteredConversations"
             :key="c.id"
+            class="conv-item"
         >
+          <!-- Избранное: наверху списка и во вкладке «★» -->
+          <button
+              type="button"
+              class="conv-star"
+              :class="{ 'is-on': favorites.has(c.id) }"
+              :title="favorites.has(c.id) ? 'Убрать из избранного' : 'В избранное'"
+              @click.stop.prevent="toggleFavorite(c.id)"
+          >★</button>
           <RouterLink
               :to="`/messages/${c.id}`"
               class="conv"
@@ -1761,6 +1873,18 @@ onUnmounted(() => {
           <div class="chat__head-accent"></div>
         </header>
 
+        <!-- Закреплённое сообщение: клик — перейти к нему -->
+        <div v-if="activeConversation?.pinned_message" class="chat__pinned">
+          <button type="button" class="chat__pinned-body" @click="scrollToMessage(activeConversation.pinned_message.id)">
+            <span class="chat__pinned-icon">📌</span>
+            <span class="chat__pinned-text">
+              <b>Закреплено{{ activeConversation.pinned_message.user ? ` · ${activeConversation.pinned_message.user.username}` : '' }}</b>
+              <span>{{ activeConversation.pinned_message.body || 'Вложение' }}</span>
+            </span>
+          </button>
+          <button type="button" class="chat__pinned-close" title="Открепить" @click="unpin">✕</button>
+        </div>
+
         <!-- MESSAGES -->
 
         <div
@@ -1890,6 +2014,8 @@ onUnmounted(() => {
                       m.user?.chat_bubble && !parseSticker(m.body) ? ['bubble-fx', `bubble-fx--${m.user.chat_bubble}`] : null,
                       { 'msg__bubble--sticker': parseSticker(m.body) },
                     ]"
+                    title="Двойной клик — ❤️"
+                    @dblclick="toggleReaction(m, '❤️')"
                 >
                   <div
                       v-if="m.forwarded_from"
@@ -2117,9 +2243,43 @@ onUnmounted(() => {
                     </span>
                   </div>
                 </div>
+
+                <!-- Реакции: эмодзи со счётчиком, нажать — поставить или снять -->
+                <div v-if="m.reactions?.length" class="msg__reactions">
+                  <button
+                      v-for="r in m.reactions"
+                      :key="r.emoji"
+                      type="button"
+                      class="msg__reaction"
+                      :class="{ 'is-mine': r.mine }"
+                      @click="toggleReaction(m, r.emoji)"
+                  >{{ r.emoji }} <b>{{ r.count }}</b></button>
+                </div>
+
+                <!-- Выбор реакции -->
+                <div v-if="reactPickerId === m.id" class="msg__react-picker">
+                  <button
+                      v-for="emoji in REACTIONS"
+                      :key="emoji"
+                      type="button"
+                      @click="toggleReaction(m, emoji); reactPickerId = null"
+                  >{{ emoji }}</button>
+                </div>
               </div>
 
               <div class="msg__actions">
+                <button
+                    class="msg__action"
+                    type="button"
+                    title="Реакция"
+                    @click="reactPickerId = reactPickerId === m.id ? null : m.id"
+                >😊</button>
+                <button
+                    class="msg__action"
+                    type="button"
+                    :title="activeConversation?.pinned_message_id === m.id ? 'Открепить' : 'Закрепить'"
+                    @click="togglePin(m)"
+                >📌</button>
                 <button
                     class="msg__action"
                     type="button"
@@ -3100,6 +3260,27 @@ onUnmounted(() => {
         >
           <div class="action-sheet">
             <div class="action-sheet__handle"></div>
+
+            <!-- Реакция одним касанием -->
+            <div v-if="actionSheetMessage" class="action-sheet__reactions">
+              <button
+                  v-for="emoji in REACTIONS"
+                  :key="emoji"
+                  type="button"
+                  :class="{ 'is-mine': actionSheetMessage.reactions?.some((r) => r.emoji === emoji && r.mine) }"
+                  @click="toggleReaction(actionSheetMessage, emoji); closeActionSheet()"
+              >{{ emoji }}</button>
+            </div>
+
+            <button
+                v-if="actionSheetMessage"
+                type="button"
+                class="action-sheet__item"
+                @click="togglePin(actionSheetMessage); closeActionSheet()"
+            >
+              <span class="action-sheet__icon">📌</span>
+              {{ activeConversation?.pinned_message_id === actionSheetMessage.id ? 'Открепить' : 'Закрепить' }}
+            </button>
 
             <div
                 v-if="actionSheetMessage"

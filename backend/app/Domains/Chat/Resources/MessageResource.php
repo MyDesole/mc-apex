@@ -4,6 +4,7 @@ namespace App\Domains\Chat\Resources;
 
 use App\Domains\Chat\Models\Message;
 use App\Domains\Chat\Models\MessageAttachment;
+use App\Domains\Chat\Services\ChatService;
 use App\Domains\Users\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -37,6 +38,9 @@ class MessageResource extends JsonResource
                 'username' => $message->forwardedFrom->username,
             ] : null,
             'attachments' => $this->attachments(),
+            'reactions' => $message->relationLoaded('reactions')
+                ? ChatService::groupReactions($message->reactions, $me?->id)
+                : [],
             'is_mine' => $me ? $message->user_id === $me->id : false,
         ];
     }

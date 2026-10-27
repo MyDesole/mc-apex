@@ -151,6 +151,34 @@ class ChatController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    /** Реакция на сообщение: поставить или снять. */
+    public function react(Request $request, Message $message): JsonResponse
+    {
+        $this->authorize('view', $message->conversation);
+
+        $data = $request->validate(['emoji' => ['required', 'string', \Illuminate\Validation\Rule::in(\App\Domains\Chat\Models\MessageReaction::EMOJI)]]);
+
+        return response()->json([
+            'reactions' => $this->chat->toggleReaction($message, $request->user(), $data['emoji']),
+        ]);
+    }
+
+    /** Закрепить сообщение в диалоге или открепить (message_id = null). */
+    public function pin(Request $request, Conversation $conversation): JsonResponse
+    {
+        $this->authorize('send', $conversation);
+
+        $data = $request->validate(['message_id' => ['present', 'nullable', 'integer']]);
+
+        $message = $data['message_id']
+            ? Message::where('conversation_id', $conversation->id)->findOrFail($data['message_id'])
+            : null;
+
+        $this->chat->pin($conversation, $message);
+
+        return response()->json(['conversation' => $this->chat->conversationPayload($conversation->fresh())]);
+    }
+
     /* ----------------------------- Вложения ----------------------------- */
 
     /**

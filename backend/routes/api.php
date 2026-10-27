@@ -307,6 +307,13 @@ Route::middleware('auth:sanctum')->group(function () {
             ->whereNumber('attachment');
         Route::post('/conversations/{conversation}/read', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'markConversationRead'])
             ->whereNumber('conversation');
+        // Реакции и закреп
+        Route::post('/messages/{message}/reactions', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'react'])
+            ->whereNumber('message')
+            ->middleware('throttle:60,1');
+        Route::post('/conversations/{conversation}/pin', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'pin'])
+            ->whereNumber('conversation');
+
         Route::post('/conversations/{conversation}/typing', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'typing'])
             ->whereNumber('conversation');
         Route::put('/messages/{message}', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'update'])
