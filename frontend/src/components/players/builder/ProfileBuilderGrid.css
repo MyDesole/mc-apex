@@ -80,6 +80,61 @@
   box-shadow: none;
 }
 
+/*
+ * Готовые части профиля рисуют свои подложки (а темы карточки ещё и
+ * перекрашивают их): аспекты, ачивки, друзья, рекомендации, Minecraft-
+ * карточка. В блоке фон задаёт оформление самого блока, поэтому их
+ * обёртки прозрачные — иначе в неоновом блоке торчит белая коробка.
+ */
+.profile-layout .pb-block .pb-block__body :is(.aspects, .side-panel, .showcase, .recommendations) {
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+
+.profile-layout .pb-block .pb-block__body :is(.aspects, .side-panel, .showcase, .recommendations)::before,
+.profile-layout .pb-block .pb-block__body :is(.aspects, .side-panel, .showcase, .recommendations)::after {
+  display: none;
+}
+
+.profile-layout .pb-block .pb-block__body .aspects .section-head {
+  display: none;
+}
+
+/* Карточки внутри — полупрозрачные, подкрашены своим цветом */
+.profile-layout .pb-block .pb-block__body .aspect-card {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--mode-color) 14%, transparent), rgba(255, 255, 255, 0.025));
+  border-color: color-mix(in srgb, var(--mode-color) 28%, transparent);
+  border-radius: calc(var(--pb-block-radius) * 0.7);
+  box-shadow: none;
+}
+
+.profile-layout .pb-block:not(.pb-tone--default) .pb-block__body :is(.profile-stat, .social-card, .clan-badge) {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+
+/* На светлой «бумаге» карточки и подписи — тёмные */
+.profile-layout .pb-tone--paper .pb-block__body .aspect-card {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--mode-color) 16%, transparent), rgba(0, 0, 0, 0.03));
+}
+
+.profile-layout .pb-tone--paper .pb-block__body :is(.profile-stat, .social-card, .clan-badge) {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.pb-tone--paper :is(.aspect-label, .aspect-total, .stat-top, .stat-top *) {
+  color: var(--text) !important;
+}
+
+.pb-tone--paper .stat-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
 .block-title {
   margin: 0 0 12px;
 
