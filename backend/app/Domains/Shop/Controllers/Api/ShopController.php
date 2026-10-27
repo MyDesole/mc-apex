@@ -125,6 +125,23 @@ class ShopController extends Controller
         ]);
     }
 
+    /** Надеть или снять конкретный экземпляр питомца (их бывает несколько). */
+    public function togglePet(Request $request, \App\Domains\Shop\Models\UserInventory $row, string $action): JsonResponse
+    {
+        $user = $request->user();
+
+        abort_unless($row->user_id === $user->id && $row->item?->type === ShopItem::TYPE_PROFILE_PET, 404);
+
+        $action === 'equip'
+            ? ShopService::equipPetRow($user, $row)
+            : ShopService::unequipPetRow($user, $row);
+
+        return response()->json([
+            'message' => $action === 'equip' ? 'Питомец гуляет в профиле.' : 'Питомец ушёл в инвентарь.',
+            'inventory' => ShopService::inventory($user->fresh())->all(),
+        ]);
+    }
+
     /** Стикерпаки игрока для выбора в чате. */
     public function stickers(Request $request, StickerService $stickers): JsonResponse
     {

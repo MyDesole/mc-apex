@@ -50,6 +50,11 @@ export const shopApi = {
         return api.post(`/shop/${id}/equip-bundle`)
     },
 
+    // Конкретный экземпляр питомца (их может быть несколько, гуляют до трёх)
+    togglePet(inventoryId, equip = true) {
+        return api.post(`/shop/pets/${inventoryId}/${equip ? 'equip' : 'unequip'}`)
+    },
+
     unequip(id) {
         return api.post(`/shop/${id}/unequip`)
     },

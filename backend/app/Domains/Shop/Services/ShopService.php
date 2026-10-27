@@ -285,7 +285,8 @@ class ShopService
             'icon' => $item->icon,
             'color' => $item->color,
             'is_consumable' => $item->is_consumable,
-            'is_repeatable' => $item->is_repeatable,
+            // Питомцев можно покупать ещё — каждый экземпляр уникален
+            'is_repeatable' => $item->is_repeatable || $item->type === ShopItem::TYPE_PROFILE_PET,
             'is_equippable' => $item->isEquippable(),
             'metadata' => $item->metadata,
             // Флаги покупки есть всегда: у гостя они по умолчанию ложные,
@@ -375,7 +376,9 @@ class ShopService
                 self::presentItem($row->item),
                 [
                     // Питомец: черты и номер именно этого экземпляра
-                    'pet' => $row->pet_traits ? PetTraits::present($row->pet_traits, $row->pet_serial) : null,
+                    'pet' => $row->pet_traits
+                        ? [...PetTraits::present($row->pet_traits, $row->pet_serial), 'name' => $row->pet_name]
+                        : null,
                     'inventory_id' => $row->id,
                     'shop_item_id' => $row->shop_item_id,
                     'quantity' => $row->quantity,
@@ -506,7 +509,8 @@ class ShopService
             ? ClanInventory::where('clan_id', $clan->id)->where('shop_item_id', $item->id)->first()
             : UserInventory::where('user_id', $user->id)->where('shop_item_id', $item->id)->first();
 
-        if ($owned && ! $item->isStackable()) {
+        // Питомцев можно собирать: каждая покупка — новый уникальный экземпляр
+        if ($owned && ! $item->isStackable() && $item->type !== ShopItem::TYPE_PROFILE_PET) {
             throw new RuntimeException($isStyle
                 ? 'Это оформление уже есть в инвентаре клана — наденьте его в настройках клана.'
                 : 'Этот предмет уже есть в вашем инвентаре.');
@@ -583,10 +587,13 @@ class ShopService
                 return;
             }
 
-            $inventory = UserInventory::firstOrNew([
-                'user_id' => $user->id,
-                'shop_item_id' => $item->id,
-            ]);
+            // Питомец — всегда новый экземпляр, остальное копится в одной строке
+            $inventory = $item->type === ShopItem::TYPE_PROFILE_PET
+                ? new UserInventory(['user_id' => $user->id, 'shop_item_id' => $item->id])
+                : UserInventory::firstOrNew([
+                    'user_id' => $user->id,
+                    'shop_item_id' => $item->id,
+                ]);
 
             // Сколько применений даёт одна покупка (у пачки ×5 — пять)
             $charges = (int) ($item->metadata['charges'] ?? 1);
@@ -858,6 +865,19 @@ class ShopService
             throw new RuntimeException('Сначала нужно купить этот предмет.');
         }
 
+        // Питомцы: до трёх сразу; надеваем ещё не надетый экземпляр
+        if ($item->type === ShopItem::TYPE_PROFILE_PET) {
+            $free = UserInventory::where('user_id', $user->id)
+                ->where('shop_item_id', $item->id)
+                ->whereNull('equipped_at')
+                ->orderBy('id')
+                ->first();
+
+            self::equipPetRow($user, $free ?? $row);
+
+            return self::inventory($user->fresh())->all();
+        }
+
         DB::transaction(function () use ($user, $item, $row) {
             if ($item->type === ShopItem::TYPE_BADGE) {
                 self::equipBadge($user, $row);
@@ -989,8 +1009,88 @@ class ShopService
         self::syncBadgeField($user);
     }
 
+    /** Сколько питомцев гуляет на профиле одновременно. */
+    public const MAX_PETS = 3;
+
+    /**
+     * Надеть экземпляр питомца. Если уже гуляют трое — снимаем того,
+     * кого надели раньше всех.
+     */
+    public static function equipPetRow(User $user, UserInventory $row): void
+    {
+        DB::transaction(function () use ($user, $row) {
+            if (! $row->equipped_at) {
+                $equipped = self::equippedPetRows($user);
+
+                if ($equipped->count() >= self::MAX_PETS) {
+                    $equipped->first()->forceFill(['equipped_at' => null])->save();
+                }
+
+                $row->forceFill(['equipped_at' => now()])->save();
+            }
+
+            self::syncPets($user);
+        });
+    }
+
+    public static function unequipPetRow(User $user, UserInventory $row): void
+    {
+        $row->forceFill(['equipped_at' => null])->save();
+        self::syncPets($user);
+    }
+
+    private static function equippedPetRows(User $user): Collection
+    {
+        return UserInventory::with('item')
+            ->where('user_id', $user->id)
+            ->whereNotNull('equipped_at')
+            ->whereHas('item', fn ($q) => $q->where('type', ShopItem::TYPE_PROFILE_PET))
+            ->orderBy('equipped_at')
+            ->orderBy('id')
+            ->get();
+    }
+
+    /**
+     * Надетые питомцы → профиль игрока: список до трёх (порядок надевания)
+     * и, для старых мест, первый — в profile_pet и pet_traits.
+     */
+    public static function syncPets(User $user): void
+    {
+        $rows = self::equippedPetRows($user)->take(self::MAX_PETS)->values();
+        $first = $rows->first();
+
+        $user->forceFill([
+            'profile_pets' => $rows->isEmpty() ? null : $rows->map(fn (UserInventory $r) => [
+                'inventory_id' => $r->id,
+                'pet' => $r->item?->effect_value,
+                'traits' => $r->pet_traits,
+                'serial' => $r->pet_serial,
+                'name' => $r->pet_name,
+            ])->all(),
+            'profile_pet' => $first?->item?->effect_value,
+            'pet_traits' => $first?->pet_traits ? $first->pet_traits + ['serial' => $first->pet_serial] : null,
+        ])->save();
+    }
+
     public static function unequip(User $user, ShopItem $item): array
     {
+        // Питомцы: снимаем все надетые экземпляры этого питомца
+        if ($item->type === ShopItem::TYPE_PROFILE_PET) {
+            $rows = UserInventory::where('user_id', $user->id)
+                ->where('shop_item_id', $item->id)
+                ->whereNotNull('equipped_at')
+                ->get();
+
+            if ($rows->isEmpty()) {
+                throw new RuntimeException('Этот предмет не надет.');
+            }
+
+            $rows->each(fn (UserInventory $r) => $r->forceFill(['equipped_at' => null])->save());
+            self::syncPets($user);
+
+            return self::inventory($user->fresh())->all();
+        }
+
         $isStyle = $item->type === ShopItem::TYPE_CLAN_HIGHLIGHT_STYLE;
         $clan = $isStyle ? self::clanForHighlight($user) : null;
 

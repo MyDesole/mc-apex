@@ -3,6 +3,9 @@
 namespace App\Domains\Players\Services;
 
 use App\Domains\Players\Support\PetTraits;
+use App\Domains\Shop\Models\ShopItem;
+use App\Domains\Shop\Models\UserInventory;
+use App\Domains\Shop\Services\ShopService;
 use App\Domains\Users\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -27,8 +30,13 @@ class PetService
 
     private const HAPPY_WITHIN_HOURS = 6;
 
-    public function stats(User $owner, ?User $viewer = null): array
+    public function stats(User $owner, ?User $viewer = null, ?int $inventoryId = null): array
     {
+        // Несколько питомцев: черты и имя — того экземпляра, на который нажали
+        $instance = $inventoryId
+            ? collect($owner->profile_pets ?? [])->firstWhere('inventory_id', $inventoryId)
+            : null;
+
         $counts = DB::table('pet_interactions')
             ->where('owner_id', $owner->id)
             ->selectRaw('action, count(*) as total')
@@ -83,9 +91,13 @@ class PetService
         // Черты надетого экземпляра; у админа без записи — постоянные по id
         $traits = $owner->pet_traits ?: ($owner->profile_pet ? PetTraits::roll(crc32($owner->id . ':' . $owner->profile_pet)) : null);
 
+        if ($instance) {
+            $traits = $instance['traits'] ?? $traits;
+        }
+
         return [
-            'traits' => PetTraits::present($traits, $owner->pet_traits['serial'] ?? null),
-            'name' => $owner->pet_name,
+            'traits' => PetTraits::present($traits, $instance['serial'] ?? ($owner->pet_traits['serial'] ?? null)),
+            'name' => $instance ? ($instance['name'] ?? null) : $owner->pet_name,
             'xp' => $xp,
             'level' => $level,
             'level_xp' => $this->xpFor($level),
@@ -132,13 +144,32 @@ class PetService
         return $stats;
     }
 
-    public function rename(User $owner, ?string $name): ?string
+    /**
+     * Имя конкретного экземпляра питомца (по строке инвентаря), без
+     * номера — первого надетого.
+     */
+    public function rename(User $owner, ?string $name, ?int $inventoryId = null): ?string
     {
         $name = mb_substr(trim(strip_tags((string) $name)), 0, 20);
+        $name = $name !== '' ? $name : null;
 
-        $owner->forceFill(['pet_name' => $name !== '' ? $name : null])->save();
+        $row = $inventoryId
+            ? UserInventory::where('user_id', $owner->id)->whereKey($inventoryId)->first()
+            : UserInventory::where('user_id', $owner->id)
+                ->whereNotNull('equipped_at')
+                ->whereHas('item', fn ($q) => $q->where('type', ShopItem::TYPE_PROFILE_PET))
+                ->orderBy('equipped_at')
+                ->first();
 
-        return $owner->pet_name;
+        if ($row) {
+            $row->forceFill(['pet_name' => $name])->save();
+            ShopService::syncPets($owner);
+        }
+
+        // Старое поле — для питомца без записи в инвентаре (админ)
+        $owner->forceFill(['pet_name' => $name])->save();
+
+        return $name;
     }
 
     /** Опыт на уровень растёт: 0, 5, 15, 30, 50… (5 · n(n−1)/2). */

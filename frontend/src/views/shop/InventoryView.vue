@@ -239,9 +239,14 @@ async function toggleEquip(item) {
   notice.value = ''
 
   try {
-    const result = item.equipped
-        ? await shopApi.unequip(item.id)
-        : await shopApi.equip(item.id)
+    // Питомец — конкретный экземпляр: их бывает несколько, на профиле до трёх
+    const isPetInstance = item.type === 'profile_pet' && Number.isInteger(item.inventory_id)
+
+    const result = isPetInstance
+        ? await shopApi.togglePet(item.inventory_id, !item.equipped)
+        : item.equipped
+            ? await shopApi.unequip(item.id)
+            : await shopApi.equip(item.id)
 
     notice.value = result.message
     // Надетое могло смениться в любом слоте — перечитываем первую страницу

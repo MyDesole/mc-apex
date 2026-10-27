@@ -121,7 +121,9 @@ class LootCaseService
             $duplicate = false;
 
             if ($item) {
-                $owned = UserInventory::where('user_id', $user->id)->where('shop_item_id', $item->id)->first();
+                // Питомец — всегда новый уникальный экземпляр, а не повтор
+                $isPet = $item->type === ShopItem::TYPE_PROFILE_PET;
+                $owned = $isPet ? null : UserInventory::where('user_id', $user->id)->where('shop_item_id', $item->id)->first();
 
                 if ($owned && ! $item->isStackable()) {
                     // Повтор: вместо второй копии — часть цены монетами

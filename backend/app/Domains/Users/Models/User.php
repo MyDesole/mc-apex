@@ -134,6 +134,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'profile_blocks' => 'array',
         'profile_page' => 'array',
         'pet_traits' => 'array',
+        'profile_pets' => 'array',
         'referred_by' => 'integer',
         'clan_joined_at' => 'datetime',
         'last_seen_at' => 'datetime',

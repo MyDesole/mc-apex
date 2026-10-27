@@ -12,7 +12,7 @@ class UserInventory extends Model
     protected $table = 'user_inventory';
 
     protected $fillable = [
-        'user_id', 'shop_item_id', 'quantity', 'equipped_at', 'acquired_at', 'gifted_by',
+        'user_id', 'shop_item_id', 'quantity', 'equipped_at', 'acquired_at', 'gifted_by', 'pet_name',
     ];
 
     protected $casts = [
@@ -42,15 +42,6 @@ class UserInventory extends Model
 
             $row->pet_traits = PetTraits::roll();
             $row->pet_serial = (int) static::where('shop_item_id', $row->shop_item_id)->max('pet_serial') + 1;
-        });
-
-        // Надели или сменили питомца — черты переезжают в профиль игрока
-        static::saved(function (UserInventory $row) {
-            if ($row->pet_traits && $row->wasChanged('equipped_at') && $row->equipped_at) {
-                User::whereKey($row->user_id)->update([
-                    'pet_traits' => json_encode($row->pet_traits + ['serial' => $row->pet_serial]),
-                ]);
-            }
         });
     }
 

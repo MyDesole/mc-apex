@@ -409,6 +409,28 @@ const nameLengthClass = computed(() => {
   return null
 })
 
+/*
+ * Питомцы на профиле: список до трёх (каждый — свой экземпляр с
+ * чертами и именем), для старых профилей — один profile_pet.
+ * Черты из профиля — просто id; превращаем в вид { model: { id } }.
+ */
+const walkingPets = computed(() => {
+  const toTraits = (raw) => raw
+      ? Object.fromEntries(['model', 'backdrop', 'accessory'].map((k) => [k, { id: raw[k] }]))
+      : null
+
+  if (Array.isArray(props.user.profile_pets) && props.user.profile_pets.length) {
+    return props.user.profile_pets
+        .filter((p) => p?.pet)
+        .slice(0, 3)
+        .map((p) => ({ ...p, traits: toTraits(p.traits) }))
+  }
+
+  return props.user.profile_pet
+      ? [{ pet: props.user.profile_pet, inventory_id: null, traits: toTraits(props.user.pet_traits), name: null }]
+      : []
+})
+
 // «33 дня», «21 день», «11 дней»
 const daysWord = computed(() => {
   const n = Math.abs(Number(props.user.days_on_platform) || 0)
@@ -507,13 +529,17 @@ const coverStyle = computed(() => {
          ===================================================== -->
 
     <!-- Питомец живёт в полной шапке, в компактной ему тесно -->
-    <!-- Питомец: гуляет по шапке, по клику — карточка с действиями -->
+    <!-- Питомцы (до трёх): гуляют по шапке, по клику — карточка с действиями -->
     <ProfilePet
-        v-if="user.profile_pet"
-        :key="`pet-${user.id}-${user.profile_pet}`"
-        :pet="user.profile_pet"
+        v-for="(pet, i) in walkingPets"
+        :key="`pet-${user.id}-${pet.inventory_id ?? pet.pet}`"
+        :pet="pet.pet"
         :owner="user"
         :editable="editable"
+        :instance-id="pet.inventory_id"
+        :traits="pet.traits"
+        :name="pet.name"
+        :lane="i"
         :size="compact ? 30 : 38"
         interactive
     />

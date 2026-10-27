@@ -392,6 +392,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{shopItem}/equip', [ShopController::class, 'equip'])->whereNumber('shopItem');
         Route::post('/{shopItem}/equip-bundle', [ShopController::class, 'equipBundle'])->whereNumber('shopItem');
         Route::post('/randomize', [ShopController::class, 'randomize'])->middleware('throttle:30,1');
+        // Конкретный экземпляр питомца: надеть (до трёх) или снять
+        Route::post('/pets/{row}/{action}', [ShopController::class, 'togglePet'])
+            ->whereNumber('row')
+            ->whereIn('action', ['equip', 'unequip']);
         Route::get('/stickers', [ShopController::class, 'stickers']);
         Route::post('/{shopItem}/unequip', [ShopController::class, 'unequip'])->whereNumber('shopItem');
     });

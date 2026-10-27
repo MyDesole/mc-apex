@@ -29,6 +29,10 @@ const props = defineProps({
   interactive: { type: Boolean, default: false },
   // Черты экземпляра (окрас, фон, аксессуар) — для превью в инвентаре и кейсах
   traits: { type: Object, default: null },
+  // Несколько питомцев: какой экземпляр, его имя и «дорожка» (стартовая позиция)
+  instanceId: { type: Number, default: null },
+  name: { type: String, default: null },
+  lane: { type: Number, default: 0 },
 })
 
 const auth = useAuthStore()
@@ -191,7 +195,7 @@ const MOODS = {
   calm: { label: 'Спокоен', icon: '🙂', text: 'Скучает по вниманию' },
 }
 
-const petName = computed(() => stats.value?.name || data.value?.name || 'Питомец')
+const petName = computed(() => stats.value?.name || props.name || data.value?.name || 'Питомец')
 const mood = computed(() => MOODS[stats.value?.mood] ?? MOODS.calm)
 
 // Уникальный экземпляр: окрас, фон, аксессуар, номер
@@ -216,7 +220,9 @@ const xpProgress = computed(() => {
 async function loadStats() {
   if (!props.interactive || !props.owner?.id) return
   try {
-    stats.value = await api.get(`/players/${props.owner.id}/pet`)
+    stats.value = await api.get(`/players/${props.owner.id}/pet`, {
+      params: props.instanceId ? { pet: props.instanceId } : undefined,
+    })
   } catch {
     // Без статистики питомец просто гуляет
   }
@@ -362,7 +368,7 @@ function startRename() {
 
 async function saveName() {
   try {
-    const res = await api.put('/players/me/pet-name', { name: nameDraft.value })
+    const res = await api.put('/players/me/pet-name', { name: nameDraft.value, inventory_id: props.instanceId })
     stats.value = { ...stats.value, name: res.name }
     renaming.value = false
   } catch (e) {
@@ -377,8 +383,9 @@ async function saveName() {
 onMounted(async () => {
   if (!data.value) return
 
-  x.value = rand(8, 70)
-  schedule(800)
+  // Несколько питомцев стартуют в разных местах, а не друг на друге
+  x.value = props.lane ? 15 + props.lane * 28 + rand(-6, 6) : rand(8, 70)
+  schedule(800 + props.lane * 500)
 
   zoneEl.value?.parentElement?.addEventListener('mousemove', onZoneMove)
   window.addEventListener('keydown', onKey)
