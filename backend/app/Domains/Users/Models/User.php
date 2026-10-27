@@ -133,6 +133,7 @@ class User extends Authenticatable implements MustVerifyEmail
         // Конструктор профиля: блоки по порядку (см. ProfileBlocksService)
         'profile_blocks' => 'array',
         'profile_page' => 'array',
+        'pet_traits' => 'array',
         'referred_by' => 'integer',
         'clan_joined_at' => 'datetime',
         'last_seen_at' => 'datetime',

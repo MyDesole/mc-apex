@@ -17,6 +17,7 @@ import { profilePet } from '@/data/players/flair.js'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
 import { api } from '@/services/core/api.js'
 import { useAuthStore } from '@/stores/core/auth.js'
+import { PET_RARITY, chanceLabel, petAccessory, petBackdrop, petModelStyle } from '@/data/players/petTraits.js'
 
 const props = defineProps({
   pet: { type: String, default: null },
@@ -26,6 +27,8 @@ const props = defineProps({
   // Своя страница: можно назвать питомца
   editable: { type: Boolean, default: false },
   interactive: { type: Boolean, default: false },
+  // Черты экземпляра (окрас, фон, аксессуар) — для превью в инвентаре и кейсах
+  traits: { type: Object, default: null },
 })
 
 const auth = useAuthStore()
@@ -124,9 +127,26 @@ function burstHearts(count = 5) {
   }, 1300)
 }
 
-/** Наведение: просыпается, подпрыгивает и говорит. */
+/**
+ * Остановиться там, где сейчас стоишь: посреди прогулки left ещё
+ * «едет» к цели, поэтому берём настоящую позицию на экране.
+ */
+function freeze() {
+  clearTimeout(timer)
+  if (!['walk', 'run'].includes(state.value) || !petEl.value || !zoneEl.value) return
+
+  const zone = zoneEl.value.getBoundingClientRect()
+  const pet = petEl.value.getBoundingClientRect()
+  walkMs.value = 0
+  x.value = ((pet.left + pet.width / 2 - zone.left) / zone.width) * 100
+  if (data.value?.fly) y.value = ((pet.top - zone.top) / zone.height) * 100
+  state.value = 'idle'
+}
+
+/** Наведение: замирает под курсором, просыпается, подпрыгивает и говорит. */
 function onHover() {
   if (!data.value || busy.value) return
+  freeze()
   if (state.value === 'sleep') state.value = 'idle'
 
   jump()
@@ -174,6 +194,19 @@ const MOODS = {
 const petName = computed(() => stats.value?.name || data.value?.name || 'Питомец')
 const mood = computed(() => MOODS[stats.value?.mood] ?? MOODS.calm)
 
+// Уникальный экземпляр: окрас, фон, аксессуар, номер
+const traits = computed(() => stats.value?.traits ?? props.traits ?? null)
+const skinStyle = computed(() => petModelStyle(traits.value))
+const aura = computed(() => petBackdrop(traits.value))
+const accessory = computed(() => petAccessory(traits.value))
+const rarity = computed(() => PET_RARITY[traits.value?.rarity] ?? PET_RARITY.common)
+
+const TRAIT_ROWS = [
+  { key: 'model', label: 'Окрас' },
+  { key: 'backdrop', label: 'Фон' },
+  { key: 'accessory', label: 'Аксессуар' },
+]
+
 const xpProgress = computed(() => {
   const s = stats.value
   if (!s || s.next_level_xp === null) return 100
@@ -192,9 +225,14 @@ async function loadStats() {
 function placePanel() {
   const rect = petEl.value?.getBoundingClientRect()
   if (!rect) return
+
+  // Над питомцем не хватает места (компактная шапка, верх экрана) — открываем снизу
+  const below = rect.top < 400
+
   panelPos.value = {
     left: Math.min(window.innerWidth - 150, Math.max(150, rect.left + rect.width / 2)),
-    top: rect.top - 10,
+    top: below ? rect.bottom + 10 : rect.top - 10,
+    below,
   }
 }
 
@@ -212,8 +250,10 @@ function onPetClick() {
 }
 
 function closePanel() {
+  if (!panelOpen.value) return
   panelOpen.value = false
   renaming.value = false
+  if (!busy.value) schedule(1200)
 }
 
 function onKey(event) {
@@ -394,6 +434,7 @@ onUnmounted(() => {
         }"
         :title="interactive ? `${petName} — нажми, чтобы поиграть` : undefined"
         @mouseenter="onHover"
+        @mouseleave="!busy && !panelOpen && schedule(1500)"
         @click.stop="onPetClick"
         @animationend="jumping = false"
     >
@@ -410,7 +451,18 @@ onUnmounted(() => {
       <span v-for="heart in hearts" :key="heart.id" class="pet__heart" :style="{ '--dx': heart.dx, animationDelay: heart.delay }">❤</span>
 
       <span class="pet__body" :class="{ 'is-left': facingLeft }">
-        <PixelSprite :sprite="data.sprite" :size="size" />
+        <!-- Фон экземпляра: сияние позади -->
+        <span v-if="aura" class="pet__aura" :style="{ background: aura }"></span>
+        <span class="pet__skin" :style="skinStyle">
+          <PixelSprite :sprite="data.sprite" :size="size" />
+        </span>
+        <!-- Аксессуар поверх головы -->
+        <span
+            v-if="accessory"
+            class="pet__acc"
+            :class="{ 'pet__acc--halo': accessory.halo }"
+            :style="{ bottom: `${accessory.dy * size}px`, fontSize: `${Math.round(size * 0.42)}px` }"
+        >{{ accessory.halo ? '' : accessory.icon }}</span>
       </span>
       <span class="pet__shadow"></span>
 
@@ -427,16 +479,21 @@ onUnmounted(() => {
         <div
             v-if="panelOpen && stats"
             class="pet-panel"
+            :class="{ 'pet-panel--below': panelPos.below }"
             :style="{ left: `${panelPos.left}px`, top: `${panelPos.top}px` }"
             @click.stop
         >
           <header class="pet-panel__head">
-            <span class="pet-panel__avatar"><PixelSprite :sprite="data.sprite" :size="36" /></span>
+            <span class="pet-panel__avatar" :style="aura ? { background: aura } : null">
+              <span :style="skinStyle"><PixelSprite :sprite="data.sprite" :size="36" /></span>
+              <span v-if="accessory && !accessory.halo" class="pet-panel__acc">{{ accessory.icon }}</span>
+            </span>
             <div class="pet-panel__title">
-              <template v-if="!renaming">
+              <div v-if="!renaming" class="pet-panel__name-row">
                 <strong>{{ petName }}</strong>
+                <em v-if="traits?.serial" class="pet-panel__serial">#{{ traits.serial }}</em>
                 <button v-if="editable" type="button" class="pet-panel__rename" title="Дать имя" @click="startRename">✎</button>
-              </template>
+              </div>
               <form v-else class="pet-panel__name-form" @submit.prevent="saveName">
                 <input v-model="nameDraft" maxlength="20" placeholder="Имя питомца" autofocus />
                 <button type="submit">✓</button>
@@ -445,6 +502,16 @@ onUnmounted(() => {
             </div>
             <span class="pet-panel__level">ур. {{ stats.level }}</span>
           </header>
+
+          <!-- Черты экземпляра с шансами — как у подарков -->
+          <div v-if="traits" class="pet-panel__traits" :style="{ '--rarity': rarity.color }">
+            <span class="pet-panel__rarity">{{ rarity.label }} экземпляр</span>
+            <div v-for="row in TRAIT_ROWS" :key="row.key" class="pet-panel__trait">
+              <span>{{ row.label }}</span>
+              <b>{{ traits[row.key]?.name }}</b>
+              <i>{{ chanceLabel(traits[row.key]?.chance) }}</i>
+            </div>
+          </div>
 
           <div class="pet-panel__xp">
             <i :style="{ width: `${xpProgress}%` }"></i>
@@ -523,10 +590,62 @@ onUnmounted(() => {
 }
 
 .pet__body {
+  position: relative;
+
   display: block;
   filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.45));
   image-rendering: pixelated;
   transition: filter 0.2s ease;
+}
+
+/* Уникальный экземпляр: окрас, сияние фона, аксессуар */
+.pet__skin {
+  position: relative;
+  z-index: 1;
+  display: block;
+}
+
+.pet__aura {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 0;
+
+  width: 170%;
+  height: 170%;
+
+  border-radius: 50%;
+  filter: blur(6px);
+  opacity: 0.8;
+
+  transform: translate(-50%, -50%);
+  animation: pet-aura 6s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes pet-aura {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.pet__acc {
+  position: absolute;
+  left: 50%;
+  z-index: 2;
+
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.pet__acc--halo {
+  width: 60%;
+  height: 14%;
+
+  border: 2px solid #fde047;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #fde047;
 }
 
 .pet:hover .pet__body {
@@ -654,10 +773,14 @@ onUnmounted(() => {
   50% { scale: 1.03 0.88; }
 }
 
+/*
+ * translate складывается с transform: translateX(-50%) у .pet, поэтому
+ * по X тут 0 — раньше было -50%, и питомец на прыжке отскакивал вбок.
+ */
 @keyframes pet-jump {
-  0%, 100% { translate: -50% 0; }
-  40% { translate: -50% -22px; }
-  70% { translate: -50% -8px; }
+  0%, 100% { translate: 0 0; }
+  40% { translate: 0 -22px; }
+  70% { translate: 0 -8px; }
 }
 
 /* Реплика: облачко над головой */
@@ -822,6 +945,94 @@ onUnmounted(() => {
 
 <!-- Карточка питомца вынесена в body — стили без scoped -->
 <style>
+/* Анимированные окрасы: имя анимации задаётся в style, поэтому без scoped */
+@keyframes pet-rainbow {
+  from { filter: saturate(2) hue-rotate(0deg) drop-shadow(0 0 4px rgba(255, 255, 255, 0.6)); }
+  to { filter: saturate(2) hue-rotate(360deg) drop-shadow(0 0 4px rgba(255, 255, 255, 0.6)); }
+}
+
+@keyframes pet-galaxy {
+  0%, 100% { filter: hue-rotate(230deg) saturate(2) drop-shadow(0 0 5px rgba(236, 72, 153, 0.9)); }
+  50% { filter: hue-rotate(290deg) saturate(2.4) drop-shadow(0 0 8px rgba(99, 102, 241, 0.9)); }
+}
+
+.pet-panel__avatar {
+  position: relative;
+}
+
+.pet-panel__acc {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+
+  font-size: 16px;
+  line-height: 1;
+
+  transform: translateX(-50%);
+}
+
+.pet-panel__serial {
+  flex-shrink: 0;
+
+  color: #a8a3b8;
+
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.pet-panel__traits {
+  margin-top: 12px;
+  padding: 10px 12px;
+
+  background: color-mix(in srgb, var(--rarity) 10%, rgba(255, 255, 255, 0.03));
+  border: 1px solid color-mix(in srgb, var(--rarity) 35%, transparent);
+  border-radius: 12px;
+}
+
+.pet-panel__rarity {
+  display: block;
+  margin-bottom: 6px;
+
+  color: var(--rarity);
+
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.pet-panel__trait {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  align-items: baseline;
+  gap: 8px;
+
+  padding: 3px 0;
+
+  font-size: 12px;
+}
+
+.pet-panel__trait span {
+  color: #8a8598;
+}
+
+.pet-panel__trait b {
+  color: #fff;
+}
+
+.pet-panel__trait i {
+  padding: 1px 6px;
+
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.15);
+  border-radius: 6px;
+
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+}
+
 .pet-panel-backdrop {
   position: fixed;
   inset: 0;
@@ -861,6 +1072,18 @@ onUnmounted(() => {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
   transform: translateX(-50%) rotate(45deg);
+}
+
+/* Под питомцем: стрелка сверху */
+.pet-panel--below {
+  transform: translate(-50%, 0);
+}
+
+.pet-panel--below::after {
+  top: -7px;
+  bottom: auto;
+
+  transform: translateX(-50%) rotate(225deg);
 }
 
 .pet-panel-enter-active,
@@ -913,18 +1136,44 @@ onUnmounted(() => {
   line-height: 1.3;
 }
 
-.pet-panel__rename {
-  position: relative;
-  top: -1px;
+.pet-panel__name-row {
+  min-width: 0;
 
-  margin-left: 4px;
-  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pet-panel__name-row strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pet-panel__rename {
+  flex-shrink: 0;
+
+  width: 22px;
+  height: 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   color: #a8a3b8;
-  background: none;
+  background: rgba(255, 255, 255, 0.06);
   border: 0;
+  border-radius: 6px;
+
+  font-size: 12px;
 
   cursor: pointer;
+}
+
+.pet-panel__rename:hover {
+  color: #fff;
+  background: rgba(139, 92, 246, 0.35);
 }
 
 .pet-panel__name-form {

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Shop\Services;
 
+use App\Domains\Players\Support\PetTraits;
 use App\Domains\Shop\Models\CaseOpening;
 use App\Domains\Shop\Models\ShopItem;
 use App\Domains\Shop\Models\UserInventory;
@@ -131,6 +132,7 @@ class LootCaseService
                     $inventory->quantity = (int) ($inventory->quantity ?? 0) + 1;
                     $inventory->acquired_at = $inventory->acquired_at ?? now();
                     $inventory->save();
+                    $minted = $inventory;
                 }
             } elseif ($outcome === LootCases::COINS) {
                 [$min, $max] = $case['coins'];
@@ -157,13 +159,18 @@ class LootCaseService
                 'duplicate' => $duplicate,
             ]);
 
-            return ['coins' => $coins, 'duplicate' => $duplicate];
+            return [
+                'coins' => $coins,
+                'duplicate' => $duplicate,
+                // Выпал питомец — показываем, какой именно экземпляр отчеканился
+                'pet' => isset($minted) ? PetTraits::present($minted->pet_traits, $minted->pet_serial) : null,
+            ];
         });
 
         $prize = [
             'outcome' => $outcome,
             'rarity' => $item?->rarity,
-            'item' => $item ? $this->presentItem($item) : null,
+            'item' => $item ? [...$this->presentItem($item), 'pet' => $result['pet']] : null,
             'coins' => $result['coins'],
         ];
 

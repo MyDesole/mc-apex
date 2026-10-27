@@ -11,6 +11,7 @@ import { casesApi } from '@/services/shop/cases.js'
 import { RARITY_LABELS, RARITY_COLORS, TYPE_LABELS, formatCoins } from '@/data/wallet/economy.js'
 import { playCaseTick, playCaseWin } from '@/utils/sound.js'
 import ShopItemPreview from '@/components/shop/ShopItemPreview.vue'
+import { chanceLabel } from '@/data/players/petTraits.js'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -446,6 +447,14 @@ onUnmounted(() => {
             <template v-else-if="prize.outcome === 'coins'">Уже на вашем балансе</template>
             <template v-else>В следующий раз повезёт больше</template>
           </p>
+
+          <!-- Питомец уникален: показываем, какой экземпляр отчеканился -->
+          <ul v-if="prize.item?.pet" class="prize-pet">
+            <li><span>Номер</span><b>#{{ prize.item.pet.serial }}</b></li>
+            <li><span>Окрас</span><b>{{ prize.item.pet.model.name }}</b><i>{{ chanceLabel(prize.item.pet.model.chance) }}</i></li>
+            <li><span>Фон</span><b>{{ prize.item.pet.backdrop.name }}</b><i>{{ chanceLabel(prize.item.pet.backdrop.chance) }}</i></li>
+            <li><span>Аксессуар</span><b>{{ prize.item.pet.accessory.name }}</b><i>{{ chanceLabel(prize.item.pet.accessory.chance) }}</i></li>
+          </ul>
 
           <p v-if="result.duplicate" class="prize-card__dup">
             Такой предмет уже есть — вместо него +{{ formatCoins(prize.coins) }} ApexCoin

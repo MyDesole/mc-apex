@@ -22,6 +22,7 @@ import ProfilePet from '@/components/players/ProfilePet.vue'
 import ProfileTitle from '@/components/players/ProfileTitle.vue'
 import { STICKER_PACKS } from '@/data/shop/stickers.js'
 import { HIGHLIGHT_COLORS, HIGHLIGHT_EFFECTS, highlightColor } from '@/data/clan/clanHighlight.js'
+import { PET_RARITY } from '@/data/players/petTraits.js'
 import { cardTheme } from '@/data/shop/cosmetics.js'
 import { profileLayout } from '@/data/players/profileLayouts.js'
 import { loadSkin, renderSkinHead } from '@/utils/minecraftSkin.js'
@@ -287,7 +288,13 @@ onMounted(async () => {
 
     <!-- Питомец: живёт прямо в превью -->
     <div v-else-if="item.type === 'profile_pet'" class="preview__pet">
-      <ProfilePet :pet="value" :size="34" />
+      <!-- Свой экземпляр (инвентарь, выигрыш) — с окрасом, фоном и аксессуаром -->
+      <ProfilePet :pet="value" :size="34" :traits="item.pet" />
+      <span
+          v-if="item.pet?.serial"
+          class="preview__pet-serial"
+          :style="{ '--rarity': PET_RARITY[item.pet.rarity]?.color }"
+      >#{{ item.pet.serial }}</span>
     </div>
 
     <!-- Оформление сообщений: пара пузырей чата -->
@@ -881,6 +888,24 @@ onMounted(async () => {
   background: #16141c;
   border: 1px solid var(--border);
   border-radius: 8px;
+}
+
+/* Номер экземпляра питомца */
+.preview__pet-serial {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 20;
+
+  padding: 2px 8px;
+
+  color: #fff;
+  background: color-mix(in srgb, var(--rarity, #a8a3b8) 45%, #0d0b14);
+  border: 1px solid var(--rarity, #a8a3b8);
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 900;
 }
 
 /* ---------- Эффект профиля без слоя: как в шапке профиля ---------- */

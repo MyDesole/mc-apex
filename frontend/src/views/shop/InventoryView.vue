@@ -656,6 +656,12 @@ onMounted(() => {
                 {{ item.name }}
               </h3>
 
+              <!-- Уникальный питомец: номер и черты этого экземпляра -->
+              <p v-if="item.pet" class="inventory-card__pet">
+                <b>#{{ item.pet.serial }}</b>
+                {{ item.pet.model.name }} · {{ item.pet.backdrop.name }} · {{ item.pet.accessory.name }}
+              </p>
+
               <p class="inventory-card__description">
                 {{ itemSubtitle(item) }}
 

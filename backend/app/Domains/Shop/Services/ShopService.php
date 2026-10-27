@@ -3,6 +3,7 @@
 namespace App\Domains\Shop\Services;
 
 use App\Domains\Clan\Models\Clan;
+use App\Domains\Players\Support\PetTraits;
 use App\Domains\Clan\Models\ClanInventory;
 use App\Domains\Clan\Services\ClanTreasuryService;
 use App\Domains\Wallet\Models\CoinTransaction;
@@ -373,6 +374,8 @@ class ShopService
             ->map(fn (UserInventory $row) => array_merge(
                 self::presentItem($row->item),
                 [
+                    // Питомец: черты и номер именно этого экземпляра
+                    'pet' => $row->pet_traits ? PetTraits::present($row->pet_traits, $row->pet_serial) : null,
                     'inventory_id' => $row->id,
                     'shop_item_id' => $row->shop_item_id,
                     'quantity' => $row->quantity,

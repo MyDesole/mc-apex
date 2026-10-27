@@ -5,6 +5,7 @@ namespace App\Domains\Shop\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Domains\Users\Models\User;
+use App\Domains\Players\Support\PetTraits;
 
 class UserInventory extends Model
 {
@@ -18,7 +19,40 @@ class UserInventory extends Model
         'equipped_at' => 'datetime',
         'acquired_at' => 'datetime',
         'quantity' => 'integer',
+        'pet_traits' => 'array',
+        'pet_serial' => 'integer',
     ];
+
+    /**
+     * Питомец «чеканится» при появлении в инвентаре — откуда бы ни пришёл
+     * (покупка, кейс, набор, админ): случайные черты и номер экземпляра.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (UserInventory $row) {
+            if ($row->pet_traits) {
+                return;
+            }
+
+            $item = ShopItem::find($row->shop_item_id);
+
+            if ($item?->type !== ShopItem::TYPE_PROFILE_PET) {
+                return;
+            }
+
+            $row->pet_traits = PetTraits::roll();
+            $row->pet_serial = (int) static::where('shop_item_id', $row->shop_item_id)->max('pet_serial') + 1;
+        });
+
+        // Надели или сменили питомца — черты переезжают в профиль игрока
+        static::saved(function (UserInventory $row) {
+            if ($row->pet_traits && $row->wasChanged('equipped_at') && $row->equipped_at) {
+                User::whereKey($row->user_id)->update([
+                    'pet_traits' => json_encode($row->pet_traits + ['serial' => $row->pet_serial]),
+                ]);
+            }
+        });
+    }
 
     public function user(): BelongsTo
     {

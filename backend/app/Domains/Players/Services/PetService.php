@@ -2,6 +2,7 @@
 
 namespace App\Domains\Players\Services;
 
+use App\Domains\Players\Support\PetTraits;
 use App\Domains\Users\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -79,7 +80,11 @@ class PetService
             ->values()
             ->all();
 
+        // Черты надетого экземпляра; у админа без записи — постоянные по id
+        $traits = $owner->pet_traits ?: ($owner->profile_pet ? PetTraits::roll(crc32($owner->id . ':' . $owner->profile_pet)) : null);
+
         return [
+            'traits' => PetTraits::present($traits, $owner->pet_traits['serial'] ?? null),
             'name' => $owner->pet_name,
             'xp' => $xp,
             'level' => $level,

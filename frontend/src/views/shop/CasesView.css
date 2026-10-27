@@ -1071,3 +1071,48 @@
     animation: none;
   }
 }
+
+/* Уникальный питомец в выигрыше: номер и черты с шансами */
+.prize-pet {
+  width: min(100%, 300px);
+  margin: 4px 0 0;
+  padding: 10px 14px;
+
+  list-style: none;
+
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.prize-pet li {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  align-items: baseline;
+  gap: 8px;
+
+  padding: 3px 0;
+
+  font-size: 13px;
+  text-align: left;
+}
+
+.prize-pet span {
+  color: #8a8598;
+}
+
+.prize-pet b {
+  color: #fff;
+}
+
+.prize-pet i {
+  padding: 1px 6px;
+
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.15);
+  border-radius: 6px;
+
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
