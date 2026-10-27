@@ -93,6 +93,7 @@ export const STYLE_OPTIONS = {
     hover: { label: 'При наведении', options: [['none', 'Ничего'], ['lift', 'Подъём'], ['glow', 'Свечение'], ['tilt', 'Наклон']] },
     font: { label: 'Шрифт', options: [['default', 'Обычный'], ['display', 'Заголовочный'], ['mono', 'Моно'], ['serif', 'С засечками']] },
     border: { label: 'Рамка', options: [['none', 'Обычная'], ['shine', 'Блик'], ['pulse', 'Пульс'], ['rainbow', 'Радуга'], ['glow', 'Свечение']] },
+    text: { label: 'Цвет текста', options: [['auto', 'Авто'], ['light', 'Светлый'], ['dark', 'Тёмный'], ['accent', 'Цветом блока']] },
 }
 
 /** Настройки всей страницы. */
@@ -103,7 +104,39 @@ export const PAGE_OPTIONS = {
     appear: { label: 'Появление', options: [['rise', 'Снизу'], ['none', 'Сразу'], ['fade', 'Проявление'], ['zoom', 'Приближение'], ['cascade', 'Каскад']] },
     radius: { label: 'Углы блоков', options: [['round', 'Скруглённые'], ['sharp', 'Острые'], ['soft', 'Мягкие']] },
     backdrop: { label: 'Фон под блоками', options: [['none', 'Нет'], ['dim', 'Затемнить'], ['blur', 'Размыть']] },
+    bg: { label: 'Фон страницы', options: [['none', 'Как в теме'], ['gradient', 'Градиент'], ['mesh', 'Меш'], ['aurora', 'Сияние'], ['stars', 'Звёзды'], ['grid', 'Сетка'], ['spotlight', 'Прожектор'], ['noise', 'Шум']] },
+    font: { label: 'Шрифт профиля', options: [['default', 'Обычный'], ['display', 'Заголовочный'], ['mono', 'Моно'], ['serif', 'С засечками'], ['rounded', 'Округлый']] },
+    shadow: { label: 'Тени блоков', options: [['soft', 'Мягкие'], ['none', 'Без теней'], ['deep', 'Глубокие'], ['neon', 'Неоновые']] },
+    width: { label: 'Ширина', options: [['normal', 'Обычная'], ['wide', 'Широкая'], ['full', 'Во весь экран']] },
+    titles: { label: 'Заголовки блоков', options: [['default', 'Обычные'], ['caps', 'ПРОПИСНЫЕ'], ['line', 'С линией'], ['pill', 'Плашкой'], ['hidden', 'Скрыть все']] },
+    density: { label: 'Плотность', options: [['normal', 'Обычная'], ['compact', 'Плотно'], ['airy', 'Воздушно']] },
+    fx: { label: 'Эффект страницы', options: [['none', 'Нет'], ['snow', 'Снег'], ['embers', 'Угольки'], ['fireflies', 'Светлячки'], ['starfall', 'Звездопад'], ['pixels', 'Пиксели']] },
+    hdr_layout: { label: 'Раскладка', options: [['classic', 'Классика'], ['center', 'По центру'], ['mirror', 'Зеркально'], ['banner', 'Баннер'], ['minimal', 'Минимал']] },
+    hdr_height: { label: 'Высота', options: [['normal', 'Обычная'], ['short', 'Низкая'], ['tall', 'Высокая']] },
+    hdr_bg: { label: 'Фон шапки', options: [['theme', 'Как в теме'], ['accent', 'Акцент'], ['gradient', 'Градиент'], ['glass', 'Стекло'], ['none', 'Без фона']] },
+    hdr_name: { label: 'Стиль ника', options: [['default', 'Как в инвентаре'], ['gradient', 'Градиент'], ['outline', 'Контур'], ['neon', 'Неон'], ['shadow', 'Тень'], ['glitch', 'Глитч']] },
+    hdr_size: { label: 'Размер ника', options: [['m', 'M'], ['s', 'S'], ['l', 'L'], ['xl', 'XL']] },
+    hdr_avatar: { label: 'Форма аватара', options: [['circle', 'Круг'], ['rounded', 'Скруглённый'], ['square', 'Квадрат'], ['hex', 'Шестиугольник']] },
+    hdr_avatar_size: { label: 'Размер аватара', options: [['m', 'Обычный'], ['s', 'Маленький'], ['l', 'Крупный']] },
+    hdr_progress: { label: 'Полоса тира', options: [['show', 'Показать'], ['hide', 'Скрыть']] },
 }
+
+/** Числа и цвета страницы — не выбор из списка, а ползунки и пипетки. */
+export const PAGE_EXTRAS = { bg_from: '#2e1065', bg_to: '#0b0912', accent: '', glass: 100, blur: 0 }
+
+/** Готовые палитры студии: фон, два цвета, акцент и характер блоков одним кликом. */
+export const THEME_PRESETS = [
+    { id: 'midnight', label: 'Полночь', bg: 'mesh', bg_from: '#312e81', bg_to: '#05060f', accent: '#818cf8', shadow: 'soft', glass: 100, blur: 0 },
+    { id: 'sunset', label: 'Закат', bg: 'gradient', bg_from: '#9a3412', bg_to: '#1c0a1e', accent: '#fb923c', shadow: 'deep', glass: 85, blur: 8 },
+    { id: 'neon', label: 'Неон', bg: 'grid', bg_from: '#db2777', bg_to: '#07030d', accent: '#f472b6', shadow: 'neon', glass: 70, blur: 10 },
+    { id: 'ocean', label: 'Океан', bg: 'aurora', bg_from: '#0e7490', bg_to: '#020617', accent: '#22d3ee', shadow: 'soft', glass: 65, blur: 16 },
+    { id: 'forest', label: 'Лес', bg: 'spotlight', bg_from: '#166534', bg_to: '#04110a', accent: '#4ade80', shadow: 'deep', glass: 90, blur: 4 },
+    { id: 'nether', label: 'Незер', bg: 'noise', bg_from: '#7f1d1d', bg_to: '#120404', accent: '#ef4444', shadow: 'deep', glass: 90, blur: 0 },
+    { id: 'end', label: 'Энд', bg: 'stars', bg_from: '#4c1d95', bg_to: '#030008', accent: '#c084fc', shadow: 'neon', glass: 60, blur: 14 },
+    { id: 'gold', label: 'Золото', bg: 'spotlight', bg_from: '#a16207', bg_to: '#0c0a04', accent: '#facc15', shadow: 'soft', glass: 95, blur: 0 },
+    { id: 'ice', label: 'Лёд', bg: 'gradient', bg_from: '#1e3a8a', bg_to: '#0b1120', accent: '#93c5fd', shadow: 'soft', glass: 55, blur: 20 },
+    { id: 'mono', label: 'Монохром', bg: 'grid', bg_from: '#27272a', bg_to: '#09090b', accent: '#e4e4e7', shadow: 'none', glass: 100, blur: 0 },
+]
 
 /** Кем тиммейт приходится игроку — подпись и цвет карточки. */
 export const TEAMMATE_ROLES = [
@@ -129,13 +162,13 @@ export function widthSpan(width) {
 }
 
 export function defaultStyle() {
-    const style = { color: 'auto', title: '', icon: '', hide_title: false, hide_mobile: false }
+    const style = { color: 'auto', title: '', icon: '', hide_title: false, hide_mobile: false, hex: '', tilt: 0, opacity: 100 }
     for (const [key, def] of Object.entries(STYLE_OPTIONS)) style[key] = def.options[0][0]
     return style
 }
 
 export function defaultPage() {
-    const page = {}
+    const page = { ...PAGE_EXTRAS }
     for (const [key, def] of Object.entries(PAGE_OPTIONS)) page[key] = def.options[0][0]
     return page
 }

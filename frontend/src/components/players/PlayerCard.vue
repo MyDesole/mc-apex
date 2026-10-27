@@ -18,6 +18,7 @@ import { profileLayout } from '@/data/players/profileLayouts.js'
 import ProfileEntrance from '@/components/players/ProfileEntrance.vue'
 import CursorTrail from '@/components/players/CursorTrail.vue'
 import ProfileBuilderGrid from '@/components/players/builder/ProfileBuilderGrid.vue'
+import ProfileFx from '@/components/players/builder/ProfileFx.vue'
 import { useAuthStore } from '@/stores/core/auth.js'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 
@@ -120,10 +121,6 @@ const layoutClass = computed(() => (layout.value
       { 'profile-layout--light': layout.value.light },
     ]
     : []))
-
-const accentStyle = computed(() => ({
-  '--accent-color': accent.value,
-}))
 
 /* =========================================================
    DATA
@@ -339,9 +336,42 @@ watch(builderMode, (on) => emit('builder', on), { immediate: true })
 // Настройки страницы из конструктора видны сразу, ещё до сохранения
 const previewPage = ref(null)
 
-const compactHeader = computed(() =>
-    (previewPage.value ?? props.user.profile_page ?? {}).header === 'compact'
-)
+const currentPage = computed(() => previewPage.value ?? props.user.profile_page ?? {})
+
+const compactHeader = computed(() => currentPage.value.header === 'compact')
+
+// Студия профиля: фон, шрифт, ширина и свой акцент всей страницы
+const studioClass = computed(() => {
+  if (!builderMode.value) return []
+  const p = currentPage.value
+  return [
+    `pp-bg--${p.bg || 'none'}`,
+    `pp-font--${p.font || 'default'}`,
+    `pp-width--${p.width || 'normal'}`,
+    // Шапка профиля (стили в ProfileStudio.css)
+    `ph-layout--${p.hdr_layout || 'classic'}`,
+    `ph-height--${p.hdr_height || 'normal'}`,
+    `ph-bg--${p.hdr_bg || 'theme'}`,
+    `ph-name--${p.hdr_name || 'default'}`,
+    `ph-size--${p.hdr_size || 'm'}`,
+    `ph-ava--${p.hdr_avatar || 'circle'}`,
+    `ph-ava-size--${p.hdr_avatar_size || 'm'}`,
+    `ph-progress--${p.hdr_progress || 'show'}`,
+  ]
+})
+
+const studioStyle = computed(() => {
+  const p = currentPage.value
+  const style = { '--accent-color': accent.value }
+  if (!builderMode.value) return style
+  if (p.bg_from) style['--pp-from'] = p.bg_from
+  if (p.bg_to) style['--pp-to'] = p.bg_to
+  if (p.accent) {
+    style['--accent-color'] = p.accent
+    style['--player-accent'] = p.accent
+  }
+  return style
+})
 
 async function persistBlocks(blocks, page = null) {
   savingBlocks.value = true
@@ -394,12 +424,14 @@ const profileCompleteness = computed(() => {
 <template>
   <div
       class="profile-layout"
-      :class="[layoutClass, { 'profile-layout--builder': builderMode }]"
-      :style="accentStyle"
+      :class="[layoutClass, studioClass, { 'profile-layout--builder': builderMode }]"
+      :style="studioStyle"
   >
     <!-- Появление профиля и след курсора: косметика для гостей профиля -->
     <ProfileEntrance :key="`entrance-${user?.id}`" :entrance="user?.profile_entrance" />
     <CursorTrail :key="`trail-${user?.id}-${user?.cursor_trail}`" :trail="user?.cursor_trail" />
+    <!-- Эффект страницы из студии: снег, угольки… -->
+    <ProfileFx v-if="builderMode" :fx="currentPage.fx" />
 
     <!-- =====================================================
          КОНСТРУКТОР: шапка сверху, дальше блоки игрока

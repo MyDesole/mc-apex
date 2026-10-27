@@ -4,8 +4,9 @@
  * ниже — оформление: фон, цвет, заголовок, выравнивание, высота, узор,
  * углы, наведение, шрифт и показ на телефоне. Меняет блок на месте.
  */
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
+import StudioIcon from '@/components/players/builder/StudioIcon.vue'
 import TeammatePicker from '@/components/players/builder/TeammatePicker.vue'
 import { BLOCK_TYPES, COLORS, STICKER_SPRITES, STYLE_OPTIONS, TONES } from '@/data/players/profileBlocks.js'
 
@@ -14,6 +15,36 @@ const props = defineProps({
 })
 
 const LIMITS = { facts: 10, bars: 8, timeline: 10 }
+
+// Оформление по разделам, а не одной стеной кнопок
+const LOOK_GROUPS = [
+  { label: 'Форма', keys: ['radius', 'height', 'align'] },
+  { label: 'Текст', keys: ['font', 'text'] },
+  { label: 'Эффекты', keys: ['pattern', 'border', 'hover'], sliders: true },
+]
+
+// Готовые стили блока: фон, рамка, узор, наведение, углы и шрифт разом
+const LOOKS = [
+  { id: 'clean', label: 'Чистый', tone: 'default', style: { border: 'none', pattern: 'none', hover: 'lift', radius: 'inherit', font: 'default', text: 'auto' } },
+  { id: 'neon', label: 'Неон', tone: 'neon', style: { border: 'glow', pattern: 'none', hover: 'glow', radius: 'round', font: 'display', text: 'accent' } },
+  { id: 'glass', label: 'Стекло', tone: 'glass', style: { border: 'shine', pattern: 'none', hover: 'lift', radius: 'round', font: 'default', text: 'light' } },
+  { id: 'holo', label: 'Голограмма', tone: 'gradient', style: { border: 'rainbow', pattern: 'aurora', hover: 'tilt', radius: 'round', font: 'display', text: 'light' } },
+  { id: 'paper', label: 'Бумага', tone: 'paper', style: { border: 'none', pattern: 'none', hover: 'lift', radius: 'sharp', font: 'serif', text: 'auto' } },
+  { id: 'terminal', label: 'Терминал', tone: 'outline', style: { border: 'none', pattern: 'grid', hover: 'none', radius: 'sharp', font: 'mono', text: 'accent' } },
+  { id: 'pulse', label: 'Пульс', tone: 'accent', style: { border: 'pulse', pattern: 'dots', hover: 'glow', radius: 'round', font: 'default', text: 'auto' } },
+  { id: 'bare', label: 'Без рамки', tone: 'transparent', style: { border: 'none', pattern: 'none', hover: 'none', radius: 'inherit', font: 'default', text: 'auto' } },
+]
+
+function applyLook(look) {
+  props.block.tone = look.tone
+  Object.assign(props.block.style, look.style)
+}
+
+// Плитки фона красим цветом блока
+const accentVar = computed(() => {
+  const hex = props.block.style.hex || COLORS.find((c) => c.id === props.block.style.color)?.hex
+  return hex ? { '--accent-color': hex } : null
+})
 
 const NEW_ROW = {
   facts: () => ({ label: '', value: '' }),
@@ -202,66 +233,110 @@ function setDate(value) {
 
     <!-- ================= Оформление ================= -->
     <template v-else>
-      <div class="pb-option">
-        <span class="pb-option__label">Заголовок</span>
-        <div class="pb-settings__row">
-          <input v-model="block.style.icon" maxlength="4" class="pb-settings__emoji" placeholder="✨" title="Эмодзи перед заголовком" />
-          <input v-model="block.style.title" maxlength="60" :placeholder="def.title || 'Без заголовка'" />
-          <label class="pb-check">
-            <input v-model="block.style.hide_title" type="checkbox" />
-            Скрыть
-          </label>
+      <section class="studio-group">
+        <h4>Стиль в один клик</h4>
+        <div class="studio-tiles studio-tiles--4">
+          <button
+              v-for="look in LOOKS"
+              :key="look.id"
+              type="button"
+              class="studio-tile"
+              :style="accentVar"
+              @click="applyLook(look)"
+          >
+            <span class="studio-tone" :class="[`pb-tone--${look.tone}`, `pb-border--${look.style.border}`]"><i></i><i></i></span>
+            <span class="studio-tile__label">{{ look.label }}</span>
+          </button>
         </div>
-      </div>
+      </section>
 
-      <div class="pb-option">
-        <span class="pb-option__label">Фон</span>
-        <div class="pb-option__chips">
+      <section class="studio-group">
+        <h4>Заголовок</h4>
+        <div class="pb-settings__row">
+          <input v-model="block.style.icon" maxlength="4" class="pb-settings__emoji" placeholder="★" title="Значок перед заголовком" />
+          <input v-model="block.style.title" maxlength="60" :placeholder="def.title || 'Без заголовка'" />
+        </div>
+        <label class="studio-switch">
+          <input v-model="block.style.hide_title" type="checkbox" />
+          <span></span>
+          Скрыть заголовок
+        </label>
+      </section>
+
+      <section class="studio-group">
+        <h4>Фон</h4>
+        <div class="studio-tiles studio-tiles--4">
           <button
               v-for="tone in TONES"
               :key="tone.id"
               type="button"
-              class="pb-chip"
+              class="studio-tile"
               :class="{ 'is-on': block.tone === tone.id }"
+              :style="accentVar"
               @click="block.tone = tone.id"
-          >{{ tone.label }}</button>
+          >
+            <span class="studio-tone" :class="`pb-tone--${tone.id}`"><i></i><i></i></span>
+            <span class="studio-tile__label">{{ tone.label }}</span>
+          </button>
         </div>
-      </div>
+      </section>
 
-      <div class="pb-option">
-        <span class="pb-option__label">Цвет</span>
-        <div class="pb-option__chips">
+      <section class="studio-group">
+        <h4>Цвет</h4>
+        <div class="studio-accent">
           <button
               v-for="color in COLORS"
               :key="color.id"
               type="button"
-              class="pb-swatch"
-              :class="{ 'is-on': block.style.color === color.id, 'pb-swatch--auto': !color.hex }"
+              class="studio-dot"
+              :class="{ 'is-on': !block.style.hex && block.style.color === color.id, 'studio-dot--auto': !color.hex }"
               :style="color.hex ? { background: color.hex } : null"
               :title="color.label || color.id"
-              @click="block.style.color = color.id"
+              @click="block.style.color = color.id; block.style.hex = ''"
           ></button>
+          <label class="studio-dot studio-dot--picker" :class="{ 'is-on': block.style.hex }" :style="block.style.hex ? { background: block.style.hex } : null" title="Любой цвет">
+            <input type="color" :value="block.style.hex || '#8b5cf6'" @input="block.style.hex = $event.target.value" />
+            <StudioIcon v-if="!block.style.hex" name="plus" :size="14" />
+          </label>
         </div>
-      </div>
+      </section>
 
-      <div v-for="(option, key) in STYLE_OPTIONS" :key="key" class="pb-option">
-        <span class="pb-option__label">{{ option.label }}</span>
-        <div class="pb-option__chips">
-          <button
-              v-for="[value, label] in option.options"
-              :key="value"
-              type="button"
-              class="pb-chip"
-              :class="{ 'is-on': block.style[key] === value }"
-              @click="block.style[key] = value"
-          >{{ label }}</button>
-        </div>
-      </div>
+      <section v-for="group in LOOK_GROUPS" :key="group.label" class="studio-group">
+        <h4>{{ group.label }}</h4>
+        <template v-for="key in group.keys" :key="key">
+          <span class="studio-label">{{ STYLE_OPTIONS[key].label }}</span>
+          <div class="studio-seg" :class="{ 'studio-seg--wrap': STYLE_OPTIONS[key].options.length > 4 }">
+            <button
+                v-for="[value, label] in STYLE_OPTIONS[key].options"
+                :key="value"
+                type="button"
+                :class="{ 'is-on': block.style[key] === value }"
+                @click="block.style[key] = value"
+            >{{ label }}</button>
+          </div>
+        </template>
 
-      <label class="pb-check">
-        <input v-model="block.style.hide_mobile" type="checkbox" />
-        Не показывать на телефоне
-      </label>
+        <template v-if="group.sliders">
+          <label class="studio-slider">
+            <span>Наклон <b>{{ block.style.tilt || 0 }}°</b></span>
+            <input v-model.number="block.style.tilt" type="range" min="-4" max="4" step="1" />
+          </label>
+          <label class="studio-slider">
+            <span>Прозрачность <b>{{ block.style.opacity ?? 100 }}%</b></span>
+            <input v-model.number="block.style.opacity" type="range" min="30" max="100" step="5" />
+          </label>
+          <p class="studio-note">Наклон виден гостям, в студии блоки стоят ровно.</p>
+        </template>
+      </section>
+
+      <section class="studio-group">
+        <h4>Телефон</h4>
+        <label class="studio-switch">
+          <input v-model="block.style.hide_mobile" type="checkbox" />
+          <span></span>
+          Не показывать на телефоне
+        </label>
+      </section>
     </template>
   </div>
 </template>

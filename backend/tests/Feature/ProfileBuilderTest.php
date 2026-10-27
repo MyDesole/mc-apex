@@ -27,7 +27,7 @@ class ProfileBuilderTest extends TestCase
                 ['id' => 's2', 'type' => 'stats'],
                 ['id' => 'x', 'type' => 'hacker'],
             ],
-            'page' => ['gap' => 'loose', 'header' => 'huge'],
+            'page' => ['gap' => 'loose', 'header' => 'huge', 'bg' => 'aurora', 'bg_from' => '#FF00AA', 'accent' => 'red', 'glass' => 5, 'blur' => 99, 'hdr_layout' => 'banner', 'hdr_name' => 'rainbow', 'fx' => 'snow'],
         ])->assertOk();
 
         $blocks = $response->json('blocks');
@@ -52,6 +52,17 @@ class ProfileBuilderTest extends TestCase
         $this->assertSame($blocks, $user->fresh()->profile_blocks);
         $this->assertSame('loose', $user->fresh()->profile_page['gap']);
         $this->assertSame('full', $user->fresh()->profile_page['header']);
+        // Студия: цвета только #rrggbb, числа зажаты в рамки
+        $page = $user->fresh()->profile_page;
+        $this->assertSame('aurora', $page['bg']);
+        $this->assertSame('#ff00aa', $page['bg_from']);
+        $this->assertSame('', $page['accent']);
+        $this->assertSame(20, $page['glass']);
+        $this->assertSame(24, $page['blur']);
+        // Шапка и эффекты: неизвестное значение — по умолчанию
+        $this->assertSame('banner', $page['hdr_layout']);
+        $this->assertSame('default', $page['hdr_name']);
+        $this->assertSame('snow', $page['fx']);
 
         // Пустой список — профиль без блоков, а не обычный профиль
         $this->actingAs($user)->putJson('/api/players/me/blocks', ['blocks' => []])

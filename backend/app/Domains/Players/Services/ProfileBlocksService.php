@@ -54,6 +54,7 @@ class ProfileBlocksService
         'font' => ['default', 'display', 'mono', 'serif'],
         // Анимированная рамка блока
         'border' => ['none', 'shine', 'pulse', 'rainbow', 'glow'],
+        'text' => ['auto', 'light', 'dark', 'accent'],
     ];
 
     /** Настройки всей страницы. */
@@ -65,6 +66,24 @@ class ProfileBlocksService
         'appear' => ['rise', 'none', 'fade', 'zoom', 'cascade'],
         'radius' => ['round', 'sharp', 'soft'],
         'backdrop' => ['none', 'dim', 'blur'],
+        // Студия: фон всей страницы, шрифт, тени, ширина, заголовки, плотность
+        'bg' => ['none', 'gradient', 'mesh', 'aurora', 'stars', 'grid', 'spotlight', 'noise'],
+        'font' => ['default', 'display', 'mono', 'serif', 'rounded'],
+        'shadow' => ['soft', 'none', 'deep', 'neon'],
+        'width' => ['normal', 'wide', 'full'],
+        'titles' => ['default', 'caps', 'line', 'pill', 'hidden'],
+        'density' => ['normal', 'compact', 'airy'],
+        // Эффект поверх всей страницы
+        'fx' => ['none', 'snow', 'embers', 'fireflies', 'starfall', 'pixels'],
+        // Шапка профиля
+        'hdr_layout' => ['classic', 'center', 'mirror', 'banner', 'minimal'],
+        'hdr_height' => ['normal', 'short', 'tall'],
+        'hdr_bg' => ['theme', 'accent', 'gradient', 'glass', 'none'],
+        'hdr_name' => ['default', 'gradient', 'outline', 'neon', 'shadow', 'glitch'],
+        'hdr_size' => ['m', 's', 'l', 'xl'],
+        'hdr_avatar' => ['circle', 'rounded', 'square', 'hex'],
+        'hdr_avatar_size' => ['m', 's', 'l'],
+        'hdr_progress' => ['show', 'hide'],
     ];
 
     /** Кем тиммейт приходится игроку: подпись и цвет карточки. */
@@ -95,7 +114,27 @@ class ProfileBlocksService
 
     public function page(array $page): array
     {
-        return $this->pick(self::PAGE, $page);
+        return $this->pick(self::PAGE, $page) + [
+            'bg_from' => $this->hex($page['bg_from'] ?? null) ?? '#2e1065',
+            'bg_to' => $this->hex($page['bg_to'] ?? null) ?? '#0b0912',
+            // Свой акцент всего профиля; пусто — акцент из магазина
+            'accent' => $this->hex($page['accent'] ?? null) ?? '',
+            'glass' => $this->clampInt($page['glass'] ?? 100, 20, 100),
+            'blur' => $this->clampInt($page['blur'] ?? 0, 0, 24),
+        ];
+    }
+
+    /** Цвет только вида #rrggbb, иначе null. */
+    private function hex(mixed $value): ?string
+    {
+        $value = strtolower(trim((string) $value));
+
+        return preg_match('/^#[0-9a-f]{6}$/', $value) ? $value : null;
+    }
+
+    private function clampInt(mixed $value, int $min, int $max): int
+    {
+        return max($min, min($max, (int) $value));
     }
 
     /** Каждое поле — только из своего списка, иначе значение по умолчанию. */
@@ -116,6 +155,10 @@ class ProfileBlocksService
             'title' => $this->str($style['title'] ?? '', 60),
             // Эмодзи перед заголовком
             'icon' => mb_substr(trim(strip_tags((string) ($style['icon'] ?? ''))), 0, 4),
+            // Свой цвет блока пипеткой (вместо палитры), наклон и прозрачность
+            'hex' => $this->hex($style['hex'] ?? null) ?? '',
+            'tilt' => $this->clampInt($style['tilt'] ?? 0, -4, 4),
+            'opacity' => $this->clampInt($style['opacity'] ?? 100, 30, 100),
             'hide_title' => (bool) ($style['hide_title'] ?? false),
             'hide_mobile' => (bool) ($style['hide_mobile'] ?? false),
         ];
