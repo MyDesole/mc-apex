@@ -397,6 +397,17 @@ const tierProgress = computed(() => {
   return Math.max(0, Math.min(100, number))
 })
 
+/*
+ * Ник до 32 символов без пробелов: на узком экране длинный ник
+ * уменьшаем, чтобы он занимал две строки, а не четыре.
+ */
+const nameLengthClass = computed(() => {
+  const length = displayNameWithClan.value.length
+  if (length > 26) return 'is-xlong'
+  if (length > 18) return 'is-long'
+  return null
+})
+
 // «33 дня», «21 день», «11 дней»
 const daysWord = computed(() => {
   const n = Math.abs(Number(props.user.days_on_platform) || 0)
@@ -614,6 +625,11 @@ const coverStyle = computed(() => {
         Настроить
       </button>
 
+      <!-- Действия гостя: дружба, жалоба (передаёт страница игрока) -->
+      <div v-if="!editable && $slots.actions" class="profile-header__actions">
+        <slot name="actions" />
+      </div>
+
     </div>
 
     <!-- =====================================================
@@ -677,7 +693,7 @@ const coverStyle = computed(() => {
 
         <div class="profile-header__compact-name-row">
 
-          <h1 class="profile-header__compact-name">
+          <h1 class="profile-header__compact-name" :class="nameLengthClass">
             <!-- Эффект ника из магазина — как в полной шапке -->
             <span v-if="user.name_effect" class="name-fx" :class="`name-fx--${user.name_effect}`">
               <template v-if="user.name_effect === 'wave'">
@@ -852,7 +868,7 @@ const coverStyle = computed(() => {
         <!-- Name -->
         <div class="profile-header__name-row">
 
-          <h1 class="profile-header__name">
+          <h1 class="profile-header__name" :class="nameLengthClass">
             <!-- Эффект ника из магазина — тот же, что в UserName -->
             <span v-if="user.name_effect" class="name-fx" :class="`name-fx--${user.name_effect}`">
               <template v-if="user.name_effect === 'wave'">

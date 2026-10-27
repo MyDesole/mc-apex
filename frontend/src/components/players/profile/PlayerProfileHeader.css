@@ -3226,3 +3226,203 @@
     font-size: 11px;
   }
 }
+
+/* =========================================================
+   КОМПАКТНАЯ ШАПКА НА ТЕЛЕФОНЕ
+   Высота по содержимому (раньше фиксированная — плашки и статус
+   обрезались), кнопки отдельным рядом сверху иконками, а не поверх
+   ника. Ник до 32 символов без пробелов — переносим по буквам.
+   ========================================================= */
+
+@media (max-width: 640px) {
+  .profile-header.profile-header--compact {
+    height: auto;
+    min-height: 0;
+
+    padding: 12px 14px 16px;
+  }
+
+  .profile-header--compact .profile-header__topline {
+    justify-content: flex-end;
+    gap: 6px;
+
+    margin-bottom: 10px;
+  }
+
+  .profile-header--compact .profile-header__topline .profile-header__edit {
+    width: 36px;
+    min-height: 36px;
+    margin: 0;
+    padding: 0;
+
+    justify-content: center;
+    gap: 0;
+
+    font-size: 0;
+  }
+
+  .profile-header--compact .profile-header__topline .profile-header__edit svg {
+    display: block;
+    width: 16px;
+    height: 16px;
+  }
+
+  .profile-header__compact-content {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+
+    height: auto;
+    padding-top: 0;
+  }
+
+  .profile-header__compact-avatar-wrap {
+    width: 56px;
+    height: 56px;
+  }
+
+  .profile-header__avatar-frame--compact {
+    width: 52px;
+    height: 52px;
+  }
+
+  .profile-header__compact-name-row {
+    gap: 6px;
+  }
+
+  .profile-header__compact-name {
+    display: block;
+
+    max-width: 100%;
+
+    font-size: 19px;
+    line-height: 1.15;
+    letter-spacing: -0.3px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .profile-header__compact-name .name-fx {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .profile-header__compact-name .profile-header__name-icon {
+    display: inline-block;
+    margin-left: 4px;
+    vertical-align: -3px;
+  }
+
+  .profile-header__compact-meta {
+    gap: 5px;
+  }
+
+  .profile-header__compact-status {
+    max-width: 100%;
+    white-space: normal;
+    font-size: 12px;
+  }
+
+  .profile-header__compact-chip {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+
+  .profile-header__compact-tier-ring {
+    width: 56px;
+    height: 56px;
+    align-self: start;
+  }
+
+  .profile-header__compact-tier-letter {
+    font-size: 19px;
+  }
+
+  .profile-header__compact-tier-ring small {
+    font-size: 8px;
+  }
+}
+
+@media (max-width: 380px) {
+  /* Совсем узко: кольцо тира уходит под аватар, ник получает всю ширину */
+  .profile-header__compact-content {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .profile-header__compact-tier-ring {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: center;
+    width: 48px;
+    height: 48px;
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-header__compact-content {
+    align-items: start;
+  }
+
+  .profile-header__compact-name.is-long {
+    font-size: 16px;
+  }
+
+  .profile-header__compact-name.is-xlong {
+    font-size: 14.5px;
+    letter-spacing: -0.2px;
+  }
+}
+
+/* =========================================================
+   ДЛИННЫЕ НИКИ В ПОЛНОЙ ШАПКЕ
+   Ник до 32 символов без пробелов не переносился и растягивал
+   строку шире экрана. Ограничиваем ширину, переносим по буквам,
+   длинные ники — мельче.
+   ========================================================= */
+
+.profile-header__name {
+  min-width: 0;
+  max-width: 100%;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.profile-header__name .name-fx {
+  overflow-wrap: anywhere;
+}
+
+.profile-header__name.is-long {
+  font-size: clamp(24px, 3.4vw, 42px);
+}
+
+.profile-header__name.is-xlong {
+  font-size: clamp(21px, 2.8vw, 34px);
+  letter-spacing: -0.5px;
+}
+
+@media (max-width: 640px) {
+  .profile-header__name {
+    font-size: 28px;
+    line-height: 1.1;
+  }
+
+  .profile-header__name.is-long {
+    font-size: 21px;
+  }
+
+  .profile-header__name.is-xlong {
+    font-size: 18px;
+  }
+}
+
+/* Действия гостя (дружба, жалоба) — справа в верхнем ряду шапки */
+.profile-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-left: auto;
+}

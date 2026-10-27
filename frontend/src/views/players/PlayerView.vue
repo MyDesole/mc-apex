@@ -142,30 +142,37 @@ watch(
         <PlayerRatingBreakdown v-else-if="block.type === 'rating'" :rating="rating" title-class="block-title" />
         <PlayerSeasons v-else-if="block.type === 'seasons'" :user-id="user.id" title-class="block-title" />
       </template>
-    </PlayerCard>
 
-    <!-- Профиль из конструктора: дружба и жалоба остаются под сеткой -->
-    <div v-if="builderOn && !isMe" class="builder-actions">
-      <FriendButton
-          :user-id="user.id"
-          :friendship="friendship"
-          @update="onFriendshipUpdate"
-      />
-      <button
-          v-if="auth.isAuthenticated"
-          type="button"
-          class="report-link"
-          @click="openReport({ type: 'user', id: user.id, name: user.username })"
-      >
-        Пожаловаться на игрока
-      </button>
-    </div>
+      <!-- Профиль из конструктора: дружба и жалоба — в шапке -->
+      <template v-if="!isMe" #header-actions>
+        <div class="profile-friend-actions">
+        <FriendButton
+            :user-id="user.id"
+            :friendship="friendship"
+            @update="onFriendshipUpdate"
+        />
+        <button
+            v-if="auth.isAuthenticated"
+            type="button"
+            class="profile-header-report"
+            title="Пожаловаться на игрока"
+            aria-label="Пожаловаться на игрока"
+            @click="openReport({ type: 'user', id: user.id, name: user.username })"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 22V4" />
+            <path d="M4 4h13l-2 4 2 4H4" />
+          </svg>
+        </button>
+        </div>
+      </template>
+    </PlayerCard>
 
     <!--
       Minecraft-витрина и факты об игроке одним рядом: раньше клан, место
       и дружба шли отдельными блоками друг под другом.
     -->
-    <div v-else-if="!builderOn" class="profile-row">
+    <div v-if="!builderOn" class="profile-row">
       <PlayerShowcase
           :user="user"
           :rank="rank"

@@ -419,7 +419,11 @@ const profileCompleteness = computed(() => {
             :bridge-techniques="bridgeTechniques"
             @edit="emit('edit')"
             @build="building = true"
-        />
+        >
+          <template v-if="$slots['header-actions']" #actions>
+            <slot name="header-actions" />
+          </template>
+        </PlayerProfileHeader>
       </main>
 
       <p v-if="blocksError" class="builder-error">{{ blocksError }}</p>
