@@ -29,6 +29,8 @@ const props = defineProps({
   user: { type: Object, required: true },
   editing: { type: Boolean, default: false },
   saving: { type: Boolean, default: false },
+  // Свой профиль: подсказываем, если блоков не осталось
+  owner: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['save', 'cancel', 'reset', 'preview-page'])
@@ -44,12 +46,12 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value))
 }
 
-// Начинаем редактирование с сохранённой раскладки или с «как сейчас»
+// Начинаем редактирование с сохранённой раскладки (даже пустой) или с «как сейчас»
 watch(
     () => props.editing,
     (on) => {
       if (on) {
-        draft.value = (props.blocks?.length ? clone(props.blocks) : defaultBlocks()).map(withDefaults)
+        draft.value = (Array.isArray(props.blocks) ? clone(props.blocks) : defaultBlocks()).map(withDefaults)
         pageDraft.value = { ...defaultPage(), ...(props.page ?? {}) }
         openSettings.value = null
       }
@@ -333,6 +335,11 @@ function blockStyle(block, i) {
 
       <div v-if="editing && !list.length" class="pb-empty">
         Профиль пуст — добавь первый блок кнопкой «＋ Блок» или возьми шаблон.
+      </div>
+
+      <!-- Хозяин убрал все блоки: подсказка видна только ему -->
+      <div v-else-if="owner && !list.length" class="pb-empty">
+        Блоков нет — гости видят только шапку. Добавить блоки можно в «Конструкторе».
       </div>
     </div>
 

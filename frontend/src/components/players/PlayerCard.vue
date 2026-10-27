@@ -324,9 +324,13 @@ const building = ref(false)
 const savingBlocks = ref(false)
 const blocksError = ref('')
 
-// Профиль рисуется блоками, если игрок их настроил или сейчас настраивает
+/*
+ * Профиль рисуется блоками, если игрок их настроил или сейчас настраивает.
+ * Пустой список — тоже настройка (игрок убрал все блоки); обычный профиль
+ * только при null, его возвращает «Сбросить».
+ */
 const builderMode = computed(() =>
-    building.value || (Array.isArray(props.user.profile_blocks) && props.user.profile_blocks.length > 0)
+    building.value || Array.isArray(props.user.profile_blocks)
 )
 
 // Страница прячет свои блоки (Minecraft-карточку, клан…): они теперь в сетке
@@ -432,6 +436,7 @@ const profileCompleteness = computed(() => {
           :blocks="user.profile_blocks"
           :page="user.profile_page"
           :user="user"
+          :owner="editable"
           :editing="building"
           :saving="savingBlocks"
           @save="saveBlocks"

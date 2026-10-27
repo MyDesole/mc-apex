@@ -53,6 +53,12 @@ class ProfileBuilderTest extends TestCase
         $this->assertSame('loose', $user->fresh()->profile_page['gap']);
         $this->assertSame('full', $user->fresh()->profile_page['header']);
 
+        // Пустой список — профиль без блоков, а не обычный профиль
+        $this->actingAs($user)->putJson('/api/players/me/blocks', ['blocks' => []])
+            ->assertOk()
+            ->assertJsonPath('blocks', []);
+        $this->assertSame([], $user->fresh()->profile_blocks);
+
         // null — обратно к обычному профилю
         $this->actingAs($user)->putJson('/api/players/me/blocks', ['blocks' => null])->assertOk();
         $this->assertNull($user->fresh()->profile_blocks);
