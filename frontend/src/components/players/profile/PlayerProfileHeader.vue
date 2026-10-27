@@ -10,6 +10,7 @@ import PixelSprite from '@/components/shop/PixelSprite.vue'
 import '@/components/shop/badgeStyles.css'
 import ProfilePet from '@/components/players/ProfilePet.vue'
 import ProfileTitle from '@/components/players/ProfileTitle.vue'
+import RespectBadge from '@/components/players/profile/RespectBadge.vue'
 import { nameIcon } from '@/data/players/flair.js'
 import {
   AVATAR_FRAMES,
@@ -564,6 +565,9 @@ const coverStyle = computed(() => {
          ===================================================== -->
 
     <div class="profile-header__topline">
+
+      <!-- Респекты: гость даёт раз в день, хозяин видит счёт и гостей -->
+      <RespectBadge v-if="user.id" :key="`respect-${user.id}`" :user="user" :editable="editable" />
 
       <!-- Рандом: случайный образ из своих предметов -->
       <button

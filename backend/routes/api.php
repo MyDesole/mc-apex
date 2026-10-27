@@ -104,6 +104,16 @@ Route::get('/shop/{shopItem}', [ShopController::class, 'show'])->whereNumber('sh
 Route::get('/players/{user}/guestbook', [\App\Domains\Players\Controllers\Api\ProfileBuilderController::class, 'guestbook'])
     ->whereNumber('user');
 
+// Респекты профиля и топ самых уважаемых недели — видны всем
+Route::get('/players/{user}/respects', [\App\Domains\Players\Controllers\Api\RespectController::class, 'show'])
+    ->whereNumber('user');
+Route::get('/respects/top', [\App\Domains\Players\Controllers\Api\RespectController::class, 'top']);
+
+// Опрос в профиле: результаты видны всем
+Route::get('/players/{user}/polls/{block}', [\App\Domains\Players\Controllers\Api\ProfileBuilderController::class, 'poll'])
+    ->whereNumber('user')
+    ->where('block', '[a-z0-9]{1,16}');
+
 // Питомец профиля: состояние видно всем (до /players/{user}, иначе перехватит)
 Route::get('/players/{user}/pet', [\App\Domains\Players\Controllers\Api\PetController::class, 'show'])
     ->whereNumber('user');
@@ -407,6 +417,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/players/{user}/tier-history', [TierTestController::class, 'history'])->whereNumber('user');
 
     // Гостевая книга профиля: писать — только авторизованным
+    // Респект (раз в день) и отметка «заходил в профиль»
+    Route::post('/players/{user}/respects', [\App\Domains\Players\Controllers\Api\RespectController::class, 'give'])
+        ->whereNumber('user')
+        ->middleware('throttle:20,1');
+    Route::post('/players/{user}/visit', [\App\Domains\Players\Controllers\Api\RespectController::class, 'visit'])
+        ->whereNumber('user')
+        ->middleware('throttle:60,1');
+    Route::get('/players/me/guests', [\App\Domains\Players\Controllers\Api\RespectController::class, 'guests']);
+
+    Route::post('/players/{user}/polls/{block}', [\App\Domains\Players\Controllers\Api\ProfileBuilderController::class, 'votePoll'])
+        ->whereNumber('user')
+        ->where('block', '[a-z0-9]{1,16}')
+        ->middleware('throttle:30,1');
+
     // Погладить, покормить, поиграть — раз в день каждое
     Route::post('/players/{user}/pet/{action}', [\App\Domains\Players\Controllers\Api\PetController::class, 'interact'])
         ->whereNumber('user')

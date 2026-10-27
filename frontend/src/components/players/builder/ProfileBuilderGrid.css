@@ -1286,3 +1286,78 @@
     animation: none !important;
   }
 }
+
+/* ---------- Иконка в заголовке и анимированные рамки ---------- */
+
+.pb-block__icon {
+  margin-right: 4px;
+}
+
+.pb-border--glow {
+  box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--accent-color, #8b5cf6) 70%, transparent),
+      0 0 26px color-mix(in srgb, var(--accent-color, #8b5cf6) 35%, transparent);
+}
+
+.pb-border--pulse {
+  animation: pb-border-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes pb-border-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-color, #8b5cf6) 40%, transparent); }
+  50% { box-shadow: 0 0 0 2px var(--accent-color, #8b5cf6), 0 0 30px color-mix(in srgb, var(--accent-color, #8b5cf6) 45%, transparent); }
+}
+
+/* Радуга и блик — бегущая обводка через маску */
+.pb-border--rainbow::after,
+.pb-border--shine::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+
+  padding: 2px;
+
+  border-radius: inherit;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+
+  pointer-events: none;
+}
+
+.pb-border--rainbow::after {
+  background: linear-gradient(90deg, #f87171, #fbbf24, #4ade80, #22d3ee, #818cf8, #e879f9, #f87171) 0 0 / 300% 100%;
+  animation: pb-border-slide 4s linear infinite;
+}
+
+.pb-border--shine::after {
+  background:
+      linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.9) 50%, transparent 65%) 0 0 / 250% 100%,
+      linear-gradient(color-mix(in srgb, var(--accent-color, #8b5cf6) 50%, transparent), color-mix(in srgb, var(--accent-color, #8b5cf6) 50%, transparent));
+  animation: pb-border-slide 3s ease-in-out infinite;
+}
+
+@keyframes pb-border-slide {
+  from { background-position: 100% 0, 0 0; }
+  to { background-position: -150% 0, 0 0; }
+}
+
+.pb-settings__hint {
+  margin: 0;
+  color: #8a8598;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* Иконки палитры — символами, не цветными эмодзи */
+.pb-palette__icon,
+.pb-drawer__icon {
+  font-variant-emoji: text;
+  font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "DejaVu Sans", sans-serif;
+}
+
+.pb-controls__name {
+  font-variant-emoji: text;
+}

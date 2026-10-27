@@ -280,6 +280,7 @@ function blockClasses(block) {
     `pb-radius--${s.radius}`,
     `pb-hover--${s.hover}`,
     `pb-font--${s.font}`,
+    `pb-border--${s.border || 'none'}`,
     {
       'pb-hide-mobile': s.hide_mobile,
       'is-dragging': dragId.value === block.id,
@@ -400,7 +401,10 @@ function blockStyle(block, i) {
 
         <!-- Содержимое -->
         <div class="pb-block__body">
-          <h3 v-if="blockTitle(block)" class="block-title pb-block__title">{{ blockTitle(block) }}</h3>
+          <h3 v-if="blockTitle(block)" class="block-title pb-block__title">
+            <span v-if="block.style.icon" class="pb-block__icon">{{ block.style.icon }}</span>
+            {{ blockTitle(block) }}
+          </h3>
           <slot v-if="BLOCK_TYPES[block.type].group === 'profile'" name="builtin" :block="block" />
           <ProfileCustomBlock v-else :block="block" :user="user" :editing="editing" />
         </div>

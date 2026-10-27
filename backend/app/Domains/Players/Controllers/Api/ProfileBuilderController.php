@@ -52,6 +52,18 @@ class ProfileBuilderController extends Controller
         return response()->json(['players' => $this->blocks->teammates($ids)]);
     }
 
+    public function poll(Request $request, User $user, string $block): JsonResponse
+    {
+        return response()->json($this->blocks->pollResults($user, $block, $request->user('sanctum')));
+    }
+
+    public function votePoll(Request $request, User $user, string $block): JsonResponse
+    {
+        $data = $request->validate(['option' => ['required', 'integer', 'min:0', 'max:3']]);
+
+        return response()->json($this->blocks->vote($user, $request->user(), $block, $data['option']));
+    }
+
     public function guestbook(User $user): JsonResponse
     {
         return response()->json(['entries' => $this->blocks->guestbook($user)]);

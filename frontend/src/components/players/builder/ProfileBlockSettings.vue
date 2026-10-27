@@ -27,6 +27,8 @@ const hasContent = def.group !== 'profile' && props.block.type !== 'guestbook'
 // Блок из старой раскладки мог прийти без оформления
 props.block.settings ??= {}
 props.block.style ??= {}
+if (props.block.type === 'poll') props.block.settings.options ??= ['', '']
+if (props.block.type === 'goals') props.block.settings.items ??= []
 const tab = ref(hasContent ? 'content' : 'look')
 
 function addRow() {
@@ -80,6 +82,43 @@ function setDate(value) {
       </template>
 
       <TeammatePicker v-else-if="block.type === 'players'" :block="block" />
+
+      <template v-else-if="block.type === 'poll'">
+        <input v-model="block.settings.question" maxlength="120" placeholder="Вопрос" />
+        <div v-for="(_, i) in block.settings.options" :key="i" class="pb-settings__row">
+          <input v-model="block.settings.options[i]" maxlength="60" :placeholder="`Вариант ${i + 1}`" />
+          <button v-if="block.settings.options.length > 2" type="button" @click="block.settings.options.splice(i, 1)">✕</button>
+        </div>
+        <button
+            v-if="block.settings.options.length < 4"
+            type="button"
+            class="pb-settings__add"
+            @click="block.settings.options.push('')"
+        >＋ Вариант</button>
+        <p class="pb-settings__hint">Голоса привязаны к номеру варианта: если поменять варианты местами, голоса останутся на месте.</p>
+      </template>
+
+      <template v-else-if="block.type === 'goals'">
+        <div v-for="(item, i) in block.settings.items" :key="i" class="pb-settings__row">
+          <label class="pb-check"><input v-model="item.done" type="checkbox" /></label>
+          <input v-model="item.text" maxlength="80" placeholder="Цель" />
+          <button type="button" @click="block.settings.items.splice(i, 1)">✕</button>
+        </div>
+        <button
+            v-if="block.settings.items.length < 10"
+            type="button"
+            class="pb-settings__add"
+            @click="block.settings.items.push({ text: '', done: false })"
+        >＋ Цель</button>
+      </template>
+
+      <template v-else-if="block.type === 'counter'">
+        <div class="pb-settings__row">
+          <input v-model="block.settings.emoji" maxlength="4" class="pb-settings__emoji" placeholder="🏆" />
+          <input v-model="block.settings.value" maxlength="12" placeholder="1000" />
+        </div>
+        <input v-model="block.settings.label" maxlength="40" placeholder="Подпись: побед, часов, рекорд…" />
+      </template>
 
       <template v-else-if="block.type in LIMITS">
         <div v-for="(item, i) in block.settings.items" :key="i" class="pb-settings__row">
@@ -166,6 +205,7 @@ function setDate(value) {
       <div class="pb-option">
         <span class="pb-option__label">Заголовок</span>
         <div class="pb-settings__row">
+          <input v-model="block.style.icon" maxlength="4" class="pb-settings__emoji" placeholder="✨" title="Эмодзи перед заголовком" />
           <input v-model="block.style.title" maxlength="60" :placeholder="def.title || 'Без заголовка'" />
           <label class="pb-check">
             <input v-model="block.style.hide_title" type="checkbox" />

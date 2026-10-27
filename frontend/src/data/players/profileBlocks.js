@@ -15,7 +15,7 @@ export const BLOCK_TYPES = {
     clan: { group: 'profile', label: 'Клан', hint: 'Клан и роль в нём', icon: '⛨', single: true, width: 'third', title: 'Клан' },
     rank: { group: 'profile', label: 'Место в топе', hint: 'Позиция в рейтинге', icon: '#', single: true, width: 'third', title: 'Место в топе' },
     rating: { group: 'profile', label: 'Разбор рейтинга', hint: 'Из чего сложились очки', icon: '∑', single: true, width: 'third', title: null },
-    seasons: { group: 'profile', label: 'Сезоны', hint: 'Награды прошлых сезонов', icon: '❄', single: true, width: 'third', title: null },
+    seasons: { group: 'profile', label: 'Сезоны', hint: 'Награды прошлых сезонов', icon: '✲', single: true, width: 'third', title: null },
     socials: { group: 'profile', label: 'Соцсети', hint: 'Ссылки на твои соцсети', icon: '@', single: true, width: 'half', title: 'Соцсети' },
     games: { group: 'profile', label: 'История тиров / виды бриджа', hint: 'График тир-тестов или подтверждённые виды', icon: '↗', single: true, width: 'full', title: null },
     aspects: { group: 'profile', label: 'Аспекты', hint: 'Оценки навыков PvP', icon: '✧', single: true, width: 'full', title: 'Аспекты' },
@@ -29,8 +29,11 @@ export const BLOCK_TYPES = {
     facts: { group: 'content', label: 'Факты', hint: 'Таблица: девайс, пинг, любимый кит…', icon: '☰', width: 'third', title: 'Факты', settings: { items: [{ label: 'Мышь', value: '' }, { label: 'Пинг', value: '' }] } },
     bars: { group: 'content', label: 'Навыки', hint: 'Полоски от 0 до 100', icon: '▤', width: 'third', title: 'Навыки', settings: { items: [{ label: 'Бридж', value: 80 }, { label: 'Клатчи', value: 60 }] } },
     timeline: { group: 'content', label: 'Мой путь', hint: 'Лента событий: когда и что случилось', icon: '⋮', width: 'half', title: 'Мой путь', settings: { items: [{ when: '', text: '' }] } },
-    players: { group: 'content', label: 'Тиммейты', hint: 'Игроки APEX, с кем играешь: дуо, сквад, тренер', icon: '⚔', width: 'half', title: 'Мой сквад', settings: { items: [] } },
-    countdown: { group: 'content', label: 'Обратный отсчёт', hint: 'До турнира, стрима или дня рождения', icon: '⏱', width: 'third', title: null, settings: { title: '', date: '' } },
+    players: { group: 'content', label: 'Тиммейты', hint: 'Игроки APEX, с кем играешь: дуо, сквад, тренер', icon: '⚇', width: 'half', title: 'Мой сквад', settings: { items: [] } },
+    poll: { group: 'content', label: 'Опрос', hint: 'Гости голосуют — результаты в реальном времени', icon: '▥', width: 'third', title: 'Опрос', settings: { question: 'Какой режим лучший?', options: ['Бридж', 'BedWars'] } },
+    goals: { group: 'content', label: 'Цели', hint: 'Список целей с галочками и прогрессом', icon: '◎', width: 'third', title: 'Мои цели', settings: { items: [{ text: 'Получить тир A', done: false }, { text: 'Выиграть турнир', done: false }] } },
+    counter: { group: 'content', label: 'Счётчик', hint: 'Крупная цифра: победы, часы, рекорды', icon: '№', width: 'quarter', title: null, settings: { value: '1000', label: 'побед в бридже', emoji: '🏆' } },
+    countdown: { group: 'content', label: 'Обратный отсчёт', hint: 'До турнира, стрима или дня рождения', icon: '◷', width: 'third', title: null, settings: { title: '', date: '' } },
     video: { group: 'content', label: 'Видео с YouTube', hint: 'Твой лучший хайлайт прямо в профиле', icon: '▶', width: 'two_thirds', title: null, settings: { url: '' } },
     guestbook: { group: 'content', label: 'Гостевая книга', hint: 'Гости оставляют тебе записи', icon: '✎', single: true, width: 'half', title: 'Гостевая книга' },
 
@@ -89,6 +92,7 @@ export const STYLE_OPTIONS = {
     radius: { label: 'Углы', options: [['inherit', 'Как у страницы'], ['sharp', 'Острые'], ['round', 'Скруглённые'], ['pill', 'Сильно']] },
     hover: { label: 'При наведении', options: [['none', 'Ничего'], ['lift', 'Подъём'], ['glow', 'Свечение'], ['tilt', 'Наклон']] },
     font: { label: 'Шрифт', options: [['default', 'Обычный'], ['display', 'Заголовочный'], ['mono', 'Моно'], ['serif', 'С засечками']] },
+    border: { label: 'Рамка', options: [['none', 'Обычная'], ['shine', 'Блик'], ['pulse', 'Пульс'], ['rainbow', 'Радуга'], ['glow', 'Свечение']] },
 }
 
 /** Настройки всей страницы. */
@@ -125,7 +129,7 @@ export function widthSpan(width) {
 }
 
 export function defaultStyle() {
-    const style = { color: 'auto', title: '', hide_title: false, hide_mobile: false }
+    const style = { color: 'auto', title: '', icon: '', hide_title: false, hide_mobile: false }
     for (const [key, def] of Object.entries(STYLE_OPTIONS)) style[key] = def.options[0][0]
     return style
 }

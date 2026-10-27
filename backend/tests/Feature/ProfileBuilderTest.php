@@ -90,6 +90,36 @@ class ProfileBuilderTest extends TestCase
             ->assertJsonPath('players.0.username', 'Mate_1');
     }
 
+    public function test_poll_goals_counter_and_voting(): void
+    {
+        $owner = User::factory()->create();
+        $guest = User::factory()->create();
+
+        $blocks = $this->actingAs($owner)->putJson('/api/players/me/blocks', ['blocks' => [
+            ['id' => 'poll1', 'type' => 'poll', 'settings' => ['question' => 'Лучший режим?', 'options' => ['Бридж', 'BedWars', 'PvP', 'Скайварс', 'Лишний']]],
+            ['id' => 'g', 'type' => 'goals', 'settings' => ['items' => [['text' => 'Тир A', 'done' => true], ['text' => '']]]],
+            ['id' => 'c', 'type' => 'counter', 'settings' => ['value' => '1200<script>', 'label' => 'побед'], 'style' => ['border' => 'rainbow', 'icon' => '🔥🔥🔥🔥🔥']],
+        ]])->assertOk()->json('blocks');
+
+        $this->assertCount(4, $blocks[0]['settings']['options']);
+        $this->assertCount(1, $blocks[1]['settings']['items']);
+        $this->assertSame('1200', $blocks[2]['settings']['value']);
+        $this->assertSame('rainbow', $blocks[2]['style']['border']);
+
+        $base = "/api/players/{$owner->id}/polls/poll1";
+
+        $this->actingAs($guest)->postJson($base, ['option' => 1])
+            ->assertOk()
+            ->assertJsonPath('votes', [0, 1, 0, 0])
+            ->assertJsonPath('mine', 1);
+
+        // Переголосовать — голос переезжает, а не добавляется
+        $this->actingAs($guest)->postJson($base, ['option' => 0])->assertJsonPath('total', 1);
+
+        $this->getJson($base)->assertOk()->assertJsonPath('votes.0', 1)->assertJsonPath('mine', 0);
+        $this->getJson("/api/players/{$owner->id}/polls/nope")->assertNotFound();
+    }
+
     public function test_guestbook_needs_block_and_respects_delete_rights(): void
     {
         $owner = User::factory()->create();

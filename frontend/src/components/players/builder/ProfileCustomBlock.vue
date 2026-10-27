@@ -4,7 +4,8 @@
  * тиммейты, обратный отсчёт, видео, гостевая книга, пиксель-арт,
  * разделитель и пустое место. Заголовок блока рисует сетка.
  */
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import PollBlock from '@/components/players/builder/PollBlock.vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
 import GuestbookBlock from '@/components/players/builder/GuestbookBlock.vue'
 import SquadBlock from '@/components/players/builder/SquadBlock.vue'
@@ -39,6 +40,8 @@ const countdown = computed(() => {
 })
 
 onMounted(() => {
+  if (props.block.type === 'counter') runCounter()
+
   if (props.block.type === 'countdown') {
     clock = setInterval(() => { now.value = Date.now() }, 1000)
   }
@@ -53,6 +56,40 @@ const videoId = computed(() => youtubeId(s.value.url))
 /* ---------- Списки: факты, навыки, путь, тиммейты ---------- */
 
 const items = computed(() => s.value.items || [])
+
+/* ---------- Цели ---------- */
+
+const goalsDone = computed(() => items.value.filter((i) => i.done).length)
+const goalsPercent = computed(() => (items.value.length ? Math.round((goalsDone.value / items.value.length) * 100) : 0))
+
+/* ---------- Счётчик: число «набегает» при появлении ---------- */
+
+const counterShown = ref('')
+
+function runCounter() {
+  const raw = String(s.value.value || '')
+  const match = raw.match(/\d[\d\s]*/)
+  if (!match) {
+    counterShown.value = raw
+    return
+  }
+
+  const target = Number(match[0].replace(/\s/g, ''))
+  const started = performance.now()
+
+  const tick = (now) => {
+    const t = Math.min(1, (now - started) / 1200)
+    const eased = 1 - (1 - t) ** 3
+    counterShown.value = raw.replace(match[0], Math.round(target * eased).toLocaleString('ru-RU'))
+    if (t < 1) requestAnimationFrame(tick)
+  }
+
+  requestAnimationFrame(tick)
+  // Если вкладка в фоне и кадров нет — сразу конечное значение
+  setTimeout(() => { if (!counterShown.value) counterShown.value = raw }, 1500)
+}
+
+watch(() => s.value.value, () => props.block.type === 'counter' && runCounter())
 
 function pad(n) {
   return String(n).padStart(2, '0')
@@ -106,6 +143,38 @@ function pad(n) {
 
   <!-- Тиммейты -->
   <SquadBlock v-else-if="block.type === 'players'" :items="items" :editing="editing" />
+
+  <!-- Опрос -->
+  <PollBlock
+      v-else-if="block.type === 'poll'"
+      :owner="user"
+      :block-id="block.id"
+      :question="s.question"
+      :options="s.options || []"
+      :preview="editing"
+  />
+
+  <!-- Цели -->
+  <div v-else-if="block.type === 'goals'" class="cb-goals">
+    <div class="cb-goals__progress">
+      <span>{{ goalsDone }} из {{ items.length }}</span>
+      <div class="cb-goals__bar"><i :style="{ width: `${goalsPercent}%` }"></i></div>
+    </div>
+    <ul>
+      <li v-for="(item, i) in items" :key="i" :class="{ 'is-done': item.done }">
+        <span class="cb-goals__check">{{ item.done ? '✓' : '' }}</span>
+        {{ item.text }}
+      </li>
+    </ul>
+    <p v-if="!items.length && editing" class="cb-placeholder">Добавь цели в настройках ⚙</p>
+  </div>
+
+  <!-- Счётчик -->
+  <div v-else-if="block.type === 'counter'" class="cb-counter">
+    <span v-if="s.emoji" class="cb-counter__emoji">{{ s.emoji }}</span>
+    <strong class="cb-counter__value">{{ counterShown }}</strong>
+    <span v-if="s.label" class="cb-counter__label">{{ s.label }}</span>
+  </div>
 
   <!-- Обратный отсчёт -->
   <div v-else-if="block.type === 'countdown'" class="cb-countdown">
@@ -347,6 +416,120 @@ function pad(n) {
 .cb-timeline__text {
   color: var(--text, #fff);
   font-size: 14px;
+}
+
+/* Цели */
+.cb-goals__progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin-bottom: 10px;
+
+  color: var(--text-muted, #a8a3b8);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.cb-goals__bar {
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 99px;
+}
+
+.cb-goals__bar i {
+  display: block;
+  height: 100%;
+
+  background: linear-gradient(90deg, #22c55e, var(--accent-color, #8b5cf6));
+  border-radius: inherit;
+  transition: width 0.6s ease;
+}
+
+.cb-goals ul {
+  margin: 0;
+  padding: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  list-style: none;
+}
+
+.cb-goals li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  color: var(--text, #fff);
+  font-size: 14px;
+}
+
+.cb-goals li.is-done {
+  color: var(--text-muted, #8a8598);
+  text-decoration: line-through;
+}
+
+.cb-goals__check {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.cb-goals li.is-done .cb-goals__check {
+  background: #22c55e;
+  border-color: #22c55e;
+}
+
+/* Счётчик */
+.cb-counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  padding: 8px 0;
+
+  text-align: center;
+}
+
+.cb-counter__emoji {
+  font-size: 28px;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
+}
+
+.cb-counter__value {
+  color: var(--text, #fff);
+
+  font-family: var(--font-display);
+  font-size: clamp(32px, 5vw, 48px);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-shadow: 0 0 22px color-mix(in srgb, var(--accent-color, #8b5cf6) 60%, transparent);
+}
+
+.cb-counter__label {
+  color: var(--text-muted, #a8a3b8);
+
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 /* Пустое место */

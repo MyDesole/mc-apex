@@ -5,6 +5,7 @@ namespace App\Domains\Players\Services;
 use App\Domains\Players\Models\GuestbookEntry;
 use App\Domains\Users\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -29,7 +30,7 @@ class ProfileBlocksService
         'showcase', 'clan', 'rank', 'rating', 'seasons',
         // Свои блоки, со своими настройками
         'text', 'quote', 'countdown', 'video', 'guestbook', 'sticker', 'divider', 'spacer',
-        'facts', 'bars', 'timeline', 'players',
+        'facts', 'bars', 'timeline', 'players', 'poll', 'goals', 'counter',
     ];
 
     /** Блоки, которые бывают в профиле только в одном экземпляре. */
@@ -51,6 +52,8 @@ class ProfileBlocksService
         'radius' => ['inherit', 'sharp', 'round', 'pill'],
         'hover' => ['none', 'lift', 'glow', 'tilt'],
         'font' => ['default', 'display', 'mono', 'serif'],
+        // Анимированная рамка блока
+        'border' => ['none', 'shine', 'pulse', 'rainbow', 'glow'],
     ];
 
     /** Настройки всей страницы. */
@@ -111,6 +114,8 @@ class ProfileBlocksService
     {
         return $this->pick(self::STYLE, $style) + [
             'title' => $this->str($style['title'] ?? '', 60),
+            // Эмодзи перед заголовком
+            'icon' => mb_substr(trim(strip_tags((string) ($style['icon'] ?? ''))), 0, 4),
             'hide_title' => (bool) ($style['hide_title'] ?? false),
             'hide_mobile' => (bool) ($style['hide_mobile'] ?? false),
         ];
@@ -208,6 +213,26 @@ class ProfileBlocksService
             'spacer' => [
                 'size' => in_array($s['size'] ?? null, ['s', 'm', 'l'], true) ? $s['size'] : 'm',
             ],
+            // Опрос: вопрос и 2–4 варианта, гости голосуют (голоса — в profile_poll_votes)
+            'poll' => [
+                'question' => $this->str($s['question'] ?? '', 120),
+                'options' => collect(is_array($s['options'] ?? null) ? $s['options'] : [])
+                    ->map(fn ($o) => $this->str($o, 60))
+                    ->take(4)
+                    ->values()
+                    ->all(),
+            ],
+            'goals' => [
+                'items' => $this->items($s, 10, fn ($item) => [
+                    'text' => $this->str($item['text'] ?? '', 80),
+                    'done' => (bool) ($item['done'] ?? false),
+                ], 'text'),
+            ],
+            'counter' => [
+                'value' => mb_substr(preg_replace('/[^0-9.,kKкК+%\s]/u', '', (string) ($s['value'] ?? '')), 0, 12),
+                'label' => $this->str($s['label'] ?? '', 40),
+                'emoji' => mb_substr(trim(strip_tags((string) ($s['emoji'] ?? ''))), 0, 4),
+            ],
             'countdown' => [
                 'title' => $this->str($s['title'] ?? '', 80),
                 'date' => $this->date($s['date'] ?? ''),
@@ -263,6 +288,64 @@ class ProfileBlocksService
         $time = strtotime((string) $value);
 
         return $time ? date('c', $time) : '';
+    }
+
+    /* -------------------------------- Опросы -------------------------------- */
+
+    /** Блок опроса из раскладки игрока или 404. */
+    private function pollBlock(User $owner, string $blockId): array
+    {
+        $block = collect($owner->profile_blocks ?? [])->first(
+            fn ($b) => ($b['type'] ?? null) === 'poll' && ($b['id'] ?? null) === $blockId,
+        );
+
+        abort_unless($block && count($block['settings']['options'] ?? []) >= 2, 404, 'Опрос не найден.');
+
+        return $block;
+    }
+
+    /** Результаты: голоса по вариантам и мой выбор. */
+    public function pollResults(User $owner, string $blockId, ?User $viewer): array
+    {
+        $block = $this->pollBlock($owner, $blockId);
+        $options = $block['settings']['options'];
+
+        $counts = DB::table('profile_poll_votes')
+            ->where('owner_id', $owner->id)
+            ->where('block_id', $blockId)
+            ->selectRaw('`option`, count(*) as total')
+            ->groupBy('option')
+            ->pluck('total', 'option');
+
+        $mine = $viewer
+            ? DB::table('profile_poll_votes')
+                ->where('owner_id', $owner->id)
+                ->where('block_id', $blockId)
+                ->where('user_id', $viewer->id)
+                ->value('option')
+            : null;
+
+        return [
+            'votes' => collect($options)->keys()->map(fn ($i) => (int) ($counts[$i] ?? 0))->all(),
+            'total' => (int) $counts->sum(),
+            'mine' => $mine === null ? null : (int) $mine,
+        ];
+    }
+
+    public function vote(User $owner, User $actor, string $blockId, int $option): array
+    {
+        $block = $this->pollBlock($owner, $blockId);
+
+        if ($option < 0 || $option >= count($block['settings']['options'])) {
+            throw ValidationException::withMessages(['option' => ['Такого варианта нет.']]);
+        }
+
+        DB::table('profile_poll_votes')->updateOrInsert(
+            ['owner_id' => $owner->id, 'block_id' => $blockId, 'user_id' => $actor->id],
+            ['option' => $option, 'updated_at' => now(), 'created_at' => now()],
+        );
+
+        return $this->pollResults($owner, $blockId, $actor);
     }
 
     /* ------------------------------- Тиммейты ------------------------------- */
