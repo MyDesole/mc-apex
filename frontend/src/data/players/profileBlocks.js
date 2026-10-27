@@ -23,8 +23,15 @@ export const BLOCK_TYPES = {
     friends: { group: 'profile', label: 'Друзья', hint: 'Список друзей', icon: '♢', single: true, width: 'half', title: null },
     recommendations: { group: 'profile', label: 'Рекомендации', hint: 'Отзывы друзей о тебе', icon: '❝', single: true, width: 'full', title: null },
 
+    // Шапка, разобранная на части (режим «Разобрать на блоки»)
+    h_avatar: { group: 'header', label: 'Аватар', hint: 'Аватар с рамкой из инвентаря', icon: '◉', single: true, width: 'quarter', title: null },
+    h_name: { group: 'header', label: 'Ник', hint: 'Ник с эффектом, значком, ролью и титулом', icon: 'Aa', single: true, width: 'three_quarters', title: null },
+    h_badges: { group: 'header', label: 'Бейджи', hint: 'Купленные бейджи', icon: '✪', single: true, width: 'half', title: null },
+    h_about: { group: 'header', label: 'О себе', hint: 'Статус, описание и цитата', icon: '❞', single: true, width: 'half', title: null },
+    h_tier: { group: 'header', label: 'Тир и плашки', hint: 'Полоса тира, клан, дни, уровень', icon: '▲', single: true, width: 'full', title: null },
+
     // Свои блоки
-    text: { group: 'content', label: 'Свой текст', hint: 'Абзац о чём угодно: правила, истории, планы', icon: '¶', width: 'half', title: 'Заметка', settings: { body: '', size: 'm' } },
+    text:{ group: 'content', label: 'Свой текст', hint: 'Абзац о чём угодно: правила, истории, планы', icon: '¶', width: 'half', title: 'Заметка', settings: { body: '', size: 'm' } },
     quote: { group: 'content', label: 'Цитата', hint: 'Крупная цитата с автором', icon: '“', width: 'full', title: null, settings: { text: '', author: '' } },
     facts: { group: 'content', label: 'Факты', hint: 'Таблица: девайс, пинг, любимый кит…', icon: '☰', width: 'third', title: 'Факты', settings: { items: [{ label: 'Мышь', value: '' }, { label: 'Пинг', value: '' }] } },
     bars: { group: 'content', label: 'Навыки', hint: 'Полоски от 0 до 100', icon: '▤', width: 'third', title: 'Навыки', settings: { items: [{ label: 'Бридж', value: 80 }, { label: 'Клатчи', value: 60 }] } },
@@ -52,6 +59,7 @@ export const BLOCK_TYPES = {
 }
 
 export const GROUPS = [
+    { id: 'header', label: 'Части шапки' },
     { id: 'profile', label: 'Части профиля' },
     { id: 'content', label: 'Свои блоки' },
     { id: 'decor', label: 'Украшения' },
@@ -122,6 +130,7 @@ export const PAGE_OPTIONS = {
     width: { label: 'Ширина', options: [['normal', 'Обычная'], ['wide', 'Широкая'], ['full', 'Во весь экран']] },
     titles: { label: 'Заголовки блоков', options: [['default', 'Обычные'], ['caps', 'ПРОПИСНЫЕ'], ['line', 'С линией'], ['pill', 'Плашкой'], ['hidden', 'Скрыть все']] },
     density: { label: 'Плотность', options: [['normal', 'Обычная'], ['compact', 'Плотно'], ['airy', 'Воздушно']] },
+    hdr_mode: { label: 'Шапка', options: [['whole', 'Целиком'], ['blocks', 'Разобрать на блоки']] },
     hdr_layout: { label: 'Раскладка', options: [['classic', 'Классика'], ['center', 'По центру'], ['mirror', 'Зеркально'], ['banner', 'Баннер'], ['minimal', 'Минимал']] },
     hdr_height: { label: 'Высота', options: [['normal', 'Обычная'], ['short', 'Низкая'], ['tall', 'Высокая']] },
     hdr_bg: { label: 'Фон шапки', options: [['theme', 'Как в теме'], ['accent', 'Акцент'], ['gradient', 'Градиент'], ['glass', 'Стекло'], ['none', 'Без фона']] },

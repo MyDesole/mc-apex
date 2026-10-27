@@ -59,6 +59,9 @@
 .pb-block {
   --pb-block-radius: var(--pb-radius);
 
+  /* Содержимое перестраивается по ширине блока, а не экрана (@container) */
+  container-type: inline-size;
+
   position: relative;
   isolation: isolate;
   overflow: hidden;

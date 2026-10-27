@@ -2357,3 +2357,32 @@ body .profile-layout.ph-progress-case--lower .tier-progress, body .profile-layou
 .studio-mytpl { border: 1px solid var(--studio-line); }
 
 .studio-search .studio-icon-btn { width: 30px; height: 30px; border: 0; background: none; }
+.studio-hdr--split {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  gap: 4px;
+  padding: 6px;
+}
+
+.studio-hdr--split > * {
+  outline: 1px dashed color-mix(in srgb, var(--studio-accent) 70%, transparent);
+  outline-offset: 1px;
+}
+
+.studio-hdr--split s { grid-column: 1 / -1; width: 100%; }
+/* Узкий экран: черновик и подсказки — сверху, под полосой студии, компактно */
+@media (max-width: 900px) {
+  .studio-draft,
+  .studio-toast {
+    top: calc(var(--studio-top) + 8px);
+    bottom: auto;
+    left: 50%;
+
+    max-width: calc(100vw - 20px);
+
+    white-space: normal;
+  }
+
+  .studio-draft { padding: 6px 6px 6px 12px; font-size: 12px; }
+  .studio-draft > span { flex: 1; min-width: 0; }
+}

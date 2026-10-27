@@ -454,6 +454,7 @@ const profileCompleteness = computed(() => {
             data-block="header"
             :user="user"
             :compact="compactHeader"
+            :slim="currentPage.hdr_mode === 'blocks'"
             :editable="editable"
             :cover-url="user.cover_url"
             :accent="accent"
@@ -485,8 +486,20 @@ const profileCompleteness = computed(() => {
           @profile="emit('edit')"
       >
         <template #builtin="{ block }">
+          <!-- Часть шапки: та же шапка, но показывает только свой кусок -->
+          <PlayerProfileHeader
+              v-if="block.type.startsWith('h_')"
+              :part="block.type.slice(2)"
+              :user="user"
+              :cover-url="user.cover_url"
+              :accent="accent"
+              :bridge-mode="bridgeMode"
+              :bridge-rank="bridgeRank"
+              :bridge-techniques="bridgeTechniques"
+          />
+
           <!-- Статистика -->
-          <div v-if="block.type === 'stats'" class="profile-stats">
+          <div v-else-if="block.type === 'stats'" class="profile-stats">
             <div
                 v-for="stat in profileStats"
                 :key="stat.key"

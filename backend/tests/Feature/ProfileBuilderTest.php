@@ -152,6 +152,8 @@ class ProfileBuilderTest extends TestCase
             ['id' => 'pr', 'type' => 'progress', 'settings' => ['title' => 'До тира A', 'current' => -5, 'target' => 0]],
             ['id' => 'mq', 'type' => 'marquee', 'settings' => ['text' => 'Привет', 'speed' => 'ludicrous']],
             ['id' => 'sc', 'type' => 'schedule', 'settings' => ['items' => [['day' => 'fri', 'time' => '20:00', 'text' => 'Стрим'], ['day' => 'xyz', 'text' => 'Бридж']]]],
+            ['id' => 'ha', 'type' => 'h_avatar', 'width' => 'quarter'],
+            ['id' => 'ha2', 'type' => 'h_avatar'],
             ['id' => 'tx', 'type' => 'text', 'style' => ['grad_from' => '#FF0000', 'grad_to' => 'nope', 'grad_angle' => 999, 'bw' => 40, 'anim' => 'float', 'reveal' => 'teleport', 'pad' => 'xl']],
         ]])->assertOk()->json('blocks');
 
@@ -168,8 +170,11 @@ class ProfileBuilderTest extends TestCase
         $this->assertSame(1, $blocks[4]['settings']['target']);
         $this->assertSame('normal', $blocks[5]['settings']['speed']);
         $this->assertSame('mon', $blocks[6]['settings']['items'][1]['day']);
+        // Часть шапки — блок, но только один раз
+        $this->assertSame('h_avatar', $blocks[7]['type']);
+        $this->assertSame('quarter', $blocks[7]['width']);
         // Оформление: цвета #rrggbb, числа в рамках, перечисления из списка
-        $style = $blocks[7]['style'];
+        $style = $blocks[8]['style'];
         $this->assertSame('#ff0000', $style['grad_from']);
         $this->assertSame('', $style['grad_to']);
         $this->assertSame(360, $style['grad_angle']);

@@ -32,12 +32,15 @@ class ProfileBlocksService
         'text', 'quote', 'countdown', 'video', 'guestbook', 'sticker', 'divider', 'spacer',
         'facts', 'bars', 'timeline', 'players', 'poll', 'goals', 'counter',
         'setup', 'links', 'music', 'faq', 'marquee', 'schedule', 'banner', 'progress',
+        // Шапка, разобранная на блоки
+        'h_avatar', 'h_name', 'h_badges', 'h_about', 'h_tier',
     ];
 
     /** Блоки, которые бывают в профиле только в одном экземпляре. */
     private const SINGLE = [
         'stats', 'socials', 'games', 'aspects', 'achievements', 'friends', 'recommendations',
         'showcase', 'clan', 'rank', 'rating', 'seasons', 'guestbook',
+        'h_avatar', 'h_name', 'h_badges', 'h_about', 'h_tier',
     ];
 
     public const WIDTHS = ['quarter', 'third', 'half', 'two_thirds', 'three_quarters', 'full'];
@@ -83,6 +86,8 @@ class ProfileBlocksService
         'titles' => ['default', 'caps', 'line', 'pill', 'hidden'],
         'density' => ['normal', 'compact', 'airy'],
         // Шапка профиля
+        // whole — шапка целиком; blocks — её части стоят в сетке блоками
+        'hdr_mode' => ['whole', 'blocks'],
         'hdr_layout' => ['classic', 'center', 'mirror', 'banner', 'minimal'],
         'hdr_height' => ['normal', 'short', 'tall'],
         'hdr_bg' => ['theme', 'accent', 'gradient', 'glass', 'none'],

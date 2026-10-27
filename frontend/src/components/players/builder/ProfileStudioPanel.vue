@@ -25,7 +25,7 @@ const props = defineProps({
 
 const emit = defineEmits([
   'add', 'select', 'move', 'remove', 'reorder', 'preset', 'replay',
-  'save-template', 'apply-template', 'delete-template', 'profile',
+  'save-template', 'apply-template', 'delete-template', 'profile', 'header-mode',
 ])
 
 const templateName = ref('')
@@ -475,6 +475,35 @@ function seg(key) {
       <!-- ============ Шапка ============ -->
       <template v-else-if="tab === 'header'">
         <section class="studio-group">
+          <h4>Режим</h4>
+          <div class="studio-tiles studio-tiles--2">
+            <button
+                type="button"
+                class="studio-tile"
+                :class="{ 'is-on': page.hdr_mode !== 'blocks' }"
+                @click="emit('header-mode', 'whole')"
+            >
+              <span class="studio-hdr studio-hdr--classic"><i></i><b></b><s></s></span>
+              <span class="studio-tile__label">Шапка целиком</span>
+            </button>
+            <button
+                type="button"
+                class="studio-tile"
+                :class="{ 'is-on': page.hdr_mode === 'blocks' }"
+                @click="emit('header-mode', 'blocks')"
+            >
+              <span class="studio-hdr studio-hdr--split"><i></i><b></b><s></s></span>
+              <span class="studio-tile__label">Разобрать на блоки</span>
+            </button>
+          </div>
+          <p class="studio-note">
+            {{ page.hdr_mode === 'blocks'
+              ? 'Аватар, ник, бейджи, «о себе» и тир — теперь блоки: двигай, растягивай и оформляй их как любые другие. Сверху осталась лента с обложкой и питомцами.'
+              : 'Разбери шапку — и её части станут обычными блоками сетки.' }}
+          </p>
+        </section>
+
+        <section v-if="page.hdr_mode !== 'blocks'" class="studio-group">
           <h4>Раскладка</h4>
           <div class="studio-tiles studio-tiles--3">
             <button
@@ -491,7 +520,7 @@ function seg(key) {
           </div>
         </section>
 
-        <section class="studio-group">
+        <section v-if="page.hdr_mode !== 'blocks'" class="studio-group">
           <h4>Элементы шапки</h4>
           <p class="studio-note">Тяни строку, чтобы переставить. Нажми на элемент в шапке на холсте — он раскроется здесь.</p>
           <ol class="studio-layers">

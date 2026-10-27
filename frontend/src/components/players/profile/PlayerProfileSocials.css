@@ -292,3 +292,16 @@
     max-width: 120px;
   }
 }
+
+/* В узком блоке профиля — по одной карточке в ряд, шапка в столбик */
+@container (max-width: 420px) {
+  .socials__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .socials__head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+}

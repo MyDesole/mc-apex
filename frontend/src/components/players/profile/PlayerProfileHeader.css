@@ -3426,3 +3426,108 @@
 
   margin-left: auto;
 }
+
+/* =========================================================
+   ШАПКА, РАЗОБРАННАЯ НА БЛОКИ (prop part)
+   Одна часть внутри блока студии: фон и рамку даёт блок,
+   поэтому своя подложка, декор и отступы шапки не нужны.
+   ========================================================= */
+
+.profile-header--part {
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow: visible;
+
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.profile-header--part :is(
+  .profile-header__cover, .profile-header__aurora, .profile-header__grid,
+  .profile-header__noise, .profile-header__accent-line, .profile-header__effect
+) {
+  display: none;
+}
+
+.profile-header--part .profile-header__content {
+  min-height: 0 !important;
+  gap: 0;
+  padding: 0 !important;
+}
+
+.profile-header__part-empty {
+  margin: 0;
+  padding: 14px 0;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 13px;
+}
+
+.profile-header--part .profile-header__identity {
+  width: 100%;
+  max-width: none;
+}
+
+/* Аватар */
+.profile-header--part-avatar .profile-header__content { justify-content: center; }
+/* !important: студия делает identity флексом для порядка частей */
+.profile-header--part-avatar .profile-header__identity { display: none !important; }
+
+/* Остальные части — без аватара */
+.profile-header--part:not(.profile-header--part-avatar) .profile-header__avatar-wrap { display: none !important; }
+
+.profile-header--part-name :is(.profile-header__badges, .profile-header__status-text, .profile-header__bio, .profile-header__quote, .profile-header__stats, .tier-progress, .bridge-hero),
+.profile-header--part-badges :is(.profile-header__name-row, .profile-header__title, .profile-header__status-text, .profile-header__bio, .profile-header__quote, .profile-header__stats, .tier-progress, .bridge-hero),
+.profile-header--part-about :is(.profile-header__name-row, .profile-header__title, .profile-header__badges, .profile-header__stats, .tier-progress, .bridge-hero),
+.profile-header--part-tier :is(.profile-header__name-row, .profile-header__title, .profile-header__badges, .profile-header__status-text, .profile-header__bio, .profile-header__quote) {
+  display: none !important;
+}
+
+.profile-header--part :is(.profile-header__badges, .profile-header__stats, .tier-progress, .bridge-hero, .profile-header__quote) {
+  margin-top: 0;
+}
+/* Лента вместо шапки: части стоят в сетке, тут обложка, питомцы, эффект и кнопки */
+.profile-header--slim {
+  min-height: 150px !important;
+}
+
+.profile-header--slim :is(.profile-header__content, .profile-header__compact-content, .profile-header__tier-watermark, .profile-header__peak) {
+  display: none !important;
+}
+/* На узком экране содержимое шапки высокое и питомцы наезжали на полосу
+   тира — даём им свою полосу снизу */
+@media (max-width: 700px) {
+  .profile-header--pets {
+    padding-bottom: 76px !important;
+  }
+}
+
+:global(body.pb-studio--phone) .profile-header--pets {
+  padding-bottom: 76px !important;
+}
+/* Узкий телефон: аватар над ником, ник во всю ширину и не рвётся на куски */
+@media (max-width: 520px) {
+  .profile-header:not(.profile-header--part) .profile-header__content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding-top: 18px;
+  }
+
+  .profile-header:not(.profile-header--part) .profile-header__identity {
+    width: 100%;
+  }
+
+  .profile-header__name {
+    font-size: clamp(24px, 8.4vw, 32px);
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+
+  .profile-header__name.is-long {
+    font-size: clamp(18px, 6.2vw, 24px);
+    overflow-wrap: anywhere;
+  }
+}

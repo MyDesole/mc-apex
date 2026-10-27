@@ -21,6 +21,7 @@ import ProfileCustomBlock from '@/components/players/builder/ProfileCustomBlock.
 import ProfileBlockSettings from '@/components/players/builder/ProfileBlockSettings.vue'
 import ProfileStudioPanel from '@/components/players/builder/ProfileStudioPanel.vue'
 import StudioIcon from '@/components/players/builder/StudioIcon.vue'
+import { useTryOn } from '@/composables/players/useTryOn.js'
 import {
   BLOCK_TYPES, WIDTHS, COLORS,
   blockTitle, defaultBlocks, defaultPage, makeBlock, widthSpan, withDefaults,
@@ -393,6 +394,31 @@ function cancel() {
   emit('cancel')
 }
 
+// Примерка из магазина живёт только пока открыта студия
+const { restoreAll: restoreTryOn } = useTryOn()
+watch(() => props.editing, (on) => { if (!on) restoreTryOn() })
+
+/* ---------- Шапка: целиком или блоками ----------
+ * Разобрали — её части встают первыми блоками сетки (тех, что ещё нет);
+ * собрали обратно — блоки частей уходят.
+ */
+
+const HEADER_BLOCKS = ['h_avatar', 'h_name', 'h_badges', 'h_about', 'h_tier']
+
+function setHeaderMode(mode) {
+  pageDraft.value.hdr_mode = mode
+  const present = new Set(draft.value.map((b) => b.type))
+
+  if (mode === 'blocks') {
+    const parts = HEADER_BLOCKS.filter((type) => !present.has(type)).map((type) => makeBlock(type))
+    draft.value.unshift(...parts)
+    say('Шапка разобрана — её части теперь блоки')
+  } else {
+    draft.value = draft.value.filter((b) => !HEADER_BLOCKS.includes(b.type))
+    if (openSettings.value && !draft.value.some((b) => b.id === openSettings.value)) openSettings.value = null
+  }
+}
+
 /* ---------- Глазами гостя ---------- */
 
 const guestView = ref(false)
@@ -581,6 +607,7 @@ onUnmounted(() => {
   phone?.removeEventListener?.('change', schedulePack)
   window.removeEventListener('keydown', onKey)
   document.removeEventListener('click', onCanvasClick, true)
+  restoreTryOn()
   document.body.classList.remove('pb-studio', 'pb-studio--panel', 'pb-studio--inspector', 'pb-studio--phone', 'pb-studio--guest', 'pb-studio--header')
 })
 
@@ -745,7 +772,7 @@ function blockStyle(block, i) {
             <span v-if="block.style.icon" class="pb-block__icon">{{ block.style.icon }}</span>
             {{ blockTitle(block) }}
           </h3>
-          <slot v-if="BLOCK_TYPES[block.type].group === 'profile'" name="builtin" :block="block" />
+          <slot v-if="['profile', 'header'].includes(BLOCK_TYPES[block.type].group)" name="builtin" :block="block" />
           <ProfileCustomBlock v-else :block="block" :user="user" :editing="live" />
         </div>
       </section>
@@ -854,7 +881,8 @@ function blockStyle(block, i) {
                 @save-template="saveTemplate"
                 @apply-template="applyMyTemplate"
                 @delete-template="deleteTemplate"
-                @profile="emit('profile')"
+                @profile="restoreTryOn(); emit('profile')"
+                @header-mode="setHeaderMode"
             />
           </aside>
         </Transition>

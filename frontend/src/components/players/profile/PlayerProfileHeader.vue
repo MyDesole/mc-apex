@@ -50,6 +50,22 @@ const props = defineProps({
   },
 
   /*
+   * Шапка, разобранная на блоки: показать только одну часть —
+   * avatar | name | badges | about | tier. Декор, питомцы и кнопки
+   * остаются у полной шапки.
+   */
+  part: {
+    type: String,
+    default: null,
+  },
+
+  // Части стоят в сетке блоками — здесь остаётся лента: обложка, питомцы, кнопки
+  slim: {
+    type: Boolean,
+    default: false,
+  },
+
+  /*
    * Бридж-профиль: вместо тира показываем звание бриджера.
    * Подменяем значения, и шапка сама рисует ранг — переписывать каждое
    * место с тиром не нужно.
@@ -482,13 +498,26 @@ const coverStyle = computed(() => {
     backgroundImage: `url(${props.coverUrl})`,
   }
 })
+// Пустая часть шапки в блоке: подпись вместо пустой коробки
+const partEmpty = computed(() => {
+  if (props.part === 'badges' && !playerBadges.value.length) return 'Бейджей пока нет'
+  if (props.part === 'about' && !playerStatus.value && !props.user.bio && !playerQuote.value) {
+    return 'Статуса, описания и цитаты пока нет'
+  }
+  return ''
+})
 </script>
 
 <template>
   <section
       class="profile-header"
       :class="{
-        'profile-header--compact': compact,
+        'profile-header--compact': compact && !part,
+        'profile-header--part': !!part,
+        'profile-header--slim': slim && !part,
+        // Питомцы гуляют по низу шапки: на телефоне им нужна своя полоса
+        'profile-header--pets': !part && !compact && walkingPets.length > 0,
+        [`profile-header--part-${part}`]: !!part,
 
         // Медийка: уникальная подсветка карточки
         'profile-header--media': isMedia,
@@ -531,7 +560,7 @@ const coverStyle = computed(() => {
     <!-- Питомец живёт в полной шапке, в компактной ему тесно -->
     <!-- Питомцы (до трёх): гуляют по шапке, по клику — карточка с действиями -->
     <ProfilePet
-        v-for="(pet, i) in walkingPets"
+        v-for="(pet, i) in (part ? [] : walkingPets)"
         :key="`pet-${user.id}-${pet.inventory_id ?? pet.pet}`"
         :pet="pet.pet"
         :owner="user"
@@ -546,7 +575,7 @@ const coverStyle = computed(() => {
 
     <!-- Эффекты-слои (снег, искры, сияние…) — свой компонент с частицами -->
     <ProfileEffectLayer
-        v-if="hasProfileEffect && profileEffect.layer"
+        v-if="hasProfileEffect && profileEffect.layer && !part"
         :effect="effectId"
         :density="compact ? 0.5 : 1"
     />
@@ -579,7 +608,7 @@ const coverStyle = computed(() => {
          ===================================================== -->
 
     <div
-        v-if="!compact"
+        v-if="!compact && !part"
         class="profile-header__tier-watermark"
         aria-hidden="true"
     >
@@ -590,7 +619,7 @@ const coverStyle = computed(() => {
          TOP BAR
          ===================================================== -->
 
-    <div class="profile-header__topline">
+    <div v-if="!part" class="profile-header__topline">
 
       <!-- Респекты: гость даёт раз в день, хозяин видит счёт и гостей -->
       <RespectBadge v-if="user.id" :key="`respect-${user.id}`" :user="user" :editable="editable" />
@@ -649,7 +678,7 @@ const coverStyle = computed(() => {
          ===================================================== -->
 
     <div
-        v-if="compact"
+        v-if="compact && !part"
         class="profile-header__compact-content"
     >
 
@@ -941,6 +970,9 @@ const coverStyle = computed(() => {
         <!-- Титул под ником (магазин) -->
         <ProfileTitle v-if="user.profile_title" :title="user.profile_title" class="profile-header__title" />
 
+        <!-- Часть шапки в блоке, а показать нечего -->
+        <p v-if="partEmpty" class="profile-header__part-empty">{{ partEmpty }}</p>
+
         <!-- Badges (купленные в магазине) -->
         <div
             v-if="playerBadges.length"
@@ -1138,7 +1170,7 @@ const coverStyle = computed(() => {
          ===================================================== -->
 
     <div
-        v-if="!compact"
+        v-if="!compact && !part"
         class="profile-header__peak"
         aria-hidden="true"
     >
