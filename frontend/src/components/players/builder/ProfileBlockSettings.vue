@@ -16,12 +16,30 @@ const props = defineProps({
 
 const LIMITS = { facts: 10, bars: 8, timeline: 10 }
 
+const SETUP_KINDS = [
+  ['mouse', 'Мышь'], ['keyboard', 'Клавиатура'], ['headset', 'Наушники'], ['monitor', 'Монитор'],
+  ['mousepad', 'Коврик'], ['pc', 'ПК'], ['dpi', 'DPI'], ['sens', 'Сенса'], ['fps', 'FPS'], ['other', 'Другое'],
+]
+
+const LINK_ICONS = [
+  ['link', 'Ссылка'], ['discord', 'Discord'], ['youtube', 'YouTube'], ['twitch', 'Twitch'], ['telegram', 'Telegram'],
+  ['tiktok', 'TikTok'], ['vk', 'VK'], ['star', 'Звезда'], ['heart', 'Сердце'], ['game', 'Геймпад'],
+]
+
+const WEEKDAYS = [['mon', 'Пн'], ['tue', 'Вт'], ['wed', 'Ср'], ['thu', 'Чт'], ['fri', 'Пт'], ['sat', 'Сб'], ['sun', 'Вс']]
+
 // Оформление по разделам, а не одной стеной кнопок
 const LOOK_GROUPS = [
-  { label: 'Форма', keys: ['radius', 'height', 'align'] },
-  { label: 'Текст', keys: ['font', 'text'] },
+  { label: 'Форма', keys: ['radius', 'height', 'align', 'pad'], border: true },
+  { label: 'Текст', keys: ['font', 'size', 'text'] },
   { label: 'Эффекты', keys: ['pattern', 'border', 'hover'], sliders: true },
+  { label: 'Движение', keys: ['anim', 'reveal'] },
 ]
+
+function setGradient(on) {
+  props.block.style.grad_from = on ? (props.block.style.hex || '#8b5cf6') : ''
+  props.block.style.grad_to = on ? '#0b0a10' : ''
+}
 
 // Готовые стили блока: фон, рамка, узор, наведение, углы и шрифт разом
 const LOOKS = [
@@ -60,6 +78,7 @@ props.block.settings ??= {}
 props.block.style ??= {}
 if (props.block.type === 'poll') props.block.settings.options ??= ['', '']
 if (props.block.type === 'goals') props.block.settings.items ??= []
+if (['setup', 'links', 'faq', 'schedule'].includes(props.block.type)) props.block.settings.items ??= []
 const tab = ref(hasContent ? 'content' : 'look')
 
 function addRow() {
@@ -149,6 +168,139 @@ function setDate(value) {
           <input v-model="block.settings.value" maxlength="12" placeholder="1000" />
         </div>
         <input v-model="block.settings.label" maxlength="40" placeholder="Подпись: побед, часов, рекорд…" />
+      </template>
+
+      <template v-else-if="block.type === 'setup'">
+        <div v-for="(item, i) in block.settings.items" :key="i" class="pb-settings__row">
+          <select v-model="item.kind" class="pb-settings__select">
+            <option v-for="[value, label] in SETUP_KINDS" :key="value" :value="value">{{ label }}</option>
+          </select>
+          <input v-model="item.value" maxlength="60" placeholder="Logitech G Pro, 800, 144 Гц…" />
+          <button type="button" @click="block.settings.items.splice(i, 1)">✕</button>
+        </div>
+        <button
+            v-if="block.settings.items.length < 10"
+            type="button"
+            class="pb-settings__add"
+            @click="block.settings.items.push({ kind: 'other', value: '' })"
+        >＋ Строка</button>
+      </template>
+
+      <template v-else-if="block.type === 'links'">
+        <div class="studio-seg">
+          <button
+              v-for="[value, label] in [['solid', 'Заливка'], ['outline', 'Контур'], ['glass', 'Стекло']]"
+              :key="value"
+              type="button"
+              :class="{ 'is-on': block.settings.style === value }"
+              @click="block.settings.style = value"
+          >{{ label }}</button>
+        </div>
+        <div v-for="(item, i) in block.settings.items" :key="i" class="pb-settings__card">
+          <div class="pb-settings__row">
+            <select v-model="item.icon" class="pb-settings__select">
+              <option v-for="[value, label] in LINK_ICONS" :key="value" :value="value">{{ label }}</option>
+            </select>
+            <input v-model="item.label" maxlength="30" placeholder="Подпись" />
+            <label class="pb-settings__color" title="Цвет кнопки">
+              <input type="color" :value="item.color || '#8b5cf6'" @input="item.color = $event.target.value" />
+            </label>
+            <button type="button" @click="block.settings.items.splice(i, 1)">✕</button>
+          </div>
+          <input v-model="item.url" maxlength="300" placeholder="https://…" />
+        </div>
+        <button
+            v-if="block.settings.items.length < 6"
+            type="button"
+            class="pb-settings__add"
+            @click="block.settings.items.push({ label: '', url: '', icon: 'link', color: '' })"
+        >＋ Кнопка</button>
+      </template>
+
+      <template v-else-if="block.type === 'music'">
+        <input v-model="block.settings.url" maxlength="300" placeholder="Ссылка: Spotify, YouTube, Яндекс Музыка, SoundCloud, VK" />
+        <input v-model="block.settings.title" maxlength="60" placeholder="Название трека" />
+        <input v-model="block.settings.artist" maxlength="60" placeholder="Исполнитель" />
+        <p class="pb-settings__hint">Spotify и YouTube играют прямо в профиле, остальные — кнопкой «Слушать».</p>
+      </template>
+
+      <template v-else-if="block.type === 'faq'">
+        <div v-for="(item, i) in block.settings.items" :key="i" class="pb-settings__card">
+          <div class="pb-settings__row">
+            <input v-model="item.q" maxlength="100" placeholder="Вопрос" />
+            <button type="button" @click="block.settings.items.splice(i, 1)">✕</button>
+          </div>
+          <textarea v-model="item.a" maxlength="400" rows="2" placeholder="Ответ"></textarea>
+        </div>
+        <button
+            v-if="block.settings.items.length < 8"
+            type="button"
+            class="pb-settings__add"
+            @click="block.settings.items.push({ q: '', a: '' })"
+        >＋ Вопрос</button>
+      </template>
+
+      <template v-else-if="block.type === 'marquee'">
+        <input v-model="block.settings.text" maxlength="120" placeholder="Текст строки" />
+        <span class="studio-label">Скорость</span>
+        <div class="studio-seg">
+          <button
+              v-for="[value, label] in [['slow', 'Медленно'], ['normal', 'Обычно'], ['fast', 'Быстро']]"
+              :key="value"
+              type="button"
+              :class="{ 'is-on': block.settings.speed === value }"
+              @click="block.settings.speed = value"
+          >{{ label }}</button>
+        </div>
+        <span class="studio-label">Направление и размер</span>
+        <div class="studio-seg">
+          <button type="button" :class="{ 'is-on': block.settings.direction === 'left' }" @click="block.settings.direction = 'left'">Влево</button>
+          <button type="button" :class="{ 'is-on': block.settings.direction === 'right' }" @click="block.settings.direction = 'right'">Вправо</button>
+        </div>
+        <div class="studio-seg">
+          <button
+              v-for="value in ['m', 'l', 'xl']"
+              :key="value"
+              type="button"
+              :class="{ 'is-on': block.settings.size === value }"
+              @click="block.settings.size = value"
+          >{{ value.toUpperCase() }}</button>
+        </div>
+      </template>
+
+      <template v-else-if="block.type === 'schedule'">
+        <div v-for="(item, i) in block.settings.items" :key="i" class="pb-settings__row">
+          <select v-model="item.day" class="pb-settings__select pb-settings__select--day">
+            <option v-for="[value, label] in WEEKDAYS" :key="value" :value="value">{{ label }}</option>
+          </select>
+          <input v-model="item.time" maxlength="20" placeholder="20:00" class="pb-settings__short" />
+          <input v-model="item.text" maxlength="60" placeholder="Что делаю" />
+          <button type="button" @click="block.settings.items.splice(i, 1)">✕</button>
+        </div>
+        <button
+            v-if="block.settings.items.length < 14"
+            type="button"
+            class="pb-settings__add"
+            @click="block.settings.items.push({ day: 'mon', time: '', text: '' })"
+        >＋ Строка</button>
+      </template>
+
+      <template v-else-if="block.type === 'banner'">
+        <input v-model="block.settings.title" maxlength="60" placeholder="Крупный заголовок" />
+        <textarea v-model="block.settings.text" maxlength="140" rows="2" placeholder="Пара слов под ним"></textarea>
+        <div class="pb-settings__row">
+          <input v-model="block.settings.button" maxlength="30" placeholder="Текст кнопки" class="pb-settings__short" />
+          <input v-model="block.settings.url" maxlength="300" placeholder="https://… куда ведёт" />
+        </div>
+      </template>
+
+      <template v-else-if="block.type === 'progress'">
+        <input v-model="block.settings.title" maxlength="60" placeholder="До чего: тир A, 1000 побед…" />
+        <div class="pb-settings__row">
+          <input v-model.number="block.settings.current" type="number" min="0" placeholder="Сейчас" />
+          <input v-model.number="block.settings.target" type="number" min="1" placeholder="Цель" />
+          <input v-model="block.settings.unit" maxlength="12" placeholder="побед" class="pb-settings__short" />
+        </div>
       </template>
 
       <template v-else-if="block.type in LIMITS">
@@ -282,6 +434,31 @@ function setDate(value) {
       </section>
 
       <section class="studio-group">
+        <h4>Свой градиент</h4>
+        <label class="studio-switch">
+          <input type="checkbox" :checked="!!block.style.grad_from" @change="setGradient($event.target.checked)" />
+          <span></span>
+          Залить блок градиентом
+        </label>
+        <template v-if="block.style.grad_from">
+          <div class="studio-colors">
+            <label class="studio-color">
+              <input v-model="block.style.grad_from" type="color" />
+              <span><small>Цвет 1</small>{{ block.style.grad_from }}</span>
+            </label>
+            <label class="studio-color">
+              <input :value="block.style.grad_to || '#0b0a10'" type="color" @input="block.style.grad_to = $event.target.value" />
+              <span><small>Цвет 2</small>{{ block.style.grad_to || '#0b0a10' }}</span>
+            </label>
+          </div>
+          <label class="studio-slider">
+            <span>Угол <b>{{ block.style.grad_angle ?? 135 }}°</b></span>
+            <input v-model.number="block.style.grad_angle" type="range" min="0" max="360" step="15" />
+          </label>
+        </template>
+      </section>
+
+      <section class="studio-group">
         <h4>Цвет</h4>
         <div class="studio-accent">
           <button
@@ -315,6 +492,11 @@ function setDate(value) {
             >{{ label }}</button>
           </div>
         </template>
+
+        <label v-if="group.border" class="studio-slider">
+          <span>Толщина рамки <b>{{ block.style.bw ? `${block.style.bw} px` : 'обычная' }}</b></span>
+          <input v-model.number="block.style.bw" type="range" min="0" max="6" step="1" />
+        </label>
 
         <template v-if="group.sliders">
           <label class="studio-slider">

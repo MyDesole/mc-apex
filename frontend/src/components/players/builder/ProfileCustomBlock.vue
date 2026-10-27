@@ -9,6 +9,7 @@ import PollBlock from '@/components/players/builder/PollBlock.vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
 import GuestbookBlock from '@/components/players/builder/GuestbookBlock.vue'
 import SquadBlock from '@/components/players/builder/SquadBlock.vue'
+import ProfileExtraBlock from '@/components/players/builder/ProfileExtraBlock.vue'
 import { youtubeId } from '@/data/players/profileBlocks.js'
 
 const props = defineProps({
@@ -225,6 +226,9 @@ function pad(n) {
   <div v-else-if="block.type === 'spacer'" class="cb-spacer" :class="`cb-spacer--${s.size || 'm'}`">
     <span v-if="editing">пустое место</span>
   </div>
+
+  <!-- Сетап, ссылки, музыка, вопросы, бегущая строка, расписание, баннер, прогресс -->
+  <ProfileExtraBlock v-else :block="block" :editing="editing" />
 </template>
 
 <style scoped>

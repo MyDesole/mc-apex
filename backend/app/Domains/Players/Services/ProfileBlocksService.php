@@ -31,6 +31,7 @@ class ProfileBlocksService
         // Свои блоки, со своими настройками
         'text', 'quote', 'countdown', 'video', 'guestbook', 'sticker', 'divider', 'spacer',
         'facts', 'bars', 'timeline', 'players', 'poll', 'goals', 'counter',
+        'setup', 'links', 'music', 'faq', 'marquee', 'schedule', 'banner', 'progress',
     ];
 
     /** Блоки, которые бывают в профиле только в одном экземпляре. */
@@ -55,9 +56,17 @@ class ProfileBlocksService
         // Анимированная рамка блока
         'border' => ['none', 'shine', 'pulse', 'rainbow', 'glow'],
         'text' => ['auto', 'light', 'dark', 'accent'],
+        // Внутренние отступы, размер текста, живая анимация, появление при прокрутке
+        'pad' => ['normal', 'none', 's', 'l', 'xl'],
+        'size' => ['m', 's', 'l', 'xl'],
+        'anim' => ['none', 'float', 'sway', 'pulse', 'bounce'],
+        'reveal' => ['none', 'up', 'left', 'right', 'zoom', 'flip'],
     ];
 
-    /** Настройки всей страницы. */
+    /**
+     * Настройки всей страницы. Того, что продаётся в магазине (акцент,
+     * эффекты ника и профиля), здесь нет: студия не раздаёт платное.
+     */
     private const PAGE = [
         // masonry — блоки встают в ближайшее свободное место, без дыр
         'flow' => ['masonry', 'rows'],
@@ -73,21 +82,30 @@ class ProfileBlocksService
         'width' => ['normal', 'wide', 'full'],
         'titles' => ['default', 'caps', 'line', 'pill', 'hidden'],
         'density' => ['normal', 'compact', 'airy'],
-        // Эффект поверх всей страницы
-        'fx' => ['none', 'snow', 'embers', 'fireflies', 'starfall', 'pixels'],
         // Шапка профиля
         'hdr_layout' => ['classic', 'center', 'mirror', 'banner', 'minimal'],
         'hdr_height' => ['normal', 'short', 'tall'],
         'hdr_bg' => ['theme', 'accent', 'gradient', 'glass', 'none'],
-        'hdr_name' => ['default', 'gradient', 'outline', 'neon', 'shadow', 'glitch'],
-        'hdr_size' => ['m', 's', 'l', 'xl'],
         'hdr_avatar' => ['circle', 'rounded', 'square', 'hex'],
         'hdr_avatar_size' => ['m', 's', 'l'],
-        'hdr_progress' => ['show', 'hide'],
     ];
 
     /** Кем тиммейт приходится игроку: подпись и цвет карточки. */
     private const TEAMMATE_ROLES = ['duo', 'squad', 'coach', 'student', 'rival', 'bestie'];
+
+    /** Сетап: что за строка (иконка и подпись на странице). */
+    private const SETUP_KINDS = ['mouse', 'keyboard', 'headset', 'monitor', 'mousepad', 'pc', 'dpi', 'sens', 'fps', 'other'];
+
+    /** Иконки кнопок-ссылок. */
+    private const LINK_ICONS = ['link', 'discord', 'youtube', 'twitch', 'telegram', 'tiktok', 'vk', 'star', 'heart', 'game'];
+
+    /** Откуда можно поставить «Сейчас слушаю». */
+    private const MUSIC_HOSTS = [
+        'open.spotify.com', 'music.yandex.ru', 'music.yandex.com', 'youtube.com', 'www.youtube.com',
+        'music.youtube.com', 'youtu.be', 'soundcloud.com', 'vk.com',
+    ];
+
+    private const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
     private const STICKER_SPRITES = [
         'creeper', 'bee', 'axolotl', 'tnt', 'diamond', 'heart', 'skull', 'warden', 'totem', 'cat',
@@ -117,11 +135,44 @@ class ProfileBlocksService
         return $this->pick(self::PAGE, $page) + [
             'bg_from' => $this->hex($page['bg_from'] ?? null) ?? '#2e1065',
             'bg_to' => $this->hex($page['bg_to'] ?? null) ?? '#0b0912',
-            // Свой акцент всего профиля; пусто — акцент из магазина
-            'accent' => $this->hex($page['accent'] ?? null) ?? '',
             'glass' => $this->clampInt($page['glass'] ?? 100, 20, 100),
             'blur' => $this->clampInt($page['blur'] ?? 0, 0, 24),
+            'hdr_items' => $this->headerItems($page['hdr_items'] ?? []),
         ];
+    }
+
+    /** Части шапки: порядок, видимость и оформление каждой. */
+    private const HEADER_ITEMS = ['name', 'role', 'stats', 'progress'];
+
+    private const HEADER_ITEM_STYLE = [
+        'size' => ['m', 's', 'l', 'xl'],
+        'font' => ['default', 'display', 'mono', 'serif', 'rounded'],
+        'weight' => ['default', 'light', 'bold', 'black'],
+        'spacing' => ['normal', 'tight', 'wide'],
+        'case' => ['none', 'upper', 'lower'],
+    ];
+
+    /**
+     * Все части по одному разу: сначала в присланном порядке, недостающие —
+     * в конце по умолчанию.
+     */
+    private function headerItems(mixed $items): array
+    {
+        $result = [];
+
+        foreach (is_array($items) ? $items : [] as $item) {
+            $id = is_array($item) ? ($item['id'] ?? null) : null;
+
+            if (in_array($id, self::HEADER_ITEMS, true) && ! isset($result[$id])) {
+                $result[$id] = ['id' => $id, 'hidden' => (bool) ($item['hidden'] ?? false)] + $this->pick(self::HEADER_ITEM_STYLE, $item);
+            }
+        }
+
+        foreach (self::HEADER_ITEMS as $id) {
+            $result[$id] ??= ['id' => $id, 'hidden' => false] + $this->pick(self::HEADER_ITEM_STYLE, []);
+        }
+
+        return array_values($result);
     }
 
     /** Цвет только вида #rrggbb, иначе null. */
@@ -159,6 +210,12 @@ class ProfileBlocksService
             'hex' => $this->hex($style['hex'] ?? null) ?? '',
             'tilt' => $this->clampInt($style['tilt'] ?? 0, -4, 4),
             'opacity' => $this->clampInt($style['opacity'] ?? 100, 30, 100),
+            // Свой градиент фона: два цвета и угол; пустые цвета — без градиента
+            'grad_from' => $this->hex($style['grad_from'] ?? null) ?? '',
+            'grad_to' => $this->hex($style['grad_to'] ?? null) ?? '',
+            'grad_angle' => $this->clampInt($style['grad_angle'] ?? 135, 0, 360),
+            // Толщина рамки цветом блока; 0 — обычная
+            'bw' => $this->clampInt($style['bw'] ?? 0, 0, 6),
             'hide_title' => (bool) ($style['hide_title'] ?? false),
             'hide_mobile' => (bool) ($style['hide_mobile'] ?? false),
         ];
@@ -290,8 +347,68 @@ class ProfileBlocksService
             'divider' => [
                 'style' => in_array($s['style'] ?? null, ['line', 'dots', 'glow', 'zigzag', 'blocks'], true) ? $s['style'] : 'line',
             ],
+            'setup' => [
+                'items' => $this->items($s, 10, fn ($item) => [
+                    'kind' => in_array($item['kind'] ?? null, self::SETUP_KINDS, true) ? $item['kind'] : 'other',
+                    'value' => $this->str($item['value'] ?? '', 60),
+                ], 'value'),
+            ],
+            'links' => [
+                'style' => in_array($s['style'] ?? null, ['solid', 'outline', 'glass'], true) ? $s['style'] : 'solid',
+                'items' => $this->items($s, 6, fn ($item) => [
+                    'label' => $this->str($item['label'] ?? '', 30),
+                    'url' => $this->url($item['url'] ?? ''),
+                    'icon' => in_array($item['icon'] ?? null, self::LINK_ICONS, true) ? $item['icon'] : 'link',
+                    'color' => $this->hex($item['color'] ?? null) ?? '',
+                ], 'url'),
+            ],
+            'music' => [
+                'url' => $this->musicUrl($s['url'] ?? ''),
+                'title' => $this->str($s['title'] ?? '', 60),
+                'artist' => $this->str($s['artist'] ?? '', 60),
+            ],
+            'faq' => [
+                'items' => $this->items($s, 8, fn ($item) => [
+                    'q' => $this->str($item['q'] ?? '', 100),
+                    'a' => $this->str($item['a'] ?? '', 400),
+                ], 'q'),
+            ],
+            'marquee' => [
+                'text' => $this->str($s['text'] ?? '', 120),
+                'speed' => in_array($s['speed'] ?? null, ['normal', 'slow', 'fast'], true) ? $s['speed'] : 'normal',
+                'direction' => in_array($s['direction'] ?? null, ['left', 'right'], true) ? $s['direction'] : 'left',
+                'size' => in_array($s['size'] ?? null, ['m', 'l', 'xl'], true) ? $s['size'] : 'm',
+            ],
+            'schedule' => [
+                'items' => $this->items($s, 14, fn ($item) => [
+                    'day' => in_array($item['day'] ?? null, self::WEEKDAYS, true) ? $item['day'] : 'mon',
+                    'time' => $this->str($item['time'] ?? '', 20),
+                    'text' => $this->str($item['text'] ?? '', 60),
+                ], 'text'),
+            ],
+            'banner' => [
+                'title' => $this->str($s['title'] ?? '', 60),
+                'text' => $this->str($s['text'] ?? '', 140),
+                'button' => $this->str($s['button'] ?? '', 30),
+                'url' => $this->url($s['url'] ?? ''),
+            ],
+            'progress' => [
+                'title' => $this->str($s['title'] ?? '', 60),
+                'current' => max(0, min(1_000_000_000, (int) ($s['current'] ?? 0))),
+                'target' => max(1, min(1_000_000_000, (int) ($s['target'] ?? 100))),
+                'unit' => $this->str($s['unit'] ?? '', 12),
+            ],
             default => [],
         };
+    }
+
+    /** Ссылка на трек — только с известных музыкальных сервисов. */
+    private function musicUrl(mixed $value): string
+    {
+        $url = $this->url($value);
+        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+
+        return in_array($host, self::MUSIC_HOSTS, true) ? $url : '';
     }
 
     /** Список строк блока: не больше $max, пустые (без $required) выкидываем. */

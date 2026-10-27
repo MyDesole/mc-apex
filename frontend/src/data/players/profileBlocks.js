@@ -35,10 +35,18 @@ export const BLOCK_TYPES = {
     counter: { group: 'content', label: 'Счётчик', hint: 'Крупная цифра: победы, часы, рекорды', icon: '№', width: 'quarter', title: null, settings: { value: '1000', label: 'побед в бридже', emoji: '🏆' } },
     countdown: { group: 'content', label: 'Обратный отсчёт', hint: 'До турнира, стрима или дня рождения', icon: '◷', width: 'third', title: null, settings: { title: '', date: '' } },
     video: { group: 'content', label: 'Видео с YouTube', hint: 'Твой лучший хайлайт прямо в профиле', icon: '▶', width: 'two_thirds', title: null, settings: { url: '' } },
+    setup: { group: 'content', label: 'Сетап', hint: 'Мышь, клава, DPI, сенса — с иконками', icon: '⌨', width: 'half', title: 'Мой сетап', settings: { items: [{ kind: 'mouse', value: '' }, { kind: 'dpi', value: '800' }] } },
+    links: { group: 'content', label: 'Кнопки-ссылки', hint: 'Яркие кнопки: Discord, YouTube, Twitch…', icon: '⇗', width: 'third', title: null, settings: { style: 'solid', items: [] } },
+    music: { group: 'content', label: 'Сейчас слушаю', hint: 'Трек со Spotify, YouTube или Яндекс Музыки', icon: '♫', width: 'third', title: null, settings: { url: '', title: '', artist: '' } },
+    faq: { group: 'content', label: 'Вопрос — ответ', hint: 'Раскрывающиеся ответы на частые вопросы', icon: '?', width: 'half', title: 'Частые вопросы', settings: { items: [{ q: 'Во что играешь?', a: '' }] } },
+    schedule: { group: 'content', label: 'Расписание', hint: 'Когда играю или стримлю — по дням недели', icon: '▦', width: 'third', title: 'Расписание', settings: { items: [{ day: 'fri', time: '20:00', text: 'Бридж с кланом' }] } },
+    banner: { group: 'content', label: 'Баннер', hint: 'Крупный призыв с кнопкой: «Пиши в ДС»', icon: '▬', width: 'full', title: null, settings: { title: 'Ищу тиммейта на турнир', text: '', button: 'Написать', url: '' } },
+    progress: { group: 'content', label: 'Прогресс до цели', hint: 'Полоса с процентами: до тира, до 1000 побед', icon: '▰', width: 'half', title: null, settings: { title: 'До 1000 побед', current: 640, target: 1000, unit: 'побед' } },
     guestbook: { group: 'content', label: 'Гостевая книга', hint: 'Гости оставляют тебе записи', icon: '✎', single: true, width: 'half', title: 'Гостевая книга' },
 
     // Украшения
     sticker: { group: 'decor', label: 'Пиксель-арт', hint: 'Крупная анимированная картинка с подписью', icon: '▣', width: 'third', title: null, settings: { sprite: 'creeper', caption: '' } },
+    marquee: { group: 'decor', label: 'Бегущая строка', hint: 'Текст, который бесконечно едет по экрану', icon: '⇉', width: 'full', title: null, settings: { text: 'APEX TIERS', speed: 'normal', direction: 'left', size: 'l' } },
     divider: { group: 'decor', label: 'Разделитель', hint: 'Линия между частями профиля', icon: '—', width: 'full', title: null, settings: { style: 'line' } },
     spacer: { group: 'decor', label: 'Пустое место', hint: 'Отступ, чтобы раздвинуть блоки', icon: '␣', width: 'full', title: null, settings: { size: 'm' } },
 }
@@ -94,6 +102,10 @@ export const STYLE_OPTIONS = {
     font: { label: 'Шрифт', options: [['default', 'Обычный'], ['display', 'Заголовочный'], ['mono', 'Моно'], ['serif', 'С засечками']] },
     border: { label: 'Рамка', options: [['none', 'Обычная'], ['shine', 'Блик'], ['pulse', 'Пульс'], ['rainbow', 'Радуга'], ['glow', 'Свечение']] },
     text: { label: 'Цвет текста', options: [['auto', 'Авто'], ['light', 'Светлый'], ['dark', 'Тёмный'], ['accent', 'Цветом блока']] },
+    pad: { label: 'Отступы внутри', options: [['normal', 'Обычные'], ['none', 'Нет'], ['s', 'S'], ['l', 'L'], ['xl', 'XL']] },
+    size: { label: 'Размер текста', options: [['m', 'M'], ['s', 'S'], ['l', 'L'], ['xl', 'XL']] },
+    anim: { label: 'Живая анимация', options: [['none', 'Нет'], ['float', 'Парит'], ['sway', 'Качается'], ['pulse', 'Пульс'], ['bounce', 'Прыгает']] },
+    reveal: { label: 'Появление при прокрутке', options: [['none', 'Сразу'], ['up', 'Снизу'], ['left', 'Слева'], ['right', 'Справа'], ['zoom', 'Зум'], ['flip', 'Переворот']] },
 }
 
 /** Настройки всей страницы. */
@@ -110,32 +122,31 @@ export const PAGE_OPTIONS = {
     width: { label: 'Ширина', options: [['normal', 'Обычная'], ['wide', 'Широкая'], ['full', 'Во весь экран']] },
     titles: { label: 'Заголовки блоков', options: [['default', 'Обычные'], ['caps', 'ПРОПИСНЫЕ'], ['line', 'С линией'], ['pill', 'Плашкой'], ['hidden', 'Скрыть все']] },
     density: { label: 'Плотность', options: [['normal', 'Обычная'], ['compact', 'Плотно'], ['airy', 'Воздушно']] },
-    fx: { label: 'Эффект страницы', options: [['none', 'Нет'], ['snow', 'Снег'], ['embers', 'Угольки'], ['fireflies', 'Светлячки'], ['starfall', 'Звездопад'], ['pixels', 'Пиксели']] },
     hdr_layout: { label: 'Раскладка', options: [['classic', 'Классика'], ['center', 'По центру'], ['mirror', 'Зеркально'], ['banner', 'Баннер'], ['minimal', 'Минимал']] },
     hdr_height: { label: 'Высота', options: [['normal', 'Обычная'], ['short', 'Низкая'], ['tall', 'Высокая']] },
     hdr_bg: { label: 'Фон шапки', options: [['theme', 'Как в теме'], ['accent', 'Акцент'], ['gradient', 'Градиент'], ['glass', 'Стекло'], ['none', 'Без фона']] },
-    hdr_name: { label: 'Стиль ника', options: [['default', 'Как в инвентаре'], ['gradient', 'Градиент'], ['outline', 'Контур'], ['neon', 'Неон'], ['shadow', 'Тень'], ['glitch', 'Глитч']] },
-    hdr_size: { label: 'Размер ника', options: [['m', 'M'], ['s', 'S'], ['l', 'L'], ['xl', 'XL']] },
     hdr_avatar: { label: 'Форма аватара', options: [['circle', 'Круг'], ['rounded', 'Скруглённый'], ['square', 'Квадрат'], ['hex', 'Шестиугольник']] },
     hdr_avatar_size: { label: 'Размер аватара', options: [['m', 'Обычный'], ['s', 'Маленький'], ['l', 'Крупный']] },
-    hdr_progress: { label: 'Полоса тира', options: [['show', 'Показать'], ['hide', 'Скрыть']] },
 }
 
 /** Числа и цвета страницы — не выбор из списка, а ползунки и пипетки. */
-export const PAGE_EXTRAS = { bg_from: '#2e1065', bg_to: '#0b0912', accent: '', glass: 100, blur: 0 }
+export const PAGE_EXTRAS = { bg_from: '#2e1065', bg_to: '#0b0912', glass: 100, blur: 0 }
 
-/** Готовые палитры студии: фон, два цвета, акцент и характер блоков одним кликом. */
+/**
+ * Готовые палитры студии: фон, два цвета и характер блоков одним кликом.
+ * Акцента здесь нет — цвет акцента продаётся в магазине.
+ */
 export const THEME_PRESETS = [
-    { id: 'midnight', label: 'Полночь', bg: 'mesh', bg_from: '#312e81', bg_to: '#05060f', accent: '#818cf8', shadow: 'soft', glass: 100, blur: 0 },
-    { id: 'sunset', label: 'Закат', bg: 'gradient', bg_from: '#9a3412', bg_to: '#1c0a1e', accent: '#fb923c', shadow: 'deep', glass: 85, blur: 8 },
-    { id: 'neon', label: 'Неон', bg: 'grid', bg_from: '#db2777', bg_to: '#07030d', accent: '#f472b6', shadow: 'neon', glass: 70, blur: 10 },
-    { id: 'ocean', label: 'Океан', bg: 'aurora', bg_from: '#0e7490', bg_to: '#020617', accent: '#22d3ee', shadow: 'soft', glass: 65, blur: 16 },
-    { id: 'forest', label: 'Лес', bg: 'spotlight', bg_from: '#166534', bg_to: '#04110a', accent: '#4ade80', shadow: 'deep', glass: 90, blur: 4 },
-    { id: 'nether', label: 'Незер', bg: 'noise', bg_from: '#7f1d1d', bg_to: '#120404', accent: '#ef4444', shadow: 'deep', glass: 90, blur: 0 },
-    { id: 'end', label: 'Энд', bg: 'stars', bg_from: '#4c1d95', bg_to: '#030008', accent: '#c084fc', shadow: 'neon', glass: 60, blur: 14 },
-    { id: 'gold', label: 'Золото', bg: 'spotlight', bg_from: '#a16207', bg_to: '#0c0a04', accent: '#facc15', shadow: 'soft', glass: 95, blur: 0 },
-    { id: 'ice', label: 'Лёд', bg: 'gradient', bg_from: '#1e3a8a', bg_to: '#0b1120', accent: '#93c5fd', shadow: 'soft', glass: 55, blur: 20 },
-    { id: 'mono', label: 'Монохром', bg: 'grid', bg_from: '#27272a', bg_to: '#09090b', accent: '#e4e4e7', shadow: 'none', glass: 100, blur: 0 },
+    { id: 'midnight', label: 'Полночь', bg: 'mesh', bg_from: '#312e81', bg_to: '#05060f', shadow: 'soft', glass: 100, blur: 0 },
+    { id: 'sunset', label: 'Закат', bg: 'gradient', bg_from: '#9a3412', bg_to: '#1c0a1e', shadow: 'deep', glass: 85, blur: 8 },
+    { id: 'neon', label: 'Неон', bg: 'grid', bg_from: '#db2777', bg_to: '#07030d', shadow: 'neon', glass: 70, blur: 10 },
+    { id: 'ocean', label: 'Океан', bg: 'aurora', bg_from: '#0e7490', bg_to: '#020617', shadow: 'soft', glass: 65, blur: 16 },
+    { id: 'forest', label: 'Лес', bg: 'spotlight', bg_from: '#166534', bg_to: '#04110a', shadow: 'deep', glass: 90, blur: 4 },
+    { id: 'nether', label: 'Незер', bg: 'noise', bg_from: '#7f1d1d', bg_to: '#120404', shadow: 'deep', glass: 90, blur: 0 },
+    { id: 'end', label: 'Энд', bg: 'stars', bg_from: '#4c1d95', bg_to: '#030008', shadow: 'neon', glass: 60, blur: 14 },
+    { id: 'gold', label: 'Золото', bg: 'spotlight', bg_from: '#a16207', bg_to: '#0c0a04', shadow: 'soft', glass: 95, blur: 0 },
+    { id: 'ice', label: 'Лёд', bg: 'gradient', bg_from: '#1e3a8a', bg_to: '#0b1120', shadow: 'soft', glass: 55, blur: 20 },
+    { id: 'mono', label: 'Монохром', bg: 'grid', bg_from: '#27272a', bg_to: '#09090b', shadow: 'none', glass: 100, blur: 0 },
 ]
 
 /** Кем тиммейт приходится игроку — подпись и цвет карточки. */
@@ -162,13 +173,33 @@ export function widthSpan(width) {
 }
 
 export function defaultStyle() {
-    const style = { color: 'auto', title: '', icon: '', hide_title: false, hide_mobile: false, hex: '', tilt: 0, opacity: 100 }
+    const style = { color: 'auto', title: '', icon: '', hide_title: false, hide_mobile: false, hex: '', tilt: 0, opacity: 100, grad_from: '', grad_to: '', grad_angle: 135, bw: 0 }
     for (const [key, def] of Object.entries(STYLE_OPTIONS)) style[key] = def.options[0][0]
     return style
 }
 
+/** Части шапки: их можно переставлять, прятать и оформлять по отдельности. */
+export const HEADER_ITEMS = {
+    name: 'Ник',
+    role: 'Роль',
+    stats: 'Плашки: клан, дни',
+    progress: 'Полоса тира',
+}
+
+export const HEADER_ITEM_STYLE = {
+    size: { label: 'Размер', options: [['s', 'S'], ['m', 'M'], ['l', 'L'], ['xl', 'XL']] },
+    font: { label: 'Шрифт', options: [['default', 'Обычный'], ['display', 'Заголовочный'], ['mono', 'Моно'], ['serif', 'С засечками'], ['rounded', 'Округлый']] },
+    weight: { label: 'Жирность', options: [['default', 'Как есть'], ['light', 'Тонкий'], ['bold', 'Жирный'], ['black', 'Сверхжирный']] },
+    spacing: { label: 'Разрядка', options: [['tight', 'Плотно'], ['normal', 'Обычно'], ['wide', 'Широко']] },
+    case: { label: 'Регистр', options: [['none', 'Как есть'], ['upper', 'ВЕРХНИЙ'], ['lower', 'нижний']] },
+}
+
+export function defaultHeaderItems() {
+    return Object.keys(HEADER_ITEMS).map((id) => ({ id, hidden: false, size: 'm', font: 'default', weight: 'default', spacing: 'normal', case: 'none' }))
+}
+
 export function defaultPage() {
-    const page = { ...PAGE_EXTRAS }
+    const page = { ...PAGE_EXTRAS, hdr_items: defaultHeaderItems() }
     for (const [key, def] of Object.entries(PAGE_OPTIONS)) page[key] = def.options[0][0]
     return page
 }

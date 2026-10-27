@@ -18,7 +18,6 @@ import { profileLayout } from '@/data/players/profileLayouts.js'
 import ProfileEntrance from '@/components/players/ProfileEntrance.vue'
 import CursorTrail from '@/components/players/CursorTrail.vue'
 import ProfileBuilderGrid from '@/components/players/builder/ProfileBuilderGrid.vue'
-import ProfileFx from '@/components/players/builder/ProfileFx.vue'
 import { useAuthStore } from '@/stores/core/auth.js'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 
@@ -340,7 +339,25 @@ const currentPage = computed(() => previewPage.value ?? props.user.profile_page 
 
 const compactHeader = computed(() => currentPage.value.header === 'compact')
 
-// Студия профиля: фон, шрифт, ширина и свой акцент всей страницы
+/*
+ * Части шапки (ник, роль, плашки, полоса тира): спрятать и оформить.
+ * Класс ставим только у изменённого свойства — остальное как в теме.
+ */
+const ITEM_DEFAULTS = { size: 'm', font: 'default', weight: 'default', spacing: 'normal', case: 'none' }
+
+function headerItemClasses(items) {
+  if (!Array.isArray(items) || !items.length) return []
+  const classes = ['ph-items']
+  for (const item of items) {
+    if (item.hidden) classes.push(`ph-hide--${item.id}`)
+    for (const [key, base] of Object.entries(ITEM_DEFAULTS)) {
+      if (item[key] && item[key] !== base) classes.push(`ph-${item.id}-${key}--${item[key]}`)
+    }
+  }
+  return classes
+}
+
+// Студия профиля: фон, шрифт, ширина страницы и вид шапки
 const studioClass = computed(() => {
   if (!builderMode.value) return []
   const p = currentPage.value
@@ -352,11 +369,9 @@ const studioClass = computed(() => {
     `ph-layout--${p.hdr_layout || 'classic'}`,
     `ph-height--${p.hdr_height || 'normal'}`,
     `ph-bg--${p.hdr_bg || 'theme'}`,
-    `ph-name--${p.hdr_name || 'default'}`,
-    `ph-size--${p.hdr_size || 'm'}`,
     `ph-ava--${p.hdr_avatar || 'circle'}`,
     `ph-ava-size--${p.hdr_avatar_size || 'm'}`,
-    `ph-progress--${p.hdr_progress || 'show'}`,
+    ...headerItemClasses(p.hdr_items),
   ]
 })
 
@@ -366,10 +381,8 @@ const studioStyle = computed(() => {
   if (!builderMode.value) return style
   if (p.bg_from) style['--pp-from'] = p.bg_from
   if (p.bg_to) style['--pp-to'] = p.bg_to
-  if (p.accent) {
-    style['--accent-color'] = p.accent
-    style['--player-accent'] = p.accent
-  }
+  // Порядок частей шапки
+  for (const [i, item] of (p.hdr_items || []).entries()) style[`--ph-o-${item.id}`] = i
   return style
 })
 
@@ -430,8 +443,6 @@ const profileCompleteness = computed(() => {
     <!-- Появление профиля и след курсора: косметика для гостей профиля -->
     <ProfileEntrance :key="`entrance-${user?.id}`" :entrance="user?.profile_entrance" />
     <CursorTrail :key="`trail-${user?.id}-${user?.cursor_trail}`" :trail="user?.cursor_trail" />
-    <!-- Эффект страницы из студии: снег, угольки… -->
-    <ProfileFx v-if="builderMode" :fx="currentPage.fx" />
 
     <!-- =====================================================
          КОНСТРУКТОР: шапка сверху, дальше блоки игрока
@@ -471,6 +482,7 @@ const profileCompleteness = computed(() => {
           @cancel="building = false; previewPage = null"
           @reset="resetBlocks"
           @preview-page="previewPage = $event"
+          @profile="emit('edit')"
       >
         <template #builtin="{ block }">
           <!-- Статистика -->
@@ -493,7 +505,7 @@ const profileCompleteness = computed(() => {
           <div v-else-if="block.type === 'socials'">
             <PlayerProfileSocials v-if="hasSocials" :socials="user.socials" />
             <p v-else class="builder-muted">
-              {{ editable ? 'Добавь соцсети в «Настроить».' : 'Соцсетей пока нет.' }}
+              {{ editable ? 'Добавь соцсети в студии → «Профиль».' : 'Соцсетей пока нет.' }}
             </p>
           </div>
 
@@ -864,9 +876,9 @@ const profileCompleteness = computed(() => {
             v-if="editable"
             class="profile-empty__action"
             type="button"
-            @click="emit('edit')"
+            @click="building = true"
         >
-          Настроить профиль
+          Открыть студию профиля
         </button>
       </section>
 

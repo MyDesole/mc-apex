@@ -616,12 +616,12 @@ const coverStyle = computed(() => {
         Рандом
       </button>
 
-      <!-- Конструктор: двигать, менять размер, добавлять и убирать блоки -->
+      <!-- Студия: всё оформление и настройки профиля в одном месте -->
       <button
           v-if="editable"
           class="profile-header__edit profile-header__build"
           type="button"
-          title="Собрать профиль из блоков"
+          title="Студия профиля: блоки, шапка, тема, данные профиля"
           @click="emit('build')"
       >
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -630,39 +630,12 @@ const coverStyle = computed(() => {
           <rect x="14" y="12" width="7" height="9" rx="1.5" />
           <rect x="3" y="16" width="7" height="5" rx="1.5" />
         </svg>
-        Конструктор
+        Студия
       </button>
 
       <Transition name="random-note">
         <span v-if="randomMessage" class="profile-header__random-note">{{ randomMessage }}</span>
       </Transition>
-
-      <button
-          v-if="editable"
-          class="profile-header__edit"
-          type="button"
-          @click="emit('edit')"
-      >
-        <svg
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-        >
-          <path d="M12 20h9" />
-
-          <path
-              d="M16.5 3.5a2.121 2.121 0 0 1 3 3L8 18l-4 1 1-4Z"
-          />
-        </svg>
-
-        Настроить
-      </button>
 
       <!-- Действия гостя: дружба, жалоба (передаёт страница игрока) -->
       <div v-if="!editable && $slots.actions" class="profile-header__actions">

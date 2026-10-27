@@ -36,7 +36,7 @@ const props = defineProps({
   owner: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['save', 'cancel', 'reset', 'preview-page'])
+const emit = defineEmits(['save', 'cancel', 'reset', 'preview-page', 'profile'])
 
 const draft = ref([])
 const pageDraft = ref(defaultPage())
@@ -54,19 +54,36 @@ const STUDIO_TABS = [
   ['theme', 'palette', 'Тема'],
   ['type', 'type', 'Текст'],
   ['layout', 'grid', 'Сетка'],
-  ['motion', 'sparkle', 'Эффекты'],
+  ['motion', 'motion', 'Анимация'],
+  ['inventory', 'bag', 'Инвентарь'],
+  ['profile', 'user', 'Профиль'],
 ]
 
 // Шапку рисует родитель вне сетки: клик по ней в студии открывает её раздел
 function onCanvasClick(event) {
   if (!live.value) return
-  if (event.target.closest?.('.player-card--builder-head .profile-header')) {
-    event.preventDefault()
-    event.stopPropagation()
-    openSettings.value = null
-    studioTab.value = 'header'
-  }
+  const header = event.target.closest?.('.player-card--builder-head .profile-header')
+  if (!header) return
+
+  event.preventDefault()
+  event.stopPropagation()
+  openSettings.value = null
+  studioTab.value = 'header'
+
+  // Нажали на конкретную часть — раскрываем её настройки
+  const part = Object.entries(HEADER_PARTS).find(([, sel]) => event.target.closest(sel))
+  headerFocus.value = part ? part[0] : null
 }
+
+// Части шапки на холсте; роль раньше ника — она внутри его строки
+const HEADER_PARTS = {
+  role: '.profile-header__role',
+  name: '.profile-header__name-row',
+  stats: '.profile-header__stats',
+  progress: '.tier-progress',
+}
+
+const headerFocus = ref(null)
 
 function toggleTab(id) {
   studioTab.value = studioTab.value === id ? null : id
@@ -111,6 +128,7 @@ function resetHistory() {
   past.value = []
   future.value = []
   lastSnapshot = snapshot()
+  checkDraft()
 }
 
 watch([draft, pageDraft], () => {
@@ -123,6 +141,8 @@ watch([draft, pageDraft], () => {
     if (past.value.length > 80) past.value.shift()
     future.value = []
     lastSnapshot = now
+    // Черновик на случай закрытой вкладки
+    writeStore(draftKey.value, { state: now, at: Date.now() })
   }, 350)
 }, { deep: true })
 
@@ -159,7 +179,13 @@ function onKey(event) {
   const mod = event.ctrlKey || event.metaKey
   const key = event.key.toLowerCase()
 
-  if (mod && (key === 'z' || key === 'я') && !typing) {
+  if (mod && event.shiftKey && (key === 'c' || key === 'с') && !typing && activeBlock.value) {
+    event.preventDefault()
+    copyStyle(activeBlock.value)
+  } else if (mod && event.shiftKey && (key === 'v' || key === 'м') && !typing && activeBlock.value) {
+    event.preventDefault()
+    pasteStyle(activeBlock.value)
+  } else if (mod && (key === 'z' || key === 'я') && !typing) {
     event.preventDefault()
     event.shiftKey ? redo() : undo()
   } else if (mod && (key === 'y' || key === 'н') && !typing) {
@@ -245,6 +271,126 @@ function startTitle(block) {
   if (!blockTitle(block) && block.style.hide_title) return
   titleEditing.value = block.id
   nextTick(() => document.querySelector('.pb-title-input')?.select())
+}
+
+/* ---------- Стиль: копировать, вставить, всем ----------
+ * Оформление без своего текста: заголовок, значок и «скрыть» у каждого
+ * блока свои.
+ */
+
+const OWN_KEYS = ['title', 'icon', 'hide_title', 'hide_mobile']
+const copiedStyle = ref(null)
+const toast = ref('')
+let toastTimer = null
+
+function say(text) {
+  toast.value = text
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => { toast.value = '' }, 1800)
+}
+
+function lookOf(block) {
+  const style = clone(block.style)
+  for (const key of OWN_KEYS) delete style[key]
+  return { tone: block.tone, style }
+}
+
+function copyStyle(block) {
+  copiedStyle.value = lookOf(block)
+  say('Стиль скопирован — вставь его в другой блок')
+}
+
+function pasteStyle(block) {
+  if (!copiedStyle.value) return
+  block.tone = copiedStyle.value.tone
+  Object.assign(block.style, clone(copiedStyle.value.style))
+  say('Стиль вставлен')
+}
+
+function styleToAll(source) {
+  const look = lookOf(source)
+  for (const block of draft.value) {
+    if (block.id === source.id || ['divider', 'spacer'].includes(block.type)) continue
+    block.tone = look.tone
+    Object.assign(block.style, clone(look.style))
+  }
+  say('Стиль применён ко всем блокам · Ctrl+Z — вернуть')
+}
+
+/* ---------- Свои шаблоны и черновик ----------
+ * Живут в браузере игрока: это удобство, а не данные профиля.
+ */
+
+const MY_TEMPLATES_KEY = 'apex-studio-templates'
+const draftKey = computed(() => `apex-studio-draft-${props.user?.id}`)
+
+function readStore(key, fallback) {
+  try {
+    return JSON.parse(localStorage.getItem(key)) ?? fallback
+  } catch {
+    return fallback
+  }
+}
+
+function writeStore(key, value) {
+  try {
+    if (value === null) localStorage.removeItem(key)
+    else localStorage.setItem(key, JSON.stringify(value))
+  } catch {
+    // Хранилище недоступно (приватный режим) — просто без сохранения
+  }
+}
+
+const myTemplates = ref(readStore(MY_TEMPLATES_KEY, []))
+
+function saveTemplate(name) {
+  const list = [
+    { id: Date.now().toString(36), name: name || `Шаблон ${myTemplates.value.length + 1}`, blocks: clone(draft.value), page: clone(pageDraft.value) },
+    ...myTemplates.value,
+  ].slice(0, 8)
+  myTemplates.value = list
+  writeStore(MY_TEMPLATES_KEY, list)
+  say('Шаблон сохранён')
+}
+
+function applyMyTemplate(template) {
+  draft.value = clone(template.blocks).map(withDefaults)
+  pageDraft.value = { ...defaultPage(), ...clone(template.page) }
+  openSettings.value = null
+}
+
+function deleteTemplate(id) {
+  myTemplates.value = myTemplates.value.filter((t) => t.id !== id)
+  writeStore(MY_TEMPLATES_KEY, myTemplates.value)
+}
+
+// Несохранённый черновик с прошлого раза
+const savedDraft = ref(null)
+
+function checkDraft() {
+  const stored = readStore(draftKey.value, null)
+  savedDraft.value = stored && stored.state !== snapshot() ? stored : null
+}
+
+function restoreDraft() {
+  restore(savedDraft.value.state)
+  past.value.push(lastSnapshot)
+  savedDraft.value = null
+}
+
+function dropDraft() {
+  writeStore(draftKey.value, null)
+  savedDraft.value = null
+}
+
+function publish() {
+  writeStore(draftKey.value, null)
+  emit('save', { blocks: clone(draft.value), page: clone(pageDraft.value) })
+}
+
+function cancel() {
+  writeStore(draftKey.value, null)
+  emit('cancel')
 }
 
 /* ---------- Глазами гостя ---------- */
@@ -470,7 +616,14 @@ function blockClasses(block) {
     `pb-font--${s.font}`,
     `pb-border--${s.border || 'none'}`,
     `pb-text--${s.text || 'auto'}`,
+    `pb-pad--${s.pad || 'normal'}`,
+    `pb-size--${s.size || 'm'}`,
+    `pb-anim--${s.anim || 'none'}`,
+    // Появление при прокрутке — только гостям, в студии блоки стоят на месте
+    live.value ? null : `pb-reveal--${s.reveal || 'none'}`,
     {
+      'pb-grad': !!s.grad_from,
+      'pb-bw': Number(s.bw) > 0,
       'pb-hide-mobile': s.hide_mobile,
       'is-dragging': dragId.value === block.id,
       'is-over': overId.value === block.id,
@@ -489,6 +642,10 @@ function blockStyle(block, i) {
     '--span': widthSpan(block.width),
     '--i': i,
     ...(hex ? { '--accent-color': hex } : {}),
+    ...(block.style.grad_from
+      ? { '--pb-grad': `linear-gradient(${block.style.grad_angle ?? 135}deg, ${block.style.grad_from}, ${block.style.grad_to || '#0b0a10'})` }
+      : {}),
+    ...(Number(block.style.bw) > 0 ? { '--pb-bw': `${block.style.bw}px` } : {}),
     // Наклон и прозрачность — только на готовом профиле, в редакторе мешают
     ...(!live.value && tilt ? { rotate: `${tilt}deg` } : {}),
     ...(opacity < 100 ? { opacity: live.value ? Math.max(0.6, opacity / 100) : opacity / 100 } : {}),
@@ -554,6 +711,8 @@ function blockStyle(block, i) {
                 title="Копия блока"
                 @click="duplicate(block)"
             ><StudioIcon name="copy" :size="14" /></button>
+            <button type="button" title="Копировать стиль (Ctrl+Shift+C)" @click="copyStyle(block)"><StudioIcon name="brush" :size="14" /></button>
+            <button v-if="copiedStyle" type="button" title="Вставить стиль (Ctrl+Shift+V)" @click="pasteStyle(block)"><StudioIcon name="check" :size="14" /></button>
             <button type="button" class="is-danger" title="Убрать (Delete)" @click="remove(block)"><StudioIcon name="trash" :size="14" /></button>
           </div>
 
@@ -607,7 +766,7 @@ function blockStyle(block, i) {
       <div v-if="editing" class="studio">
         <!-- Верхняя полоса -->
         <header class="studio-top">
-          <button type="button" class="studio-top__back" title="Выйти без сохранения" @click="emit('cancel')">
+          <button type="button" class="studio-top__back" title="Выйти без сохранения" @click="cancel">
             <StudioIcon name="back" :size="18" />
           </button>
           <div class="studio-top__title">
@@ -637,18 +796,30 @@ function blockStyle(block, i) {
           </div>
 
           <div class="studio-top__actions">
-            <button type="button" class="studio-btn studio-btn--ghost" @click="emit('cancel')">Отмена</button>
+            <button type="button" class="studio-btn studio-btn--ghost" @click="cancel">Отмена</button>
             <button
                 type="button"
                 class="studio-btn studio-btn--primary"
                 :disabled="saving"
-                @click="emit('save', { blocks: clone(draft), page: clone(pageDraft) })"
+                @click="publish"
             >
               <StudioIcon name="check" :size="16" />
               {{ saving ? 'Публикуем…' : 'Опубликовать' }}
             </button>
           </div>
         </header>
+
+        <!-- Подсказки и черновик -->
+        <Transition name="studio-toast">
+          <div v-if="toast" class="studio-toast">{{ toast }}</div>
+        </Transition>
+
+        <div v-if="savedDraft && !guestView" class="studio-draft">
+          <StudioIcon name="save" :size="16" />
+          <span>Есть несохранённый черновик с прошлого раза</span>
+          <button type="button" class="studio-btn studio-btn--primary" @click="restoreDraft">Вернуть</button>
+          <button type="button" class="studio-btn studio-btn--ghost" @click="dropDraft">Удалить</button>
+        </div>
 
         <!-- Рейка разделов и панель -->
         <nav class="studio-rail">
@@ -671,6 +842,7 @@ function blockStyle(block, i) {
                 :blocks="draft"
                 :page="pageDraft"
                 :active-id="openSettings"
+                :focus-item="headerFocus"
                 @add="add"
                 @select="select"
                 @move="move"
@@ -678,6 +850,11 @@ function blockStyle(block, i) {
                 @reorder="reorder"
                 @preset="applyPreset"
                 @replay="replay"
+                :my-templates="myTemplates"
+                @save-template="saveTemplate"
+                @apply-template="applyMyTemplate"
+                @delete-template="deleteTemplate"
+                @profile="emit('profile')"
             />
           </aside>
         </Transition>
@@ -691,6 +868,7 @@ function blockStyle(block, i) {
                 <strong>{{ BLOCK_TYPES[activeBlock.type].label }}</strong>
                 <small>Правки сразу видны на холсте</small>
               </div>
+              <button type="button" title="Этот стиль — всем блокам" @click="styleToAll(activeBlock)"><StudioIcon name="brush" :size="16" /></button>
               <button type="button" title="Закрыть (Esc)" @click="openSettings = null"><StudioIcon name="close" :size="16" /></button>
             </header>
 

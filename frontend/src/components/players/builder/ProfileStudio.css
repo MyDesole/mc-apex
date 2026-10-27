@@ -1861,53 +1861,6 @@ body .profile-layout:is(.ph-bg--accent, .ph-bg--gradient, .ph-bg--glass, .ph-bg-
   display: none;
 }
 
-/* ---------- Ник ---------- */
-
-body .profile-layout.ph-size--s .profile-header__name { font-size: 30px; }
-body .profile-layout.ph-size--l .profile-header__name { font-size: clamp(40px, 6vw, 66px); }
-body .profile-layout.ph-size--xl .profile-header__name { font-size: clamp(44px, 8vw, 88px); letter-spacing: -0.03em; }
-
-:is(body .profile-layout, .studio-nick).ph-name--gradient .profile-header__name {
-  background: linear-gradient(100deg, #fff 10%, var(--accent-color, #8b5cf6) 60%, color-mix(in srgb, var(--accent-color, #8b5cf6) 50%, #22d3ee));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: none;
-}
-
-:is(body .profile-layout, .studio-nick).ph-name--outline .profile-header__name {
-  color: transparent;
-  -webkit-text-stroke: 1.5px color-mix(in srgb, var(--accent-color, #8b5cf6) 60%, #fff);
-  text-shadow: none;
-}
-
-:is(body .profile-layout, .studio-nick).ph-name--neon .profile-header__name {
-  color: #fff;
-  text-shadow:
-      0 0 4px #fff,
-      0 0 12px var(--accent-color, #8b5cf6),
-      0 0 28px var(--accent-color, #8b5cf6),
-      0 0 48px color-mix(in srgb, var(--accent-color, #8b5cf6) 60%, transparent);
-}
-
-:is(body .profile-layout, .studio-nick).ph-name--shadow .profile-header__name {
-  color: #fff;
-  text-shadow: 4px 4px 0 var(--accent-color, #8b5cf6), 8px 8px 0 rgba(0, 0, 0, 0.45);
-}
-
-:is(body .profile-layout, .studio-nick).ph-name--glitch .profile-header__name {
-  color: #fff;
-  text-shadow: 3px 0 #ff2a6d, -3px 0 #05d9e8;
-  animation: ph-glitch 2.6s steps(1) infinite;
-}
-
-@keyframes ph-glitch {
-  0%, 86%, 100% { transform: none; text-shadow: 3px 0 #ff2a6d, -3px 0 #05d9e8; }
-  88% { transform: translate(-2px, 1px) skewX(-6deg); text-shadow: -4px 0 #ff2a6d, 4px 0 #05d9e8; }
-  91% { transform: translate(2px, -1px); text-shadow: 5px 1px #ff2a6d, -5px -1px #05d9e8; }
-  94% { transform: none; }
-}
-
 /* ---------- Аватар ---------- */
 
 body .profile-layout.ph-ava--rounded :is(.profile-header__avatar-frame, .profile-header__avatar-frame-inner, .profile-header__avatar, .profile-header__avatar-glow) {
@@ -1926,10 +1879,6 @@ body .profile-layout.ph-ava--hex :is(.profile-header__avatar-frame, .profile-hea
 body .profile-layout.ph-ava-size--s .profile-header__avatar-wrap { zoom: 0.75; }
 body .profile-layout.ph-ava-size--l .profile-header__avatar-wrap { zoom: 1.3; }
 
-/* ---------- Что показывать ---------- */
-
-body .profile-layout.ph-progress--hide .tier-progress { display: none; }
-
 /* ---------- Шапка на холсте студии ---------- */
 
 body.pb-studio:not(.pb-studio--guest) .player-card--builder-head .profile-header {
@@ -1939,8 +1888,16 @@ body.pb-studio:not(.pb-studio--guest) .player-card--builder-head .profile-header
   transition: outline-color 0.15s ease;
 }
 
-body.pb-studio:not(.pb-studio--guest) .player-card--builder-head .profile-header > * {
-  pointer-events: none;
+/* Части шапки подсвечиваются: клик по ним раскрывает их настройки (клик ловит студия) */
+body.pb-studio:not(.pb-studio--guest) .player-card--builder-head .profile-header :is(.profile-header__name-row, .profile-header__role, .profile-header__stats, .tier-progress) {
+  border-radius: 6px;
+  outline: 1px dashed transparent;
+  outline-offset: 4px;
+  transition: outline-color 0.15s ease;
+}
+
+body.pb-studio:not(.pb-studio--guest) .player-card--builder-head .profile-header :is(.profile-header__name-row, .profile-header__role, .profile-header__stats, .tier-progress):hover {
+  outline-color: var(--studio-accent);
 }
 
 body.pb-studio:not(.pb-studio--guest) .player-card--builder-head .profile-header:hover {
@@ -1949,11 +1906,6 @@ body.pb-studio:not(.pb-studio--guest) .player-card--builder-head .profile-header
 
 body.pb-studio--header .player-card--builder-head .profile-header {
   outline-color: var(--studio-accent) !important;
-}
-
-/* Эффект страницы поверх профиля */
-.profile-layout:has(> .profile-fx) {
-  position: relative;
 }
 
 /* ---------- Ширина мышью ---------- */
@@ -2115,26 +2067,6 @@ body.pb-studio--guest :is(.studio-top, .studio-rail, .studio-left, .studio-right
 .studio-hdr--minimal i { width: 10px; height: 10px; }
 .studio-hdr--minimal s { display: none; }
 
-.studio-nick {
-  height: 52px;
-
-  display: grid;
-  place-items: center;
-
-  overflow: hidden;
-
-  background: #0b0a10;
-  border-radius: 8px;
-}
-
-.studio-nick .profile-header__name {
-  color: #fff;
-  font-family: var(--font-display, system-ui);
-  font-size: 19px;
-  font-weight: 900;
-  line-height: 1;
-}
-
 .studio-ava {
   height: 42px;
   display: grid;
@@ -2152,40 +2084,276 @@ body.pb-studio--guest :is(.studio-top, .studio-rail, .studio-left, .studio-right
 .studio-ava--square i { border-radius: 2px; }
 .studio-ava--hex i { clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%); }
 
-.studio-fx {
-  position: relative;
 
-  height: 52px;
 
-  display: grid;
-  place-items: center;
+/* =========================================================
+   ЧАСТИ ШАПКИ: порядок, видимость и оформление каждой
+   (классы ph-{часть}-{свойство}--{значение} ставит PlayerCard)
+   ========================================================= */
 
-  overflow: hidden;
-
-  background: linear-gradient(180deg, #14111f, #0b0a10);
-  border-radius: 8px;
+body .profile-layout.ph-items .profile-header__identity {
+  display: flex;
+  flex-direction: column;
 }
 
-.studio-fx em {
+body .profile-layout.ph-items .profile-header__name-row { order: var(--ph-o-name, 0); }
+body .profile-layout.ph-items .profile-header__stats { order: var(--ph-o-stats, 2); }
+body .profile-layout.ph-items .tier-progress { order: var(--ph-o-progress, 3); }
+/* Роль живёт в строке с ником: двигается вместе с ним, порядок — слева или справа */
+body .profile-layout.ph-items .profile-header__role { order: calc(var(--ph-o-role, 1) - var(--ph-o-name, 0)); }
+
+body .profile-layout.ph-hide--name .profile-header__name { display: none !important; }
+body .profile-layout.ph-hide--role .profile-header__role { display: none !important; }
+body .profile-layout.ph-hide--stats .profile-header__stats { display: none !important; }
+body .profile-layout.ph-hide--progress .tier-progress { display: none !important; }
+
+body .profile-layout.ph-name-size--s .profile-header__name { font-size: 28px; }
+body .profile-layout.ph-name-size--l .profile-header__name { font-size: clamp(40px, 6vw, 66px); }
+body .profile-layout.ph-name-size--xl .profile-header__name { font-size: clamp(44px, 8vw, 88px); }
+body .profile-layout.ph-name-font--rounded .profile-header__name, body .profile-layout.ph-name-font--rounded .profile-header__name * { font-family: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif !important; }
+body .profile-layout.ph-name-font--mono .profile-header__name, body .profile-layout.ph-name-font--mono .profile-header__name * { font-family: ui-monospace, "JetBrains Mono", Consolas, monospace !important; }
+body .profile-layout.ph-name-font--serif .profile-header__name, body .profile-layout.ph-name-font--serif .profile-header__name * { font-family: Georgia, "Times New Roman", serif !important; }
+body .profile-layout.ph-name-font--display .profile-header__name, body .profile-layout.ph-name-font--display .profile-header__name * { font-family: var(--font-display) !important; }
+body .profile-layout.ph-name-weight--bold .profile-header__name, body .profile-layout.ph-name-weight--bold .profile-header__name * { font-weight: 700 !important; }
+body .profile-layout.ph-name-weight--light .profile-header__name, body .profile-layout.ph-name-weight--light .profile-header__name * { font-weight: 300 !important; }
+body .profile-layout.ph-name-weight--black .profile-header__name, body .profile-layout.ph-name-weight--black .profile-header__name * { font-weight: 900 !important; }
+body .profile-layout.ph-name-spacing--tight .profile-header__name, body .profile-layout.ph-name-spacing--tight .profile-header__name * { letter-spacing: -0.04em !important; }
+body .profile-layout.ph-name-spacing--wide .profile-header__name, body .profile-layout.ph-name-spacing--wide .profile-header__name * { letter-spacing: 0.12em !important; }
+body .profile-layout.ph-name-case--upper .profile-header__name, body .profile-layout.ph-name-case--upper .profile-header__name * { text-transform: uppercase !important; }
+body .profile-layout.ph-name-case--lower .profile-header__name, body .profile-layout.ph-name-case--lower .profile-header__name * { text-transform: lowercase !important; }
+
+body .profile-layout.ph-role-size--s .profile-header__role { zoom: 0.85; }
+body .profile-layout.ph-role-size--l .profile-header__role { zoom: 1.2; }
+body .profile-layout.ph-role-size--xl .profile-header__role { zoom: 1.4; }
+body .profile-layout.ph-role-font--rounded .profile-header__role, body .profile-layout.ph-role-font--rounded .profile-header__role * { font-family: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif !important; }
+body .profile-layout.ph-role-font--mono .profile-header__role, body .profile-layout.ph-role-font--mono .profile-header__role * { font-family: ui-monospace, "JetBrains Mono", Consolas, monospace !important; }
+body .profile-layout.ph-role-font--serif .profile-header__role, body .profile-layout.ph-role-font--serif .profile-header__role * { font-family: Georgia, "Times New Roman", serif !important; }
+body .profile-layout.ph-role-font--display .profile-header__role, body .profile-layout.ph-role-font--display .profile-header__role * { font-family: var(--font-display) !important; }
+body .profile-layout.ph-role-weight--bold .profile-header__role, body .profile-layout.ph-role-weight--bold .profile-header__role * { font-weight: 700 !important; }
+body .profile-layout.ph-role-weight--light .profile-header__role, body .profile-layout.ph-role-weight--light .profile-header__role * { font-weight: 300 !important; }
+body .profile-layout.ph-role-weight--black .profile-header__role, body .profile-layout.ph-role-weight--black .profile-header__role * { font-weight: 900 !important; }
+body .profile-layout.ph-role-spacing--tight .profile-header__role, body .profile-layout.ph-role-spacing--tight .profile-header__role * { letter-spacing: -0.04em !important; }
+body .profile-layout.ph-role-spacing--wide .profile-header__role, body .profile-layout.ph-role-spacing--wide .profile-header__role * { letter-spacing: 0.12em !important; }
+body .profile-layout.ph-role-case--upper .profile-header__role, body .profile-layout.ph-role-case--upper .profile-header__role * { text-transform: uppercase !important; }
+body .profile-layout.ph-role-case--lower .profile-header__role, body .profile-layout.ph-role-case--lower .profile-header__role * { text-transform: lowercase !important; }
+
+body .profile-layout.ph-stats-size--s .profile-header__stats { zoom: 0.85; }
+body .profile-layout.ph-stats-size--l .profile-header__stats { zoom: 1.2; }
+body .profile-layout.ph-stats-size--xl .profile-header__stats { zoom: 1.4; }
+body .profile-layout.ph-stats-font--rounded .profile-header__stats, body .profile-layout.ph-stats-font--rounded .profile-header__stats * { font-family: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif !important; }
+body .profile-layout.ph-stats-font--mono .profile-header__stats, body .profile-layout.ph-stats-font--mono .profile-header__stats * { font-family: ui-monospace, "JetBrains Mono", Consolas, monospace !important; }
+body .profile-layout.ph-stats-font--serif .profile-header__stats, body .profile-layout.ph-stats-font--serif .profile-header__stats * { font-family: Georgia, "Times New Roman", serif !important; }
+body .profile-layout.ph-stats-font--display .profile-header__stats, body .profile-layout.ph-stats-font--display .profile-header__stats * { font-family: var(--font-display) !important; }
+body .profile-layout.ph-stats-weight--bold .profile-header__stats, body .profile-layout.ph-stats-weight--bold .profile-header__stats * { font-weight: 700 !important; }
+body .profile-layout.ph-stats-weight--light .profile-header__stats, body .profile-layout.ph-stats-weight--light .profile-header__stats * { font-weight: 300 !important; }
+body .profile-layout.ph-stats-weight--black .profile-header__stats, body .profile-layout.ph-stats-weight--black .profile-header__stats * { font-weight: 900 !important; }
+body .profile-layout.ph-stats-spacing--tight .profile-header__stats, body .profile-layout.ph-stats-spacing--tight .profile-header__stats * { letter-spacing: -0.04em !important; }
+body .profile-layout.ph-stats-spacing--wide .profile-header__stats, body .profile-layout.ph-stats-spacing--wide .profile-header__stats * { letter-spacing: 0.12em !important; }
+body .profile-layout.ph-stats-case--upper .profile-header__stats, body .profile-layout.ph-stats-case--upper .profile-header__stats * { text-transform: uppercase !important; }
+body .profile-layout.ph-stats-case--lower .profile-header__stats, body .profile-layout.ph-stats-case--lower .profile-header__stats * { text-transform: lowercase !important; }
+
+body .profile-layout.ph-progress-size--s .tier-progress { zoom: 0.85; }
+body .profile-layout.ph-progress-size--l .tier-progress { zoom: 1.2; }
+body .profile-layout.ph-progress-size--xl .tier-progress { zoom: 1.4; }
+body .profile-layout.ph-progress-font--rounded .tier-progress, body .profile-layout.ph-progress-font--rounded .tier-progress * { font-family: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif !important; }
+body .profile-layout.ph-progress-font--mono .tier-progress, body .profile-layout.ph-progress-font--mono .tier-progress * { font-family: ui-monospace, "JetBrains Mono", Consolas, monospace !important; }
+body .profile-layout.ph-progress-font--serif .tier-progress, body .profile-layout.ph-progress-font--serif .tier-progress * { font-family: Georgia, "Times New Roman", serif !important; }
+body .profile-layout.ph-progress-font--display .tier-progress, body .profile-layout.ph-progress-font--display .tier-progress * { font-family: var(--font-display) !important; }
+body .profile-layout.ph-progress-weight--bold .tier-progress, body .profile-layout.ph-progress-weight--bold .tier-progress * { font-weight: 700 !important; }
+body .profile-layout.ph-progress-weight--light .tier-progress, body .profile-layout.ph-progress-weight--light .tier-progress * { font-weight: 300 !important; }
+body .profile-layout.ph-progress-weight--black .tier-progress, body .profile-layout.ph-progress-weight--black .tier-progress * { font-weight: 900 !important; }
+body .profile-layout.ph-progress-spacing--tight .tier-progress, body .profile-layout.ph-progress-spacing--tight .tier-progress * { letter-spacing: -0.04em !important; }
+body .profile-layout.ph-progress-spacing--wide .tier-progress, body .profile-layout.ph-progress-spacing--wide .tier-progress * { letter-spacing: 0.12em !important; }
+body .profile-layout.ph-progress-case--upper .tier-progress, body .profile-layout.ph-progress-case--upper .tier-progress * { text-transform: uppercase !important; }
+body .profile-layout.ph-progress-case--lower .tier-progress, body .profile-layout.ph-progress-case--lower .tier-progress * { text-transform: lowercase !important; }
+
+
+/* =========================================================
+   БЛОК: свой градиент, рамка, отступы, размер текста, движение
+   ========================================================= */
+
+.pb .pb-block.pb-grad {
+  background: var(--pb-grad) !important;
+}
+
+.pb .pb-block.pb-bw {
+  border: var(--pb-bw) solid var(--accent-color, #8b5cf6) !important;
+}
+
+.pb .pb-block.pb-pad--none { padding: 0; }
+.pb .pb-block.pb-pad--s { padding: 10px; }
+.pb .pb-block.pb-pad--l { padding: 26px; }
+.pb .pb-block.pb-pad--xl { padding: 38px; }
+
+.pb-size--s .pb-block__body { font-size: 0.88em; }
+.pb-size--l .pb-block__body { font-size: 1.15em; }
+.pb-size--xl .pb-block__body { font-size: 1.32em; }
+
+/* Живая анимация (в студии тоже видна — чтобы выбрать) */
+.pb-anim--float { animation: pb-float 4s ease-in-out infinite; }
+.pb-anim--sway { animation: pb-sway 5s ease-in-out infinite; transform-origin: 50% 0; }
+.pb-anim--pulse { animation: pb-pulse 2.4s ease-in-out infinite; }
+.pb-anim--bounce { animation: pb-bounce 2.2s cubic-bezier(0.3, 0, 0.3, 1) infinite; }
+
+@keyframes pb-float { 50% { translate: 0 -8px; } }
+@keyframes pb-sway { 25% { rotate: 0.8deg; } 75% { rotate: -0.8deg; } }
+@keyframes pb-pulse { 50% { scale: 1.02; } }
+@keyframes pb-bounce { 0%, 60%, 100% { translate: 0 0; } 30% { translate: 0 -12px; } 45% { translate: 0 -3px; } }
+
+/* Появление при прокрутке: на скролле, без скриптов. Где не поддерживается — блок просто виден */
+@supports (animation-timeline: view()) {
+  .pb:not(.pb--editing) :is(.pb-reveal--up, .pb-reveal--left, .pb-reveal--right, .pb-reveal--zoom, .pb-reveal--flip) {
+    animation-fill-mode: both;
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+    animation-timeline: view();
+    animation-range: entry 0% cover 30%;
+  }
+
+  .pb:not(.pb--editing) .pb-reveal--up { animation-name: pb-rv-up; }
+  .pb:not(.pb--editing) .pb-reveal--left { animation-name: pb-rv-left; }
+  .pb:not(.pb--editing) .pb-reveal--right { animation-name: pb-rv-right; }
+  .pb:not(.pb--editing) .pb-reveal--zoom { animation-name: pb-rv-zoom; }
+  .pb:not(.pb--editing) .pb-reveal--flip { animation-name: pb-rv-flip; }
+}
+
+@keyframes pb-rv-up { from { opacity: 0; translate: 0 60px; } }
+@keyframes pb-rv-left { from { opacity: 0; translate: -80px 0; } }
+@keyframes pb-rv-right { from { opacity: 0; translate: 80px 0; } }
+@keyframes pb-rv-zoom { from { opacity: 0; scale: 0.8; } }
+@keyframes pb-rv-flip { from { opacity: 0; transform: perspective(800px) rotateX(-40deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.pb-anim--float, .pb-anim--sway, .pb-anim--pulse, .pb-anim--bounce) { animation: none; }
+}
+
+/* ---------- Поля редакторов в инспекторе ---------- */
+
+.pb-settings__select {
+  flex-shrink: 0;
+  width: 118px;
+  height: 38px;
+  padding: 0 8px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+  font: inherit;
+  font-size: 12.5px;
+}
+
+.pb-settings__select--day { width: 64px; }
+.pb-settings__select option { color: #111; }
+
+.pb-settings__card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+}
+
+.pb-settings__color input[type="color"] {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* ---------- Части шапки в панели ---------- */
+
+.studio-hitem {
+  list-style: none;
+  border: 1px solid transparent;
+  border-radius: 12px;
+}
+
+.studio-hitem.is-open {
+  background: rgba(255, 255, 255, 0.025);
+  border-color: color-mix(in srgb, var(--studio-accent) 45%, transparent);
+}
+
+.studio-hitem.is-off .studio-layer__name { opacity: 0.45; text-decoration: line-through; }
+.studio-hitem.is-over { border-color: var(--studio-accent); border-style: dashed; }
+
+.studio-hitem__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 10px 12px;
+}
+
+.studio-layer__actions.is-always { opacity: 1; }
+/* ---------- Подсказки, черновик, свои шаблоны ---------- */
+
+.studio-toast {
+  position: fixed;
+  top: calc(var(--studio-top) + 14px);
+  left: calc(var(--studio-pl) + (100vw - var(--studio-pl) - var(--studio-pr)) / 2);
+  z-index: 4;
+
+  padding: 9px 16px;
+
+  color: #fff;
+  background: color-mix(in srgb, var(--studio-accent) 85%, #000);
+  border-radius: 999px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+
+  transform: translateX(-50%);
+}
+
+.studio-toast-enter-active,
+.studio-toast-leave-active { transition: opacity 0.2s ease, translate 0.2s ease; }
+
+.studio-toast-enter-from,
+.studio-toast-leave-to { opacity: 0; translate: 0 -8px; }
+
+.studio-draft {
+  position: fixed;
+  bottom: 18px;
+  left: calc(var(--studio-pl) + (100vw - var(--studio-pl) - var(--studio-pr)) / 2);
+  z-index: 4;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 8px 8px 8px 16px;
+
+  color: #e6e3ee;
+  background: rgba(12, 11, 18, 0.95);
+  border: 1px solid color-mix(in srgb, var(--studio-accent) 60%, transparent);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+
+  font-size: 13px;
+  white-space: nowrap;
+
+  transform: translateX(-50%);
+}
+
+.studio-draft .studio-btn { min-height: 32px; padding: 0 12px; }
+
+/* Пока висит черновик, подсказка внизу не нужна */
+.studio:has(.studio-draft) .studio-hint { display: none; }
+
+.studio-subhead {
+  margin: 4px 0 -12px;
   color: var(--studio-dim);
   font-size: 10.5px;
-  font-style: normal;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
-.studio-fx .profile-fx--starfall i { width: calc(26px * var(--s)); }
+.studio-mytpl { border: 1px solid var(--studio-line); }
 
-/*
- * Эффект ника из инвентаря (.name-fx) красит текст сам и с !important.
- * Если в студии выбран свой стиль ника — он главнее: эффект снимаем,
- * текст наследует оформление заголовка. «Как в инвентаре» — не трогаем.
- */
-body .profile-layout:not(.ph-name--default) .profile-header__name :is(.name-fx, .name-fx__char) {
-  color: inherit !important;
-  -webkit-text-fill-color: inherit;
-  background: none !important;
-  text-shadow: inherit;
-  filter: none;
-  animation: none !important;
-  transform: none;
-}
+.studio-search .studio-icon-btn { width: 30px; height: 30px; border: 0; background: none; }

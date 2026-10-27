@@ -6,11 +6,11 @@
  * type — шрифт и заголовки, layout — сетка и ширина, motion — появление.
  * Настройки страницы меняет прямо в page (это черновик родителя).
  */
-import { computed, ref } from 'vue'
-import ProfileFx from '@/components/players/builder/ProfileFx.vue'
+import { computed, ref, watch } from 'vue'
 import StudioIcon from '@/components/players/builder/StudioIcon.vue'
+import StudioInventory from '@/components/players/builder/StudioInventory.vue'
 import {
-  BLOCK_TYPES, COLORS, GROUPS, PAGE_OPTIONS, PRESETS, THEME_PRESETS, WIDTHS, widthSpan,
+  BLOCK_TYPES, GROUPS, HEADER_ITEMS, HEADER_ITEM_STYLE, PAGE_OPTIONS, PRESETS, THEME_PRESETS, WIDTHS, widthSpan,
 } from '@/data/players/profileBlocks.js'
 
 const props = defineProps({
@@ -18,9 +18,22 @@ const props = defineProps({
   blocks: { type: Array, required: true },
   page: { type: Object, required: true },
   activeId: { type: String, default: null },
+  // Часть шапки, на которую нажали на холсте
+  focusItem: { type: String, default: null },
+  myTemplates: { type: Array, default: () => [] },
 })
 
-const emit = defineEmits(['add', 'select', 'move', 'remove', 'reorder', 'preset', 'replay'])
+const emit = defineEmits([
+  'add', 'select', 'move', 'remove', 'reorder', 'preset', 'replay',
+  'save-template', 'apply-template', 'delete-template', 'profile',
+])
+
+const templateName = ref('')
+
+function saveTemplate() {
+  emit('save-template', templateName.value.trim())
+  templateName.value = ''
+}
 
 const TITLES = {
   add: ['Добавить блок', 'Нажми — блок встанет в конец профиля'],
@@ -29,8 +42,10 @@ const TITLES = {
   theme: ['Тема', 'Палитры, фон страницы и характер блоков'],
   type: ['Текст', 'Шрифт всего профиля и вид заголовков'],
   layout: ['Сетка', 'Как блоки ложатся на страницу'],
-  motion: ['Анимация', 'Появление блоков и живой эффект поверх страницы'],
-  header: ['Шапка', 'Раскладка, фон, ник и аватар. Нажми на шапку на холсте — откроется этот раздел'],
+  motion: ['Анимация', 'Как блоки появляются перед гостем. Эффекты профиля — из инвентаря'],
+  inventory: ['Инвентарь', 'Купленное для профиля: нажми — наденешь, холст обновится сразу'],
+  profile: ['Профиль', 'Аватар, обложка, описание, соцсети и витрина ачивок'],
+  header: ['Шапка','Раскладка, фон, ник и аватар. Нажми на шапку на холсте — откроется этот раздел'],
 }
 
 const heading = computed(() => TITLES[props.tab] ?? TITLES.add)
@@ -79,7 +94,7 @@ const presetCards = computed(() =>
 /* ---------- Тема ---------- */
 
 const activeTheme = computed(() => THEME_PRESETS.find((t) =>
-  t.bg === props.page.bg && t.bg_from === props.page.bg_from && t.bg_to === props.page.bg_to && t.accent === props.page.accent,
+  t.bg === props.page.bg && t.bg_from === props.page.bg_from && t.bg_to === props.page.bg_to,
 )?.id)
 
 function applyTheme(theme) {
@@ -96,15 +111,37 @@ const SHADOW_PREVIEW = {
   neon: '0 0 0 1px var(--accent-color), 0 0 16px color-mix(in srgb, var(--accent-color) 55%, transparent)',
 }
 
-const accentSwatches = COLORS.filter((c) => c.hex)
-
 function sampleStyle(extra = {}) {
   return {
     '--pp-from': props.page.bg_from,
     '--pp-to': props.page.bg_to,
-    ...(props.page.accent ? { '--accent-color': props.page.accent } : {}),
     ...extra,
   }
+}
+
+/* ---------- Части шапки ---------- */
+
+const openItem = ref(props.focusItem)
+const itemFrom = ref(null)
+const itemOver = ref(null)
+
+// Клик по части шапки на холсте раскрывает её здесь
+watch(() => props.focusItem, (id) => { if (id) openItem.value = id })
+
+function moveItem(i, delta) {
+  const list = props.page.hdr_items
+  const [item] = list.splice(i, 1)
+  list.splice(i + delta, 0, item)
+}
+
+function dropItem(to) {
+  if (itemFrom.value !== null && itemFrom.value !== to) {
+    const list = props.page.hdr_items
+    const [item] = list.splice(itemFrom.value, 1)
+    list.splice(to, 0, item)
+  }
+  itemFrom.value = null
+  itemOver.value = null
 }
 
 /* ---------- Сетка ---------- */
@@ -192,6 +229,27 @@ function seg(key) {
 
       <!-- ============ Шаблоны ============ -->
       <template v-else-if="tab === 'templates'">
+        <section class="studio-group">
+          <h4>Мои шаблоны</h4>
+          <form class="studio-search" @submit.prevent="saveTemplate">
+            <StudioIcon name="save" :size="15" />
+            <input v-model="templateName" maxlength="30" placeholder="Сохранить текущий вид как…" />
+            <button type="submit" class="studio-icon-btn" title="Сохранить"><StudioIcon name="plus" :size="15" /></button>
+          </form>
+          <div v-for="t in myTemplates" :key="t.id" class="studio-layer studio-mytpl" @click="emit('apply-template', t)">
+            <StudioIcon name="template" :size="16" />
+            <span class="studio-layer__name">
+              <strong>{{ t.name }}</strong>
+              <small>{{ t.blocks.length }} блоков</small>
+            </span>
+            <span class="studio-layer__actions is-always" @click.stop>
+              <button type="button" class="is-danger" title="Удалить шаблон" @click="emit('delete-template', t.id)"><StudioIcon name="trash" :size="14" /></button>
+            </span>
+          </div>
+          <p v-if="!myTemplates.length" class="studio-note">Собери вид, который нравится, и сохрани — потом вернёшься к нему одним кликом.</p>
+        </section>
+
+        <h4 class="studio-subhead">Готовые</h4>
         <button
             v-for="preset in presetCards"
             :key="preset.id"
@@ -231,10 +289,8 @@ function seg(key) {
               <span
                   class="studio-swatch-bg"
                   :class="`pp-bg--${theme.bg}`"
-                  :style="{ '--pp-from': theme.bg_from, '--pp-to': theme.bg_to, '--accent-color': theme.accent }"
-              >
-                <i :style="{ background: theme.accent }"></i>
-              </span>
+                  :style="{ '--pp-from': theme.bg_from, '--pp-to': theme.bg_to }"
+              ></span>
               <span>{{ theme.label }}</span>
             </button>
           </div>
@@ -273,32 +329,6 @@ function seg(key) {
                 title="Поменять местами"
                 @click="[page.bg_from, page.bg_to] = [page.bg_to, page.bg_from]"
             ><StudioIcon name="redo" :size="15" /></button>
-          </div>
-        </section>
-
-        <section class="studio-group">
-          <h4>Акцент</h4>
-          <div class="studio-accent">
-            <button
-                type="button"
-                class="studio-dot studio-dot--auto"
-                :class="{ 'is-on': !page.accent }"
-                title="Из магазина"
-                @click="page.accent = ''"
-            ></button>
-            <button
-                v-for="c in accentSwatches"
-                :key="c.id"
-                type="button"
-                class="studio-dot"
-                :class="{ 'is-on': page.accent === c.hex }"
-                :style="{ background: c.hex }"
-                @click="page.accent = c.hex"
-            ></button>
-            <label class="studio-dot studio-dot--picker" title="Любой цвет">
-              <input type="color" :value="page.accent || '#8b5cf6'" @input="page.accent = $event.target.value" />
-              <StudioIcon name="plus" :size="14" />
-            </label>
           </div>
         </section>
 
@@ -428,6 +458,20 @@ function seg(key) {
         </section>
       </template>
 
+      <!-- ============ Инвентарь ============ -->
+      <StudioInventory v-else-if="tab === 'inventory'" />
+
+      <!-- ============ Профиль ============ -->
+      <template v-else-if="tab === 'profile'">
+        <section class="studio-group">
+          <h4>Данные профиля</h4>
+          <p class="studio-note">Аватар и обложка, статус, цитата и описание, соцсети, любимые режимы, витрина ачивок и привязка Minecraft.</p>
+          <button type="button" class="studio-wide-btn" @click="emit('profile')">
+            <StudioIcon name="user" :size="16" /> Изменить данные профиля
+          </button>
+        </section>
+      </template>
+
       <!-- ============ Шапка ============ -->
       <template v-else-if="tab === 'header'">
         <section class="studio-group">
@@ -448,32 +492,48 @@ function seg(key) {
         </section>
 
         <section class="studio-group">
-          <h4>Ник</h4>
-          <div class="studio-tiles studio-tiles--3">
-            <button
-                v-for="[value, label] in seg('hdr_name')"
-                :key="value"
-                type="button"
-                class="studio-tile"
-                :class="{ 'is-on': page.hdr_name === value }"
-                :style="sampleStyle()"
-                @click="page.hdr_name = value"
+          <h4>Элементы шапки</h4>
+          <p class="studio-note">Тяни строку, чтобы переставить. Нажми на элемент в шапке на холсте — он раскроется здесь.</p>
+          <ol class="studio-layers">
+            <li
+                v-for="(item, i) in page.hdr_items"
+                :key="item.id"
+                class="studio-hitem"
+                :class="{ 'is-open': openItem === item.id, 'is-off': item.hidden, 'is-over': itemOver === i }"
+                draggable="true"
+                @dragstart="itemFrom = i"
+                @dragover.prevent="itemOver = i"
+                @drop.prevent="dropItem(i)"
+                @dragend="itemFrom = null; itemOver = null"
             >
-              <span class="studio-nick" :class="`ph-name--${value}`"><b class="profile-header__name">Steve</b></span>
-              <span class="studio-tile__label">{{ label }}</span>
-            </button>
-          </div>
-          <p class="studio-note">Свой стиль заменяет эффект ника из инвентаря. «Как в инвентаре» — ник с купленным эффектом.</p>
-          <span class="studio-label">Размер</span>
-          <div class="studio-seg">
-            <button
-                v-for="value in ['s', 'm', 'l', 'xl']"
-                :key="value"
-                type="button"
-                :class="{ 'is-on': page.hdr_size === value }"
-                @click="page.hdr_size = value"
-            >{{ value.toUpperCase() }}</button>
-          </div>
+              <div class="studio-layer" @click="openItem = openItem === item.id ? null : item.id">
+                <StudioIcon class="studio-layer__grip" name="grip" :size="16" />
+                <span class="studio-layer__name"><strong>{{ HEADER_ITEMS[item.id] }}</strong></span>
+                <span class="studio-layer__actions is-always" @click.stop>
+                  <button type="button" :title="item.hidden ? 'Показать' : 'Спрятать'" @click="item.hidden = !item.hidden">
+                    <StudioIcon :name="item.hidden ? 'eye-off' : 'eye'" :size="14" />
+                  </button>
+                  <button type="button" title="Выше" :disabled="i === 0" @click="moveItem(i, -1)"><StudioIcon name="up" :size="14" /></button>
+                  <button type="button" title="Ниже" :disabled="i === page.hdr_items.length - 1" @click="moveItem(i, 1)"><StudioIcon name="down" :size="14" /></button>
+                </span>
+              </div>
+              <div v-if="openItem === item.id" class="studio-hitem__body">
+                <template v-for="(def, key) in HEADER_ITEM_STYLE" :key="key">
+                  <span class="studio-label">{{ def.label }}</span>
+                  <div class="studio-seg" :class="{ 'studio-seg--wrap': def.options.length > 4 }">
+                    <button
+                        v-for="[value, label] in def.options"
+                        :key="value"
+                        type="button"
+                        :class="{ 'is-on': item[key] === value }"
+                        @click="item[key] = value"
+                    >{{ label }}</button>
+                  </div>
+                </template>
+                <p v-if="item.id === 'name'" class="studio-note">Цвет и эффект ника — из инвентаря.</p>
+              </div>
+            </li>
+          </ol>
         </section>
 
         <section class="studio-group">
@@ -527,12 +587,7 @@ function seg(key) {
         </section>
 
         <section class="studio-group">
-          <h4>Что показывать</h4>
-          <label class="studio-switch">
-            <input type="checkbox" :checked="page.hdr_progress !== 'hide'" @change="page.hdr_progress = $event.target.checked ? 'show' : 'hide'" />
-            <span></span>
-            Полоса прогресса тира
-          </label>
+          <h4>Вид</h4>
           <label class="studio-switch">
             <input type="checkbox" :checked="page.header === 'compact'" @change="page.header = $event.target.checked ? 'compact' : 'full'" />
             <span></span>
@@ -543,26 +598,6 @@ function seg(key) {
 
       <!-- ============ Анимация ============ -->
       <template v-else-if="tab === 'motion'">
-        <section class="studio-group">
-          <h4>Эффект страницы</h4>
-          <div class="studio-tiles studio-tiles--3">
-            <button
-                v-for="[value, label] in seg('fx')"
-                :key="value"
-                type="button"
-                class="studio-tile"
-                :class="{ 'is-on': page.fx === value }"
-                :style="sampleStyle()"
-                @click="page.fx = value"
-            >
-              <span class="studio-fx">
-                <ProfileFx :fx="value" :count="10" />
-                <em v-if="value === 'none'">Нет</em>
-              </span>
-              <span class="studio-tile__label">{{ label }}</span>
-            </button>
-          </div>
-        </section>
 
         <section class="studio-group">
           <h4>Появление блоков</h4>
