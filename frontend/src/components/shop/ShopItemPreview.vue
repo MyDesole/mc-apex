@@ -20,8 +20,8 @@ import ProfileEntrance from '@/components/players/ProfileEntrance.vue'
 import CursorTrail from '@/components/players/CursorTrail.vue'
 import ProfilePet from '@/components/players/ProfilePet.vue'
 import ProfileTitle from '@/components/players/ProfileTitle.vue'
-import ChatSticker from '@/components/chat/ChatSticker.vue'
 import { STICKER_PACKS } from '@/data/shop/stickers.js'
+import { HIGHLIGHT_COLORS, HIGHLIGHT_EFFECTS, highlightColor } from '@/data/clan/clanHighlight.js'
 import { cardTheme } from '@/data/shop/cosmetics.js'
 import { profileLayout } from '@/data/players/profileLayouts.js'
 import { loadSkin, renderSkinHead } from '@/utils/minecraftSkin.js'
@@ -56,6 +56,18 @@ const layout = computed(() => (props.item.type === 'profile_layout' ? profileLay
 const hasLayer = computed(() => !!layerEffect(value.value))
 
 const bundleLook = computed(() => bundleTheme(props.item.bundle?.theme || props.item.metadata?.theme))
+
+// Подсветка клана: цвет — из цветовых стилей, эффект — из эффектов
+const clanLook = computed(() => {
+  const isColor = HIGHLIGHT_COLORS[value.value]
+  const look = highlightColor(isColor ? value.value : 'violet')
+
+  return {
+    color: look.color,
+    glow: look.glow,
+    effect: HIGHLIGHT_EFFECTS[value.value] ? value.value : (isColor ? 'glow' : 'frame'),
+  }
+})
 
 const initial = computed(() => (auth.user?.username || 'A').charAt(0).toUpperCase())
 
@@ -148,6 +160,46 @@ onMounted(async () => {
       <span class="preview__header-name">{{ auth.user?.username || 'Игрок' }}</span>
     </div>
 
+    <!-- Эффект профиля без слоя (свечение, огонь, лёд…): тот же вид на мини-шапке -->
+    <div
+        v-else-if="item.type === 'profile_effect'"
+        class="preview__header preview__header--fx"
+        :class="`preview-fx--${value}`"
+        :style="{ '--fx': color }"
+    >
+      <span class="preview__header-fx" />
+      <span class="preview__header-name">{{ auth.user?.username || 'Игрок' }}</span>
+    </div>
+
+    <!-- Подсветка клана и её оформление: строчка в списке кланов -->
+    <div
+        v-else-if="item.type === 'clan_highlight' || item.type === 'clan_highlight_style'"
+        class="preview__clan"
+    >
+      <span class="preview__clan-row preview__clan-row--dim"><i /><b /></span>
+      <span
+          class="preview__clan-row preview__clan-row--lit"
+          :class="`hl-fx--${clanLook.effect}`"
+          :style="{ '--hl-color': clanLook.color, '--hl-glow': clanLook.glow }"
+      >
+        <i>{{ (auth.user?.clan_tag || 'APX').slice(0, 3) }}</i>
+        <span>Твой клан</span>
+      </span>
+      <span class="preview__clan-row preview__clan-row--dim"><i /><b /></span>
+    </div>
+
+    <!-- Приоритет тир-теста: твоя заявка прыгает в начало очереди -->
+    <div v-else-if="item.type === 'tier_priority'" class="preview__queue">
+      <span class="preview__queue-row preview__queue-row--me">⚡ Ты</span>
+      <span class="preview__queue-row">Игрок 1</span>
+      <span class="preview__queue-row">Игрок 2</span>
+    </div>
+
+    <!-- Монеты -->
+    <div v-else-if="item.type === 'coin_bundle'" class="preview__coins">
+      <span v-for="n in 5" :key="n" class="preview__coin" :style="{ '--n': n }">₳</span>
+    </div>
+
     <!-- Акцентный цвет -->
     <div v-else-if="item.type === 'accent_color'" class="preview__swatch">
       <span :style="{ background: value || color }" />
@@ -217,14 +269,20 @@ onMounted(async () => {
       </span>
     </div>
 
-    <!-- Стикерпак: первые три стикера -->
+    <!-- Стикерпак: веер из трёх стикеров, главный по центру -->
     <div v-else-if="item.type === 'sticker_pack'" class="preview__stickers">
-      <ChatSticker
-          v-for="id in (item.metadata?.stickers || []).slice(0, 3)"
+      <span
+          v-for="(id, i) in (item.metadata?.stickers || []).slice(0, 3)"
           :key="id"
-          :sticker="STICKER_PACKS[value]?.[id] || { sprite: 'creeper', caption: id }"
-          :size="34"
-      />
+          class="preview__sticker"
+          :class="`preview__sticker--${i}`"
+      >
+        <PixelSprite
+            :sprite="(STICKER_PACKS[value]?.[id] || { sprite: 'creeper' }).sprite"
+            :anim="(STICKER_PACKS[value]?.[id] || {}).anim"
+            :size="i === 0 ? 46 : 32"
+        />
+      </span>
     </div>
 
     <!-- Питомец: живёт прямо в превью -->
@@ -729,10 +787,43 @@ onMounted(async () => {
   gap: 8px;
 }
 
+/* Веер: главный стикер по центру, два — позади под углом */
 .preview__stickers {
+  position: relative;
+
+  width: 120px;
+  max-width: 100%;
+  height: 80px;
+}
+
+.preview__sticker {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+
   display: flex;
-  align-items: flex-end;
-  gap: 4px;
+
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+}
+
+.preview__sticker--0 {
+  z-index: 2;
+  transform: translateX(-50%);
+  animation: preview-sticker-bob 2.4s ease-in-out infinite;
+}
+
+.preview__sticker--1 {
+  transform: translateX(-120%) rotate(-14deg);
+  opacity: 0.85;
+}
+
+.preview__sticker--2 {
+  transform: translateX(20%) rotate(14deg);
+  opacity: 0.85;
+}
+
+@keyframes preview-sticker-bob {
+  50% { translate: 0 -5px; }
 }
 
 /* ---------- Набор ---------- */
@@ -790,5 +881,290 @@ onMounted(async () => {
   background: #16141c;
   border: 1px solid var(--border);
   border-radius: 8px;
+}
+
+/* ---------- Эффект профиля без слоя: как в шапке профиля ---------- */
+
+.preview__header--fx {
+  overflow: hidden;
+  background: #110f18;
+}
+
+.preview__header-fx {
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+}
+
+.preview-fx--glow .preview__header-fx {
+  background:
+      radial-gradient(ellipse at 72% 38%, color-mix(in srgb, var(--fx) 55%, transparent), transparent 55%),
+      radial-gradient(ellipse at 20% 75%, color-mix(in srgb, var(--fx) 30%, transparent), transparent 55%);
+  filter: blur(14px);
+}
+
+.preview-fx--pulse .preview__header-fx {
+  background: radial-gradient(ellipse at 70% 35%, color-mix(in srgb, var(--fx) 65%, transparent), transparent 55%);
+  filter: blur(14px);
+  animation: pfx-pulse 2.4s ease-in-out infinite;
+}
+
+.preview-fx--gradient .preview__header-fx {
+  inset: -50%;
+  background: conic-gradient(from 0deg, #8b5cf6, #ec4899, #f59e0b, #22c55e, #06b6d4, #8b5cf6);
+  filter: blur(24px);
+  opacity: 0.45;
+  animation: pfx-spin 8s linear infinite;
+}
+
+.preview-fx--fire .preview__header-fx {
+  inset: 25% -10% -30%;
+  background:
+      radial-gradient(ellipse at 50% 100%, rgba(250, 204, 21, 0.75), rgba(249, 115, 22, 0.55) 25%, rgba(239, 68, 68, 0.3) 45%, transparent 72%);
+  filter: blur(10px);
+  transform-origin: 50% 100%;
+  animation: pfx-fire 1.2s ease-in-out infinite alternate;
+}
+
+.preview-fx--ice .preview__header-fx {
+  background:
+      radial-gradient(ellipse at 75% 20%, rgba(165, 243, 252, 0.6), transparent 35%),
+      radial-gradient(ellipse at 25% 75%, rgba(6, 182, 212, 0.45), transparent 50%);
+  filter: blur(10px);
+  animation: pfx-pulse 4.5s ease-in-out infinite;
+}
+
+.preview-fx--legendary .preview__header-fx {
+  inset: -40%;
+  background:
+      radial-gradient(ellipse at 70% 30%, rgba(250, 204, 21, 0.6), transparent 30%),
+      radial-gradient(ellipse at 30% 70%, rgba(249, 115, 22, 0.45), transparent 38%),
+      conic-gradient(from 0deg, rgba(250, 204, 21, 0.1), rgba(249, 115, 22, 0.25), rgba(250, 204, 21, 0.1));
+  filter: blur(14px);
+  animation: pfx-spin 10s linear infinite;
+}
+
+.preview-fx--warp .preview__header-fx {
+  background: repeating-radial-gradient(circle at 70% 40%, color-mix(in srgb, var(--fx) 40%, transparent) 0 4px, transparent 4px 16px);
+  animation: pfx-warp 3s linear infinite;
+  opacity: 0.7;
+}
+
+.preview-fx--glitch .preview__header-fx {
+  background:
+      linear-gradient(90deg, rgba(239, 68, 68, 0.35), transparent 30%, rgba(6, 182, 212, 0.35) 70%, transparent),
+      repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 5px);
+  animation: pfx-glitch 1.4s steps(2) infinite;
+}
+
+.preview-fx--glitch .preview__header-name {
+  animation: pfx-glitch-text 1.4s steps(2) infinite;
+}
+
+/* Неизвестный эффект без слоя — мягкое свечение цветом предмета */
+.preview__header--fx:not([class*='preview-fx--glow'], [class*='preview-fx--pulse'], [class*='preview-fx--gradient'], [class*='preview-fx--fire'], [class*='preview-fx--ice'], [class*='preview-fx--legendary'], [class*='preview-fx--warp'], [class*='preview-fx--glitch']) .preview__header-fx {
+  background: radial-gradient(ellipse at 70% 35%, color-mix(in srgb, var(--fx) 55%, transparent), transparent 55%);
+  filter: blur(14px);
+}
+
+@keyframes pfx-pulse { 50% { opacity: 0.45; transform: scale(1.08); } }
+@keyframes pfx-spin { to { transform: rotate(360deg); } }
+@keyframes pfx-fire { from { transform: scaleY(0.92); } to { transform: scaleY(1.1); } }
+@keyframes pfx-warp { to { transform: scale(1.3); opacity: 0.3; } }
+@keyframes pfx-glitch { 50% { transform: translateX(3px); } }
+@keyframes pfx-glitch-text { 50% { transform: translateX(-2px); text-shadow: 2px 0 #ef4444, -2px 0 #06b6d4; } }
+
+/* ---------- Подсветка клана: строка в списке кланов ---------- */
+
+.preview__clan {
+  width: 86%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.preview__clan-row {
+  position: relative;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  height: 24px;
+  padding: 0 8px;
+
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 7px;
+}
+
+.preview__clan-row--dim i {
+  width: 14px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.preview__clan-row--dim b {
+  width: 50%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.preview__clan-row--lit {
+  height: 32px;
+
+  color: #fff;
+  background: color-mix(in srgb, var(--hl-color) 14%, #15131c);
+  border: 1.5px solid var(--hl-color);
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.preview__clan-row--lit i {
+  padding: 1px 5px;
+
+  color: #0d0b14;
+  background: var(--hl-color);
+  border-radius: 4px;
+
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.preview__clan-row--lit span {
+  position: relative;
+  z-index: 1;
+}
+
+.hl-fx--glow { box-shadow: 0 0 14px var(--hl-glow); }
+.hl-fx--pulse { animation: hl-pulse 1.8s ease-in-out infinite; }
+.hl-fx--neon { box-shadow: 0 0 8px var(--hl-color), inset 0 0 8px var(--hl-glow); animation: hl-flicker 3s steps(1) infinite; }
+.hl-fx--ice { background: linear-gradient(135deg, rgba(165, 243, 252, 0.25), #15131c); border-color: #a5f3fc; box-shadow: 0 0 12px rgba(165, 243, 252, 0.4); }
+
+.hl-fx--gradient,
+.hl-fx--legendary,
+.hl-fx--holo,
+.hl-fx--aurora,
+.hl-fx--galaxy,
+.hl-fx--lava,
+.hl-fx--fire {
+  border-color: transparent;
+  background:
+      linear-gradient(#15131c, #15131c) padding-box,
+      var(--hl-border, linear-gradient(90deg, #8b5cf6, #ec4899, #f59e0b, #8b5cf6)) border-box;
+  background-size: 100% 100%, 300% 100%;
+  animation: hl-slide 3s linear infinite;
+}
+
+.hl-fx--legendary { --hl-border: linear-gradient(90deg, #facc15, #f97316, #fde047, #facc15); box-shadow: 0 0 14px rgba(250, 204, 21, 0.4); }
+.hl-fx--holo { --hl-border: linear-gradient(90deg, #f0abfc, #67e8f9, #fde68a, #a7f3d0, #f0abfc); }
+.hl-fx--aurora { --hl-border: linear-gradient(90deg, #22c55e, #06b6d4, #8b5cf6, #22c55e); }
+.hl-fx--galaxy { --hl-border: linear-gradient(90deg, #6366f1, #a855f7, #ec4899, #6366f1); }
+.hl-fx--lava,
+.hl-fx--fire { --hl-border: linear-gradient(90deg, #ef4444, #f97316, #facc15, #ef4444); box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35); }
+
+.hl-fx--storm { animation: hl-storm 2.6s infinite; }
+.hl-fx--matrix { background: repeating-linear-gradient(90deg, rgba(34, 197, 94, 0.18) 0 2px, transparent 2px 6px), #07110a; border-color: #22c55e; }
+.hl-fx--glitch { animation: pfx-glitch 1.2s steps(2) infinite; box-shadow: 2px 0 rgba(239, 68, 68, 0.6), -2px 0 rgba(6, 182, 212, 0.6); }
+
+.hl-fx--shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%);
+  transform: translateX(-100%);
+  animation: hl-shine 2.4s ease-in-out infinite;
+}
+
+@keyframes hl-pulse { 50% { box-shadow: 0 0 18px var(--hl-glow); } }
+@keyframes hl-flicker { 0%, 100% { opacity: 1; } 92% { opacity: 0.6; } 94% { opacity: 1; } }
+@keyframes hl-slide { to { background-position: 0 0, 300% 0; } }
+@keyframes hl-storm { 0%, 88%, 100% { box-shadow: none; } 90%, 94% { box-shadow: 0 0 18px rgba(186, 230, 253, 0.8); } }
+@keyframes hl-shine { 60%, 100% { transform: translateX(100%); } }
+
+/* ---------- Приоритет тир-теста: очередь ---------- */
+
+.preview__queue {
+  width: 70%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.preview__queue-row {
+  padding: 5px 10px;
+
+  color: #a8a3b8;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 7px;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.preview__queue-row--me {
+  color: #1c1917;
+  background: linear-gradient(90deg, #fde047, #f59e0b);
+  box-shadow: 0 0 14px rgba(250, 204, 21, 0.45);
+
+  font-weight: 900;
+
+  animation: preview-queue-jump 2.6s ease-in-out infinite;
+}
+
+@keyframes preview-queue-jump {
+  0%, 15% { transform: translateY(58px); opacity: 0.6; }
+  40%, 100% { transform: translateY(0); opacity: 1; }
+}
+
+/* ---------- Монеты ---------- */
+
+.preview__coins {
+  position: relative;
+  width: 90px;
+  height: 80px;
+}
+
+.preview__coin {
+  position: absolute;
+  left: calc(10px + (var(--n) - 1) * 14px);
+  bottom: calc(6px + (var(--n) - 1) * 6px);
+
+  width: 30px;
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #78350f;
+  background: radial-gradient(circle at 35% 30%, #fef08a, #facc15 55%, #ca8a04);
+  border-radius: 50%;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4), inset 0 -2px 0 rgba(0, 0, 0, 0.15);
+
+  font-size: 14px;
+  font-weight: 900;
+
+  animation: preview-coin 2s ease-in-out infinite;
+  animation-delay: calc(var(--n) * 0.15s);
+}
+
+@keyframes preview-coin {
+  50% { translate: 0 -5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preview *,
+  .preview *::after {
+    animation: none !important;
+  }
 }
 </style>
