@@ -104,6 +104,10 @@ Route::get('/shop/{shopItem}', [ShopController::class, 'show'])->whereNumber('sh
 Route::get('/players/{user}/guestbook', [\App\Domains\Players\Controllers\Api\ProfileBuilderController::class, 'guestbook'])
     ->whereNumber('user');
 
+// Питомец профиля: состояние видно всем (до /players/{user}, иначе перехватит)
+Route::get('/players/{user}/pet', [\App\Domains\Players\Controllers\Api\PetController::class, 'show'])
+    ->whereNumber('user');
+
 // Карточки тиммейтов для блока профиля (до /players/{user}, иначе перехватит)
 Route::get('/players/teammates', [\App\Domains\Players\Controllers\Api\ProfileBuilderController::class, 'teammates'])
     ->middleware('throttle:60,1');
@@ -396,6 +400,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/players/{user}/tier-history', [TierTestController::class, 'history'])->whereNumber('user');
 
     // Гостевая книга профиля: писать — только авторизованным
+    // Погладить, покормить, поиграть — раз в день каждое
+    Route::post('/players/{user}/pet/{action}', [\App\Domains\Players\Controllers\Api\PetController::class, 'interact'])
+        ->whereNumber('user')
+        ->whereIn('action', ['pet', 'feed', 'play'])
+        ->middleware('throttle:30,1');
+    Route::put('/players/me/pet-name', [\App\Domains\Players\Controllers\Api\PetController::class, 'rename'])
+        ->middleware('throttle:10,1');
+
     Route::post('/players/{user}/guestbook', [\App\Domains\Players\Controllers\Api\ProfileBuilderController::class, 'writeGuestbook'])
         ->whereNumber('user')
         ->middleware('throttle:6,1');

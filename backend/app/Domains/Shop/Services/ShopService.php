@@ -27,18 +27,107 @@ class ShopService
      */
     public static function catalog(?User $user = null): Collection
     {
-        $items = ShopItem::query()
+        return self::presentCatalog(self::catalogQuery($user)->get(), $user);
+    }
+
+    /**
+     * Активные предметы в порядке витрины (sort_order, price, id).
+     * Клановые предметы покупает только лидер — остальным их не показываем.
+     */
+    public static function catalogQuery(?User $user = null): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = ShopItem::query()
             ->active()
             ->orderBy('sort_order')
             ->orderBy('price')
-            ->get();
+            ->orderBy('id');
 
-        // Клановые предметы покупает только лидер — остальным их не показываем
+        if (! ($user && self::leaderClan($user))) {
+            $query->whereNotIn('type', [ShopItem::TYPE_CLAN_HIGHLIGHT, ShopItem::TYPE_CLAN_HIGHLIGHT_STYLE]);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Страница каталога по курсору: витрина с сотнями предметов (у многих
+     * анимированные превью) тормозила, если рисовать всё сразу.
+     *
+     * Курсор — последняя позиция (sort_order, price, id): следующая
+     * страница начинается строго после неё, без OFFSET и без дублей,
+     * даже если между запросами что-то добавили в магазин.
+     *
+     * @return array{items: Collection, next_cursor: ?string}
+     */
+    public static function catalogPage(?User $user, ?string $type, ?string $cursor, int $limit): array
+    {
+        $query = self::catalogQuery($user)->where('type', '!=', ShopItem::TYPE_BUNDLE);
+
+        if ($type) {
+            $query->where('type', $type);
+        }
+
+        $after = self::decodeCursor($cursor);
+
+        if ($after) {
+            [$sort, $price, $id] = $after;
+            $query->where(fn ($q) => $q
+                ->where('sort_order', '>', $sort)
+                ->orWhere(fn ($q) => $q->where('sort_order', $sort)->where('price', '>', $price))
+                ->orWhere(fn ($q) => $q->where('sort_order', $sort)->where('price', $price)->where('id', '>', $id)));
+        }
+
+        // Берём на один больше: так понятно, есть ли следующая страница
+        $rows = $query->limit($limit + 1)->get();
+        $hasMore = $rows->count() > $limit;
+        $rows = $rows->take($limit);
+
+        $last = $rows->last();
+
+        return [
+            'items' => self::presentCatalog($rows, $user),
+            'next_cursor' => $hasMore && $last
+                ? self::encodeCursor([(int) $last->sort_order, (int) $last->price, (int) $last->id])
+                : null,
+        ];
+    }
+
+    /** Сколько предметов в каждой вкладке — для вкладок без загрузки всего. */
+    public static function catalogTypeCounts(?User $user): array
+    {
+        return self::catalogQuery($user)
+            ->reorder()
+            ->where('type', '!=', ShopItem::TYPE_BUNDLE)
+            ->selectRaw('type, count(*) as total')
+            ->groupBy('type')
+            ->pluck('total', 'type')
+            ->map(fn ($n) => (int) $n)
+            ->all();
+    }
+
+    public static function encodeCursor(array $values): string
+    {
+        return rtrim(strtr(base64_encode(json_encode($values)), '+/', '-_'), '=');
+    }
+
+    /** Курсор от клиента: битый или чужой формат — значит «с начала». */
+    public static function decodeCursor(?string $cursor): ?array
+    {
+        if (! $cursor) {
+            return null;
+        }
+
+        $values = json_decode((string) base64_decode(strtr($cursor, '-_', '+/')), true);
+
+        return is_array($values) && $values !== [] && array_filter($values, 'is_int') === $values
+            ? $values
+            : null;
+    }
+
+    /** Помечает купленное, надетое и доступное по цене. */
+    private static function presentCatalog(Collection $items, ?User $user): Collection
+    {
         $leaderClan = $user ? self::leaderClan($user) : null;
-
-        $items = $items
-            ->reject(fn (ShopItem $item) => $item->isClanItem() && ! $leaderClan)
-            ->values();
 
         if (! $user) {
             return $items->map(fn (ShopItem $item) => self::presentItem(
@@ -210,6 +299,69 @@ class ShopService
     /**
      * Инвентарь пользователя.
      */
+    private const RARITY_RANK = ['legendary' => 4, 'epic' => 3, 'rare' => 2, 'common' => 1];
+
+    /**
+     * Страница инвентаря по курсору: вкладка (all, equipped или тип),
+     * поиск и сортировка — на сервере, клиент рисует по 24 предмета.
+     *
+     * Инвентарь собирается из купленного и (у админа) всей бесплатной
+     * косметики, поэтому порядок считаем в PHP, а курсор — позиция в
+     * этом стабильном порядке (надетое первым, затем по сортировке, id).
+     *
+     * @return array{items: array, next_cursor: ?string, counts: array, equipped: array}
+     */
+    public static function inventoryPage(User $user, string $tab, string $query, string $sort, ?string $cursor, int $limit): array
+    {
+        $all = self::inventory($user);
+
+        $counts = ['all' => $all->count(), 'equipped' => $all->where('equipped', true)->count()]
+            + $all->countBy('type')->all();
+
+        $needle = mb_strtolower(trim($query));
+
+        $list = $all
+            ->filter(fn (array $item) => match ($tab) {
+                'all' => true,
+                'equipped' => $item['equipped'],
+                default => $item['type'] === $tab,
+            })
+            ->filter(fn (array $item) => $needle === '' || str_contains(
+                mb_strtolower(($item['name'] ?? '') . ' ' . ($item['description'] ?? '')),
+                $needle,
+            ))
+            ->sort(function (array $a, array $b) use ($sort) {
+                // Надетое всегда первым — его ищут чаще всего
+                if ($a['equipped'] !== $b['equipped']) {
+                    return $a['equipped'] ? -1 : 1;
+                }
+
+                $byName = strcmp(mb_strtolower($a['name']), mb_strtolower($b['name']));
+
+                $order = match ($sort) {
+                    'new' => strcmp((string) $b['acquired_at'], (string) $a['acquired_at']),
+                    'name' => $byName,
+                    default => (self::RARITY_RANK[$b['rarity']] ?? 0) <=> (self::RARITY_RANK[$a['rarity']] ?? 0) ?: $byName,
+                };
+
+                return $order ?: ($a['shop_item_id'] <=> $b['shop_item_id']);
+            })
+            ->values();
+
+        $offset = self::decodeCursor($cursor)[0] ?? 0;
+        $page = $list->slice($offset, $limit)->values();
+        $next = $offset + $limit;
+
+        return [
+            'items' => $page->all(),
+            'next_cursor' => $next < $list->count() ? self::encodeCursor([$next]) : null,
+            'total' => $list->count(),
+            'counts' => $counts,
+            // Для «Сейчас надето»: надетое и сколько предметов в каждом слоте
+            'equipped' => $all->where('equipped', true)->values()->all(),
+        ];
+    }
+
     public static function inventory(User $user): Collection
     {
         $rows = UserInventory::with('item')

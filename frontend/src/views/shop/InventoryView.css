@@ -1954,3 +1954,31 @@
   font-size: 12px;
   font-weight: 800;
 }
+
+/* Маячок догрузки следующей страницы */
+.inventory-more {
+  min-height: 48px;
+  padding: 16px 0;
+
+  color: var(--text-muted, #8a8598);
+  font-size: 13px;
+  text-align: center;
+}
+
+.inventory-more__btn {
+  padding: 9px 18px;
+
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+
+  font: inherit;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.inventory-more__btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}

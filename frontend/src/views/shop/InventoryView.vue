@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { shopApi } from '@/services/shop/shop.js'
+import { useCursorList } from '@/composables/core/useCursorList.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import AppIcon from '@/components/core/AppIcon.vue'
 import ShopItemPreview from '@/components/shop/ShopItemPreview.vue'
@@ -18,7 +19,6 @@ const error = ref('')
 const notice = ref('')
 const busyId = ref(null)
 
-const items = ref([])
 const maxBadges = ref(3)
 const priorityCharges = ref(0)
 const priorityCandidates = ref([])
@@ -37,7 +37,6 @@ const TYPE_ORDER = [
   'card_theme', 'accent_color', 'card_background', 'badge', 'tier_priority',
 ]
 
-const RARITY_RANK = { legendary: 4, epic: 3, rare: 2, common: 1 }
 
 const search = ref('')
 const activeTab = ref('all')
@@ -60,49 +59,59 @@ watch(sortBy, (value) => {
   }
 })
 
-const tabs = computed(() => {
-  const counts = {}
-  for (const item of items.value) counts[item.type] = (counts[item.type] || 0) + 1
+/*
+ * Инвентарь по курсору: вкладка, поиск и сортировка на сервере, клиент
+ * рисует по 24 предмета и догружает при прокрутке — сотни анимированных
+ * превью разом тормозили страницу. С первой страницей приходят счётчики
+ * вкладок и всё надетое (для «Сейчас надето»).
+ */
+const counts = ref({})
+const equippedItems = ref([])
 
-  const types = Object.keys(counts).sort((a, b) => {
-    const ia = TYPE_ORDER.indexOf(a)
-    const ib = TYPE_ORDER.indexOf(b)
-    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib)
-  })
+const list = useCursorList(
+    ({ cursor }) => shopApi.inventoryPage({
+      tab: activeTab.value,
+      q: search.value.trim(),
+      sort: sortBy.value,
+      cursor,
+    }),
+    {
+      onFirstPage(data) {
+        counts.value = data.counts ?? {}
+        equippedItems.value = data.equipped ?? []
+        if (data.bundles) bundles.value = data.bundles
+        if (data.max_equipped_badges) maxBadges.value = data.max_equipped_badges
+        priorityCharges.value = data.priority_charges ?? priorityCharges.value
+        priorityCandidates.value = data.priority_candidates ?? priorityCandidates.value
+      },
+    },
+)
+
+const visibleItems = list.items
+
+const tabs = computed(() => {
+  const types = Object.keys(counts.value)
+      .filter((key) => !['all', 'equipped'].includes(key))
+      .sort((a, b) => {
+        const ia = TYPE_ORDER.indexOf(a)
+        const ib = TYPE_ORDER.indexOf(b)
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib)
+      })
 
   return [
-    { key: 'all', label: 'Все', count: items.value.length },
-    { key: 'equipped', label: 'Надето', count: items.value.filter((i) => i.equipped).length },
-    ...types.map((type) => ({ key: type, label: TYPE_LABELS[type] || type, count: counts[type] })),
+    { key: 'all', label: 'Все', count: counts.value.all ?? 0 },
+    { key: 'equipped', label: 'Надето', count: counts.value.equipped ?? 0 },
+    ...types.map((type) => ({ key: type, label: TYPE_LABELS[type] || type, count: counts.value[type] })),
   ]
 })
 
-const visibleItems = computed(() => {
-  const query = search.value.trim().toLowerCase()
+// Вкладка и сортировка — сразу, поиск — после паузы в наборе
+watch([activeTab, sortBy], () => list.reload())
 
-  let list = items.value.filter((item) => {
-    if (activeTab.value === 'equipped' && !item.equipped) return false
-    if (!['all', 'equipped'].includes(activeTab.value) && item.type !== activeTab.value) return false
-    if (!query) return true
-
-    return [item.name, item.description, TYPE_LABELS[item.type]]
-        .filter(Boolean)
-        .some((text) => text.toLowerCase().includes(query))
-  })
-
-  const byName = (a, b) => a.name.localeCompare(b.name, 'ru')
-
-  list = [...list].sort((a, b) => {
-    // Надетое всегда первым — его ищут чаще всего
-    if (a.equipped !== b.equipped) return a.equipped ? -1 : 1
-
-    if (sortBy.value === 'new') return new Date(b.acquired_at || 0) - new Date(a.acquired_at || 0)
-    if (sortBy.value === 'name') return byName(a, b)
-
-    return (RARITY_RANK[b.rarity] || 0) - (RARITY_RANK[a.rarity] || 0) || byName(a, b)
-  })
-
-  return list
+let searchTimer = null
+watch(search, () => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => list.reload(), 300)
 })
 
 /* ---------- «Сейчас надето»: слоты образа ---------- */
@@ -126,43 +135,33 @@ const SLOTS = [
 const loadout = computed(() =>
     SLOTS.map((slot) => ({
       ...slot,
-      item: items.value.find((i) => i.type === slot.type && i.equipped) ?? null,
-      owned: items.value.filter((i) => i.type === slot.type).length,
+      item: equippedItems.value.find((i) => i.type === slot.type) ?? null,
+      owned: counts.value[slot.type] ?? 0,
     })).filter((slot) => slot.owned > 0),
 )
 
-const equippedBadges = computed(() => items.value.filter((i) => i.type === 'badge' && i.equipped))
+const equippedBadges = computed(() => equippedItems.value.filter((i) => i.type === 'badge'))
 
 function openTab(key) {
   activeTab.value = key
   search.value = ''
 }
 
-const equippedCount = computed(() =>
-    items.value.filter((item) => item.equipped).length,
-)
+const equippedCount = computed(() => counts.value.equipped ?? 0)
 
-const hasPriorityItems = computed(() =>
-    items.value.some((item) => item.type === 'tier_priority'),
-)
+const hasPriorityItems = computed(() => (counts.value.tier_priority ?? 0) > 0)
+
+// Всего предметов (для шапки и пустого состояния)
+const totalOwned = computed(() => counts.value.all ?? 0)
 
 async function load() {
   loading.value = true
   error.value = ''
 
-  try {
-    const data = await shopApi.inventory()
+  await list.reload()
+  if (list.error.value) error.value = list.error.value || 'Не удалось загрузить инвентарь.'
 
-    items.value = data.items ?? []
-    bundles.value = data.bundles ?? []
-    maxBadges.value = data.max_equipped_badges ?? 3
-    priorityCharges.value = data.priority_charges ?? 0
-    priorityCandidates.value = data.priority_candidates ?? []
-  } catch (e) {
-    error.value = e.message || 'Не удалось загрузить инвентарь.'
-  } finally {
-    loading.value = false
-  }
+  loading.value = false
 }
 
 function openApply(item) {
@@ -222,9 +221,9 @@ async function equipBundle(bundle) {
   try {
     const result = await shopApi.equipBundle(bundle.id)
 
-    items.value = result.items ?? items.value
     bundles.value = result.bundles ?? bundles.value
     notice.value = result.message
+    await list.reload()
 
     await auth.fetchMe()
   } catch (e) {
@@ -244,8 +243,9 @@ async function toggleEquip(item) {
         ? await shopApi.unequip(item.id)
         : await shopApi.equip(item.id)
 
-    items.value = result.inventory ?? []
     notice.value = result.message
+    // Надетое могло смениться в любом слоте — перечитываем первую страницу
+    await list.reload()
 
     await auth.fetchMe()
   } catch (e) {
@@ -375,7 +375,7 @@ onMounted(() => {
           </span>
 
           <strong class="inventory-stat__value">
-            {{ items.length }}
+            {{ totalOwned }}
           </strong>
 
           <span class="inventory-stat__hint">
@@ -451,7 +451,7 @@ onMounted(() => {
     ====================================================== -->
 
     <section
-        v-else-if="!items.length"
+        v-else-if="!totalOwned"
         class="inventory-empty"
     >
       <div class="inventory-empty__visual">
@@ -515,7 +515,7 @@ onMounted(() => {
           </button>
 
           <button
-              v-if="items.some((i) => i.type === 'badge')"
+              v-if="(counts.badge ?? 0) > 0"
               type="button"
               class="loadout__slot"
               :class="{ 'is-empty': !equippedBadges.length, 'is-active': activeTab === 'badge' }"
@@ -602,7 +602,7 @@ onMounted(() => {
         </div>
       </section>
 
-      <p v-if="!visibleItems.length" class="inventory-nothing">
+      <p v-if="!visibleItems.length && !list.loading.value" class="inventory-nothing">
         Ничего не нашлось<template v-if="search.trim()"> по «{{ search.trim() }}»</template>.
       </p>
 
@@ -723,6 +723,16 @@ onMounted(() => {
               <AppIcon icon="check" :size="12" />
             </div>
           </article>
+      </div>
+
+      <!-- Маячок догрузки следующей страницы -->
+      <div
+          v-if="!list.done.value"
+          :ref="(el) => (list.sentinel.value = el)"
+          class="inventory-more"
+      >
+        <template v-if="list.loadingMore.value">Загружаем ещё…</template>
+        <button v-else type="button" class="inventory-more__btn" @click="list.loadMore()">Показать ещё</button>
       </div>
     </template>
     <!-- =====================================================

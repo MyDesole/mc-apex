@@ -1,5 +1,6 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useCursorList } from '@/composables/core/useCursorList.js'
 import { useRoute } from 'vue-router'
 import { shopApi } from '@/services/shop/shop.js'
 import { walletApi } from '@/services/wallet/wallet.js'
@@ -22,7 +23,6 @@ const loading = ref(true)
 const error = ref('')
 const notice = ref('')
 
-const items = ref([])
 const balance = ref(0)
 const tierRewards = ref({})
 const dailyBonusAvailable = ref(false)
@@ -51,9 +51,12 @@ const TABS = [
   { value: 'clan_highlight_style', label: 'Оформление подсветки' },
 ]
 
+// Сколько предметов в каждой вкладке — приходит с первой страницей
+const typeCounts = ref({})
+
 /** Вкладки только с товарами: пустые категории не показываем. */
 const visibleTabs = computed(() =>
-    TABS.filter((tab) => tab.value === 'all' || items.value.some((item) => item.type === tab.value))
+    TABS.filter((tab) => tab.value === 'all' || typeCounts.value[tab.value] > 0)
 )
 
 /**
@@ -67,15 +70,33 @@ const activeType = ref(
 )
 
 // Наборы показываем отдельной витриной над каталогом
-const bundles = computed(() => items.value.filter((item) => item.type === 'bundle'))
+const bundles = ref([])
 
-const filtered = computed(() => {
-  const list = items.value.filter((item) => item.type !== 'bundle')
+/*
+ * Каталог по курсору: сотни предметов с анимированными превью тормозили
+ * страницу, если рисовать их разом. Грузим по 24 и догружаем при
+ * прокрутке; вкладка фильтрует на сервере.
+ */
+const catalog = useCursorList(
+    ({ cursor }) => shopApi.catalogPage({
+      type: activeType.value === 'all' ? null : activeType.value,
+      cursor,
+    }),
+    {
+      onFirstPage(data) {
+        if (data.type_counts) typeCounts.value = data.type_counts
+        if (data.bundles) bundles.value = data.bundles
+        if (data.tier_rewards) tierRewards.value = data.tier_rewards
+        clan.value = data.clan ?? null
+        if (data.balance !== null && data.balance !== undefined) balance.value = data.balance
+      },
+    },
+)
 
-  if (activeType.value === 'all') return list
+const items = catalog.items
+const filtered = catalog.items
 
-  return list.filter((item) => item.type === activeType.value)
-})
+watch(activeType, () => catalog.reload())
 
 // === Покупка ===
 const purchaseItem = ref(null)
@@ -141,12 +162,9 @@ async function load() {
   error.value = ''
 
   try {
-    const data = await shopApi.catalog()
-
-    items.value = data.items ?? []
-    balance.value = data.balance ?? auth.user?.apex_coins ?? 0
-    tierRewards.value = data.tier_rewards ?? {}
-    clan.value = data.clan ?? null
+    balance.value = auth.user?.apex_coins ?? 0
+    await catalog.reload()
+    if (catalog.error.value) throw new Error(catalog.error.value)
 
     if (auth.isAuthenticated) {
       const wallet = await walletApi.summary()
@@ -429,7 +447,7 @@ onMounted(load)
       </nav>
     </div>
 
-    <div v-if="loading" class="state">Загружаем каталог…</div>
+    <div v-if="loading || catalog.loading.value" class="state">Загружаем каталог…</div>
 
     <div v-else-if="!filtered.length" class="state">
       В этой категории пока нет предметов.
@@ -477,6 +495,12 @@ onMounted(load)
           </button>
         </div>
       </article>
+    </div>
+
+    <!-- Маячок догрузки: дошли до него — грузим следующую страницу -->
+    <div v-if="!loading && !catalog.done.value" :ref="(el) => (catalog.sentinel.value = el)" class="state state--more">
+      <template v-if="catalog.loadingMore.value">Загружаем ещё…</template>
+      <button v-else type="button" class="btn btn-secondary" @click="catalog.loadMore()">Показать ещё</button>
     </div>
 
     <!-- ===================== Покупка ===================== -->

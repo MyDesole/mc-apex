@@ -6,6 +6,18 @@ export const shopApi = {
         return api.get('/shop')
     },
 
+    /** Страница витрины по курсору: { items, next_cursor, …шапка на первой }. */
+    catalogPage({ type = null, cursor = null, limit = 24 } = {}) {
+        return api.get('/shop', { params: { limit, type: type || undefined, cursor: cursor || undefined } })
+    },
+
+    /** Страница инвентаря: вкладка, поиск и сортировка на сервере. */
+    inventoryPage({ tab = 'all', q = '', sort = 'rarity', cursor = null, limit = 24 } = {}) {
+        return api.get('/shop/inventory', {
+            params: { limit, tab, q: q || undefined, sort, cursor: cursor || undefined },
+        })
+    },
+
     item(id) {
         return api.get(`/shop/${id}`)
     },

@@ -30,6 +30,36 @@ class ShopController extends Controller
         $user = $request->user();
         $leaderClan = $user ? ShopService::leaderClan($user) : null;
 
+        // Постранично (?limit=): витрина догружает предметы по курсору
+        if ($request->filled('limit')) {
+            $data = $request->validate([
+                'limit' => ['integer', 'min:1', 'max:60'],
+                'type' => ['nullable', 'string', 'max:40'],
+                'cursor' => ['nullable', 'string', 'max:200'],
+            ]);
+
+            $page = ShopService::catalogPage($user, $data['type'] ?? null, $data['cursor'] ?? null, (int) $data['limit']);
+
+            // Шапку витрины (наборы, вкладки, баланс) отдаём только с первой страницей
+            if (! empty($data['cursor'])) {
+                return response()->json($page);
+            }
+
+            return response()->json([
+                ...$page,
+                'type_counts' => ShopService::catalogTypeCounts($user),
+                'bundles' => ShopService::catalog($user)->where('type', ShopItem::TYPE_BUNDLE)->values(),
+                'balance' => $user ? (int) $user->apex_coins : null,
+                'clan' => $leaderClan ? [
+                    'id' => $leaderClan->id,
+                    'tag' => $leaderClan->tag,
+                    'treasury' => (int) $leaderClan->treasury,
+                ] : null,
+                'tier_rewards' => RewardService::tierTable(),
+                'currency' => config('apex.currency'),
+            ]);
+        }
+
         return response()->json([
             'items' => ShopService::catalog($user),
             'balance' => $user ? (int) $user->apex_coins : null,
@@ -50,6 +80,39 @@ class ShopController extends Controller
     public function inventory(Request $request): JsonResponse
     {
         $user = $request->user();
+
+        // Постранично (?limit=): вкладка, поиск и сортировка на сервере
+        if ($request->filled('limit')) {
+            $data = $request->validate([
+                'limit' => ['integer', 'min:1', 'max:60'],
+                'tab' => ['nullable', 'string', 'max:40'],
+                'q' => ['nullable', 'string', 'max:64'],
+                'sort' => ['nullable', 'in:rarity,new,name'],
+                'cursor' => ['nullable', 'string', 'max:200'],
+            ]);
+
+            $page = ShopService::inventoryPage(
+                $user,
+                $data['tab'] ?? 'all',
+                $data['q'] ?? '',
+                $data['sort'] ?? 'rarity',
+                $data['cursor'] ?? null,
+                (int) $data['limit'],
+            );
+
+            if (! empty($data['cursor'])) {
+                return response()->json(['items' => $page['items'], 'next_cursor' => $page['next_cursor']]);
+            }
+
+            return response()->json([
+                ...$page,
+                'equipped_badges' => ShopService::equippedBadges($user),
+                'priority_charges' => ShopService::priorityCharges($user),
+                'priority_candidates' => ShopService::priorityCandidates($user),
+                'max_equipped_badges' => (int) config('apex.shop.max_equipped_badges', 3),
+                'bundles' => BundleService::forInventory($user),
+            ]);
+        }
 
         return response()->json([
             'items' => ShopService::inventory($user),

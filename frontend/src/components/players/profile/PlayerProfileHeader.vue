@@ -506,7 +506,16 @@ const coverStyle = computed(() => {
          ===================================================== -->
 
     <!-- Питомец живёт в полной шапке, в компактной ему тесно -->
-    <ProfilePet v-if="!compact && user.profile_pet" :pet="user.profile_pet" />
+    <!-- Питомец: гуляет по шапке, по клику — карточка с действиями -->
+    <ProfilePet
+        v-if="user.profile_pet"
+        :key="`pet-${user.id}-${user.profile_pet}`"
+        :pet="user.profile_pet"
+        :owner="user"
+        :editable="editable"
+        :size="compact ? 30 : 38"
+        interactive
+    />
 
     <!-- Эффекты-слои (снег, искры, сияние…) — свой компонент с частицами -->
     <ProfileEffectLayer
