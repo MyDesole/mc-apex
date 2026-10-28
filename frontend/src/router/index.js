@@ -70,6 +70,7 @@ const router = createRouter({
     { path: '/shop', name: 'shop', component: ShopView, meta: { title: 'Магазин' } },
     { path: '/inventory', name: 'inventory', component: InventoryView, meta: { title: 'Инвентарь', auth: true } },
     { path: '/cases', name: 'cases', component: CasesView, meta: { title: 'Кейсы' } },
+    { path: '/miner', name: 'miner', component: () => import('@/views/games/MinerView.vue'), meta: { title: 'Шахтёр', auth: true } },
     { path: '/auction', name: 'auction', component: () => import('@/views/shop/AuctionView.vue'), meta: { title: 'Аукцион питомцев' } },
     { path: '/wallet', name: 'wallet', component: () => import('@/views/shop/WalletView.vue'), meta: { title: 'Кошелёк', auth: true } },
     { path: '/forum', name: 'forum', component: ForumView, meta: { title: 'Форум' } },

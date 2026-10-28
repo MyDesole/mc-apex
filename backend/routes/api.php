@@ -388,6 +388,12 @@ Route::middleware('auth:sanctum')->group(function () {
     | МАГАЗИН: ПОКУПКА И НАДЕВАНИЕ — apex:shop-buy
     |----------------------------------------------------------------------
     */
+    // Мини-игра «Шахтёр»
+    Route::get('/games/miner', [\App\Domains\Games\Controllers\MinerController::class, 'show']);
+    Route::post('/games/miner/start', [\App\Domains\Games\Controllers\MinerController::class, 'start'])->middleware('throttle:20,1');
+    Route::post('/games/miner/dig', [\App\Domains\Games\Controllers\MinerController::class, 'dig'])->middleware('throttle:120,1');
+    Route::post('/games/miner/cash-out', [\App\Domains\Games\Controllers\MinerController::class, 'cashOut'])->middleware('throttle:20,1');
+
     Route::prefix('shop')->group(function () {
         Route::post('/{shopItem}/purchase', [ShopController::class, 'purchase'])->whereNumber('shopItem')->middleware('feature:shop');
         Route::post('/cases/{slug}/open', [\App\Domains\Shop\Controllers\Api\LootCaseController::class, 'open'])

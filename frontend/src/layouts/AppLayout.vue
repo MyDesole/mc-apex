@@ -573,6 +573,13 @@ watch(mobileMenuOpen, (open) => {
                     <span>Аукцион питомцев</span>
                   </RouterLink>
 
+                  <RouterLink to="/miner" class="dropdown-item" @click="menuOpen = false">
+                    <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14.5 3.5c3 0 5.5 1.5 6 3-2-.5-4-.5-6 .5M14.5 3.5c0 3-1.5 5.5-3 6 .5-2 .5-4-.5-6M14 10L4 20" />
+                    </svg>
+                    <span>Шахтёр</span>
+                  </RouterLink>
+
                   <RouterLink to="/support" class="dropdown-item" @click="menuOpen = false">
                     <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                       <circle cx="12" cy="12" r="9" />
