@@ -35,7 +35,7 @@ const acc = computed(() => {
       :class="[{ 'pf--flip': flip }, trick ? `pf-trick--${trick}` : null]"
       :style="{ width: `${width}px`, height: `${size}px` }"
   >
-    <span v-if="aura" class="pf__aura" :style="{ background: aura }"></span>
+    <span v-if="aura" class="pf__aura" :style="{ background: aura, width: `${size * 1.5}px`, height: `${size * 1.5}px` }"></span>
     <span class="pf__body">
       <span class="pf__skin" :style="petModelStyle(traits)"><PixelSprite :sprite="sprite" :size="size" /></span>
       <span v-if="acc" class="pf__acc" :style="{ left: `${acc.left}px`, top: `${acc.top}px` }">
@@ -52,10 +52,13 @@ const acc = computed(() => {
   flex-shrink: 0;
 }
 
+/* Круг по центру питомца, а не растянутый по ширине спрайта овал */
 .pf__aura {
   position: absolute;
-  inset: -45%;
+  top: 50%;
+  left: 50%;
   z-index: 0;
+  transform: translate(-50%, -50%);
   border-radius: 50%;
   opacity: 0.85;
   pointer-events: none;

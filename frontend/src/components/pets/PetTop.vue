@@ -42,7 +42,7 @@ onMounted(load)
     <ol v-else class="pt-list">
       <li v-for="(p, i) in pets" :key="p.inventory_id" class="pt-row" :class="`is-place-${i + 1}`" :style="{ '--rar': PET_RARITY[p.traits?.rarity]?.color }">
         <span class="pt-row__place">{{ i + 1 }}</span>
-        <PetFigure :species="p.species" :traits="p.traits" :size="38" />
+        <span class="pt-row__pet"><PetFigure :species="p.species" :traits="p.traits" :size="34" /></span>
         <span class="pt-row__name">
           <strong>{{ p.name }} <em v-if="p.traits?.serial">#{{ p.traits.serial }}</em></strong>
           <small>
@@ -99,7 +99,7 @@ onMounted(load)
 
 .pt-row {
   display: grid;
-  grid-template-columns: 32px auto minmax(0, 1fr) auto;
+  grid-template-columns: 32px 60px minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
 
@@ -113,6 +113,21 @@ onMounted(load)
 .pt-row.is-place-1 { border-color: rgba(250, 204, 21, 0.55); }
 .pt-row.is-place-2 { border-color: rgba(203, 213, 225, 0.45); }
 .pt-row.is-place-3 { border-color: rgba(217, 119, 6, 0.45); }
+
+/* Слот одной ширины: имена в ровную колонку, сияние фона не вылезает */
+.pt-row__pet {
+  width: 60px;
+  height: 48px;
+
+  display: grid;
+  place-items: center;
+
+  overflow: hidden;
+
+  background: color-mix(in srgb, var(--rar, #a8a3b8) 10%, rgba(0, 0, 0, 0.25));
+  border: 1px solid color-mix(in srgb, var(--rar, #a8a3b8) 25%, transparent);
+  border-radius: 10px;
+}
 
 .pt-row__place { color: #6f6a80; font-family: var(--font-display); font-size: 16px; font-weight: 900; text-align: center; }
 .is-place-1 .pt-row__place { color: #facc15; }
