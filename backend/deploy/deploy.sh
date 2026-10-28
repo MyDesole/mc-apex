@@ -62,6 +62,8 @@ npm run build
 # Карта сайта кладётся в свежую сборку (dist пересоздаётся при каждой сборке)
 cd "$APP_DIR/backend"
 php artisan sitemap:generate || true
+# Планировщик (www-data) обновляет карту раз в сутки — файл должен быть его
+chown "$WEB_USER":"$WEB_USER" "$APP_DIR/frontend/dist/sitemap.xml" 2>/dev/null || true
 
 log "Права"
 chown -R "$WEB_USER":"$WEB_USER" "$APP_DIR/backend/storage" "$APP_DIR/backend/bootstrap/cache"
