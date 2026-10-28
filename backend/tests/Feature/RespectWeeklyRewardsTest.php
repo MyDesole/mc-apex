@@ -56,6 +56,42 @@ class RespectWeeklyRewardsTest extends TestCase
         $this->assertSame(1, $first->notifications()->count());
     }
 
+    public function test_pet_case_always_gives_a_minted_pet(): void
+    {
+        foreach (['cat', 'fox', 'dragon'] as $i => $pet) {
+            \App\Domains\Shop\Models\ShopItem::create([
+                'slug' => "pet-{$pet}", 'name' => "Питомец {$pet}", 'type' => 'profile_pet',
+                'effect_value' => $pet, 'price' => 500, 'is_active' => true,
+                'rarity' => ['common', 'rare', 'legendary'][$i],
+            ]);
+        }
+        // И обычная косметика — в сундук питомцев она попадать не должна
+        \App\Domains\Shop\Models\ShopItem::create(['slug' => 'frame-x', 'name' => 'Рамка', 'type' => 'avatar_frame', 'effect_value' => 'gold', 'price' => 10, 'is_active' => true, 'rarity' => 'common']);
+
+        $user = User::factory()->create(['apex_coins' => 5000]);
+
+        for ($i = 0; $i < 4; $i++) {
+            $this->actingAs($user)->postJson('/api/shop/cases/pets/open')
+                ->assertOk()
+                ->assertJsonPath('prize.item.type', 'profile_pet');
+        }
+
+        $pets = \App\Domains\Shop\Models\UserInventory::where('user_id', $user->id)->get();
+        $this->assertCount(4, $pets);
+        $this->assertTrue($pets->every(fn ($row) => $row->pet_traits && $row->pet_serial));
+        $this->assertSame(5000 - 4 * 750, (int) $user->fresh()->apex_coins);
+    }
+
+    public function test_trait_luck_makes_rare_traits_more_likely(): void
+    {
+        $count = fn (float $luck) => collect(range(1, 3000))
+            ->filter(fn () => \App\Domains\Players\Support\PetTraits::roll(null, $luck)['model'] !== 'classic')
+            ->count();
+
+        // С удачей «не классический» окрас выпадает заметно чаще
+        $this->assertGreaterThan($count(1.0) + 300, $count(1.8));
+    }
+
     public function test_case_key_opens_paid_case_for_free(): void
     {
         $user = User::factory()->create(['apex_coins' => 0]);

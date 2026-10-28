@@ -17,7 +17,7 @@ class PetTraits
     /** Черта => вариант => [название, вес]. Веса в долях процента. */
     public const TRAITS = [
         'model' => [
-            'classic' => ['Классический', 3900],
+            'classic' => ['Классический', 3000],
             'shadow' => ['Теневой', 1200],
             'ash' => ['Пепельный', 1100],
             'mint' => ['Мятный', 900],
@@ -29,9 +29,17 @@ class PetTraits
             'rainbow' => ['Радужный', 100],
             'void' => ['Пустотный', 50],
             'galaxy' => ['Галактический', 50],
+            'cherry' => ['Вишнёвый', 600],
+            'lime' => ['Лаймовый', 600],
+            'pastel' => ['Пастельный', 500],
+            'frost' => ['Морозный', 350],
+            'obsidian' => ['Обсидиановый', 300],
+            'toxic' => ['Токсичный', 250],
+            'lava' => ['Лавовый', 120],
+            'holo' => ['Голографический', 40],
         ],
         'backdrop' => [
-            'none' => ['Без фона', 4500],
+            'none' => ['Без фона', 3500],
             'sky' => ['Небо', 1500],
             'sunset' => ['Закат', 1200],
             'forest' => ['Лес', 1000],
@@ -40,9 +48,15 @@ class PetTraits
             'aurora' => ['Сияние', 350],
             'cosmos' => ['Космос', 200],
             'prism' => ['Призма', 50],
+            'ocean' => ['Океан', 700],
+            'sakura' => ['Сакура', 600],
+            'candy' => ['Конфета', 500],
+            'night' => ['Ночь', 400],
+            'matrix' => ['Матрица', 200],
+            'lava' => ['Лава', 150],
         ],
         'accessory' => [
-            'none' => ['Без аксессуара', 5000],
+            'none' => ['Без аксессуара', 4000],
             'cap' => ['Кепка', 1200],
             'bow' => ['Бантик', 1000],
             'flower' => ['Цветок', 700],
@@ -53,14 +67,22 @@ class PetTraits
             'halo' => ['Нимб', 150],
             'horns' => ['Рожки', 80],
             'wizard' => ['Колпак мага', 20],
+            'headphones' => ['Наушники', 500],
+            'party' => ['Праздничный колпак', 400],
+            'leaf' => ['Росток', 400],
+            'pirate' => ['Пиратская повязка', 200],
+            'monocle' => ['Монокль', 150],
         ],
     ];
 
     /**
      * Случайные черты. Если передан seed — результат всегда один и тот же
      * (для питомца без записи в инвентаре, например у админа).
+     *
+     * luck > 1 выравнивает веса (вес ^ 1/luck): редкие черты выпадают
+     * заметно чаще — так работает «Сундук питомцев».
      */
-    public static function roll(?int $seed = null): array
+    public static function roll(?int $seed = null, float $luck = 1.0): array
     {
         if ($seed !== null) {
             mt_srand($seed);
@@ -69,10 +91,13 @@ class PetTraits
         $traits = [];
 
         foreach (self::TRAITS as $trait => $variants) {
-            $total = array_sum(array_column($variants, 1));
-            $pick = mt_rand(1, $total);
+            $weights = array_map(
+                fn ($variant) => max(1, (int) round($variant[1] ** (1 / max(1.0, $luck)) * 100)),
+                $variants,
+            );
+            $pick = mt_rand(1, array_sum($weights));
 
-            foreach ($variants as $id => [, $weight]) {
+            foreach ($weights as $id => $weight) {
                 $pick -= $weight;
 
                 if ($pick <= 0) {

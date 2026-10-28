@@ -30,7 +30,7 @@ class UserInventory extends Model
     protected static function booted(): void
     {
         static::creating(function (UserInventory $row) {
-            if ($row->pet_traits) {
+            if ($row->pet_traits && $row->pet_serial) {
                 return;
             }
 
@@ -40,7 +40,8 @@ class UserInventory extends Model
                 return;
             }
 
-            $row->pet_traits = PetTraits::roll();
+            // Черты могли выкатить заранее (сундук питомцев — с удачей)
+            $row->pet_traits ??= PetTraits::roll();
             $row->pet_serial = (int) static::where('shop_item_id', $row->shop_item_id)->max('pet_serial') + 1;
         });
     }

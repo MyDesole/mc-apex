@@ -17,6 +17,14 @@ export const PET_MODELS = {
     rainbow: { filter: 'saturate(2)', animated: 'pet-rainbow' },
     void: { filter: 'invert(1) hue-rotate(180deg) drop-shadow(0 0 6px rgba(168, 85, 247, 0.9))' },
     galaxy: { filter: 'hue-rotate(250deg) saturate(2) drop-shadow(0 0 6px rgba(236, 72, 153, 0.9))', animated: 'pet-galaxy' },
+    cherry: { filter: 'hue-rotate(320deg) saturate(1.8) brightness(0.95)' },
+    lime: { filter: 'hue-rotate(60deg) saturate(1.8) brightness(1.1)' },
+    pastel: { filter: 'saturate(0.55) brightness(1.3) contrast(0.9)' },
+    frost: { filter: 'hue-rotate(170deg) saturate(0.7) brightness(1.4) drop-shadow(0 0 4px rgba(186, 230, 253, 0.9))' },
+    obsidian: { filter: 'grayscale(1) brightness(0.4) contrast(1.6) drop-shadow(0 0 4px rgba(168, 85, 247, 0.7))' },
+    toxic: { filter: 'hue-rotate(75deg) saturate(3) brightness(1.15) drop-shadow(0 0 5px rgba(132, 204, 22, 0.9))' },
+    lava: { filter: 'sepia(1) saturate(5) hue-rotate(-30deg)', animated: 'pet-lava' },
+    holo: { filter: 'saturate(1.6) brightness(1.3)', animated: 'pet-holo', opacity: 0.92 },
 }
 
 /** Фон: сияние позади питомца (в шапке — мягкое, в карточке — во всю плашку). */
@@ -30,21 +38,192 @@ export const PET_BACKDROPS = {
     aurora: 'conic-gradient(from 0deg, rgba(34, 197, 94, 0.55), rgba(6, 182, 212, 0.55), rgba(139, 92, 246, 0.55), rgba(34, 197, 94, 0.55))',
     cosmos: 'radial-gradient(circle, rgba(255, 255, 255, 0.35) 0 2%, transparent 3%) 0 0 / 14px 14px, radial-gradient(circle, rgba(99, 102, 241, 0.6), rgba(15, 23, 42, 0.3) 65%, transparent 72%)',
     prism: 'conic-gradient(from 0deg, #f87171, #fbbf24, #4ade80, #22d3ee, #818cf8, #e879f9, #f87171)',
+    ocean: 'radial-gradient(circle, rgba(34, 211, 238, 0.55), rgba(14, 116, 144, 0.25) 60%, transparent 72%)',
+    sakura: 'radial-gradient(circle, rgba(251, 207, 232, 0.65), rgba(244, 114, 182, 0.25) 60%, transparent 72%)',
+    candy: 'conic-gradient(from 45deg, rgba(244, 114, 182, 0.6), rgba(253, 224, 71, 0.6), rgba(125, 211, 252, 0.6), rgba(244, 114, 182, 0.6))',
+    night: 'radial-gradient(circle, rgba(255, 255, 255, 0.5) 0 2%, transparent 3%) 0 0 / 10px 10px, radial-gradient(circle, rgba(30, 27, 75, 0.85), rgba(15, 23, 42, 0.4) 65%, transparent 72%)',
+    matrix: 'repeating-linear-gradient(90deg, rgba(34, 197, 94, 0.55) 0 2px, transparent 2px 6px), radial-gradient(circle, rgba(21, 128, 61, 0.5), transparent 70%)',
+    lava: 'radial-gradient(circle, rgba(253, 224, 71, 0.6), rgba(239, 68, 68, 0.45) 45%, rgba(127, 29, 29, 0.2) 65%, transparent 72%)',
 }
 
-/** Аксессуар: значок поверх головы; dy — насколько выше макушки. */
+/**
+ * Аксессуар: пиксельная картинка (PetAccessory) на питомце.
+ * dy — высота низа аксессуара от низа спрайта, w — ширина, в долях
+ * размера питомца.
+ */
 export const PET_ACCESSORIES = {
     none: null,
-    cap: { icon: '🧢', dy: 0.72 },
-    bow: { icon: '🎀', dy: 0.7 },
-    flower: { icon: '🌸', dy: 0.72 },
-    glasses: { icon: '🕶️', dy: 0.38 },
-    tophat: { icon: '🎩', dy: 0.8 },
-    scarf: { icon: '🧣', dy: 0.05 },
-    crown: { icon: '👑', dy: 0.78 },
-    halo: { icon: '😇', dy: 0.95, halo: true },
-    horns: { icon: '😈', dy: 0.8, horns: true },
-    wizard: { icon: '🧙', dy: 0.85 },
+    cap: { dy: 0.74, w: 0.62 },
+    bow: { dy: 0.74, w: 0.5 },
+    flower: { dy: 0.74, w: 0.36 },
+    glasses: { dy: 0.42, w: 0.66 },
+    tophat: { dy: 0.78, w: 0.52 },
+    scarf: { dy: 0.1, w: 0.74 },
+    crown: { dy: 0.78, w: 0.56 },
+    halo: { dy: 0.98, w: 0.6 },
+    horns: { dy: 0.8, w: 0.84 },
+    wizard: { dy: 0.78, w: 0.58 },
+    headphones: { dy: 0.36, w: 0.98 },
+    party: { dy: 0.8, w: 0.4 },
+    monocle: { dy: 0.4, w: 0.26 },
+    leaf: { dy: 0.86, w: 0.3 },
+    pirate: { dy: 0.44, w: 0.72 },
+}
+
+/** Пиксель-арт аксессуаров: строки одной длины, «.» — пусто. */
+export const PET_ACCESSORY_ART = {
+    cap: {
+        palette: { R: '#ef4444', D: '#991b1b', W: '#ffffff' },
+        map: [
+            '...RRRR....',
+            '..RRRRRR...',
+            '.RRRWWRRR..',
+            '.RRRRRRRR..',
+            '.DDDDDDDDDD',
+        ],
+    },
+    bow: {
+        palette: { P: '#f472b6', K: '#be185d', L: '#fbcfe8' },
+        map: [
+            'PP.....PP',
+            'PLP.K.PLP',
+            'PPPKKKPPP',
+            'PPP.K.PPP',
+            'PP.....PP',
+        ],
+    },
+    flower: {
+        palette: { P: '#f9a8d4', Y: '#facc15', G: '#22c55e' },
+        map: [
+            '..P.P..',
+            '.PPYPP.',
+            'PPYYYPP',
+            '.PPYPP.',
+            '..PGP..',
+            '...G...',
+        ],
+    },
+    glasses: {
+        palette: { B: '#111827', L: '#60a5fa' },
+        map: [
+            'BBBBB..BBBBB',
+            'BLLBBBBBLLBB',
+            '.BBB....BBB.',
+        ],
+    },
+    tophat: {
+        palette: { B: '#1f2937', H: '#374151', R: '#dc2626' },
+        map: [
+            '..BBBB..',
+            '..BHBB..',
+            '..BHBB..',
+            '..RRRR..',
+            '..BBBB..',
+            'BBBBBBBB',
+        ],
+    },
+    scarf: {
+        palette: { R: '#ef4444', W: '#fecaca', D: '#b91c1c' },
+        map: [
+            'RRWRRWRRWRR',
+            'RRWRRWRRWRR',
+            '.......RWR.',
+            '.......DRD.',
+        ],
+    },
+    crown: {
+        palette: { Y: '#facc15', O: '#ca8a04', R: '#ef4444', B: '#3b82f6' },
+        map: [
+            'Y...Y...Y',
+            'YY.YYY.YY',
+            'YYYYYYYYY',
+            'YRYYBYYRY',
+            'OOOOOOOOO',
+        ],
+    },
+    halo: {
+        palette: { Y: '#fde68a' },
+        glow: true,
+        map: [
+            '.YYYYYYYY.',
+            'YY......YY',
+            '.YYYYYYYY.',
+        ],
+    },
+    horns: {
+        palette: { R: '#dc2626', D: '#7f1d1d' },
+        map: [
+            'R..........R',
+            'RR........RR',
+            'DRR......RRD',
+            '.DR......RD.',
+        ],
+    },
+    wizard: {
+        palette: { P: '#7c3aed', L: '#a78bfa', Y: '#fde047', D: '#4c1d95' },
+        map: [
+            '.....P...',
+            '....PP...',
+            '...PPL...',
+            '...PYPP..',
+            '..PPPLP..',
+            '..PLPPYP.',
+            '.PPPPPPP.',
+            'DDDDDDDDD',
+        ],
+    },
+    headphones: {
+        palette: { B: '#374151', R: '#ef4444', D: '#1f2937' },
+        map: [
+            '...BBBBBB...',
+            '..B......B..',
+            '.B........B.',
+            'RR........RR',
+            'RD........DR',
+            'RR........RR',
+        ],
+    },
+    party: {
+        palette: { C: '#22d3ee', M: '#f472b6', Y: '#fde047' },
+        map: [
+            '...Y...',
+            '...C...',
+            '..CMC..',
+            '..MCM..',
+            '.CMCMC.',
+            'CMCMCMC',
+        ],
+    },
+    monocle: {
+        palette: { Y: '#facc15', G: '#bfdbfe' },
+        map: [
+            '.YYY.',
+            'YGGGY',
+            'YGGGY',
+            '.YYY.',
+            '...Y.',
+            '...Y.',
+        ],
+    },
+    leaf: {
+        palette: { G: '#4ade80', D: '#15803d' },
+        map: [
+            'G...G',
+            'GG.GG',
+            '.GDG.',
+            '..D..',
+            '..D..',
+        ],
+    },
+    pirate: {
+        palette: { B: '#111827' },
+        map: [
+            'BBBBBBBBBBBB',
+            '......BBB...',
+            '......BBB...',
+            '.......B....',
+        ],
+    },
 }
 
 /** Общая редкость экземпляра — подпись и цвет. */

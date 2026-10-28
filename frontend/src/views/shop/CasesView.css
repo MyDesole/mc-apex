@@ -1116,3 +1116,20 @@
   font-style: normal;
   font-weight: 800;
 }
+
+/* Сундук питомцев — изумрудный */
+.chest-card--emerald { --tone: #34d399; }
+.opener--emerald { --tone: #34d399; }
+
+.chest--emerald {
+  --wood: #10b981;
+  --wood-dark: #047857;
+  --trim: #064e3b;
+  --lock: #d1fae5;
+}
+
+.open-button--emerald {
+  color: #022c22;
+  background: linear-gradient(135deg, #6ee7b7, #10b981);
+  box-shadow: 0 12px 28px rgba(16, 185, 129, 0.35), inset 0 -4px 0 rgba(0, 0, 0, 0.18);
+}

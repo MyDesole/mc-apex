@@ -18,6 +18,7 @@ import PixelSprite from '@/components/shop/PixelSprite.vue'
 import { api } from '@/services/core/api.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import { PET_RARITY, chanceLabel, petAccessory, petBackdrop, petModelStyle } from '@/data/players/petTraits.js'
+import PetAccessory from '@/components/players/PetAccessory.vue'
 
 const props = defineProps({
   pet: { type: String, default: null },
@@ -470,9 +471,8 @@ onUnmounted(() => {
         <span
             v-if="accessory"
             class="pet__acc"
-            :class="{ 'pet__acc--halo': accessory.halo }"
-            :style="{ bottom: `${accessory.dy * grownSize}px`, fontSize: `${Math.round(grownSize * 0.42)}px` }"
-        >{{ accessory.halo ? '' : accessory.icon }}</span>
+            :style="{ bottom: `${accessory.dy * grownSize}px` }"
+        ><PetAccessory :id="traits.accessory.id" :width="Math.round(accessory.w * grownSize)" /></span>
       </span>
       <span class="pet__shadow"></span>
 
@@ -496,7 +496,7 @@ onUnmounted(() => {
           <header class="pet-panel__head">
             <span class="pet-panel__avatar" :style="aura ? { background: aura } : null">
               <span :style="skinStyle"><PixelSprite :sprite="data.sprite" :size="36" /></span>
-              <span v-if="accessory && !accessory.halo" class="pet-panel__acc">{{ accessory.icon }}</span>
+              <span v-if="accessory" class="pet-panel__acc" :style="{ bottom: `${4 + accessory.dy * 36}px` }"><PetAccessory :id="traits.accessory.id" :width="Math.round(accessory.w * 36)" /></span>
             </span>
             <div class="pet-panel__title">
               <div v-if="!renaming" class="pet-panel__name-row">
@@ -647,15 +647,6 @@ onUnmounted(() => {
 
   transform: translateX(-50%);
   pointer-events: none;
-}
-
-.pet__acc--halo {
-  width: 60%;
-  height: 14%;
-
-  border: 2px solid #fde047;
-  border-radius: 50%;
-  box-shadow: 0 0 6px #fde047;
 }
 
 .pet:hover .pet__body {
@@ -961,6 +952,17 @@ onUnmounted(() => {
   to { filter: saturate(2) hue-rotate(360deg) drop-shadow(0 0 4px rgba(255, 255, 255, 0.6)); }
 }
 
+@keyframes pet-lava {
+  0%, 100% { filter: sepia(1) saturate(5) hue-rotate(-30deg) brightness(1) drop-shadow(0 0 4px rgba(249, 115, 22, 0.9)); }
+  50% { filter: sepia(1) saturate(6) hue-rotate(-15deg) brightness(1.25) drop-shadow(0 0 9px rgba(239, 68, 68, 0.95)); }
+}
+
+@keyframes pet-holo {
+  0% { filter: saturate(1.6) brightness(1.3) hue-rotate(0deg) drop-shadow(0 0 5px rgba(165, 243, 252, 0.9)); }
+  50% { filter: saturate(1.6) brightness(1.4) hue-rotate(180deg) drop-shadow(0 0 7px rgba(244, 114, 182, 0.9)); }
+  100% { filter: saturate(1.6) brightness(1.3) hue-rotate(360deg) drop-shadow(0 0 5px rgba(165, 243, 252, 0.9)); }
+}
+
 @keyframes pet-galaxy {
   0%, 100% { filter: hue-rotate(230deg) saturate(2) drop-shadow(0 0 5px rgba(236, 72, 153, 0.9)); }
   50% { filter: hue-rotate(290deg) saturate(2.4) drop-shadow(0 0 8px rgba(99, 102, 241, 0.9)); }
@@ -972,13 +974,12 @@ onUnmounted(() => {
 
 .pet-panel__acc {
   position: absolute;
-  top: -6px;
   left: 50%;
 
-  font-size: 16px;
-  line-height: 1;
+  line-height: 0;
 
   transform: translateX(-50%);
+  pointer-events: none;
 }
 
 .pet-panel__serial {

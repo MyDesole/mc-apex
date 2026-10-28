@@ -50,6 +50,18 @@ final class LootCases
             'coins' => [800, 2000],
             'chances' => ['nothing' => 0, 'coins' => 10, 'common' => 0, 'rare' => 40, 'epic' => 35, 'legendary' => 15],
         ],
+        // Только питомцы: всегда питомец, черты с удачей (редкие чаще)
+        'pets' => [
+            'name' => 'Сундук питомцев',
+            'description' => 'Всегда питомец. Редкие окрасы, фоны и аксессуары выпадают в разы чаще, чем в других сундуках.',
+            'price' => 750,
+            'free_daily' => false,
+            'theme' => 'emerald',
+            'coins' => [0, 0],
+            'chances' => ['nothing' => 0, 'coins' => 0, 'common' => 45, 'rare' => 33, 'epic' => 17, 'legendary' => 5],
+            'pool' => ['profile_pet'],
+            'trait_luck' => 1.8,
+        ],
     ];
 
     public static function all(): array

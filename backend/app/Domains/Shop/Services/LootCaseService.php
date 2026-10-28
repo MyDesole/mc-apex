@@ -50,8 +50,6 @@ class LootCaseService
     /** Витрина: кейсы, шансы, состояние бесплатного и гарантии. */
     public function catalog(?User $user): array
     {
-        $pool = $this->pool();
-
         return [
             'balance' => $user ? (int) $user->apex_coins : 0,
             'cases' => collect(LootCases::all())->map(fn (array $case) => [
@@ -73,11 +71,11 @@ class LootCaseService
                 // Витрина содержимого: по нескольку предметов каждой редкости
                 'preview' => collect(LootCases::RARITIES)
                     ->filter(fn ($rarity) => ($case['chances'][$rarity] ?? 0) > 0)
-                    ->flatMap(fn ($rarity) => $pool->where('rarity', $rarity)->shuffle()->take(4))
+                    ->flatMap(fn ($rarity) => $this->pool($case)->where('rarity', $rarity)->shuffle()->take(4))
                     ->map(fn (ShopItem $item) => $this->presentItem($item))
                     ->values(),
             ])->values(),
-            'pool_size' => $pool->count(),
+            'pool_size' => $this->pool()->count(),
             'history' => $user ? $this->history($user) : [],
         ];
     }
@@ -111,7 +109,13 @@ class LootCaseService
             $pity = true;
         }
 
-        $item = LootCases::isItemOutcome($outcome) ? $this->pickItem($outcome) : null;
+        $item = LootCases::isItemOutcome($outcome) ? $this->pickItem($outcome, $case) : null;
+
+        // Свой набор (сундук питомцев): нет такой редкости — любой из набора
+        if (! $item && LootCases::isItemOutcome($outcome) && isset($case['pool'])) {
+            $item = $this->pool($case)->shuffle()->first();
+            $outcome = $item?->rarity ?? $outcome;
+        }
 
         // Предметов такой редкости нет — отдаём монетами, а не пустотой
         if (LootCases::isItemOutcome($outcome) && ! $item) {
@@ -143,6 +147,10 @@ class LootCaseService
                     $coins = max(5, (int) round($item->price * LootCases::DUPLICATE_SHARE));
                 } else {
                     $inventory = $owned ?? new UserInventory(['user_id' => $user->id, 'shop_item_id' => $item->id]);
+                    // Сундук питомцев: черты с удачей, редкие чаще
+                    if ($isPet && isset($case['trait_luck'])) {
+                        $inventory->pet_traits = PetTraits::roll(null, $case['trait_luck']);
+                    }
                     $inventory->quantity = (int) ($inventory->quantity ?? 0) + 1;
                     $inventory->acquired_at = $inventory->acquired_at ?? now();
                     $inventory->save();
@@ -283,16 +291,19 @@ class LootCaseService
         return array_key_last($chances);
     }
 
-    private function pickItem(string $rarity): ?ShopItem
+    private function pickItem(string $rarity, ?array $case = null): ?ShopItem
     {
-        return $this->pool()->where('rarity', $rarity)->shuffle()->first();
+        return $this->pool($case)->where('rarity', $rarity)->shuffle()->first();
     }
 
-    private function pool(): Collection
+    /** Что может выпасть: общий набор косметики или свой у кейса (pool). */
+    private function pool(?array $case = null): Collection
     {
-        return $this->pool ??= ShopItem::active()
+        $all = $this->pool ??= ShopItem::active()
             ->whereIn('type', self::POOL_TYPES)
             ->get();
+
+        return isset($case['pool']) ? $all->whereIn('type', $case['pool'])->values() : $all;
     }
 
     /**
@@ -311,7 +322,7 @@ class LootCaseService
             }
 
             $outcome = $this->roll($case['chances']);
-            $item = LootCases::isItemOutcome($outcome) ? $this->pickItem($outcome) : null;
+            $item = LootCases::isItemOutcome($outcome) ? ($this->pickItem($outcome, $case) ?? (isset($case['pool']) ? $this->pool($case)->shuffle()->first() : null)) : null;
 
             $reel[] = [
                 'outcome' => $item ? $outcome : ($outcome === LootCases::NOTHING ? LootCases::NOTHING : LootCases::COINS),
