@@ -2386,3 +2386,7 @@ body .profile-layout.ph-progress-case--lower .tier-progress, body .profile-layou
   .studio-draft { padding: 6px 6px 6px 12px; font-size: 12px; }
   .studio-draft > span { flex: 1; min-width: 0; }
 }
+/* Мобильная студия — на весь экран, страница под ней не прокручивается */
+body.pb-mstudio {
+  overflow: hidden;
+}

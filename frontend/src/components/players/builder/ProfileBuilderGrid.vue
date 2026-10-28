@@ -20,6 +20,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import ProfileCustomBlock from '@/components/players/builder/ProfileCustomBlock.vue'
 import ProfileBlockSettings from '@/components/players/builder/ProfileBlockSettings.vue'
 import ProfileStudioPanel from '@/components/players/builder/ProfileStudioPanel.vue'
+import ProfileStudioMobile from '@/components/players/builder/ProfileStudioMobile.vue'
 import StudioIcon from '@/components/players/builder/StudioIcon.vue'
 import { useTryOn } from '@/composables/players/useTryOn.js'
 import {
@@ -210,6 +211,7 @@ function syncBody() {
   body.classList.toggle('pb-studio--inspector', on && !!activeBlock.value)
   body.classList.toggle('pb-studio--phone', on && device.value === 'phone')
   body.classList.toggle('pb-studio--guest', on && guestView.value)
+  body.classList.toggle('pb-mstudio', on && isPhone.value && !guestView.value)
   body.classList.toggle('pb-studio--header', on && studioTab.value === 'header' && !guestView.value)
 }
 
@@ -553,6 +555,8 @@ const masonry = computed(() => currentPage.value.flow !== 'rows')
 let resizeObserver = null
 let queued = false
 const phone = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(max-width: 760px)') : null
+// На телефоне студия упрощённая (ProfileStudioMobile)
+const isPhone = ref(!!phone?.matches)
 
 function packBlocks() {
   queued = false
@@ -594,9 +598,14 @@ function observeBlocks() {
   schedulePack()
 }
 
+function onPhoneChange() {
+  isPhone.value = !!phone?.matches
+}
+
 onMounted(() => {
   if (typeof ResizeObserver !== 'undefined') resizeObserver = new ResizeObserver(schedulePack)
   phone?.addEventListener?.('change', schedulePack)
+  phone?.addEventListener?.('change', onPhoneChange)
   window.addEventListener('keydown', onKey)
   document.addEventListener('click', onCanvasClick, true)
   observeBlocks()
@@ -605,10 +614,11 @@ onMounted(() => {
 onUnmounted(() => {
   resizeObserver?.disconnect()
   phone?.removeEventListener?.('change', schedulePack)
+  phone?.removeEventListener?.('change', onPhoneChange)
   window.removeEventListener('keydown', onKey)
   document.removeEventListener('click', onCanvasClick, true)
   restoreTryOn()
-  document.body.classList.remove('pb-studio', 'pb-studio--panel', 'pb-studio--inspector', 'pb-studio--phone', 'pb-studio--guest', 'pb-studio--header')
+  document.body.classList.remove('pb-studio', 'pb-studio--panel', 'pb-studio--inspector', 'pb-studio--phone', 'pb-studio--guest', 'pb-studio--header', 'pb-mstudio')
 })
 
 // Блоки добавили, убрали, переставили или сменили укладку
@@ -619,7 +629,7 @@ watch(
 
 // Студия закрывает сайт целиком; ширина холста зависит от открытых панелей
 watch(
-    () => [props.editing, studioTab.value, !!openSettings.value, device.value, guestView.value],
+    () => [props.editing, studioTab.value, !!openSettings.value, device.value, guestView.value, isPhone.value],
     () => {
       syncBody()
       // Холст поменял ширину — блоки перекладываем, когда панели доедут
@@ -788,9 +798,31 @@ function blockStyle(block, i) {
       </div>
     </div>
 
+    <!-- Телефон: своя упрощённая студия вместо панелей -->
+    <Teleport to="body">
+      <ProfileStudioMobile
+          v-if="editing && isPhone && !guestView"
+          :blocks="draft"
+          :page="pageDraft"
+          :saving="saving"
+          :dirty="dirty"
+          @add="add"
+          @move="move"
+          @remove="remove"
+          @preset="applyPreset"
+          @publish="publish"
+          @cancel="cancel"
+          @profile="restoreTryOn(); emit('profile')"
+          @preview="guestView = true"
+      />
+      <button v-if="editing && isPhone && guestView" type="button" class="studio-guest-back" @click="guestView = false">
+        <StudioIcon name="back" :size="16" /> Вернуться в студию
+      </button>
+    </Teleport>
+
     <!-- Каркас студии поверх сайта -->
     <Teleport to="body">
-      <div v-if="editing" class="studio">
+      <div v-if="editing && !isPhone" class="studio">
         <!-- Верхняя полоса -->
         <header class="studio-top">
           <button type="button" class="studio-top__back" title="Выйти без сохранения" @click="cancel">

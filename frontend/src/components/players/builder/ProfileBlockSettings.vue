@@ -12,6 +12,8 @@ import { BLOCK_TYPES, COLORS, STICKER_SPRITES, STYLE_OPTIONS, TONES } from '@/da
 
 const props = defineProps({
   block: { type: Object, required: true },
+  // Мобильная студия: только содержимое, без вкладки оформления
+  simple: { type: Boolean, default: false },
 })
 
 const LIMITS = { facts: 10, bars: 8, timeline: 10 }
@@ -102,7 +104,11 @@ function setDate(value) {
 
 <template>
   <div class="pb-settings">
-    <div v-if="hasContent" class="pb-settings__tabs">
+    <p v-if="simple && !hasContent" class="pb-settings__hint">
+      Этот блок заполняется сам. Оформление — в студии на компьютере.
+    </p>
+
+    <div v-if="hasContent && !simple" class="pb-settings__tabs">
       <button type="button" :class="{ 'is-on': tab === 'content' }" @click="tab = 'content'">Содержимое</button>
       <button type="button" :class="{ 'is-on': tab === 'look' }" @click="tab = 'look'">Оформление</button>
     </div>
@@ -384,7 +390,7 @@ function setDate(value) {
     </template>
 
     <!-- ================= Оформление ================= -->
-    <template v-else>
+    <template v-else-if="!simple">
       <section class="studio-group">
         <h4>Стиль в один клик</h4>
         <div class="studio-tiles studio-tiles--4">
