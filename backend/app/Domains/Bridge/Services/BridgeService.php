@@ -166,7 +166,7 @@ class BridgeService
         $submission->loadMissing('technique', 'user');
 
         User::query()
-            ->whereIn('role', ['bridge_tester', 'admin'])
+            ->whereIn('role', User::BRIDGE_TESTER_ROLES)
             ->get()
             ->each(fn (User $reviewer) => $reviewer->notify(
                 new BridgeSubmissionNotification($submission)

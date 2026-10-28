@@ -101,7 +101,7 @@ const MOBILE_ACCOUNT = [
 /** Служебные разделы: показываем только ролям с доступом. */
 const STAFF_LINKS = [
   { to: '/tester', label: 'Панель тестера', roles: ['tester', 'admin'], icon: 'M20 6 9 17l-5-5' },
-  { to: '/bridge-review', label: 'Проверка бриджа', roles: ['bridge_tester', 'admin'], icon: 'M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11' },
+  { to: '/bridge-review', label: 'Проверка бриджа', roles: ['bridge_tester', 'bridge_curator', 'admin'], icon: 'M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11' },
   { to: '/bridge-curator', label: 'Виды бриджа', roles: ['bridge_curator', 'admin'], icon: 'M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z' },
   { to: '/admin', label: 'Админка', roles: ['moderator', 'admin'], icon: 'M12 2 3 6v6c0 5 3.8 9.3 9 10 5.2-.7 9-5 9-10V6l-9-4Z' },
 ]

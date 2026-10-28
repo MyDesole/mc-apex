@@ -225,7 +225,7 @@ async function open(notification) {
 
     // Заявка на вид бриджа: ведём в раздел проверки
     else if (type === 'bridge_submission') {
-      if (['bridge_tester', 'admin'].includes(auth.user?.role)) {
+      if (['bridge_tester', 'bridge_curator', 'admin'].includes(auth.user?.role)) {
         await router.push('/bridge-review')
       } else {
         await router.push('/profile')
