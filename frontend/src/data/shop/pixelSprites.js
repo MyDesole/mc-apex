@@ -266,6 +266,58 @@ export const PIXEL_SPRITES = {
             '.oo..oo.',
         ],
     },
+    // Для меню питомца: еда, мячик, настроение
+    meat: {
+        palette: { r: '#dc2626', R: '#991b1b', p: '#fca5a5', b: '#f5f5f4', B: '#d6d3d1' },
+        rows: [
+            '..rrrr..',
+            '.rppRrr.',
+            'rrpRrrr.',
+            'rrrrrRr.',
+            '.rRrrr..',
+            '..rrbB..',
+            '....bbB.',
+            '.....BB.',
+        ],
+    },
+    ball: {
+        palette: { y: '#d9f99d', g: '#84cc16', w: '#f7fee7', k: '#4d7c0f' },
+        rows: [
+            '..gggg..',
+            '.gyyyyg.',
+            'gwyyyyyg',
+            'gywwyyyg',
+            'gyyywwyg',
+            'gyyyyywg',
+            '.gyyyyg.',
+            '..gggg..',
+        ],
+    },
+    smile: {
+        palette: { y: '#fde047', o: '#ca8a04', k: '#422006' },
+        rows: [
+            '..oooo..',
+            '.oyyyyo.',
+            'oykyykyo',
+            'oyyyyyyo',
+            'oykyykyo',
+            'oyykkyyo',
+            '.oyyyyo.',
+            '..oooo..',
+        ],
+    },
+    sparkle: {
+        palette: { y: '#fde047', w: '#fefce8' },
+        rows: [
+            '...y...',
+            '...y...',
+            '..ywy..',
+            'yywwwyy',
+            '..ywy..',
+            '...y...',
+            '...y...',
+        ],
+    },
     flame: {
         palette: { y: '#fde047', o: '#f97316', r: '#dc2626', w: '#fef9c3' },
         rows: [

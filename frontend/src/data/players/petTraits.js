@@ -103,6 +103,15 @@ export const PET_ACCESSORY_ART = {
             '...G...',
         ],
     },
+    // Вид сбоку (пчела): одна линза и дужка назад
+    glasses_side: {
+        palette: { B: '#111827', L: '#60a5fa' },
+        map: [
+            'BBBBBBB',
+            'BLLBB..',
+            '.BBB...',
+        ],
+    },
     glasses: {
         palette: { B: '#111827', L: '#60a5fa' },
         map: [
@@ -224,6 +233,140 @@ export const PET_ACCESSORY_ART = {
             '.......B....',
         ],
     },
+}
+
+/**
+ * Где у каждого питомца макушка, глаза и шея — в клетках его спрайта
+ * (pixelSprites.js), по центрам клеток. По ним аксессуар встаёт на своё
+ * место: очки — на глаза, шляпа — на макушку, шарф — на шею. Раньше всё
+ * ставилось по общей доле размера, и у пчелы очки висели в воздухе.
+ */
+export const PET_SHAPES = {
+    bee: { top: 2, head: [0, 4], eyes: [1.5], eyeY: 3.5, neck: 6 },
+    axolotl: { top: 1, head: [2, 9], eyes: [3.5, 7.5], eyeY: 3.5, neck: 5.6 },
+    cat: { top: 2, head: [2, 6], eyes: [2, 6], eyeY: 3.5, neck: 6 },
+    dog: { top: 2, head: [1, 7], eyes: [1.5, 6.5], eyeY: 3.5, neck: 5 },
+    fox: { top: 2, head: [1, 7], eyes: [1.5, 6.5], eyeY: 3.5, neck: 5 },
+    slime: { top: 0, head: [1, 7], eyes: [3, 6], eyeY: 3, neck: 6.4 },
+    ghost: { top: 0, head: [1, 7], eyes: [2.5, 5.5], eyeY: 3, neck: 5 },
+    dragon: { top: 2, head: [1, 9], eyes: [3, 8], eyeY: 3.5, neck: 6 },
+    robot: { top: 2, head: [0, 8], eyes: [2, 6], eyeY: 4, neck: 6 },
+    penguin: { top: 0, head: [1, 7], eyes: [2.5, 5.5], eyeY: 2.5, neck: 4 },
+}
+
+/**
+ * Как аксессуар садится: on — к чему крепится, w — ширина в долях головы,
+ * side — на угол головы (бантик, цветок), а не по центру.
+ */
+const ACCESSORY_FIT = {
+    cap: { on: 'top', w: 1.05 },
+    tophat: { on: 'top', w: 1.0 },
+    crown: { on: 'top', w: 1.05 },
+    wizard: { on: 'top', w: 1.05 },
+    party: { on: 'top', w: 0.6 },
+    leaf: { on: 'top', w: 0.45 },
+    horns: { on: 'top', w: 1.3 },
+    bow: { on: 'top', w: 0.7, side: true },
+    flower: { on: 'top', w: 0.55, side: true },
+    halo: { on: 'halo', w: 0.95 },
+    glasses: { on: 'eyes' },
+    monocle: { on: 'eye', w: 1.9 },
+    pirate: { on: 'band', w: 1.15 },
+    headphones: { on: 'ears', w: 1.3 },
+    scarf: { on: 'neck', w: 1.1 },
+}
+
+/**
+ * Где нарисовать аксессуар на питомце: { left, top, width, art } в px от
+ * левого верхнего угла спрайта размером size (высота) — как его рисует
+ * PixelSprite (ширина до 1.4 высоты, картинка по центру).
+ */
+export function accessoryPlacement(sprite, accessoryId, size, spriteRows) {
+    const shape = PET_SHAPES[sprite]
+    const fit = ACCESSORY_FIT[accessoryId]
+    if (!shape || !fit || !spriteRows?.length) return null
+
+    const cols = Math.max(...spriteRows.map((r) => r.length))
+    const rows = spriteRows.length
+    const boxW = Math.round(size * Math.min(1.4, cols / rows))
+    const cell = Math.min(boxW / cols, size / rows)
+    const ox = (boxW - cols * cell) / 2
+    const oy = (size - rows * cell) / 2
+    const px = (x) => ox + x * cell
+    const py = (y) => oy + y * cell
+
+    const headW = shape.head[1] - shape.head[0]
+    const headMid = (shape.head[0] + shape.head[1]) / 2
+    const oneEye = shape.eyes.length === 1
+
+    // Очки на питомце с одним видимым глазом (вид сбоку) — одна линза
+    const art = accessoryId === 'glasses' && oneEye ? 'glasses_side' : accessoryId
+    const map = PET_ACCESSORY_ART[art]?.map
+    if (!map) return null
+    const ratio = map.length / map[0].length
+
+    let widthCells
+    let centerX
+    let topCells
+
+    switch (fit.on) {
+        case 'top':
+            widthCells = headW * fit.w
+            centerX = fit.side ? shape.head[1] - widthCells * 0.45 : headMid
+            // Низ аксессуара чуть заходит на макушку
+            topCells = shape.top + 0.5 - widthCells * ratio
+            break
+        case 'halo':
+            widthCells = headW * fit.w
+            centerX = headMid
+            topCells = shape.top - 0.6 - widthCells * ratio
+            break
+        case 'eyes':
+            if (oneEye) {
+                widthCells = 2.6
+                centerX = shape.eyes[0]
+            } else {
+                // Линзы картинки — на 2.5 и 9.5 из 12: расстояние между ними 7/12 ширины
+                widthCells = (shape.eyes[1] - shape.eyes[0]) / (7 / 12)
+                centerX = (shape.eyes[0] + shape.eyes[1]) / 2
+            }
+            topCells = shape.eyeY - (widthCells * ratio) / 2
+            break
+        case 'eye': {
+            widthCells = fit.w
+            centerX = shape.eyes[shape.eyes.length - 1]
+            // Линза — верхние 4 из 6 строк картинки
+            topCells = shape.eyeY - widthCells * ratio * (2 / 6)
+            break
+        }
+        case 'band':
+            widthCells = headW * fit.w
+            // Повязка: нашивка (7.5 из 12) — на первый глаз
+            centerX = shape.eyes[0] + widthCells * (0.5 - 7.5 / 12)
+            topCells = shape.eyeY - 0.5
+            break
+        case 'ears':
+            widthCells = headW * fit.w
+            centerX = headMid
+            topCells = shape.eyeY - widthCells * ratio * 0.72
+            break
+        case 'neck':
+            widthCells = headW * fit.w
+            centerX = headMid
+            topCells = shape.neck - 0.6
+            break
+        default:
+            return null
+    }
+
+    const width = Math.max(6, Math.round(widthCells * cell))
+
+    return {
+        art,
+        width,
+        left: Math.round(px(centerX) - width / 2),
+        top: Math.round(py(topCells)),
+    }
 }
 
 /** Общая редкость экземпляра — подпись и цвет. */

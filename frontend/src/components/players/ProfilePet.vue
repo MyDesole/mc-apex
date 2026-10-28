@@ -17,8 +17,10 @@ import { profilePet } from '@/data/players/flair.js'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
 import { api } from '@/services/core/api.js'
 import { useAuthStore } from '@/stores/core/auth.js'
-import { PET_RARITY, chanceLabel, petAccessory, petBackdrop, petModelStyle } from '@/data/players/petTraits.js'
+import { PET_RARITY, accessoryPlacement, chanceLabel, petAccessory, petBackdrop, petModelStyle } from '@/data/players/petTraits.js'
+import { PIXEL_SPRITES } from '@/data/shop/pixelSprites.js'
 import PetAccessory from '@/components/players/PetAccessory.vue'
+import AppIcon from '@/components/core/AppIcon.vue'
 
 const props = defineProps({
   pet: { type: String, default: null },
@@ -157,7 +159,7 @@ function onHover() {
   jump()
 
   if (stats.value?.mood === 'hungry' && Math.random() < 0.6) {
-    say('Есть хочу… 🍖')
+    say('Есть хочу…')
     return
   }
 
@@ -185,15 +187,15 @@ const renaming = ref(false)
 const nameDraft = ref('')
 
 const ACTIONS = [
-  { id: 'pet', label: 'Погладить', icon: '❤', xp: 1 },
-  { id: 'feed', label: 'Покормить', icon: '🍖', xp: 2 },
-  { id: 'play', label: 'Поиграть', icon: '🎾', xp: 2 },
+  { id: 'pet', label: 'Погладить', icon: 'heart', xp: 1 },
+  { id: 'feed', label: 'Покормить', icon: 'meat', xp: 2 },
+  { id: 'play', label: 'Поиграть', icon: 'ball', xp: 2 },
 ]
 
 const MOODS = {
-  hungry: { label: 'Голодный', icon: '🍖', text: 'Давно не ел — покорми!' },
-  happy: { label: 'Счастлив', icon: '✨', text: 'С ним недавно играли' },
-  calm: { label: 'Спокоен', icon: '🙂', text: 'Скучает по вниманию' },
+  hungry: { label: 'Голодный', icon: 'meat', text: 'Давно не ел — покорми!' },
+  happy: { label: 'Счастлив', icon: 'sparkle', text: 'С ним недавно играли' },
+  calm: { label: 'Спокоен', icon: 'smile', text: 'Скучает по вниманию' },
 }
 
 const petName = computed(() => stats.value?.name || props.name || data.value?.name || 'Питомец')
@@ -207,6 +209,16 @@ const grownSize = computed(() => Math.round(props.size * (1 + Math.min(20, (stat
 const skinStyle = computed(() => petModelStyle(traits.value))
 const aura = computed(() => petBackdrop(traits.value))
 const accessory = computed(() => petAccessory(traits.value))
+
+// Аксессуар по точкам спрайта: очки на глазах, шляпа на макушке
+function placeAccessory(size) {
+  const id = traits.value?.accessory?.id
+  if (!accessory.value || !id) return null
+  return accessoryPlacement(data.value.sprite, id, size, PIXEL_SPRITES[data.value.sprite]?.rows)
+}
+
+const accPlace = computed(() => placeAccessory(grownSize.value))
+const panelAcc = computed(() => placeAccessory(36))
 const rarity = computed(() => PET_RARITY[traits.value?.rarity] ?? PET_RARITY.common)
 
 const TRAIT_ROWS = [
@@ -315,7 +327,7 @@ async function scenePet() {
   state.value = 'idle'
   jump()
   burstHearts(8)
-  say('Мрр! ❤')
+  say('Мрр!')
   await wait(1400)
 }
 
@@ -333,7 +345,7 @@ async function sceneFeed() {
   food.value = null
   state.value = 'idle'
   burstHearts(4)
-  say('Вкусно! 😋')
+  say('Вкусно!')
   await wait(900)
 }
 
@@ -400,7 +412,7 @@ onMounted(async () => {
   // Голодный время от времени напоминает о себе
   moodTimer = setInterval(() => {
     if (stats.value?.mood === 'hungry' && !busy.value && !speech.value && Math.random() < 0.5) {
-      say(['Есть хочу…', 'Покорми меня 🥺', '*урчит животом*'][Math.floor(Math.random() * 3)])
+      say(['Есть хочу…', 'Покорми меня…', '*урчит животом*'][Math.floor(Math.random() * 3)])
     }
   }, 9000)
 })
@@ -424,7 +436,7 @@ onUnmounted(() => {
         class="pet-food"
         :class="{ 'is-landed': food.landed }"
         :style="{ left: `${food.x}%` }"
-    >🍖</span>
+    ><PixelSprite sprite="meat" :size="14" /></span>
 
     <!-- Мячик -->
     <span
@@ -432,7 +444,7 @@ onUnmounted(() => {
         :key="ball.id"
         class="pet-ball"
         :style="{ left: `${ball.x}%`, bottom: data.fly ? `${100 - ball.y}%` : '8px' }"
-    >🎾</span>
+    ><PixelSprite sprite="ball" :size="12" /></span>
 
     <div
         ref="petEl"
@@ -459,7 +471,7 @@ onUnmounted(() => {
         <i>z</i><i>z</i><i>Z</i>
       </span>
 
-      <span v-for="heart in hearts" :key="heart.id" class="pet__heart" :style="{ '--dx': heart.dx, animationDelay: heart.delay }">❤</span>
+      <span v-for="heart in hearts" :key="heart.id" class="pet__heart" :style="{ '--dx': heart.dx, animationDelay: heart.delay }"><PixelSprite sprite="heart" :size="10" /></span>
 
       <span class="pet__body" :class="{ 'is-left': facingLeft }">
         <!-- Фон экземпляра: сияние позади -->
@@ -469,10 +481,10 @@ onUnmounted(() => {
         </span>
         <!-- Аксессуар поверх головы -->
         <span
-            v-if="accessory"
+            v-if="accPlace"
             class="pet__acc"
-            :style="{ bottom: `${accessory.dy * grownSize}px` }"
-        ><PetAccessory :id="traits.accessory.id" :width="Math.round(accessory.w * grownSize)" /></span>
+            :style="{ left: `${accPlace.left}px`, top: `${accPlace.top}px` }"
+        ><PetAccessory :id="accPlace.art" :width="accPlace.width" /></span>
       </span>
       <span class="pet__shadow"></span>
 
@@ -495,20 +507,22 @@ onUnmounted(() => {
         >
           <header class="pet-panel__head">
             <span class="pet-panel__avatar" :style="aura ? { background: aura } : null">
+              <span class="pet-panel__sprite">
               <span :style="skinStyle"><PixelSprite :sprite="data.sprite" :size="36" /></span>
-              <span v-if="accessory" class="pet-panel__acc" :style="{ bottom: `${4 + accessory.dy * 36}px` }"><PetAccessory :id="traits.accessory.id" :width="Math.round(accessory.w * 36)" /></span>
+              <span v-if="panelAcc" class="pet-panel__acc" :style="{ left: `${panelAcc.left}px`, top: `${panelAcc.top}px` }"><PetAccessory :id="panelAcc.art" :width="panelAcc.width" /></span>
+              </span>
             </span>
             <div class="pet-panel__title">
               <div v-if="!renaming" class="pet-panel__name-row">
                 <strong>{{ petName }}</strong>
                 <em v-if="traits?.serial" class="pet-panel__serial">#{{ traits.serial }}</em>
-                <button v-if="editable" type="button" class="pet-panel__rename" title="Дать имя" @click="startRename">✎</button>
+                <button v-if="editable" type="button" class="pet-panel__rename" title="Дать имя" @click="startRename"><AppIcon icon="doc" :size="13" /></button>
               </div>
               <form v-else class="pet-panel__name-form" @submit.prevent="saveName">
                 <input v-model="nameDraft" maxlength="20" placeholder="Имя питомца" autofocus />
-                <button type="submit">✓</button>
+                <button type="submit" aria-label="Сохранить имя"><AppIcon icon="check" :size="14" /></button>
               </form>
-              <small>{{ mood.icon }} {{ mood.label }} · {{ mood.text }}</small>
+              <small class="pet-panel__mood"><PixelSprite :sprite="mood.icon" :size="12" /> {{ mood.label }} · {{ mood.text }}</small>
             </div>
             <span class="pet-panel__level">ур. {{ stats.level }}</span>
           </header>
@@ -542,7 +556,7 @@ onUnmounted(() => {
                 :disabled="isDone(action.id)"
                 @click="act(action.id)"
             >
-              <span class="pet-action__icon">{{ action.icon }}</span>
+              <span class="pet-action__icon"><PixelSprite :sprite="action.icon" :size="18" /></span>
               <span class="pet-action__label">{{ action.label }}</span>
               <small>{{ isDone(action.id) ? 'завтра снова' : `+${action.xp} опыта` }}</small>
             </button>
@@ -551,7 +565,11 @@ onUnmounted(() => {
           <p v-if="panelError" class="pet-panel__error">{{ panelError }}</p>
 
           <footer class="pet-panel__foot">
-            <span>❤ {{ stats.counts.pet }} · 🍖 {{ stats.counts.feed }} · 🎾 {{ stats.counts.play }}</span>
+            <span class="pet-panel__counts">
+              <PixelSprite sprite="heart" :size="11" /> {{ stats.counts.pet }}
+              <PixelSprite sprite="meat" :size="11" /> {{ stats.counts.feed }}
+              <PixelSprite sprite="ball" :size="11" /> {{ stats.counts.play }}
+            </span>
             <span v-if="stats.friends.length" class="pet-panel__friends">
               Дружит с: {{ stats.friends.map((f) => f.username).join(', ') }}
             </span>
@@ -637,16 +655,19 @@ onUnmounted(() => {
   to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
+/* Место считает accessoryPlacement — от левого верхнего угла спрайта */
 .pet__acc {
   position: absolute;
-  left: 50%;
   z-index: 2;
 
-  line-height: 1;
+  line-height: 0;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
 
-  transform: translateX(-50%);
   pointer-events: none;
+}
+
+.pet__skin {
+  line-height: 0;
 }
 
 .pet:hover .pet__body {
@@ -972,13 +993,18 @@ onUnmounted(() => {
   position: relative;
 }
 
+.pet-panel__sprite {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+}
+
 .pet-panel__acc {
   position: absolute;
-  left: 50%;
+  z-index: 1;
 
   line-height: 0;
 
-  transform: translateX(-50%);
   pointer-events: none;
 }
 
@@ -1294,7 +1320,16 @@ onUnmounted(() => {
 .pet-action--play:hover:not(:disabled) { background: rgba(163, 230, 53, 0.16); border-color: rgba(163, 230, 53, 0.5); }
 
 .pet-action__icon {
-  font-size: 20px;
+  display: grid;
+  place-items: center;
+  height: 22px;
+}
+
+.pet-panel__mood,
+.pet-panel__counts {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .pet-action__label {
