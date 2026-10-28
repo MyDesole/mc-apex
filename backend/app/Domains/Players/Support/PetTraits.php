@@ -175,10 +175,10 @@ class PetTraits
      * черт мифическим стал каждый четвёртый питомец, а обычных — ноль.
      */
     public const RARITY_SHARES = [
-        'mythic' => 0.005,
-        'legendary' => 0.025,
-        'epic' => 0.10,
-        'rare' => 0.27,
+        'mythic' => 0.001,
+        'legendary' => 0.006,
+        'epic' => 0.03,
+        'rare' => 0.20,
         // остальное — common
     ];
 
