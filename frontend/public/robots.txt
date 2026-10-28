@@ -1,0 +1,17 @@
+# APEX TIERS — рейтинг Minecraft PvP
+User-agent: *
+Allow: /
+
+# Личные и служебные страницы — поисковикам не нужны
+Disallow: /admin
+Disallow: /messages
+Disallow: /settings
+Disallow: /inventory
+Disallow: /profile
+Disallow: /miner
+Disallow: /login
+Disallow: /register
+Disallow: /api/
+Disallow: /og/
+
+Sitemap: https://mc-apex.ru/sitemap.xml

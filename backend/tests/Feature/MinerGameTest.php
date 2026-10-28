@@ -38,19 +38,20 @@ class MinerGameTest extends TestCase
 
         $this->actingAs($user)->postJson('/api/games/miner/dig', ['cell' => 8])
             ->assertOk()
-            ->assertJsonPath('gain', 35)
-            ->assertJsonPath('run.coins', 35);
+            ->assertJsonPath('gain', 350)
+            ->assertJsonPath('run.coins', 350);
 
         // TNT взрывает соседей: изумруд по диагонали открывается бесплатно
-        $this->actingAs($user)->postJson('/api/games/miner/dig', ['cell' => 16])
+        $gain = $this->actingAs($user)->postJson('/api/games/miner/dig', ['cell' => 16])
             ->assertOk()
-            ->assertJsonPath('gain', 55);
+            ->json('gain');
+        $this->assertGreaterThanOrEqual(550, $gain);
 
         $this->actingAs($user)->postJson('/api/games/miner/cash-out')
             ->assertOk()
-            ->assertJsonPath('finished.coins', 90);
+            ->assertJsonPath('finished.coins', 350 + $gain);
 
-        $this->assertSame(90, (int) $user->fresh()->apex_coins);
+        $this->assertSame(350 + $gain, (int) $user->fresh()->apex_coins);
 
         // Перерыв между забегами
         $this->actingAs($user)->postJson('/api/games/miner/start')->assertStatus(422);

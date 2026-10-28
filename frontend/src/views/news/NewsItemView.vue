@@ -23,6 +23,9 @@ const typeClasses = {
   announcement: 'badge--announcement',
 }
 
+// Новость из визуального редактора — HTML; старые — обычный текст
+const isHtml = (value) => /<[a-z][\s\S]*>/i.test(value || '')
+
 const formatDate = (date) => {
   return new Date(date).toLocaleDateString('ru-RU', {
     day: '2-digit',
@@ -178,11 +181,18 @@ watch(
         {{ data.news.excerpt }}
       </div>
 
+      <!-- HTML из редактора уже очищен сервером по белому списку -->
       <div
-          v-if="data.news.body"
-          class="news-item__content"
+          v-if="data.news.body && isHtml(data.news.body)"
+          class="news-item__content news-prose"
+          v-html="data.news.body"
+      ></div>
+
+      <div
+          v-else-if="data.news.body"
+          class="news-item__content news-prose"
       >
-        {{ data.news.body }}
+        <p v-for="(paragraph, i) in data.news.body.split(/\n{2,}/)" :key="i" class="news-item__plain">{{ paragraph }}</p>
       </div>
 
       <div
@@ -236,4 +246,9 @@ watch(
 
 <style scoped>
 @import "@/views/news/NewsItemView.css";
+</style>
+
+<style>
+/* Оформление текста новости (v-html) — не scoped, общее с редактором */
+@import "@/assets/newsProse.css";
 </style>

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useTitleBlink } from '@/composables/core/useTitleBlink.js'
+import { applySeo } from '@/utils/seo.js'
 
 import HomeView from '@/views/players/HomeView.vue'
 import LoginView from '@/views/auth/LoginView.vue'
@@ -106,7 +107,10 @@ const { setBaseTitle } = useTitleBlink()
 
 router.afterEach((to) => {
   const title = to.meta?.title
-  setBaseTitle(title ? `${title} · ${APP_NAME}` : APP_NAME)
+  const full = title ? `${title} · ${APP_NAME}` : APP_NAME
+  setBaseTitle(full)
+  // Описание, canonical и og-теги — для поисковиков и превью ссылок
+  applySeo(to, full)
 })
 
 export default router

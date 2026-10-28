@@ -21,5 +21,8 @@ Schedule::call(fn () => app(\App\Domains\Shop\Services\PetAuctionService::class)
     ->name('pet-auctions:close')
     ->withoutOverlapping();
 
+// Карта сайта для поисковиков — свежие новости и кланы
+Schedule::command('sitemap:generate')->dailyAt('04:10');
+
 // Награды тройке самых уважаемых за прошедшую неделю
 Schedule::command('respects:weekly-rewards')->weeklyOn(1, '00:05');

@@ -5,6 +5,7 @@ namespace App\Domains\News\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Domains\Users\Models\User;
+use App\Support\HtmlSanitizer;
 
 class News extends Model
 {
@@ -24,6 +25,17 @@ class News extends Model
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'author_id');
+    }
+
+    /**
+     * Текст из визуального редактора — HTML по белому списку. Старые
+     * новости — обычный текст: его не трогаем, страница покажет абзацами.
+     */
+    public function setBodyAttribute(?string $value): void
+    {
+        $this->attributes['body'] = $value !== null && preg_match('/<[a-z][\s\S]*>/i', $value)
+            ? HtmlSanitizer::clean($value)
+            : $value;
     }
 
     public function getCoverUrlAttribute(): ?string

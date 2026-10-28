@@ -243,8 +243,12 @@
   color: var(--text);
   font-size: 14px;
   line-height: 1.8;
-  white-space: pre-wrap;
   overflow-wrap: break-word;
+}
+
+/* Старые новости — обычный текст: переносы строк сохраняем */
+.news-item__plain {
+  white-space: pre-wrap;
 }
 
 .news-item__empty {

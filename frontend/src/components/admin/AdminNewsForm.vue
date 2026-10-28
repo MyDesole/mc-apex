@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { adminApi } from '@/services/core/admin.js'
+import RichTextEditor from '@/components/core/RichTextEditor.vue'
 
 const props = defineProps({
   news: { type: Object, default: null },
@@ -30,7 +31,8 @@ const error = ref('')
 
 const titleLength = computed(() => form.value.title.length)
 const excerptLength = computed(() => form.value.excerpt.length)
-const bodyLength = computed(() => form.value.body.length)
+// Считаем буквы текста, а не HTML-разметку
+const bodyLength = computed(() => (form.value.body || '').replace(/<[^>]+>/g, '').length)
 
 function onCoverChange(e) {
   const file = e.target.files[0]
@@ -141,11 +143,9 @@ const types = [
             Полный текст
             <span class="counter">{{ bodyLength }} символов</span>
           </label>
-          <textarea
+          <RichTextEditor
               v-model="form.body"
-              rows="8"
-              placeholder="Текст новости... Переносы строк сохранятся"
-              class="body-textarea"
+              placeholder="Текст новости: заголовки, списки, ссылки, кнопки, картинки — панелью сверху"
           />
         </div>
 

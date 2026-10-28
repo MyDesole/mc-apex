@@ -27,16 +27,16 @@ class MinerService
 
     /** Блок => монеты за него. */
     public const VALUES = [
-        'dirt' => 0,
-        'stone' => 0,
-        'coal' => 2,
-        'copper' => 3,
-        'iron' => 5,
-        'redstone' => 6,
-        'lapis' => 8,
-        'gold' => 12,
-        'diamond' => 35,
-        'emerald' => 55,
+        'dirt' => 2,
+        'stone' => 5,
+        'coal' => 20,
+        'copper' => 30,
+        'iron' => 50,
+        'redstone' => 60,
+        'lapis' => 80,
+        'gold' => 120,
+        'diamond' => 350,
+        'emerald' => 550,
         'tnt' => 0,
         'bedrock' => 0,
     ];

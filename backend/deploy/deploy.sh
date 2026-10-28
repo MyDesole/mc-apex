@@ -59,6 +59,10 @@ cd "$APP_DIR/frontend"
 npm ci --no-audit --no-fund
 npm run build
 
+# Карта сайта кладётся в свежую сборку (dist пересоздаётся при каждой сборке)
+cd "$APP_DIR/backend"
+php artisan sitemap:generate || true
+
 log "Права"
 chown -R "$WEB_USER":"$WEB_USER" "$APP_DIR/backend/storage" "$APP_DIR/backend/bootstrap/cache"
 
