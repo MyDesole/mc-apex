@@ -2,6 +2,8 @@
 
 namespace App\Domains\Games\Services;
 
+use App\Domains\Players\Services\PetService;
+use App\Domains\Players\Support\PetPerks;
 use App\Domains\Users\Models\User;
 use App\Domains\Wallet\Models\CoinTransaction;
 use App\Domains\Wallet\Services\CoinService;
@@ -199,11 +201,17 @@ class MinerService
             'updated_at' => now(),
         ]);
 
-        if ($coins > 0) {
-            CoinService::credit($user, $coins, CoinTransaction::SOURCE_OTHER, 'Шахтёр: забег', "miner:{$runId}");
+        // Перк питомца: лучший из гуляющих по профилю добавляет процент
+        $petLevel = max([0, ...array_values(PetService::levels(
+            collect($user->profile_pets ?? [])->pluck('inventory_id')->filter()->all()
+        ))]);
+        $bonus = (int) floor($coins * PetPerks::minerBonus($petLevel));
+
+        if ($coins + $bonus > 0) {
+            CoinService::credit($user, $coins + $bonus, CoinTransaction::SOURCE_OTHER, 'Шахтёр: забег', "miner:{$runId}");
         }
 
-        return ['coins' => $coins, 'balance' => (int) $user->fresh()->apex_coins];
+        return ['coins' => $coins + $bonus, 'pet_bonus' => $bonus, 'balance' => (int) $user->fresh()->apex_coins];
     }
 
     private function active(User $user): ?object

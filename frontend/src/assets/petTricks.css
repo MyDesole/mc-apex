@@ -1,0 +1,79 @@
+/*
+ * Трюки питомцев: открываются уровнем, питомец показывает выбранный
+ * в профиле и на странице «Питомцы». Классы pf-trick--* — на обёртке,
+ * анимация — на теле (.pf__body / .pet__body), чтобы не спорить с ходьбой.
+ */
+
+.pf-trick--spin .pf__body,
+.pet-trick--spin .pet__body { animation: trick-spin 0.9s ease-in-out !important; }
+
+.pf-trick--flip .pf__body,
+.pet-trick--flip .pet__body { animation: trick-flip 0.9s cubic-bezier(0.3, 0, 0.3, 1) !important; }
+
+.pf-trick--dance .pf__body,
+.pet-trick--dance .pet__body { animation: trick-dance 1.4s ease-in-out !important; }
+
+.pf-trick--wave .pf__body,
+.pet-trick--wave .pet__body { animation: trick-wave 1.2s ease-in-out !important; }
+
+.pf-trick--hearts .pf__body,
+.pet-trick--hearts .pet__body { animation: trick-pulse 1.2s ease-in-out !important; filter: drop-shadow(0 0 6px rgba(244, 63, 94, 0.9)); }
+
+.pf-trick--sparkle .pf__body,
+.pet-trick--sparkle .pet__body { animation: trick-hop 1.2s ease-in-out !important; filter: drop-shadow(0 0 8px rgba(253, 224, 71, 0.95)); }
+
+.pf-trick--rainbow .pf__body,
+.pet-trick--rainbow .pet__body { animation: trick-rainbow 1.6s linear !important; }
+
+.pf-trick--firework .pf__body,
+.pet-trick--firework .pet__body { animation: trick-firework 1.6s ease-out !important; }
+
+@keyframes trick-spin {
+  to { rotate: 360deg; }
+}
+
+@keyframes trick-flip {
+  0% { translate: 0 0; rotate: 0deg; }
+  45% { translate: 0 -26px; rotate: -180deg; }
+  80% { translate: 0 -4px; rotate: -360deg; }
+  100% { translate: 0 0; rotate: -360deg; }
+}
+
+@keyframes trick-dance {
+  0%, 100% { rotate: 0deg; translate: 0 0; }
+  20% { rotate: -12deg; translate: -4px -4px; }
+  40% { rotate: 12deg; translate: 4px 0; }
+  60% { rotate: -12deg; translate: -4px -4px; }
+  80% { rotate: 12deg; translate: 4px 0; }
+}
+
+@keyframes trick-wave {
+  0%, 100% { rotate: 0deg; }
+  25%, 75% { rotate: -14deg; }
+  50% { rotate: 14deg; }
+}
+
+@keyframes trick-pulse {
+  0%, 100% { scale: 1; }
+  30% { scale: 1.2; }
+  60% { scale: 0.95; }
+}
+
+@keyframes trick-hop {
+  0%, 100% { translate: 0 0; }
+  25% { translate: 0 -14px; }
+  50% { translate: 0 0; }
+  75% { translate: 0 -8px; }
+}
+
+@keyframes trick-rainbow {
+  from { filter: hue-rotate(0deg) saturate(2) drop-shadow(0 0 6px rgba(255, 255, 255, 0.7)); }
+  to { filter: hue-rotate(360deg) saturate(2) drop-shadow(0 0 6px rgba(255, 255, 255, 0.7)); }
+}
+
+@keyframes trick-firework {
+  0% { translate: 0 0; scale: 1; filter: none; }
+  30% { translate: 0 -30px; scale: 0.9; }
+  45% { scale: 1.35; filter: brightness(1.8) drop-shadow(0 0 14px #fde047) drop-shadow(0 0 22px #f43f5e); }
+  100% { translate: 0 0; scale: 1; filter: none; }
+}

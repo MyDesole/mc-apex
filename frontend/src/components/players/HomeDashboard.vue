@@ -122,7 +122,10 @@ onUnmounted(() => clearInterval(tick))
     <div class="hd__grid">
       <!-- Питомцы -->
       <article class="hd-card hd-card--pets">
-        <h3><PixelSprite sprite="paw" :size="16" /> Питомцы</h3>
+        <h3>
+          <PixelSprite sprite="paw" :size="16" /> Питомцы
+          <RouterLink to="/pets" class="hd-more">Экспедиции и арена</RouterLink>
+        </h3>
 
         <div v-if="data.pets.length" class="hd-pets">
           <RouterLink
@@ -318,6 +321,19 @@ onUnmounted(() => clearInterval(tick))
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+
+.hd-more {
+  margin-left: auto;
+
+  color: #c4b5fd;
+
+  font-size: 11px;
+  letter-spacing: 0;
+  text-decoration: none;
+  text-transform: none;
+}
+
+.hd-more:hover { color: #fff; }
 
 .hd-card__empty { margin: 0; color: #8a8598; font-size: 13px; line-height: 1.5; }
 .hd-card__empty a { color: #c4b5fd; }

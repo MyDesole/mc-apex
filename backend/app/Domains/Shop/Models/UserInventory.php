@@ -44,6 +44,13 @@ class UserInventory extends Model
             $row->pet_traits ??= PetTraits::roll();
             $row->pet_serial = (int) static::where('shop_item_id', $row->shop_item_id)->max('pet_serial') + 1;
         });
+
+        // Питомцедекс: новый владелец видит вид и черты в своей коллекции
+        static::saved(function (UserInventory $row) {
+            if ($row->pet_traits && ($row->wasRecentlyCreated || $row->wasChanged('user_id'))) {
+                \App\Domains\Players\Services\PetHubService::record($row);
+            }
+        });
     }
 
     public function user(): BelongsTo

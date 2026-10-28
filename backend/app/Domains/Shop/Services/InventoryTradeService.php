@@ -159,8 +159,8 @@ class InventoryTradeService
             throw new RuntimeException('Этот предмет нельзя продать или подарить.');
         }
 
-        if (PetAuctionService::onAuction($row->id)) {
-            throw new RuntimeException('Питомец выставлен на аукцион — сначала дождись конца торгов.');
+        if ($busy = \App\Domains\Players\Support\PetLocks::reason($row->id)) {
+            throw new RuntimeException($busy);
         }
     }
 

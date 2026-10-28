@@ -26,3 +26,9 @@ Schedule::command('sitemap:generate')->dailyAt('04:10');
 
 // Награды тройке самых уважаемых за прошедшую неделю
 Schedule::command('respects:weekly-rewards')->weeklyOn(1, '00:05');
+
+// Арена питомцев: призы тройке лучших и мягкий сброс рейтинга — новый сезон
+Schedule::call(fn () => app(\App\Domains\Players\Services\PetArenaService::class)->closeSeason())
+    ->weeklyOn(1, '00:10')
+    ->name('pets:arena-season')
+    ->withoutOverlapping();

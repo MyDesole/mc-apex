@@ -47,7 +47,9 @@ class PetService
             ->groupBy('action')
             ->pluck('total', 'action');
 
-        $xp = 0;
+        // Опыт ухода + опыт из экспедиций и боёв (хранится в строке инвентаря)
+        $row = $pet ? UserInventory::find($pet) : null;
+        $xp = (int) ($row?->pet_xp ?? 0);
         foreach (self::ACTIONS as $action => $points) {
             $xp += (int) ($counts[$action] ?? 0) * $points;
         }
@@ -108,6 +110,10 @@ class PetService
             ],
             'done_today' => $doneToday,
             'friends' => $friends,
+            'rating' => (int) ($row?->pet_rating ?? 1000),
+            'wins' => (int) ($row?->pet_wins ?? 0),
+            'losses' => (int) ($row?->pet_losses ?? 0),
+            'trick' => $row?->pet_trick,
         ];
     }
 
@@ -208,7 +214,24 @@ class PetService
             return [];
         }
 
-        $xp = array_fill_keys($ids, 0);
+        return array_map(fn ($points) => self::levelFor($points), self::xpTotals($ids));
+    }
+
+    /**
+     * Весь опыт питомцев: уход + экспедиции и бои.
+     *
+     * @param  array<int>  $ids
+     * @return array<int, int>  inventory_id => опыт
+     */
+    public static function xpTotals(array $ids): array
+    {
+        $ids = array_values(array_filter(array_map('intval', $ids)));
+        if (! $ids) {
+            return [];
+        }
+
+        $xp = DB::table('user_inventory')->whereIn('id', $ids)->pluck('pet_xp', 'id')->map(fn ($v) => (int) $v)->all()
+            + array_fill_keys($ids, 0);
 
         DB::table('pet_interactions')
             ->whereIn('inventory_id', $ids)
@@ -219,7 +242,13 @@ class PetService
                 $xp[(int) $row->inventory_id] += (int) $row->total * (self::ACTIONS[$row->action] ?? 0);
             });
 
-        return array_map(fn ($points) => self::levelFor($points), $xp);
+        return $xp;
+    }
+
+    /** Публично: уровень по опыту (топ, арена). */
+    public static function levelOf(int $xp): int
+    {
+        return self::levelFor($xp);
     }
 
     /** Опыт на уровень растёт: 0, 5, 15, 30, 50… (5 · n(n−1)/2). */

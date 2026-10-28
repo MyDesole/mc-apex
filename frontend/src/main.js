@@ -18,6 +18,7 @@ import './assets/transitions.css'
 import './assets/backdrops.css'
 import './assets/nameEffects.css'
 import './assets/chatBubbles.css'
+import './assets/petTricks.css'
 import './assets/content-page.css'
 import './echo'
 

@@ -127,6 +127,9 @@ Route::get('/auctions', [\App\Domains\Shop\Controllers\Api\PetAuctionController:
 Route::get('/auctions/{auction}', [\App\Domains\Shop\Controllers\Api\PetAuctionController::class, 'show'])->whereNumber('auction');
 Route::get('/auctions/{auction}/messages', [\App\Domains\Shop\Controllers\Api\PetAuctionController::class, 'messages'])->whereNumber('auction');
 
+// Топ питомцев сервера — открыт и гостям
+Route::get('/pets/top', [\App\Domains\Players\Controllers\Api\PetHubController::class, 'top']);
+
 // Кейсы с косметикой: витрина видна и гостям
 Route::get('/cases', [\App\Domains\Shop\Controllers\Api\LootCaseController::class, 'index']);
 Route::get('/cases/status', [\App\Domains\Shop\Controllers\Api\LootCaseController::class, 'status']);
@@ -389,6 +392,21 @@ Route::middleware('auth:sanctum')->group(function () {
     | МАГАЗИН: ПОКУПКА И НАДЕВАНИЕ — apex:shop-buy
     |----------------------------------------------------------------------
     */
+    // Мои питомцы: экспедиции, арена, трюки, питомцедекс
+    Route::prefix('pets')->controller(\App\Domains\Players\Controllers\Api\PetHubController::class)->group(function () {
+        Route::get('/', 'index');
+        Route::post('/{row}/trick', 'trick')->whereNumber('row')->middleware('throttle:30,1');
+        Route::post('/{row}/expedition', 'expedition')->whereNumber('row')->middleware('throttle:30,1');
+        Route::post('/expeditions/{expedition}/claim', 'claimExpedition')->whereNumber('expedition')->middleware('throttle:30,1');
+        Route::get('/{row}/opponents', 'opponents')->whereNumber('row')->middleware('throttle:30,1');
+        Route::post('/{row}/battle', 'battle')->whereNumber('row')->middleware('throttle:20,1');
+        Route::get('/battles/{battle}', 'showBattle')->whereNumber('battle');
+        Route::post('/battles/{battle}/move', 'move')->whereNumber('battle')->middleware('throttle:120,1');
+        Route::post('/battles/{battle}/forfeit', 'forfeit')->whereNumber('battle')->middleware('throttle:20,1');
+        Route::get('/dex', 'dex');
+        Route::post('/dex/{milestone}/claim', 'claimDex')->middleware('throttle:20,1');
+    });
+
     // Панель игрока на главной: кулдауны и быстрые действия
     Route::get('/home/me', [HomeController::class, 'dashboard']);
 

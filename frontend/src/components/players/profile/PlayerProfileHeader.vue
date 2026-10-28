@@ -573,6 +573,7 @@ const partEmpty = computed(() => {
         :instance-id="pet.inventory_id"
         :traits="pet.traits"
         :name="pet.name"
+        :trick="pet.trick ?? null"
         :lane="i"
         :size="compact ? 30 : 38"
         interactive

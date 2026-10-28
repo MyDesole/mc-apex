@@ -243,6 +243,11 @@ onUnmounted(() => {
             </div>
           </dl>
 
+          <div v-if="lot.arena" class="lp__arena">
+            <span><AppIcon icon="sword" :size="13" /> Рейтинг арены <b>{{ lot.arena.rating }}</b></span>
+            <span>Победы <b>{{ lot.arena.wins }}</b> · поражения <b>{{ lot.arena.losses }}</b></span>
+          </div>
+
           <div class="lp__price">
             <div>
               <span>{{ lot.current_price ? 'Текущая ставка' : 'Стартовая цена' }}</span>
@@ -492,6 +497,25 @@ onUnmounted(() => {
 .lp__traits dt { color: #8a8598; font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
 .lp__traits dd { margin: 2px 0 0; overflow: hidden; color: #fff; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .lp__traits small { color: var(--rar); font-size: 11px; font-weight: 700; }
+
+.lp__arena {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  padding: 8px 12px;
+
+  color: #a8a3b8;
+  background: rgba(244, 63, 94, 0.07);
+  border: 1px solid rgba(244, 63, 94, 0.22);
+  border-radius: 10px;
+
+  font-size: 12.5px;
+}
+
+.lp__arena span { display: inline-flex; align-items: center; gap: 6px; }
+.lp__arena b { color: #fda4af; }
 
 .lp__price {
   display: grid;

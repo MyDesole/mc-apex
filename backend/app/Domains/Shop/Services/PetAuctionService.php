@@ -110,6 +110,10 @@ class PetAuctionService
             throw new RuntimeException('Этот питомец уже на аукционе.');
         }
 
+        if ($busy = \App\Domains\Players\Support\PetLocks::reason($row->id)) {
+            throw new RuntimeException($busy);
+        }
+
         if (self::activeCount($seller->id) >= self::MAX_ACTIVE) {
             throw new RuntimeException('На торгах может быть не больше ' . self::MAX_ACTIVE . ' твоих питомцев — дождись конца торгов или сними лот.');
         }
@@ -467,6 +471,12 @@ class PetAuctionService
                 ],
             ] : null,
             'level' => $level,
+            // Рейтинг арены уходит с питомцем — покупатель видит, насколько он боевой
+            'arena' => $row ? [
+                'rating' => (int) $row->pet_rating,
+                'wins' => (int) $row->pet_wins,
+                'losses' => (int) $row->pet_losses,
+            ] : null,
             'seller' => $seller ? ['id' => $seller->id, 'username' => $seller->username, 'avatar_url' => $seller->avatar_url] : null,
             'leader' => $leader ? ['id' => $leader->id, 'username' => $leader->username, 'avatar_url' => $leader->avatar_url] : null,
             'start_price' => (int) $a->start_price,

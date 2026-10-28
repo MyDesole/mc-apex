@@ -73,6 +73,7 @@ const price = computed(() => Number(props.lot.current_price || props.lot.start_p
         <b>₳ {{ price }}</b>
       </div>
       <div class="lc__meta">
+        <span v-if="lot.arena" title="Рейтинг арены"><AppIcon icon="sword" :size="12" /> {{ lot.arena.rating }}</span>
         <span title="Ставок"><AppIcon icon="coin" :size="12" /> {{ lot.bids_count }}</span>
         <span title="Сообщений в чате"><AppIcon icon="chat" :size="12" /> {{ lot.messages_count ?? 0 }}</span>
       </div>

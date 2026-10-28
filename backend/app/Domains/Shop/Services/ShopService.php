@@ -1086,6 +1086,7 @@ class ShopService
                 'traits' => $r->pet_traits,
                 'serial' => $r->pet_serial,
                 'name' => $r->pet_name,
+                'trick' => $r->pet_trick,
             ])->all(),
             'profile_pet' => $first?->item?->effect_value,
             'pet_traits' => $first?->pet_traits ? $first->pet_traits + ['serial' => $first->pet_serial] : null,

@@ -13,6 +13,7 @@
  * В превью магазина и кейсов — просто гуляет, без сервера.
  */
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { profilePet } from '@/data/players/flair.js'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
 import { api } from '@/services/core/api.js'
@@ -36,7 +37,19 @@ const props = defineProps({
   instanceId: { type: Number, default: null },
   name: { type: String, default: null },
   lane: { type: Number, default: 0 },
+  // Выученный трюк: питомец иногда показывает его сам и при наведении
+  trick: { type: String, default: null },
 })
+
+const trickPlaying = ref(null)
+
+function performTrick() {
+  if (!props.trick) return false
+  trickPlaying.value = null
+  requestAnimationFrame(() => { trickPlaying.value = props.trick })
+  setTimeout(() => { trickPlaying.value = null }, 1700)
+  return true
+}
 
 const auth = useAuthStore()
 const data = computed(() => profilePet(props.pet))
@@ -76,9 +89,17 @@ function wait(ms) {
 
 /** Следующее действие: чаще гуляет, иногда стоит или спит. */
 function nextAction() {
-  if (busy.value) return schedule()
+  // Пока открыто меню, питомец стоит на месте — иначе улетает от карточки
+  if (busy.value || panelOpen.value) return schedule()
 
   const roll = Math.random()
+
+  // Иногда сам показывает выученный трюк
+  if (roll > 0.88 && performTrick()) {
+    state.value = 'idle'
+    schedule(rand(2200, 3200))
+    return
+  }
 
   if (roll < 0.6) {
     walkTo(rand(4, 86))
@@ -155,6 +176,9 @@ function onHover() {
   if (!data.value || busy.value) return
   freeze()
   if (state.value === 'sleep') state.value = 'idle'
+
+  // Гостю — трюк, если питомец его знает
+  if (Math.random() < 0.4 && performTrick()) return
 
   jump()
 
@@ -245,8 +269,15 @@ async function loadStats() {
 }
 
 function placePanel() {
-  const rect = petEl.value?.getBoundingClientRect()
-  if (!rect) return
+  /*
+   * Меряем само тело и бейдж с именем, а не обёртку: у летающего
+   * питомца обёртка тянется до низа шапки, и карточка «снизу»
+   * открывалась далеко под ним.
+   */
+  const body = petEl.value?.querySelector('.pet__body')?.getBoundingClientRect()
+  if (!body) return
+  const tag = petEl.value.querySelector('.pet__tag')?.getBoundingClientRect()
+  const rect = { left: body.left, width: body.width, top: body.top, bottom: Math.max(body.bottom, tag?.bottom ?? 0) }
 
   // Над питомцем не хватает места (компактная шапка, верх экрана) — открываем снизу
   const below = rect.top < 400
@@ -266,6 +297,8 @@ function onPetClick() {
   }
 
   burstHearts(3)
+  // Касание без наведения (телефон): сначала остановить, потом мерить
+  freeze()
   placePanel()
   panelError.value = ''
   panelOpen.value = !panelOpen.value
@@ -449,7 +482,7 @@ onUnmounted(() => {
     <div
         ref="petEl"
         class="pet"
-        :class="[`pet--${state}`, { 'pet--fly': data.fly, 'pet--jump': jumping, 'pet--hungry': stats?.mood === 'hungry' }]"
+        :class="[`pet--${state}`, trickPlaying ? `pet-trick--${trickPlaying}` : null, { 'pet--fly': data.fly, 'pet--jump': jumping, 'pet--hungry': stats?.mood === 'hungry' }]"
         :style="{
           left: `${x}%`,
           top: data.fly ? `${y}%` : 'auto',
@@ -544,6 +577,11 @@ onUnmounted(() => {
             <span>{{ stats.xp }} опыта</span>
             <span v-if="stats.next_level_xp">до {{ stats.level + 1 }} ур.: {{ stats.next_level_xp - stats.xp }}</span>
             <span v-else>максимальный уровень</span>
+          </div>
+
+          <div class="pet-panel__arena">
+            <span>Арена: <b>{{ stats.rating ?? 1000 }}</b> · {{ stats.wins ?? 0 }}–{{ stats.losses ?? 0 }}</span>
+            <RouterLink v-if="auth.user?.id === owner?.id" to="/pets" @click="closePanel">Все мои питомцы</RouterLink>
           </div>
 
           <div class="pet-panel__actions">
@@ -1287,6 +1325,22 @@ onUnmounted(() => {
 
   transition: width 0.6s ease;
 }
+
+.pet-panel__arena {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  margin-top: 8px;
+
+  color: #a8a3b8;
+  font-size: 11.5px;
+}
+
+.pet-panel__arena b { color: #fda4af; }
+.pet-panel__arena a { color: #c4b5fd; font-weight: 700; text-decoration: none; }
+.pet-panel__arena a:hover { color: #fff; }
 
 .pet-panel__xp-label {
   display: flex;
