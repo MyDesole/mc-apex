@@ -8,6 +8,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { api } from '@/services/core/api.js'
+import { walletApi } from '@/services/wallet/wallet.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import AppIcon from '@/components/core/AppIcon.vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
@@ -52,11 +53,39 @@ const ready = computed(() => {
   if (!d) return 0
   let count = 0
   d.pets.forEach((p) => { count += PET_ACTIONS.filter(([a]) => !p.done.includes(a)).length })
+  if (d.bonus?.available) count++
   if (d.clan && !d.clan.checked_in) count++
   if (d.chest.available) count++
   if (!d.miner.active && !minerWait.value) count++
   return count
 })
+
+function plural(n) {
+  const mod10 = n % 10
+  const mod100 = n % 100
+  if (mod10 === 1 && mod100 !== 11) return 'дело'
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'дела'
+  return 'дел'
+}
+
+const claiming = ref(false)
+const bonusNote = ref('')
+
+async function claimBonus() {
+  claiming.value = true
+  try {
+    const result = await walletApi.claimDailyBonus()
+    bonusNote.value = `+${formatCoins(result.amount)}`
+    data.value.bonus.available = false
+    data.value.coins = result.balance ?? data.value.coins
+    auth.fetchMe()
+  } catch (e) {
+    bonusNote.value = ''
+    if (data.value.bonus) data.value.bonus.available = false
+  } finally {
+    claiming.value = false
+  }
+}
 
 function spriteOf(pet) {
   return PIXEL_SPRITES[pet.sprite] ? pet.sprite : 'paw'
@@ -79,9 +108,9 @@ onUnmounted(() => clearInterval(tick))
         <span class="hd__kicker">Твоя панель</span>
         <h2>С возвращением, {{ auth.user?.username }}</h2>
         <p>
-          <template v-if="ready">Готово к делу: <b>{{ ready }}</b>.</template>
-          <template v-else>Всё на сегодня сделано.</template>
-          Ежедневное обновится через {{ resetIn }}.
+          <template v-if="ready">Можно сделать прямо сейчас: <b>{{ ready }} {{ plural(ready) }}</b>.</template>
+          <template v-else>На сегодня всё сделано.</template>
+          Бонус, сундук, отметка в клане и забота о питомцах снова откроются через {{ resetIn }}.
         </p>
       </div>
       <RouterLink to="/shop" class="hd__coins" title="Баланс ApexCoin">
@@ -130,9 +159,20 @@ onUnmounted(() => clearInterval(tick))
 
       <!-- Ежедневное -->
       <article class="hd-card">
-        <h3><AppIcon icon="clock" :size="15" /> Ежедневное</h3>
+        <h3><AppIcon icon="clock" :size="15" /> На сегодня</h3>
 
         <ul class="hd-list">
+          <li v-if="data.bonus">
+            <span class="hd-list__icon"><PixelSprite sprite="sparkle" :size="18" /></span>
+            <span class="hd-list__text">
+              <strong>Бонус за вход</strong>
+              <small v-if="data.bonus.available">₳ {{ formatCoins(data.bonus.amount) }} ждут тебя</small>
+              <small v-else>получен{{ bonusNote ? ` · ${bonusNote}` : '' }} · снова через {{ resetIn }}</small>
+            </span>
+            <button v-if="data.bonus.available" type="button" class="hd-go" :disabled="claiming" @click="claimBonus">Забрать</button>
+            <span v-else class="hd-wait">{{ resetIn }}</span>
+          </li>
+
           <li>
             <span class="hd-list__icon"><PixelSprite sprite="totem" :size="18" /></span>
             <span class="hd-list__text">
@@ -363,9 +403,12 @@ onUnmounted(() => clearInterval(tick))
 
   color: #052e16;
   background: #4ade80;
+  border: 0;
   border-radius: 8px;
 
+  font: inherit;
   font-size: 12px;
+  cursor: pointer;
   font-weight: 800;
   text-decoration: none;
   white-space: nowrap;

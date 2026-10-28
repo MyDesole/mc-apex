@@ -30,6 +30,6 @@ class HomeDashboardTest extends TestCase
             ->assertJsonPath('miner.cooldown_until', null)
             ->assertJsonPath('clan', null)
             ->assertJsonPath('auction.mine', 0)
-            ->assertJsonStructure(['reset_at', 'pets', 'equipped']);
+            ->assertJsonStructure(['reset_at', 'pets', 'equipped', 'bonus']);
     }
 }

@@ -984,6 +984,19 @@ onUnmounted(() => {
   100% { filter: saturate(1.6) brightness(1.3) hue-rotate(360deg) drop-shadow(0 0 5px rgba(165, 243, 252, 0.9)); }
 }
 
+/* Глитч: рывками сдвигает оттенок и раздваивает контур */
+@keyframes pet-glitch {
+  0%, 86%, 100% { filter: saturate(1.4) drop-shadow(0 0 0 transparent); }
+  88% { filter: hue-rotate(90deg) saturate(3) drop-shadow(-2px 0 0 #22d3ee) drop-shadow(2px 0 0 #f43f5e); }
+  92% { filter: hue-rotate(-60deg) saturate(2) drop-shadow(2px 0 0 #22d3ee) drop-shadow(-2px 0 0 #f43f5e); }
+  95% { filter: invert(1) hue-rotate(180deg); }
+}
+
+@keyframes pet-aurora {
+  0%, 100% { filter: hue-rotate(100deg) saturate(1.8) brightness(1.2) drop-shadow(0 0 6px rgba(34, 197, 94, 0.9)); }
+  50% { filter: hue-rotate(200deg) saturate(2) brightness(1.3) drop-shadow(0 0 8px rgba(139, 92, 246, 0.9)); }
+}
+
 @keyframes pet-galaxy {
   0%, 100% { filter: hue-rotate(230deg) saturate(2) drop-shadow(0 0 5px rgba(236, 72, 153, 0.9)); }
   50% { filter: hue-rotate(290deg) saturate(2.4) drop-shadow(0 0 8px rgba(99, 102, 241, 0.9)); }

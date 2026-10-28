@@ -25,6 +25,14 @@ export const PET_MODELS = {
     toxic: { filter: 'hue-rotate(75deg) saturate(3) brightness(1.15) drop-shadow(0 0 5px rgba(132, 204, 22, 0.9))' },
     lava: { filter: 'sepia(1) saturate(5) hue-rotate(-30deg)', animated: 'pet-lava' },
     holo: { filter: 'saturate(1.6) brightness(1.3)', animated: 'pet-holo', opacity: 0.92 },
+    // Шестая волна
+    sunny: { filter: 'sepia(0.6) saturate(3) hue-rotate(5deg) brightness(1.15)' },
+    retro: { filter: 'sepia(1) contrast(1.15) brightness(0.92)' },
+    sakura: { filter: 'hue-rotate(290deg) saturate(0.8) brightness(1.3) drop-shadow(0 0 3px rgba(251, 207, 232, 0.9))' },
+    ghostly: { filter: 'grayscale(0.6) brightness(1.5) drop-shadow(0 0 6px rgba(255, 255, 255, 0.9))', opacity: 0.55 },
+    abyss: { filter: 'invert(1) hue-rotate(200deg) brightness(0.7) drop-shadow(0 0 6px rgba(34, 211, 238, 0.9))' },
+    glitch: { filter: 'saturate(1.4)', animated: 'pet-glitch' },
+    aurora: { filter: 'hue-rotate(100deg) saturate(1.8)', animated: 'pet-aurora' },
 }
 
 /** Фон: сияние позади питомца (в шапке — мягкое, в карточке — во всю плашку). */
@@ -44,6 +52,13 @@ export const PET_BACKDROPS = {
     night: 'radial-gradient(circle, rgba(255, 255, 255, 0.5) 0 2%, transparent 3%) 0 0 / 10px 10px, radial-gradient(circle, rgba(30, 27, 75, 0.85), rgba(15, 23, 42, 0.4) 65%, transparent 72%)',
     matrix: 'repeating-linear-gradient(90deg, rgba(34, 197, 94, 0.55) 0 2px, transparent 2px 6px), radial-gradient(circle, rgba(21, 128, 61, 0.5), transparent 70%)',
     lava: 'radial-gradient(circle, rgba(253, 224, 71, 0.6), rgba(239, 68, 68, 0.45) 45%, rgba(127, 29, 29, 0.2) 65%, transparent 72%)',
+    // Шестая волна
+    desert: 'radial-gradient(circle, rgba(253, 230, 138, 0.6), rgba(217, 119, 6, 0.25) 60%, transparent 72%)',
+    snowfall: 'radial-gradient(circle, rgba(255, 255, 255, 0.75) 0 1.5px, transparent 2px) 0 0 / 9px 11px, radial-gradient(circle, rgba(186, 230, 253, 0.45), rgba(30, 64, 175, 0.2) 65%, transparent 72%)',
+    circuit: 'linear-gradient(rgba(34, 211, 238, 0.35) 1px, transparent 1px) 0 0 / 10px 10px, linear-gradient(90deg, rgba(34, 211, 238, 0.35) 1px, transparent 1px) 0 0 / 10px 10px, radial-gradient(circle, rgba(8, 145, 178, 0.45), transparent 70%)',
+    rainbow: 'repeating-linear-gradient(135deg, rgba(248, 113, 113, 0.5) 0 6px, rgba(251, 191, 36, 0.5) 6px 12px, rgba(74, 222, 128, 0.5) 12px 18px, rgba(96, 165, 250, 0.5) 18px 24px, rgba(192, 132, 252, 0.5) 24px 30px)',
+    eclipse: 'radial-gradient(circle, #050308 0 36%, rgba(253, 224, 71, 0.9) 40%, rgba(251, 146, 60, 0.4) 50%, transparent 68%)',
+    rift: 'radial-gradient(circle, rgba(0, 0, 0, 0.9) 0 28%, rgba(168, 85, 247, 0.75) 34%, rgba(76, 29, 149, 0.3) 50%, transparent 70%)',
 }
 
 /**
@@ -68,6 +83,15 @@ export const PET_ACCESSORIES = {
     monocle: { dy: 0.4, w: 0.26 },
     leaf: { dy: 0.86, w: 0.3 },
     pirate: { dy: 0.44, w: 0.72 },
+    sunglasses: { dy: 0.42, w: 0.66 },
+    bowtie: { dy: 0.1, w: 0.4 },
+    santa: { dy: 0.78, w: 0.56 },
+    viking: { dy: 0.78, w: 0.84 },
+    chef: { dy: 0.8, w: 0.52 },
+    wreath: { dy: 0.76, w: 0.66 },
+    antenna: { dy: 0.86, w: 0.24 },
+    bandana: { dy: 0.74, w: 0.66 },
+    star: { dy: 0.98, w: 0.34 },
 }
 
 /** Пиксель-арт аксессуаров: строки одной длины, «.» — пусто. */
@@ -233,6 +257,108 @@ export const PET_ACCESSORY_ART = {
             '.......B....',
         ],
     },
+    // Шестая волна. Солнечные очки — линзы там же, где у обычных (2.5 и 9.5 из 12)
+    sunglasses: {
+        palette: { K: '#0f172a', D: '#1e293b', W: '#94a3b8' },
+        map: [
+            'KKKKKKKKKKKK',
+            'KWDDKKKKWDDK',
+            'KDDDK..KDDDK',
+            '.KKK....KKK.',
+        ],
+    },
+    sunglasses_side: {
+        palette: { K: '#0f172a', D: '#1e293b', W: '#94a3b8' },
+        map: [
+            'KKKKKKK',
+            'KWDDK..',
+            'KDDDK..',
+            '.KKK...',
+        ],
+    },
+    bowtie: {
+        palette: { R: '#dc2626', K: '#7f1d1d' },
+        map: [
+            'RR...RR',
+            'RRR.RRR',
+            'RRRKRRR',
+            'RRR.RRR',
+            'RR...RR',
+        ],
+    },
+    santa: {
+        palette: { R: '#dc2626', D: '#991b1b', W: '#f8fafc' },
+        map: [
+            '.....WW.',
+            '....RRW.',
+            '...RRD..',
+            '..RRRR..',
+            '.RRDRRR.',
+            'WWWWWWWW',
+        ],
+    },
+    viking: {
+        palette: { W: '#f5f5f4', G: '#9ca3af', H: '#d1d5db', B: '#78350f' },
+        map: [
+            'W..........W',
+            'WW..GGGG..WW',
+            '.WWGHGGGGWW.',
+            '..GGGGGGGG..',
+            '..BBBBBBBB..',
+        ],
+    },
+    chef: {
+        palette: { W: '#ffffff', G: '#e5e7eb' },
+        map: [
+            '.WWWWWW.',
+            'WWWGWWWW',
+            'WWWWWWGW',
+            '.WWWWWW.',
+            '.GGGGGG.',
+            '.WWWWWW.',
+        ],
+    },
+    wreath: {
+        palette: { P: '#f9a8d4', Y: '#fde047', G: '#22c55e', D: '#15803d' },
+        map: [
+            '.P.Y.P.Y.P.',
+            'GPGYGPGYGPG',
+            'DGDGDGDGDGD',
+        ],
+    },
+    antenna: {
+        palette: { R: '#ef4444', L: '#fecaca', G: '#94a3b8' },
+        map: [
+            '.RR.',
+            'RLRR',
+            '.RR.',
+            '.G..',
+            '.G..',
+            'GGG.',
+        ],
+    },
+    bandana: {
+        palette: { B: '#2563eb', W: '#ffffff', D: '#1e40af' },
+        map: [
+            '..BBBBBBB...',
+            '.BBWBBBWBB..',
+            'DDDDDDDDDDDD',
+            '..........DD',
+            '...........D',
+        ],
+    },
+    star: {
+        palette: { Y: '#fde047', W: '#fffbeb' },
+        glow: true,
+        map: [
+            '...Y...',
+            '..YYY..',
+            'YYYWYYY',
+            '.YYYYY.',
+            '.YY.YY.',
+            'Y.....Y',
+        ],
+    },
 }
 
 /**
@@ -252,6 +378,17 @@ export const PET_SHAPES = {
     dragon: { top: 2, head: [1, 9], eyes: [3, 8], eyeY: 3.5, neck: 6 },
     robot: { top: 2, head: [0, 8], eyes: [2, 6], eyeY: 4, neck: 6 },
     penguin: { top: 0, head: [1, 7], eyes: [2.5, 5.5], eyeY: 2.5, neck: 4 },
+    owl: { top: 1, head: [0, 8], eyes: [2, 6], eyeY: 3.5, neck: 5 },
+    // Глаза лягушки торчат над головой: шапка — между ними, голова уже спрайта
+    frog: { top: 0, head: [2, 8], eyes: [2.5, 7.5], eyeY: 1.5, neck: 5 },
+    bunny: { top: 3, head: [1, 7], eyes: [2.5, 5.5], eyeY: 4.5, neck: 6 },
+    panda: { top: 1, head: [0, 8], eyes: [2, 6], eyeY: 4, neck: 6 },
+    shroom: { top: 0, head: [0, 8], eyes: [2.5, 5.5], eyeY: 5.5, neck: 7 },
+    octopus: { top: 0, head: [0, 8], eyes: [2, 6], eyeY: 3.5, neck: 5 },
+    phoenix: { top: 2, head: [2, 8], eyes: [3.5, 6.5], eyeY: 3.5, neck: 5 },
+    capybara: { top: 2, head: [0, 10], eyes: [2.5, 7.5], eyeY: 3.5, neck: 6 },
+    jelly: { top: 0, head: [0, 8], eyes: [2.5, 5.5], eyeY: 3.5, neck: 4.4 },
+    unicorn: { top: 2, head: [1, 9], eyes: [3.5, 6.5], eyeY: 3.5, neck: 6 },
 }
 
 /**
@@ -274,6 +411,15 @@ const ACCESSORY_FIT = {
     pirate: { on: 'band', w: 1.15 },
     headphones: { on: 'ears', w: 1.3 },
     scarf: { on: 'neck', w: 1.1 },
+    sunglasses: { on: 'eyes' },
+    bowtie: { on: 'neck', w: 0.4 },
+    santa: { on: 'top', w: 1.0 },
+    viking: { on: 'top', w: 1.3 },
+    chef: { on: 'top', w: 0.7 },
+    wreath: { on: 'top', w: 1.05 },
+    antenna: { on: 'top', w: 0.3 },
+    bandana: { on: 'top', w: 1.15 },
+    star: { on: 'halo', w: 0.45 },
 }
 
 /**
@@ -300,7 +446,7 @@ export function accessoryPlacement(sprite, accessoryId, size, spriteRows) {
     const oneEye = shape.eyes.length === 1
 
     // Очки на питомце с одним видимым глазом (вид сбоку) — одна линза
-    const art = accessoryId === 'glasses' && oneEye ? 'glasses_side' : accessoryId
+    const art = oneEye && PET_ACCESSORY_ART[`${accessoryId}_side`] ? `${accessoryId}_side` : accessoryId
     const map = PET_ACCESSORY_ART[art]?.map
     if (!map) return null
     const ratio = map.length / map[0].length

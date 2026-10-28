@@ -7,6 +7,8 @@ use App\Domains\Games\Services\MinerService;
 use App\Domains\Players\Support\PetTraits;
 use App\Domains\Shop\Models\UserInventory;
 use App\Domains\Shop\Services\LootCaseService;
+use App\Domains\Shop\Services\ShopSettingService;
+use App\Domains\Wallet\Services\CoinService;
 use App\Domains\Users\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -35,6 +37,11 @@ class HomeDashboardService
             'pets' => $this->pets($user),
             'clan' => $this->clan($user),
             'chest' => ['available' => $this->cases->dailyAvailable($user)],
+            // Бонус за вход: null — выключен в админке
+            'bonus' => ShopSettingService::getBool('daily_bonus.enabled') ? [
+                'available' => CoinService::dailyBonusAvailable($user),
+                'amount' => ShopSettingService::getInt('daily_bonus.amount'),
+            ] : null,
             'miner' => $this->minerState($user),
             'auction' => $this->auction($user),
             'equipped' => $this->equipped($user),

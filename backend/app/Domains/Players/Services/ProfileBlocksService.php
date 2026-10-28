@@ -115,6 +115,7 @@ class ProfileBlocksService
     private const STICKER_SPRITES = [
         'creeper', 'bee', 'axolotl', 'tnt', 'diamond', 'heart', 'skull', 'warden', 'totem', 'cat',
         'paw', 'crown', 'flame', 'dog', 'fox', 'slime', 'ghost', 'dragon', 'robot', 'penguin',
+        'owl', 'frog', 'bunny', 'panda', 'shroom', 'octopus', 'capybara', 'jelly', 'phoenix', 'unicorn',
     ];
 
     /**
