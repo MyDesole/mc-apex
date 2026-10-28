@@ -1012,7 +1012,8 @@
 
 @media (max-width: 900px) {
   .profile-layout {
-    grid-template-columns: 1fr;
+    /* minmax(0, …): иначе колонку распирает содержимое и карточка уезжает вправо */
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .side-column {

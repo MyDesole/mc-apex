@@ -3531,3 +3531,32 @@
     overflow-wrap: anywhere;
   }
 }
+/* Карточка на телефоне с отступом 14px: шапка выходит ровно на её край,
+   а не на 2px дальше (тогда она смещалась и обрезалась справа) */
+@media (max-width: 600px) {
+  .profile-header:not(.profile-header--part) {
+    margin-top: -14px;
+    margin-right: -14px;
+    margin-left: -14px;
+  }
+
+  /* Огромная буква тира на узком экране вылезает за край светлым пятном */
+  .profile-header__tier-watermark {
+    display: none;
+  }
+}
+/* Звание бриджа: сдвиг под аватар нужен, только когда аватар слева.
+   На узком телефоне аватар сверху, а в блоке шапки аватара нет вовсе */
+@media (max-width: 520px) {
+  .bridge-hero {
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+  }
+}
+
+.profile-header--part .bridge-hero {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+}
