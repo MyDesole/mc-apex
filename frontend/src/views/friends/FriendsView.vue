@@ -12,6 +12,7 @@ import UserName from '@/components/players/UserName.vue'
 import GiftCoinsButton from '@/components/shop/GiftCoinsButton.vue'
 import { friendsApi } from '@/services/friends/friends.js'
 import { chatApi } from '@/services/chat/chat.js'
+import { usePresence } from '@/composables/chat/presence.js'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { rankLabel } from '@/utils/playerStyling.js'
 import { userLink } from '@/utils/links.js'
@@ -72,10 +73,14 @@ const TABS = computed(() => [
   ['outgoing', 'Отправленные', outgoing.value.length],
 ])
 
+const { isOnline } = usePresence()
+
+// Кто в сети — первыми
 const list = computed(() => {
   const source = tab.value === 'friends' ? friends.value : outgoing.value
   const q = query.value.trim().toLowerCase()
-  return q ? source.filter((u) => u.username?.toLowerCase().includes(q)) : source
+  const found = q ? source.filter((u) => u.username?.toLowerCase().includes(q)) : source
+  return [...found].sort((a, b) => Number(isOnline(b.id)) - Number(isOnline(a.id)))
 })
 
 function rankOf(user) {
@@ -156,32 +161,54 @@ onMounted(load)
       </p>
 
       <div v-else class="fr-grid">
-        <article v-for="user in list" :key="user.id" class="fr-card">
-          <RouterLink :to="userLink(user)" class="fr-person">
-            <span class="fr-avatar fr-avatar--big">
+        <article
+            v-for="user in list"
+            :key="user.id"
+            class="fr-card"
+            :class="{ 'is-online': isOnline(user.id) }"
+            :style="{ '--fr-c': user.banner_color || user.accent_color || '#8b5cf6' }"
+        >
+          <!-- Полоса в цвет профиля друга -->
+          <div class="fr-card__banner">
+            <span v-if="tab === 'friends'" class="fr-card__status">
+              <i></i>{{ isOnline(user.id) ? 'В сети' : 'Не в сети' }}
+            </span>
+          </div>
+
+          <RouterLink :to="userLink(user)" class="fr-card__person">
+            <span class="fr-avatar fr-avatar--card">
               <img v-if="user.avatar_url" :src="user.avatar_url" :alt="user.username" />
               <template v-else>{{ (user.username || '?').charAt(0).toUpperCase() }}</template>
             </span>
-            <span class="fr-person__text">
-              <UserName :user="user" />
-              <small>{{ rankOf(user) }}</small>
-            </span>
+            <span class="fr-card__name"><UserName :user="user" /></span>
+            <small v-if="user.profile_title" class="fr-card__title">{{ user.profile_title }}</small>
           </RouterLink>
+
+          <div class="fr-card__chips">
+            <span class="fr-chip" :class="{ 'is-muted': rankOf(user) === 'Без тира' }">{{ rankOf(user) }}</span>
+            <span v-if="user.clan_tag" class="fr-chip fr-chip--clan" :style="{ '--clan': user.clan_color || '#a8a3b8' }">[{{ user.clan_tag }}]</span>
+          </div>
 
           <div class="fr-card__actions">
             <template v-if="tab === 'friends'">
-              <button type="button" class="fr-btn fr-btn--primary" :disabled="busy === user.id" @click="write(user)">
+              <button type="button" class="fr-btn fr-btn--primary fr-btn--wide" :disabled="busy === user.id" @click="write(user)">
                 <AppIcon icon="send" :size="13" /> Написать
               </button>
-              <GiftCoinsButton :user="user" />
-              <button type="button" class="fr-btn fr-btn--ghost" title="Удалить из друзей" :disabled="busy === user.id" @click="remove(user, 'Удалить из друзей?')">
-                <AppIcon icon="trash" :size="13" />
+              <GiftCoinsButton :user="user">
+                <template #trigger="{ open }">
+                  <button type="button" class="fr-btn fr-btn--icon fr-btn--gift" title="Подарить ApexCoin" @click="open">
+                    <AppIcon icon="gift" :size="14" />
+                  </button>
+                </template>
+              </GiftCoinsButton>
+              <button type="button" class="fr-btn fr-btn--icon fr-btn--danger" title="Удалить из друзей" :disabled="busy === user.id" @click="remove(user, 'Удалить из друзей?')">
+                <AppIcon icon="trash" :size="14" />
               </button>
             </template>
             <button
                 v-else
                 type="button"
-                class="fr-btn"
+                class="fr-btn fr-btn--wide"
                 :disabled="busy === user.id"
                 @click="remove(user, 'Отменить заявку?')"
             >Отменить заявку</button>

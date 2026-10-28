@@ -371,14 +371,29 @@ class ShopService
             ->get()
             ->filter(fn (UserInventory $row) => $row->item !== null);
 
+        // Питомцы: уровень экземпляра и активный лот на аукционе
+        $petIds = $rows->filter(fn ($row) => $row->pet_traits)->pluck('id')->all();
+        $levels = \App\Domains\Players\Services\PetService::levels($petIds);
+        $auctions = $petIds
+            ? \Illuminate\Support\Facades\DB::table('pet_auctions')->whereIn('inventory_id', $petIds)->where('status', 'active')
+                ->get(['id', 'inventory_id', 'current_price', 'bids_count', 'ends_at'])->keyBy('inventory_id')
+            : collect();
+
         $inventory = $rows
             ->map(fn (UserInventory $row) => array_merge(
                 self::presentItem($row->item),
                 [
-                    // Питомец: черты и номер именно этого экземпляра
+                    // Питомец: черты, номер и уровень именно этого экземпляра
                     'pet' => $row->pet_traits
-                        ? [...PetTraits::present($row->pet_traits, $row->pet_serial), 'name' => $row->pet_name]
+                        ? [...PetTraits::present($row->pet_traits, $row->pet_serial), 'name' => $row->pet_name, 'level' => $levels[$row->id] ?? 1]
                         : null,
+                    'auction' => ($lot = $auctions->get($row->id)) ? [
+                        'id' => $lot->id,
+                        'current_price' => $lot->current_price ? (int) $lot->current_price : null,
+                        'bids_count' => (int) $lot->bids_count,
+                        'cancel_penalty' => PetAuctionService::penaltyFor($lot),
+                        'ends_at' => \Illuminate\Support\Carbon::parse($lot->ends_at)->toIso8601String(),
+                    ] : null,
                     'inventory_id' => $row->id,
                     'shop_item_id' => $row->shop_item_id,
                     'quantity' => $row->quantity,

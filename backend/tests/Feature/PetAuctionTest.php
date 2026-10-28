@@ -57,7 +57,7 @@ class PetAuctionTest extends TestCase
         $this->assertSame(1000, (int) $alice->fresh()->apex_coins);
         $this->assertSame(850, (int) $bob->fresh()->apex_coins);
 
-        // Со ставками лот уже не снять
+        // Со ставками снять можно только с неустойкой, а у продавца нет монет
         $this->actingAs($seller)->postJson("/api/shop/auctions/{$id}/cancel")->assertStatus(422);
 
         // Время вышло — питомец победителю, монеты продавцу
@@ -88,5 +88,87 @@ class PetAuctionTest extends TestCase
         $lot = $this->actingAs($seller)->postJson('/api/shop/auctions', ['inventory_id' => $other->id, 'start_price' => 50, 'hours' => 12])->json('id');
         $this->actingAs($seller)->postJson("/api/shop/auctions/{$lot}/cancel")->assertOk();
         $this->assertSame($seller->id, $other->fresh()->user_id);
+    }
+
+    public function test_withdraw_with_bids_costs_penalty_and_refunds_leader(): void
+    {
+        $seller = User::factory()->create(['apex_coins' => 100]);
+        $bidder = User::factory()->create(['apex_coins' => 1000]);
+        $row = $this->pet($seller);
+
+        $id = $this->actingAs($seller)->postJson('/api/shop/auctions', ['inventory_id' => $row->id, 'start_price' => 200, 'hours' => 24])->json('id');
+        $this->actingAs($bidder)->postJson("/api/shop/auctions/{$id}/bid", ['amount' => 300])->assertJsonPath('cancel_penalty', 30);
+
+        $this->actingAs($seller)->postJson("/api/shop/auctions/{$id}/cancel")->assertOk()->assertJsonPath('penalty', 30);
+
+        $this->assertSame(70, (int) $seller->fresh()->apex_coins);
+        $this->assertSame(1000, (int) $bidder->fresh()->apex_coins);
+        $this->assertSame($seller->id, $row->fresh()->user_id);
+        $this->assertSame(1, $bidder->notifications()->count());
+    }
+
+    public function test_seller_can_have_at_most_three_lots(): void
+    {
+        $seller = User::factory()->create();
+
+        foreach (range(1, 3) as $i) {
+            $this->actingAs($seller)->postJson('/api/shop/auctions', ['inventory_id' => $this->pet($seller)->id, 'start_price' => 50, 'hours' => 12])->assertCreated();
+        }
+
+        $this->actingAs($seller)->postJson('/api/shop/auctions', ['inventory_id' => $this->pet($seller)->id, 'start_price' => 50, 'hours' => 12])
+            ->assertStatus(422)
+            ->assertJsonPath('message', fn ($m) => str_contains($m, 'не больше 3'));
+    }
+
+    public function test_pet_keeps_level_after_sale(): void
+    {
+        $seller = User::factory()->create();
+        $buyer = User::factory()->create(['apex_coins' => 500]);
+        $row = $this->pet($seller);
+
+        // 30 опыта — 4 уровень (0, 5, 15, 30)
+        foreach (range(1, 15) as $day) {
+            \Illuminate\Support\Facades\DB::table('pet_interactions')->insert([
+                'owner_id' => $seller->id, 'inventory_id' => $row->id, 'actor_id' => $seller->id,
+                'action' => 'feed', 'day' => now()->subDays($day)->toDateString(), 'created_at' => now()->subDays($day),
+            ]);
+        }
+
+        $id = $this->actingAs($seller)->postJson('/api/shop/auctions', ['inventory_id' => $row->id, 'start_price' => 50, 'hours' => 12])
+            ->assertJsonPath('level', 4)
+            ->json('id');
+        $this->actingAs($buyer)->postJson("/api/shop/auctions/{$id}/bid", ['amount' => 50]);
+        $this->travel(13)->hours();
+        $this->getJson('/api/auctions');
+
+        $this->assertSame($buyer->id, $row->fresh()->user_id);
+        $this->assertSame([$row->id => 4], \App\Domains\Players\Services\PetService::levels([$row->id]));
+    }
+
+    public function test_lot_chat(): void
+    {
+        $seller = User::factory()->create();
+        $player = User::factory()->create();
+        $moderator = User::factory()->create(['role' => 'moderator']);
+        $id = $this->actingAs($seller)->postJson('/api/shop/auctions', ['inventory_id' => $this->pet($seller)->id, 'start_price' => 50, 'hours' => 12])->json('id');
+
+        $this->postJson("/api/shop/auctions/{$id}/messages", ['body' => 'привет'])->assertCreated();
+        $msg = $this->actingAs($player)->postJson("/api/shop/auctions/{$id}/messages", ['body' => '<b>Сколько</b> уровень?'])
+            ->assertCreated()
+            ->assertJsonPath('body', 'Сколько уровень?')
+            ->json('id');
+
+        // Антиспам: не чаще раза в 3 секунды
+        $this->actingAs($player)->postJson("/api/shop/auctions/{$id}/messages", ['body' => 'ещё'])->assertStatus(422);
+
+        // Гостям читать можно
+        auth()->forgetGuards();
+        $this->getJson("/api/auctions/{$id}/messages")->assertOk()->assertJsonCount(2, 'messages')
+            ->assertJsonPath('messages.0.is_seller', true);
+
+        // Чужое не удалить, модератор — может
+        $this->actingAs($seller)->deleteJson("/api/shop/auctions/{$id}/messages/{$msg}")->assertStatus(422);
+        $this->actingAs($moderator)->deleteJson("/api/shop/auctions/{$id}/messages/{$msg}")->assertOk();
+        $this->getJson("/api/auctions/{$id}/messages")->assertJsonCount(1, 'messages');
     }
 }

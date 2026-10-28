@@ -125,6 +125,7 @@ Route::get('/players/teammates', [\App\Domains\Players\Controllers\Api\ProfileBu
 // Аукцион питомцев: лоты видны и гостям
 Route::get('/auctions', [\App\Domains\Shop\Controllers\Api\PetAuctionController::class, 'index']);
 Route::get('/auctions/{auction}', [\App\Domains\Shop\Controllers\Api\PetAuctionController::class, 'show'])->whereNumber('auction');
+Route::get('/auctions/{auction}/messages', [\App\Domains\Shop\Controllers\Api\PetAuctionController::class, 'messages'])->whereNumber('auction');
 
 // Кейсы с косметикой: витрина видна и гостям
 Route::get('/cases', [\App\Domains\Shop\Controllers\Api\LootCaseController::class, 'index']);
@@ -388,6 +389,9 @@ Route::middleware('auth:sanctum')->group(function () {
     | МАГАЗИН: ПОКУПКА И НАДЕВАНИЕ — apex:shop-buy
     |----------------------------------------------------------------------
     */
+    // Панель игрока на главной: кулдауны и быстрые действия
+    Route::get('/home/me', [HomeController::class, 'dashboard']);
+
     // Мини-игра «Шахтёр»
     Route::get('/games/miner', [\App\Domains\Games\Controllers\MinerController::class, 'show']);
     Route::post('/games/miner/start', [\App\Domains\Games\Controllers\MinerController::class, 'start'])->middleware('throttle:20,1');
@@ -408,9 +412,13 @@ Route::middleware('auth:sanctum')->group(function () {
             ->whereIn('action', ['equip', 'unequip']);
         Route::get('/stickers', [ShopController::class, 'stickers']);
         Route::post('/{shopItem}/unequip', [ShopController::class, 'unequip'])->whereNumber('shopItem');
-        // Аукцион питомцев: выставить, ставка, снять лот без ставок
+        // Аукцион питомцев: выставить, ставка, снять лот (со ставками — с неустойкой), чат лота
         Route::post('/auctions', [\App\Domains\Shop\Controllers\Api\PetAuctionController::class, 'store'])
             ->middleware(['feature:shop', 'throttle:10,1']);
+        Route::post('/auctions/{auction}/messages', [\App\Domains\Shop\Controllers\Api\PetAuctionController::class, 'postMessage'])
+            ->whereNumber('auction')->middleware('throttle:12,1');
+        Route::delete('/auctions/{auction}/messages/{message}', [\App\Domains\Shop\Controllers\Api\PetAuctionController::class, 'deleteMessage'])
+            ->whereNumber(['auction', 'message'])->middleware('throttle:30,1');
         Route::post('/auctions/{auction}/bid', [\App\Domains\Shop\Controllers\Api\PetAuctionController::class, 'bid'])
             ->whereNumber('auction')->middleware(['feature:shop', 'throttle:30,1']);
         Route::post('/auctions/{auction}/cancel', [\App\Domains\Shop\Controllers\Api\PetAuctionController::class, 'cancel'])

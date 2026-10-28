@@ -3,23 +3,27 @@
 namespace App\Domains\Shop\Services;
 
 use App\Domains\Moderation\Notifications\ModerationNotification;
+use App\Domains\Players\Services\PetService;
 use App\Domains\Players\Support\PetTraits;
+use App\Domains\Shop\Events\AuctionChanged;
 use App\Domains\Shop\Models\ShopItem;
 use App\Domains\Shop\Models\UserInventory;
 use App\Domains\Users\Models\User;
 use App\Domains\Wallet\Models\CoinTransaction;
 use App\Domains\Wallet\Services\CoinService;
+use App\Support\Broadcasting\SafeBroadcast;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 /**
- * Аукцион питомцев: ставки с таймером.
+ * Аукцион питомцев: ставки с таймером и чат у каждого лота.
  *
- * Лот — конкретный экземпляр питомца. Ставка списывает монеты сразу
- * (заморозка), прошлому лидеру они возвращаются. Ставка в последние
- * минуты продлевает торги — без «снайпинга». Закрытие — по расписанию
- * и лениво при любом обращении к аукциону.
+ * Лот — конкретный экземпляр питомца, с его чертами и уровнем. Ставка
+ * списывает монеты сразу (заморозка), прошлому лидеру они возвращаются.
+ * Ставка в последние минуты продлевает торги — без «снайпинга». Закрытие —
+ * по расписанию и лениво при любом обращении к аукциону. Все изменения
+ * сразу уходят зрителям через Reverb.
  */
 class PetAuctionService
 {
@@ -30,6 +34,14 @@ class PetAuctionService
     public const MIN_STEP = 10;
     // Ставка в последние 2 минуты продлевает торги на 2 минуты
     public const SNIPE_SECONDS = 120;
+    // Одновременно на торгах — не больше трёх питомцев от игрока
+    public const MAX_ACTIVE = 3;
+    // Снять лот со ставками — неустойка 10% от текущей ставки
+    public const PENALTY_SHARE = 0.10;
+
+    // Чат: длина сообщения и пауза между сообщениями одного игрока
+    public const MESSAGE_MAX = 300;
+    public const MESSAGE_GAP_SECONDS = 3;
 
     public static function onAuction(int $inventoryId): bool
     {
@@ -46,7 +58,9 @@ class PetAuctionService
             ->limit(60)
             ->get();
 
-        return $rows->map(fn ($a) => $this->present($a, $viewer))->all();
+        $levels = PetService::levels($rows->pluck('inventory_id')->all());
+
+        return $rows->map(fn ($a) => $this->present($a, $viewer, $levels))->all();
     }
 
     public function show(int $id, ?User $viewer): array
@@ -96,6 +110,10 @@ class PetAuctionService
             throw new RuntimeException('Этот питомец уже на аукционе.');
         }
 
+        if (self::activeCount($seller->id) >= self::MAX_ACTIVE) {
+            throw new RuntimeException('На торгах может быть не больше ' . self::MAX_ACTIVE . ' твоих питомцев — дождись конца торгов или сними лот.');
+        }
+
         $id = DB::transaction(function () use ($seller, $row, $startPrice, $hours) {
             // На аукционе питомец не гуляет по профилю
             if ($row->isEquipped()) {
@@ -113,7 +131,14 @@ class PetAuctionService
             ]);
         });
 
+        $this->broadcastLot($id);
+
         return $this->show($id, $seller);
+    }
+
+    public static function activeCount(int $sellerId): int
+    {
+        return DB::table('pet_auctions')->where('seller_id', $sellerId)->where('status', 'active')->count();
     }
 
     public function bid(User $bidder, int $id, int $amount): array
@@ -182,22 +207,64 @@ class PetAuctionService
             ]);
         });
 
+        $this->broadcastLot($id);
+
         return $this->show($id, $bidder);
     }
 
-    public function cancel(User $seller, int $id): void
+    /**
+     * Забрать питомца с торгов в любой момент. Без ставок — бесплатно;
+     * со ставками лидеру возвращаются монеты, а продавец платит неустойку.
+     *
+     * @return int неустойка
+     */
+    public function cancel(User $seller, int $id): int
     {
-        $auction = DB::table('pet_auctions')->find($id);
+        $this->closeExpired();
 
-        if (! $auction || $auction->seller_id !== $seller->id || $auction->status !== 'active') {
-            throw new RuntimeException('Лот не найден.');
-        }
+        $penalty = DB::transaction(function () use ($seller, $id) {
+            $auction = DB::table('pet_auctions')->lockForUpdate()->find($id);
 
-        if ($auction->bids_count > 0) {
-            throw new RuntimeException('Ставки уже есть — снять лот нельзя.');
-        }
+            if (! $auction || $auction->seller_id !== $seller->id || $auction->status !== 'active') {
+                throw new RuntimeException('Лот не найден или торги уже закончились.');
+            }
 
-        DB::table('pet_auctions')->where('id', $id)->update(['status' => 'cancelled', 'updated_at' => now()]);
+            $penalty = self::penaltyFor($auction);
+
+            if ($penalty > 0) {
+                if (! CoinService::canAfford($seller->fresh(), $penalty)) {
+                    throw new RuntimeException("Чтобы снять лот со ставками, нужна неустойка {$penalty} ApexCoin.");
+                }
+
+                CoinService::debit($seller, $penalty, CoinTransaction::SOURCE_OTHER, "Неустойка: лот #{$id} снят с торгов");
+            }
+
+            if ($auction->top_bidder_id && $leader = User::find($auction->top_bidder_id)) {
+                CoinService::credit($leader, (int) $auction->current_price, CoinTransaction::SOURCE_OTHER, "Возврат ставки: лот #{$id} снят продавцом");
+                $leader->notify(new ModerationNotification(
+                    'auction_cancelled',
+                    "Продавец снял лот #{$id} с торгов — твоя ставка вернулась.",
+                    ['auction_id' => $id, 'link' => '/auction'],
+                ));
+            }
+
+            DB::table('pet_auctions')->where('id', $id)->update([
+                'status' => 'cancelled',
+                'penalty' => $penalty ?: null,
+                'updated_at' => now(),
+            ]);
+
+            return $penalty;
+        });
+
+        $this->broadcastLot($id);
+
+        return $penalty;
+    }
+
+    public static function penaltyFor(object $auction): int
+    {
+        return $auction->current_price ? max(1, (int) ceil($auction->current_price * self::PENALTY_SHARE)) : 0;
     }
 
     /** Закрыть закончившиеся торги: питомец — победителю, монеты — продавцу. */
@@ -233,6 +300,7 @@ class PetAuctionService
 
                 $price = (int) $auction->current_price;
 
+                // Строка инвентаря та же — питомец уходит со своим уровнем и чертами
                 $row->forceFill([
                     'user_id' => $winner->id,
                     'equipped_at' => null,
@@ -252,6 +320,8 @@ class PetAuctionService
 
                 DB::table('pet_auctions')->where('id', $id)->update(['status' => 'sold', 'updated_at' => now()]);
             });
+
+            $this->broadcastLot($id);
         }
 
         return $ended->count();
@@ -268,26 +338,144 @@ class PetAuctionService
         return (int) $auction->current_price + $step;
     }
 
-    private function present(object $a, ?User $viewer): array
+    // ---- Чат лота ----
+
+    public function messages(int $id): array
+    {
+        abort_unless(DB::table('pet_auctions')->where('id', $id)->exists(), 404, 'Лот не найден.');
+
+        $auction = DB::table('pet_auctions')->find($id);
+
+        return DB::table('pet_auction_messages')
+            ->where('auction_id', $id)
+            ->orderByDesc('id')
+            ->limit(60)
+            ->get()
+            ->reverse()
+            ->map(fn ($m) => $this->presentMessage($m, $auction))
+            ->values()
+            ->all();
+    }
+
+    public function postMessage(User $author, int $id, string $body): array
+    {
+        $auction = DB::table('pet_auctions')->find($id);
+        abort_unless($auction, 404, 'Лот не найден.');
+
+        // Без разметки и лишних пробелов: только текст
+        $body = trim(preg_replace('/\s+/u', ' ', strip_tags($body)));
+        $body = mb_substr($body, 0, self::MESSAGE_MAX);
+
+        if ($body === '') {
+            throw new RuntimeException('Пустое сообщение.');
+        }
+
+        if ($auction->status !== 'active') {
+            throw new RuntimeException('Торги закончились — чат лота закрыт.');
+        }
+
+        $last = DB::table('pet_auction_messages')
+            ->where('auction_id', $id)
+            ->where('user_id', $author->id)
+            ->orderByDesc('id')
+            ->first();
+
+        if ($last && Carbon::parse($last->created_at)->diffInSeconds(now(), true) < self::MESSAGE_GAP_SECONDS) {
+            throw new RuntimeException('Не так быстро — подожди пару секунд.');
+        }
+
+        if ($last && mb_strtolower($last->body) === mb_strtolower($body) && Carbon::parse($last->created_at)->diffInSeconds(now(), true) < 60) {
+            throw new RuntimeException('Это сообщение ты уже отправил.');
+        }
+
+        $messageId = DB::table('pet_auction_messages')->insertGetId([
+            'auction_id' => $id,
+            'user_id' => $author->id,
+            'body' => $body,
+            'created_at' => now(),
+        ]);
+
+        $message = $this->presentMessage(DB::table('pet_auction_messages')->find($messageId), $auction);
+
+        SafeBroadcast::send(new AuctionChanged($id, 'message', ['message' => $message]));
+
+        return $message;
+    }
+
+    /** Удалить сообщение: модератор — любое, автор — своё. */
+    public function deleteMessage(User $user, int $id, int $messageId): void
+    {
+        $message = DB::table('pet_auction_messages')->where('auction_id', $id)->find($messageId);
+
+        if (! $message || ($message->user_id !== $user->id && ! $user->isModerator())) {
+            throw new RuntimeException('Сообщение не найдено.');
+        }
+
+        DB::table('pet_auction_messages')->where('id', $messageId)->delete();
+
+        SafeBroadcast::send(new AuctionChanged($id, 'message_deleted', ['id' => $messageId]));
+    }
+
+    private function presentMessage(object $m, object $auction): array
+    {
+        $author = User::find($m->user_id, ['id', 'username', 'avatar', 'role']);
+
+        return [
+            'id' => $m->id,
+            'body' => $m->body,
+            'created_at' => Carbon::parse($m->created_at)->toIso8601String(),
+            'user' => $author ? [
+                'id' => $author->id,
+                'username' => $author->username,
+                'avatar_url' => $author->avatar_url,
+            ] : null,
+            'is_seller' => $m->user_id === $auction->seller_id,
+            'is_leader' => $m->user_id === $auction->top_bidder_id,
+        ];
+    }
+
+    // ---- Представление лота ----
+
+    private function broadcastLot(int $id): void
+    {
+        $auction = DB::table('pet_auctions')->find($id);
+
+        if ($auction) {
+            SafeBroadcast::send(new AuctionChanged($id, 'lot', ['lot' => $this->present($auction, null)]));
+        }
+    }
+
+    /**
+     * @param  array<int, int>|null  $levels  уровни заранее (для списка)
+     */
+    private function present(object $a, ?User $viewer, ?array $levels = null): array
     {
         $row = UserInventory::with('item')->find($a->inventory_id);
         $seller = User::find($a->seller_id, ['id', 'username', 'avatar']);
-        $leader = $a->top_bidder_id ? User::find($a->top_bidder_id, ['id', 'username']) : null;
+        $leader = $a->top_bidder_id ? User::find($a->top_bidder_id, ['id', 'username', 'avatar']) : null;
+        $level = $levels[$a->inventory_id] ?? (PetService::levels([$a->inventory_id])[$a->inventory_id] ?? 1);
 
         return [
             'id' => $a->id,
             'status' => $a->status,
             'pet' => $row?->item ? [
                 ...ShopService::presentItem($row->item),
-                'pet' => [...(PetTraits::present($row->pet_traits, $row->pet_serial) ?? []), 'name' => $row->pet_name],
+                'pet' => [
+                    ...(PetTraits::present($row->pet_traits, $row->pet_serial) ?? []),
+                    'name' => $row->pet_name,
+                    'level' => $level,
+                ],
             ] : null,
+            'level' => $level,
             'seller' => $seller ? ['id' => $seller->id, 'username' => $seller->username, 'avatar_url' => $seller->avatar_url] : null,
-            'leader' => $leader ? ['id' => $leader->id, 'username' => $leader->username] : null,
+            'leader' => $leader ? ['id' => $leader->id, 'username' => $leader->username, 'avatar_url' => $leader->avatar_url] : null,
             'start_price' => (int) $a->start_price,
             'current_price' => $a->current_price ? (int) $a->current_price : null,
             'min_bid' => self::minBid($a),
             'bids_count' => (int) $a->bids_count,
+            'cancel_penalty' => self::penaltyFor($a),
             'ends_at' => Carbon::parse($a->ends_at)->toIso8601String(),
+            'messages_count' => DB::table('pet_auction_messages')->where('auction_id', $a->id)->count(),
             'mine' => $viewer && $viewer->id === $a->seller_id,
             'leading' => $viewer && $viewer->id === $a->top_bidder_id,
         ];

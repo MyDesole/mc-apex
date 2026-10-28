@@ -241,27 +241,170 @@
 
 .fr-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
 }
 
 .fr-card {
+  position: relative;
+
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  align-items: center;
 
-  padding: 14px;
+  overflow: hidden;
 
   background: var(--bg-card, #15131c);
   border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 16px;
+  border-radius: 18px;
 
-  transition: border-color 0.15s ease, transform 0.15s ease;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .fr-card:hover {
-  border-color: color-mix(in srgb, var(--fr-accent) 45%, transparent);
-  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--fr-c) 55%, transparent);
+  box-shadow: 0 14px 34px -18px color-mix(in srgb, var(--fr-c) 70%, transparent);
+  transform: translateY(-3px);
+}
+
+/* Полоса в цвет профиля: градиент и пиксельная сетка поверх */
+.fr-card__banner {
+  position: relative;
+
+  align-self: stretch;
+  height: 64px;
+
+  background:
+      linear-gradient(rgba(0, 0, 0, 0.18) 1px, transparent 1px) 0 0 / 8px 8px,
+      linear-gradient(90deg, rgba(0, 0, 0, 0.18) 1px, transparent 1px) 0 0 / 8px 8px,
+      linear-gradient(135deg, var(--fr-c), color-mix(in srgb, var(--fr-c) 35%, #0d0b12));
+}
+
+.fr-card__banner::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 28px;
+  background: linear-gradient(transparent, var(--bg-card, #15131c));
+}
+
+.fr-card__status {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 3px 8px;
+
+  color: #d6d2e2;
+  background: rgba(10, 8, 16, 0.6);
+  border-radius: 999px;
+  backdrop-filter: blur(4px);
+
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+.fr-card__status i {
+  width: 7px;
+  height: 7px;
+
+  background: #6f6a80;
+  border-radius: 50%;
+}
+
+.fr-card.is-online .fr-card__status { color: #bbf7d0; }
+.fr-card.is-online .fr-card__status i { background: #22c55e; box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25); }
+
+.fr-card__person {
+  min-width: 0;
+  max-width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  margin-top: -38px;
+  padding: 0 14px;
+
+  color: inherit;
+  text-align: center;
+  text-decoration: none;
+}
+
+.fr-avatar--card {
+  position: relative;
+  z-index: 1;
+
+  width: 72px;
+  height: 72px;
+  margin-bottom: 6px;
+
+  border: 3px solid var(--bg-card, #15131c);
+  border-radius: 20px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fr-c) 60%, transparent);
+
+  font-size: 26px;
+}
+
+.fr-card__name {
+  max-width: 100%;
+  overflow: hidden;
+
+  font-size: 15px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fr-card__title {
+  max-width: 100%;
+  overflow: hidden;
+
+  color: #8a8598;
+
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fr-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+
+  margin: 10px 0 0;
+  padding: 0 14px;
+}
+
+.fr-chip {
+  padding: 3px 9px;
+
+  color: #e9e5f5;
+  background: color-mix(in srgb, var(--fr-c) 22%, rgba(255, 255, 255, 0.04));
+  border: 1px solid color-mix(in srgb, var(--fr-c) 35%, transparent);
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.fr-chip.is-muted {
+  color: #8a8598;
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.fr-chip--clan {
+  color: var(--clan);
+  background: color-mix(in srgb, var(--clan) 14%, transparent);
+  border-color: color-mix(in srgb, var(--clan) 35%, transparent);
 }
 
 .fr-person {
@@ -318,28 +461,30 @@
 }
 
 .fr-card__actions {
+  align-self: stretch;
+
   display: flex;
-  flex-wrap: wrap;
   gap: 6px;
 
-  padding-top: 12px;
+  margin-top: 14px;
+  padding: 12px;
 
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.fr-card__actions :deep(button) {
-  min-height: 32px;
+.fr-btn--wide { flex: 1; justify-content: center; min-height: 36px; }
+
+.fr-btn--icon {
+  width: 36px;
+  min-height: 36px;
+  padding: 0;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-/* Кнопка подарка своя и тянется на всю ширину — в карточке она в ряд */
-.fr-card__actions > :deep(*) {
-  width: auto !important;
-  flex: 0 1 auto;
-}
-
-.fr-card__actions :deep(button) {
-  width: auto !important;
-}
+.fr-btn--gift { color: #fde68a; }
+.fr-btn--gift:hover:not(:disabled) { color: #1a1206; background: #fbbf24; }
+.fr-btn--danger:hover:not(:disabled) { color: #fecaca; background: rgba(239, 68, 68, 0.25); }
 
 /* ---------- Кнопки ---------- */
 

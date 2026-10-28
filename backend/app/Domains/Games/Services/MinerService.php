@@ -23,7 +23,7 @@ class MinerService
     public const COLS = 8;
     public const ROWS = 7;
     public const ENERGY = 24;
-    public const COOLDOWN_SECONDS = 120;
+    public const COOLDOWN_SECONDS = 600;
 
     /** Блок => монеты за него. */
     public const VALUES = [

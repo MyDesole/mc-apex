@@ -6,6 +6,8 @@ import UserName from '@/components/players/UserName.vue'
 import PodiumCard from '@/components/players/PodiumCard.vue'
 import BrandCube from '@/components/core/BrandCube.vue'
 import LiveFeed from '@/components/activity/LiveFeed.vue'
+import HomeDashboard from '@/components/players/HomeDashboard.vue'
+import HomeFeatures from '@/components/players/HomeFeatures.vue'
 import { tierColors } from '@/data/players/profileCustomization.js'
 import { userLink, clanLink } from '@/utils/links.js'
 import { bridgeRankOf, rankColor, rankLabel } from '@/utils/playerStyling.js'
@@ -235,6 +237,10 @@ onMounted(async () => {
     </div>
 
     <div v-else class="sections">
+      <!-- Вошедшему — панель с кулдаунами, гостю — что есть на сайте -->
+      <HomeDashboard v-if="auth.isAuthenticated" />
+      <HomeFeatures v-else />
+
       <!-- =======================================================
            СЕЙЧАС НА APEX + КАК ПОПАСТЬ В РЕЙТИНГ
       ======================================================== -->

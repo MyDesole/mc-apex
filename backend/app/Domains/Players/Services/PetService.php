@@ -38,8 +38,9 @@ class PetService
             : null;
 
         // У каждого питомца свой опыт: считаем только действия с этим экземпляром
+        // Опыт идёт за экземпляром: проданный или подаренный питомец сохраняет уровень
         $pet = $this->instanceKey($owner, $inventoryId);
-        $scope = fn () => DB::table('pet_interactions')->where('owner_id', $owner->id)->where('inventory_id', $pet);
+        $scope = fn () => self::instanceScope($owner->id, $pet);
 
         $counts = $scope()
             ->selectRaw('action, count(*) as total')
@@ -75,8 +76,7 @@ class PetService
         // Последние, кто заботился о питомце
         $friends = DB::table('pet_interactions as pi')
             ->join('users as u', 'u.id', '=', 'pi.actor_id')
-            ->where('pi.owner_id', $owner->id)
-            ->where('pi.inventory_id', $pet)
+            ->when($pet, fn ($q) => $q->where('pi.inventory_id', $pet), fn ($q) => $q->where('pi.owner_id', $owner->id)->where('pi.inventory_id', 0))
             ->where('pi.actor_id', '!=', $owner->id)
             ->orderByDesc('pi.created_at')
             ->limit(30)
@@ -187,17 +187,52 @@ class PetService
         return $name;
     }
 
+    /** Действия с экземпляром; 0 — питомец без записи в инвентаре, он у каждого хозяина свой. */
+    private static function instanceScope(int $ownerId, int $pet): \Illuminate\Database\Query\Builder
+    {
+        $query = DB::table('pet_interactions')->where('inventory_id', $pet);
+
+        return $pet ? $query : $query->where('owner_id', $ownerId);
+    }
+
+    /**
+     * Уровни питомцев по строкам инвентаря — для инвентаря и аукциона.
+     *
+     * @param  array<int>  $inventoryIds
+     * @return array<int, int>  inventory_id => уровень
+     */
+    public static function levels(array $inventoryIds): array
+    {
+        $ids = array_values(array_filter(array_map('intval', $inventoryIds)));
+        if (! $ids) {
+            return [];
+        }
+
+        $xp = array_fill_keys($ids, 0);
+
+        DB::table('pet_interactions')
+            ->whereIn('inventory_id', $ids)
+            ->selectRaw('inventory_id, action, count(*) as total')
+            ->groupBy('inventory_id', 'action')
+            ->get()
+            ->each(function ($row) use (&$xp) {
+                $xp[(int) $row->inventory_id] += (int) $row->total * (self::ACTIONS[$row->action] ?? 0);
+            });
+
+        return array_map(fn ($points) => self::levelFor($points), $xp);
+    }
+
     /** Опыт на уровень растёт: 0, 5, 15, 30, 50… (5 · n(n−1)/2). */
-    private function xpFor(int $level): int
+    private static function xpFor(int $level): int
     {
         return intdiv(5 * $level * ($level - 1), 2);
     }
 
-    private function levelFor(int $xp): int
+    private static function levelFor(int $xp): int
     {
         $level = 1;
 
-        while ($level < self::MAX_LEVEL && $xp >= $this->xpFor($level + 1)) {
+        while ($level < self::MAX_LEVEL && $xp >= self::xpFor($level + 1)) {
             $level++;
         }
 

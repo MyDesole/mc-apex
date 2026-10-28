@@ -63,6 +63,12 @@ class HomeController extends Controller
         ]);
     }
 
+    /** Панель вошедшего игрока: кулдауны, питомцы, надетое. */
+    public function dashboard(\Illuminate\Http\Request $request, \App\Domains\Players\Services\HomeDashboardService $dashboard): JsonResponse
+    {
+        return response()->json($dashboard->for($request->user()));
+    }
+
     public function index(): JsonResponse
     {
         // настройки главной

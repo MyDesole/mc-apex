@@ -55,7 +55,7 @@ class MinerGameTest extends TestCase
 
         // Перерыв между забегами
         $this->actingAs($user)->postJson('/api/games/miner/start')->assertStatus(422);
-        $this->travel(3)->minutes();
+        $this->travel(11)->minutes();
         $this->actingAs($user)->postJson('/api/games/miner/start')->assertOk();
     }
 }

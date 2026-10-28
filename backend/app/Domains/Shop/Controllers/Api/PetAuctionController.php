@@ -56,8 +56,25 @@ class PetAuctionController extends Controller
 
     public function cancel(Request $request, int $auction): JsonResponse
     {
-        return $this->run(function () use ($request, $auction) {
-            $this->auctions->cancel($request->user(), $auction);
+        return $this->run(fn () => ['ok' => true, 'penalty' => $this->auctions->cancel($request->user(), $auction)]);
+    }
+
+    public function messages(int $auction): JsonResponse
+    {
+        return response()->json(['messages' => $this->auctions->messages($auction)]);
+    }
+
+    public function postMessage(Request $request, int $auction): JsonResponse
+    {
+        $data = $request->validate(['body' => ['required', 'string', 'max:' . PetAuctionService::MESSAGE_MAX]]);
+
+        return $this->run(fn () => $this->auctions->postMessage($request->user(), $auction, $data['body']), 201);
+    }
+
+    public function deleteMessage(Request $request, int $auction, int $message): JsonResponse
+    {
+        return $this->run(function () use ($request, $auction, $message) {
+            $this->auctions->deleteMessage($request->user(), $auction, $message);
 
             return ['ok' => true];
         });

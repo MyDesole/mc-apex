@@ -7,8 +7,9 @@ import AppIcon from '@/components/core/AppIcon.vue'
 import ShopItemPreview from '@/components/shop/ShopItemPreview.vue'
 import { friendsApi } from '@/services/friends/friends.js'
 import { api } from '@/services/core/api.js'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
+import { chanceLabel } from '@/data/players/petTraits.js'
 import {
   TYPE_LABELS,
   RARITY_LABELS,
@@ -353,6 +354,28 @@ async function createAuction() {
     auctionItem.value = null
   } finally {
     auctionBusy.value = false
+  }
+}
+
+/** Забрать питомца с торгов: со ставками — с неустойкой 10%. */
+async function withdrawAuction(item) {
+  const penalty = item.auction.cancel_penalty
+  const text = penalty
+      ? `Забрать питомца с аукциона? Лидеру вернётся ставка, а с тебя спишется неустойка ${penalty} ApexCoin (10% от ставки).`
+      : 'Забрать питомца с аукциона? Ставок нет — это бесплатно.'
+  if (!await confirmDialog(text)) return
+
+  busyId.value = item.id
+  error.value = ''
+  try {
+    await api.post(`/shop/auctions/${item.auction.id}/cancel`)
+    notice.value = 'Питомец снят с торгов.'
+    auth.fetchMe()
+    await list.reload()
+  } catch (e) {
+    error.value = e.message || 'Не удалось снять лот.'
+  } finally {
+    busyId.value = null
   }
 }
 
@@ -749,21 +772,31 @@ onMounted(() => {
 
             <!-- Info -->
             <div class="inventory-card__content">
-              <span class="inventory-card__rarity">
+              <!-- У питомца вместо редкости предмета — черты этого экземпляра -->
+              <span v-if="!item.pet" class="inventory-card__rarity">
                 {{ RARITY_LABELS[item.rarity] || item.rarity }}
+              </span>
+              <span v-else class="inventory-card__petline">
+                <b>Ур. {{ item.pet.level ?? 1 }}</b>
+                <em v-if="item.pet.serial">#{{ item.pet.serial }}</em>
               </span>
 
               <h3 class="inventory-card__name">
-                {{ item.name }}
+                {{ item.pet?.name || item.name }}
               </h3>
 
-              <!-- Уникальный питомец: номер и черты этого экземпляра -->
-              <p v-if="item.pet" class="inventory-card__pet">
-                <b>#{{ item.pet.serial }}</b>
-                {{ item.pet.model.name }} · {{ item.pet.backdrop.name }} · {{ item.pet.accessory.name }}
+              <ul v-if="item.pet" class="inventory-card__traits">
+                <li v-for="key in ['model', 'backdrop', 'accessory']" :key="key" :title="`Шанс ${chanceLabel(item.pet[key]?.chance)}`">
+                  {{ item.pet[key]?.name }} <small>{{ chanceLabel(item.pet[key]?.chance) }}</small>
+                </li>
+              </ul>
+
+              <p v-if="item.auction" class="inventory-card__auction">
+                <AppIcon icon="clock" :size="12" />
+                На аукционе · {{ item.auction.current_price ? `ставка ₳ ${item.auction.current_price}` : 'ставок нет' }}
               </p>
 
-              <p class="inventory-card__description">
+              <p v-if="!item.pet" class="inventory-card__description">
                 {{ itemSubtitle(item) }}
 
                 <template v-if="item.quantity > 1">
@@ -785,6 +818,9 @@ onMounted(() => {
                 <AppIcon icon="bolt" :size="15" />
                 <span>Применить приоритет</span>
               </button>
+
+              <!-- На торгах питомца не надеть — только «Лот» и «Забрать» ниже -->
+              <template v-else-if="item.auction" />
 
               <button
                   v-else-if="item.is_equippable"
@@ -823,9 +859,18 @@ onMounted(() => {
             </div>
 
             <!-- Продать магазину или подарить другу -->
-            <div v-if="item.tradeable && Number.isInteger(item.inventory_id)" class="inventory-card__trade">
+            <div v-if="item.auction" class="inventory-card__trade">
+              <RouterLink :to="{ path: '/auction', query: { lot: item.auction.id } }" class="inventory-card__trade-link">
+                <AppIcon icon="chat" :size="13" /> Лот
+              </RouterLink>
+              <button type="button" :disabled="busyId === item.id" @click="withdrawAuction(item)">
+                Забрать <b v-if="item.auction.cancel_penalty">−{{ item.auction.cancel_penalty }}</b>
+              </button>
+            </div>
+
+            <div v-else-if="item.tradeable && Number.isInteger(item.inventory_id)" class="inventory-card__trade">
               <button type="button" :disabled="busyId === item.id" @click="sell(item)">
-                <AppIcon icon="coin" :size="13" /> Продать · {{ item.sell_value }}
+                Продать <b>{{ item.sell_value }}</b>
               </button>
               <button type="button" :disabled="busyId === item.id" @click="openGift(item)">
                 <AppIcon icon="gift" :size="13" /> Подарить
