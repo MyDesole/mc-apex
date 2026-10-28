@@ -53,6 +53,9 @@ onMounted(async () => {
         </span>
         <h1>Самые уважаемые</h1>
         <p>Респект — раз в день любому игроку, кнопкой в шапке его профиля. Здесь те, кого уважают больше всех за последние 7 дней.</p>
+        <p class="rt-head__prize">
+          Каждый понедельник тройка недели получает 50 000, 30 000 и 10 000 ApexCoin и бесплатный сундук.
+        </p>
       </div>
 
       <dl class="rt-head__stats">
@@ -198,6 +201,12 @@ onMounted(async () => {
 
   font-size: 14px;
   line-height: 1.55;
+}
+
+.rt-head p.rt-head__prize {
+  margin-top: 10px;
+  color: #fdba74;
+  font-weight: 700;
 }
 
 .rt-head__stats {

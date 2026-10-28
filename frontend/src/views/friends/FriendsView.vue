@@ -1,17 +1,27 @@
 <script setup>
-import { rankLabel } from '@/utils/playerStyling.js'
+/**
+ * Друзья: в одном стиле с остальными страницами сообщества.
+ * Шапка со сводкой, поиск по нику, вкладки; входящие заявки — отдельным
+ * блоком сверху, чтобы их не пропустить; друзья — карточками с действиями.
+ */
+import { computed, onMounted, ref } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
 import PageLoader from '@/components/core/PageLoader.vue'
-import { confirm as confirmDialog } from '@/utils/dialog.js'
-import { onMounted, ref, computed } from 'vue'
-import { RouterLink } from 'vue-router'
-import { friendsApi } from '@/services/friends/friends.js'
+import AppIcon from '@/components/core/AppIcon.vue'
+import UserName from '@/components/players/UserName.vue'
 import GiftCoinsButton from '@/components/shop/GiftCoinsButton.vue'
-import TabTransition from '@/components/core/TabTransition.vue'
-import UserName from "@/components/players/UserName.vue";
+import { friendsApi } from '@/services/friends/friends.js'
+import { chatApi } from '@/services/chat/chat.js'
+import { confirm as confirmDialog } from '@/utils/dialog.js'
+import { rankLabel } from '@/utils/playerStyling.js'
 import { userLink } from '@/utils/links.js'
+
+const router = useRouter()
 
 const loading = ref(true)
 const tab = ref('friends')
+const query = ref('')
+const busy = ref(null)
 const friends = ref([])
 const incoming = ref([])
 const outgoing = ref([])
@@ -21,104 +31,164 @@ async function load() {
   try {
     const data = await friendsApi.list()
     friends.value = data.friends || []
-    incoming.value = data.incoming_requests || []
-    outgoing.value = data.outgoing_requests || []
-  } catch (e) {
-    console.error(e)
+    incoming.value = (data.incoming_requests || []).map((i) => i.user)
+    outgoing.value = (data.outgoing_requests || []).map((o) => o.user)
   } finally {
     loading.value = false
   }
 }
 
-async function accept(userId) {
-  await friendsApi.accept(userId)
-  await load()
+async function act(userId, action) {
+  busy.value = userId
+  try {
+    await action()
+    await load()
+  } finally {
+    busy.value = null
+  }
 }
 
-async function remove(userId) {
-  if (!await confirmDialog('Удалить из друзей?')) return
-  await friendsApi.remove(userId)
-  await load()
+function accept(user) {
+  return act(user.id, () => friendsApi.accept(user.id))
+}
+
+async function remove(user, text) {
+  if (!await confirmDialog(text)) return
+  return act(user.id, () => friendsApi.remove(user.id))
+}
+
+async function write(user) {
+  busy.value = user.id
+  try {
+    const result = await chatApi.startDirect(user.id)
+    if (result?.conversation?.id) router.push(`/messages/${result.conversation.id}`)
+  } finally {
+    busy.value = null
+  }
+}
+
+const TABS = computed(() => [
+  ['friends', 'Друзья', friends.value.length],
+  ['outgoing', 'Отправленные', outgoing.value.length],
+])
+
+const list = computed(() => {
+  const source = tab.value === 'friends' ? friends.value : outgoing.value
+  const q = query.value.trim().toLowerCase()
+  return q ? source.filter((u) => u.username?.toLowerCase().includes(q)) : source
+})
+
+function rankOf(user) {
+  const label = rankLabel(user, null)
+  if (!label) return 'Без тира'
+  return `${user.display_rank?.type === 'bridge' ? 'Звание' : 'Тир'} ${label}`
 }
 
 onMounted(load)
-
-const currentList = computed(() => {
-  if (tab.value === 'friends') return friends.value
-  if (tab.value === 'incoming') return incoming.value.map(i => i.user)
-  return outgoing.value.map(o => o.user)
-})
 </script>
 
 <template>
-  <div class="friends-page">
-    <h1>Друзья</h1>
+  <div class="fr">
+    <header class="fr-head">
+      <div>
+        <span class="fr-head__kicker"><AppIcon icon="handshake" :size="14" /> Сообщество</span>
+        <h1>Друзья</h1>
+        <p>Друзья видят твой профиль в своих списках, им можно подарить монеты и предметы, а в студии — поставить в блок «Тиммейты».</p>
+      </div>
 
-    <div class="tabs">
-      <button :class="{ active: tab === 'friends' }" @click="tab = 'friends'">
-        Друзья ({{ friends.length }})
-      </button>
-      <button :class="{ active: tab === 'incoming' }" @click="tab = 'incoming'">
-        Входящие ({{ incoming.length }})
-      </button>
-      <button :class="{ active: tab === 'outgoing' }" @click="tab = 'outgoing'">
-        Исходящие ({{ outgoing.length }})
-      </button>
-    </div>
+      <dl class="fr-head__stats">
+        <div><dt>Друзей</dt><dd>{{ friends.length }}</dd></div>
+        <div><dt>Заявок</dt><dd :class="{ 'is-hot': incoming.length }">{{ incoming.length }}</dd></div>
+        <div><dt>Отправлено</dt><dd>{{ outgoing.length }}</dd></div>
+      </dl>
+    </header>
 
     <PageLoader v-if="loading" />
-    <div v-else-if="!currentList.length" class="empty">
-      {{ tab === 'friends' ? 'Пока нет друзей' : 'Пусто' }}
-    </div>
 
-    <TabTransition
-        v-else
-        :active="tab"
-        tag="div"
-        class="friends-list"
-    >
-      <div v-for="user in currentList" :key="user.id" class="friend-row">
-        <RouterLink :to="userLink(user)" class="friend-main">
-          <div class="avatar" :class="`tier-bg-${user.tier}`">
-            <img
-                v-if="user.avatar_url"
-                :src="user.avatar_url"
-                :alt="user.username"
-                class="avatar-img"
-            />
-            <template v-else>
-              {{ (user.username || 'И').charAt(0).toUpperCase() }}
-            </template>
-          </div>
-          <div class="friend-info">
-            <div class="name">
-              <UserName :user="user" />
+    <template v-else>
+      <!-- Входящие заявки: сверху, чтобы не пропустить -->
+      <section v-if="incoming.length" class="fr-requests">
+        <h2>Хотят дружить <span>{{ incoming.length }}</span></h2>
+        <div class="fr-requests__list">
+          <div v-for="user in incoming" :key="`in-${user.id}`" class="fr-request">
+            <RouterLink :to="userLink(user)" class="fr-person">
+              <span class="fr-avatar">
+                <img v-if="user.avatar_url" :src="user.avatar_url" :alt="user.username" />
+                <template v-else>{{ (user.username || '?').charAt(0).toUpperCase() }}</template>
+              </span>
+              <span class="fr-person__text">
+                <UserName :user="user" />
+                <small>{{ rankOf(user) }}</small>
+              </span>
+            </RouterLink>
+            <div class="fr-request__actions">
+              <button type="button" class="fr-btn fr-btn--primary" :disabled="busy === user.id" @click="accept(user)">Принять</button>
+              <button type="button" class="fr-btn" :disabled="busy === user.id" @click="remove(user, 'Отклонить заявку в друзья?')">Отклонить</button>
             </div>
-            <div class="tier">{{ user.display_rank?.type === 'bridge' ? 'Звание' : 'Тир' }}: {{ rankLabel(user) }}</div>
           </div>
-        </RouterLink>
-
-        <div class="actions">
-          <button
-              v-if="tab === 'incoming'"
-              class="btn-accept"
-              @click="accept(user.id)"
-          >
-            Принять
-          </button>
-
-          <GiftCoinsButton v-if="tab === 'friends'" :user="user" />
-
-          <button
-              v-if="tab === 'friends' || tab === 'outgoing'"
-              class="btn-remove"
-              @click="remove(user.id)"
-          >
-            {{ tab === 'friends' ? 'Удалить' : 'Отменить' }}
-          </button>
         </div>
+      </section>
+
+      <div class="fr-bar">
+        <div class="fr-tabs">
+          <button
+              v-for="[id, label, count] in TABS"
+              :key="id"
+              type="button"
+              :class="{ 'is-on': tab === id }"
+              @click="tab = id"
+          >{{ label }} <b>{{ count }}</b></button>
+        </div>
+
+        <label class="fr-search">
+          <AppIcon icon="target" :size="14" />
+          <input v-model="query" placeholder="Найти по нику" />
+        </label>
       </div>
-    </TabTransition>
+
+      <p v-if="!list.length" class="fr-empty">
+        <template v-if="query">Никого с таким ником.</template>
+        <template v-else-if="tab === 'friends'">
+          Друзей пока нет. Зайди в профиль игрока и нажми «В друзья» —
+          <RouterLink to="/players">найти игроков в рейтинге</RouterLink>.
+        </template>
+        <template v-else>Отправленных заявок нет.</template>
+      </p>
+
+      <div v-else class="fr-grid">
+        <article v-for="user in list" :key="user.id" class="fr-card">
+          <RouterLink :to="userLink(user)" class="fr-person">
+            <span class="fr-avatar fr-avatar--big">
+              <img v-if="user.avatar_url" :src="user.avatar_url" :alt="user.username" />
+              <template v-else>{{ (user.username || '?').charAt(0).toUpperCase() }}</template>
+            </span>
+            <span class="fr-person__text">
+              <UserName :user="user" />
+              <small>{{ rankOf(user) }}</small>
+            </span>
+          </RouterLink>
+
+          <div class="fr-card__actions">
+            <template v-if="tab === 'friends'">
+              <button type="button" class="fr-btn fr-btn--primary" :disabled="busy === user.id" @click="write(user)">
+                <AppIcon icon="send" :size="13" /> Написать
+              </button>
+              <GiftCoinsButton :user="user" />
+              <button type="button" class="fr-btn fr-btn--ghost" title="Удалить из друзей" :disabled="busy === user.id" @click="remove(user, 'Удалить из друзей?')">
+                <AppIcon icon="trash" :size="13" />
+              </button>
+            </template>
+            <button
+                v-else
+                type="button"
+                class="fr-btn"
+                :disabled="busy === user.id"
+                @click="remove(user, 'Отменить заявку?')"
+            >Отменить заявку</button>
+          </div>
+        </article>
+      </div>
+    </template>
   </div>
 </template>
 

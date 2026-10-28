@@ -1,227 +1,418 @@
-.friends-page {
-  width: min(900px, calc(100% - 40px));
-  margin: 40px auto;
+/* =========================================================
+   ДРУЗЬЯ — в одном стиле со страницами сообщества
+   ========================================================= */
+
+.fr {
+  --fr-accent: #8b5cf6;
+
+  width: min(1000px, calc(100% - 32px));
+  margin: 28px auto 60px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
 }
 
-h1 {
-  margin: 0 0 24px;
-  font-size: 28px;
+/* ---------- Шапка ---------- */
+
+.fr-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 24px;
+
+  padding-bottom: 22px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.fr-head__kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  color: #c4b5fd;
+
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.fr-head h1 {
+  margin: 8px 0 6px;
+
+  color: #fff;
+
+  font-family: var(--font-display);
+  font-size: clamp(30px, 4.5vw, 46px);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.fr-head p {
+  max-width: 520px;
+  margin: 0;
+
+  color: #8a8598;
+
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.fr-head__stats {
+  display: flex;
+  gap: 1px;
+
+  margin: 0;
+  overflow: hidden;
+
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+}
+
+.fr-head__stats div {
+  min-width: 92px;
+  padding: 12px 16px;
+
+  background: var(--bg-card, #15131c);
+}
+
+.fr-head__stats dt {
+  color: #8a8598;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.fr-head__stats dd {
+  margin: 4px 0 0;
+
+  color: #fff;
+
+  font-size: 18px;
   font-weight: 800;
 }
 
-.tabs {
+.fr-head__stats dd.is-hot { color: #fbbf24; }
+
+/* ---------- Входящие заявки ---------- */
+
+.fr-requests {
+  padding: 16px;
+
+  background:
+      radial-gradient(ellipse at 0 0, rgba(251, 191, 36, 0.12), transparent 60%),
+      var(--bg-card, #15131c);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 16px;
+}
+
+.fr-requests h2 {
   display: flex;
-  gap: 6px;
-  margin-bottom: 20px;
-  border-bottom: 1px solid var(--border);
+  align-items: center;
+  gap: 8px;
+
+  margin: 0 0 12px;
+
+  color: #fff;
+
+  font-size: 15px;
+  font-weight: 800;
 }
 
-.tabs button {
-  padding: 10px 16px;
-  color: var(--text-dim);
-  background: transparent;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
-  transition: all 0.2s;
+.fr-requests h2 span {
+  padding: 1px 8px;
+
+  color: #1a1206;
+  background: #fbbf24;
+  border-radius: 999px;
+
+  font-size: 12px;
 }
 
-.tabs button.active {
-  color: var(--text);
-  border-bottom-color: var(--accent);
-}
-
-.friends-list {
+.fr-requests__list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.friend-row {
+.fr-request {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  padding: 12px 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 6px;
+
+  padding: 10px 12px;
+
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
 }
 
-.friend-main {
+.fr-request__actions {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-  min-width: 0;
-  text-decoration: none;
-  color: inherit;
-}
-
-/* === AVATAR === */
-
-.avatar {
-  position: relative;
-  width: 42px;
-  height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  gap: 6px;
   flex-shrink: 0;
-  border-radius: 6px;
-  color: #fff;
-  font-weight: 800;
-  font-size: 16px;
-  overflow: hidden;
-  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
 }
 
-/* фоны по тиру, если нет аватарки */
-.tier-bg-S { background: linear-gradient(135deg, #facc15, #d97706); }
-.tier-bg-A { background: linear-gradient(135deg, #f97316, #c2410c); }
-.tier-bg-B { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-.tier-bg-C { background: linear-gradient(135deg, #06b6d4, #0e7490); }
-.tier-bg-D { background: linear-gradient(135deg, #22c55e, #15803d); }
-.tier-bg-E { background: linear-gradient(135deg, #6b7280, #374151); }
+/* ---------- Панель: вкладки и поиск ---------- */
 
-.avatar-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
+.fr-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-/* === INFO === */
+.fr-tabs {
+  display: flex;
+  gap: 2px;
 
-.friend-info {
-  min-width: 0;
-  flex: 1;
+  padding: 3px;
+
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 11px;
 }
 
-.name {
+.fr-tabs button {
+  min-height: 34px;
+
+  padding: 0 14px;
+
+  color: #a8a3b8;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+
+  font: inherit;
+  font-size: 13px;
   font-weight: 700;
-  font-size: 14px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+
+  cursor: pointer;
 }
 
-.tier {
-  color: var(--text-dim);
+.fr-tabs button b {
+  margin-left: 4px;
+  color: #6f6a80;
+}
+
+.fr-tabs button.is-on {
+  color: #fff;
+  background: color-mix(in srgb, var(--fr-accent) 40%, #1d1a28);
+}
+
+.fr-tabs button.is-on b { color: #ddd6fe; }
+
+.fr-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  width: min(280px, 100%);
+  padding: 0 12px;
+
+  color: #8a8598;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 11px;
+}
+
+.fr-search:focus-within { border-color: color-mix(in srgb, var(--fr-accent) 60%, transparent); }
+
+.fr-search input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+
+  color: #fff;
+  background: none;
+  border: 0;
+  outline: none;
+
+  font: inherit;
+  font-size: 13px;
+}
+
+/* ---------- Карточки ---------- */
+
+.fr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 10px;
+}
+
+.fr-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  padding: 14px;
+
+  background: var(--bg-card, #15131c);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.fr-card:hover {
+  border-color: color-mix(in srgb, var(--fr-accent) 45%, transparent);
+  transform: translateY(-2px);
+}
+
+.fr-person {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  color: inherit;
+  text-decoration: none;
+}
+
+.fr-person__text {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fr-person__text small {
+  color: #8a8598;
   font-size: 12px;
 }
 
-/* === ACTIONS === */
+.fr-avatar {
+  width: 40px;
+  height: 40px;
 
-.actions {
-  display: flex;
-  gap: 8px;
+  display: grid;
+  place-items: center;
   flex-shrink: 0;
+  overflow: hidden;
+
+  color: #ddd6fe;
+  background: color-mix(in srgb, var(--fr-accent) 22%, #1d1a28);
+  border-radius: 12px;
+
+  font-weight: 800;
 }
 
-.btn-accept,
-.btn-remove {
-  min-height: 34px;
-  padding: 0 14px;
-  border-radius: 8px;
-  font-size: 13px;
+.fr-avatar--big {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  font-size: 20px;
+}
+
+.fr-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fr-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  padding-top: 12px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.fr-card__actions :deep(button) {
+  min-height: 32px;
+}
+
+/* Кнопка подарка своя и тянется на всю ширину — в карточке она в ряд */
+.fr-card__actions > :deep(*) {
+  width: auto !important;
+  flex: 0 1 auto;
+}
+
+.fr-card__actions :deep(button) {
+  width: auto !important;
+}
+
+/* ---------- Кнопки ---------- */
+
+.fr-btn {
+  min-height: 32px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 0 12px;
+
+  color: #d6d2e2;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+
+  font: inherit;
+  font-size: 12.5px;
   font-weight: 700;
+
   cursor: pointer;
-  border: 1px solid;
-  transition: all 0.2s;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.btn-accept {
+.fr-btn:hover:not(:disabled) { color: #fff; background: rgba(255, 255, 255, 0.1); }
+.fr-btn:disabled { opacity: 0.5; cursor: default; }
+
+.fr-btn--primary {
   color: #fff;
-  background: #22c55e;
-  border-color: #22c55e;
+  background: color-mix(in srgb, var(--fr-accent) 70%, #1d1a28);
+  border-color: transparent;
 }
 
-.btn-accept:hover {
-  background: #16a34a;
-}
+.fr-btn--primary:hover:not(:disabled) { background: var(--fr-accent); }
 
-.btn-remove {
-  color: var(--text-dim);
-  background: transparent;
-  border-color: var(--border);
-}
+.fr-btn--ghost { margin-left: auto; }
+.fr-btn--ghost:hover:not(:disabled) { color: #fecaca; background: rgba(239, 68, 68, 0.25); }
 
-.btn-remove:hover {
-  color: #f87171;
-  border-color: rgba(239, 68, 68, 0.3);
-}
+.fr-empty {
+  margin: 0;
+  padding: 44px 16px;
 
-.empty {
-  padding: 40px;
+  color: #8a8598;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+
   text-align: center;
-  color: var(--text-dim);
 }
 
-/* === MOBILE === */
+.fr-empty a { color: #c4b5fd; }
 
-@media (max-width: 640px) {
-  .friends-page {
-    width: calc(100% - 24px);
-    margin: 20px auto;
+/* ---------- Телефон ---------- */
+
+@media (max-width: 720px) {
+  .fr-head {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  h1 {
-    font-size: 22px;
-    margin-bottom: 18px;
+  .fr-head__stats div { flex: 1; min-width: 0; }
+
+  .fr-bar {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  /* Вкладки в одну строку: раньше подпись переносилась и от неё оставалось «(9)» */
-  .tabs {
-    gap: 0;
+  .fr-tabs button { flex: 1; }
+  .fr-search { width: 100%; }
+
+  .fr-request {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .tabs button {
-    flex: 1;
-    padding: 10px 6px;
-    font-size: 13px;
-    white-space: nowrap;
-  }
-
-  /* Кнопки — отдельной строкой под игроком: иначе имя и тир сжимались до буквы */
-  .friend-row {
-    flex-wrap: wrap;
-    padding: 10px 12px;
-    gap: 10px;
-  }
-
-  .friend-main {
-    flex-basis: 100%;
-  }
-
-  .actions {
-    width: 100%;
-  }
-
-  /* GiftCoinsButton — фрагмент (кнопка + Teleport), scoped-атрибут на него не ставится */
-  .actions :deep(.gift-btn),
-  .btn-accept,
-  .btn-remove {
-    flex: 1;
-    min-width: 0;
-    justify-content: center;
-  }
-
-  .avatar {
-    width: 40px;
-    height: 40px;
-    font-size: 15px;
-    border-radius: 6px;
-  }
-
-  .btn-accept,
-  .btn-remove {
-    min-height: 32px;
-    padding: 0 12px;
-    font-size: 12.5px;
-  }
+  .fr-request__actions .fr-btn { flex: 1; justify-content: center; }
 }
