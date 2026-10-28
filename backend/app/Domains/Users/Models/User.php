@@ -210,6 +210,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'featured_achievements_list',
         'friends_all',
         'display_rank',
+        'tier_tested',
     ];
 
     /**
@@ -231,7 +232,31 @@ class User extends Authenticatable implements MustVerifyEmail
             }
         }
 
-        return ['type' => 'tier', 'label' => $attributes['tier'] ?? null, 'color' => null];
+        return ['type' => 'tier', 'label' => $this->publicTier(), 'color' => null];
+    }
+
+    /**
+     * Прошёл ли игрок тир-тест. Новичку в базе стоит E по умолчанию, но
+     * показывать её как настоящий тир нельзя: до первого теста — «Без тира».
+     * S и S+ выдаёт персонал вручную, они настоящие и без очков.
+     */
+    public function hasTier(): bool
+    {
+        $attributes = $this->getAttributes();
+
+        return (float) ($attributes['tier_score'] ?? 0) > 0
+            || in_array($attributes['tier'] ?? null, ['S', 'S+'], true);
+    }
+
+    /** Тир для чужих глаз: null, пока игрок не проходил тест. */
+    public function publicTier(): ?string
+    {
+        return $this->hasTier() ? ($this->getAttributes()['tier'] ?? null) : null;
+    }
+
+    public function getTierTestedAttribute(): bool
+    {
+        return $this->hasTier();
     }
 
     public function getAspectsAttribute()

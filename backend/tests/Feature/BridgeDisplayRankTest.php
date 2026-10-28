@@ -34,7 +34,7 @@ class BridgeDisplayRankTest extends TestCase
     {
         $rank = $this->rank();
         $user = User::factory()->create([
-            'tier' => 'A', 'bridge_rank_id' => $rank->id, 'profile_mode' => 'pvp', 'bridge_primary' => true,
+            'tier' => 'A', 'tier_score' => 75, 'bridge_rank_id' => $rank->id, 'profile_mode' => 'pvp', 'bridge_primary' => true,
         ]);
 
         $this->assertSame(['type' => 'tier', 'label' => 'A', 'color' => null], $user->fresh()->display_rank);
@@ -44,7 +44,7 @@ class BridgeDisplayRankTest extends TestCase
 
     public function test_bridge_profile_without_rank_shows_tier(): void
     {
-        $user = User::factory()->create(['tier' => 'B', 'profile_mode' => 'bridge']);
+        $user = User::factory()->create(['tier' => 'B', 'tier_score' => 60, 'profile_mode' => 'bridge']);
 
         $this->assertSame('tier', $user->fresh()->display_rank['type']);
     }

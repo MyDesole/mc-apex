@@ -6,7 +6,7 @@
  * Хозяин: счётчик и место в топе недели; по клику — карточка с теми, кто
  * дал респект, и гостями профиля за неделю.
  */
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { api } from '@/services/core/api.js'
 import { useAuthStore } from '@/stores/core/auth.js'
@@ -79,6 +79,21 @@ async function give() {
   }
 }
 
+// Забрать свой сегодняшний респект (снова дать — только завтра)
+async function revoke() {
+  if (busy.value) return
+  busy.value = true
+  try {
+    data.value = await api.delete(`/players/${props.user.id}/respects`)
+    panelOpen.value = false
+  } catch (e) {
+    error.value = e.message || 'Не получилось'
+    setTimeout(() => { error.value = '' }, 2500)
+  } finally {
+    busy.value = false
+  }
+}
+
 async function openPanel() {
   const rect = btnEl.value?.getBoundingClientRect()
   if (rect) {
@@ -97,6 +112,14 @@ async function openPanel() {
     }
   }
 }
+
+const respectTitle = computed(() => {
+  const d = data.value
+  if (!d.can_give) return 'Твои респекты и гости профиля'
+  if (d.given_today) return 'Респект дан — нажми, чтобы посмотреть или забрать'
+  if (d.revoked_today) return 'Ты забрал респект сегодня — дать снова можно завтра'
+  return 'Дать респект'
+})
 
 function ago(iso) {
   const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000)
@@ -137,12 +160,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
           'is-pop': popped,
         }"
         :disabled="busy"
-        :title="data.can_give ? (data.given_today ? 'Респект на сегодня дан — приходи завтра' : 'Дать респект') : 'Твои респекты и гости профиля'"
-        @click="data.can_give ? (data.given_today ? openPanel() : give()) : openPanel()"
+        :title="respectTitle"
+        @click="data.can_give ? (data.given_today || data.revoked_today ? openPanel() : give()) : openPanel()"
     >
       <span class="respect__fire"><AppIcon icon="flame" :size="16" /></span>
       <b>{{ data.total }}</b>
-      <span v-if="data.can_give && !data.given_today" class="respect__cta">Респект</span>
+      <span v-if="data.can_give && !data.given_today && !data.revoked_today" class="respect__cta">Респект</span>
       <span v-else-if="data.can_give" class="respect__done"><AppIcon icon="check" :size="14" /></span>
       <span v-if="data.rank && data.rank <= 10" class="respect__rank">#{{ data.rank }} недели</span>
 
@@ -172,6 +195,18 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
             <small>{{ data.week }} за неделю<template v-if="data.rank"> · #{{ data.rank }} в топе недели</template></small>
           </div>
         </header>
+
+        <!-- Свой сегодняшний респект можно забрать -->
+        <button
+            v-if="data.can_give && data.given_today"
+            type="button"
+            class="respect-panel__revoke"
+            :disabled="busy"
+            @click="revoke"
+        >Забрать свой респект</button>
+        <p v-else-if="data.can_give && data.revoked_today" class="respect-panel__empty">
+          Ты забрал респект сегодня — дать снова можно завтра.
+        </p>
 
         <h4>Дали респект</h4>
         <p v-if="!data.recent.length" class="respect-panel__empty">Пока никто — поделись профилем с друзьями.</p>
@@ -422,6 +457,28 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   margin: 0;
   color: #8a8598;
   font-size: 12px;
+}
+
+.respect-panel__revoke {
+  width: 100%;
+  min-height: 34px;
+  margin-bottom: 4px;
+
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 9px;
+
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.respect-panel__revoke:hover:not(:disabled) {
+  color: #fff;
+  background: rgba(239, 68, 68, 0.25);
 }
 
 .respect-panel__person {

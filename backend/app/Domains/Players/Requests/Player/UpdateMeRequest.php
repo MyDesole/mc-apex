@@ -12,7 +12,8 @@ class UpdateMeRequest extends BaseFormRequest
             'bio' => ['nullable', 'string', 'max:500'],
             'banner_color' => ['nullable', 'string', 'max:16'],
 
-            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
+            // До 10 МБ: статичные картинки сервер сам сжимает (PlayerProfileService::storeAvatar)
+            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:10240'],
             'cover' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
 
             'socials' => ['nullable', 'array'],

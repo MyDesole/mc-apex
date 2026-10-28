@@ -466,7 +466,7 @@ onBeforeUnmount(() => {
                   >
                     Удалить аватар
                   </button>
-                  <small class="hint">JPG, PNG, WebP, GIF · до 2 МБ</small>
+                  <small class="hint">JPG, PNG, WebP, GIF · до 10 МБ</small>
                 </div>
               </div>
             </section>

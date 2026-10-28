@@ -220,7 +220,7 @@ class ClanOverviewService
                 ...$this->userCard($m->user),
                 'role' => $m->role,
                 'rating_points' => (int) $m->user->rating_points,
-                'tier' => $m->user->tier,
+                'tier' => $m->user->publicTier(),
             ])
             ->values();
     }

@@ -541,7 +541,7 @@ class ProfileBlocksService
                 'username' => $u->username,
                 'minecraft_username' => $u->minecraft_username,
                 'avatar_url' => $u->avatar_url,
-                'tier' => $u->tier,
+                'tier' => $u->publicTier(),
                 'display_rank' => $u->display_rank,
                 'name_effect' => $u->name_effect,
                 'name_icon' => $u->name_icon,

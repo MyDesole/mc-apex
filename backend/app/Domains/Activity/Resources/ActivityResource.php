@@ -26,7 +26,7 @@ class ActivityResource extends JsonResource
                 'id' => $actor->id,
                 'username' => $actor->username,
                 'avatar_url' => $actor->avatar_url,
-                'tier' => $actor->tier,
+                'tier' => $actor->publicTier(),
                 'display_rank' => $actor->display_rank,
                 'clan_tag' => $actor->clan_tag,
                 'clan_color' => $actor->clan_color,

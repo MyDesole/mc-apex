@@ -180,7 +180,7 @@ class PlayerProfileService
     {
         if (isset($files['avatar'])) {
             $this->deleteStoredFile($user->avatar);
-            $data['avatar'] = $files['avatar']->store("users/{$user->id}", 'public');
+            $data['avatar'] = $this->storeAvatar($user, $files['avatar']);
         }
 
         if (isset($files['cover'])) {
@@ -195,6 +195,58 @@ class PlayerProfileService
         AchievementService::check($user);
 
         return $user->fresh();
+    }
+
+    /** Сторона аватара после сжатия: шапка рисует его не крупнее ~130px. */
+    private const AVATAR_SIDE = 512;
+
+    /**
+     * Аватар до 10 МБ: статичную картинку уменьшаем до 512px и сохраняем
+     * в WebP — профиль не тянет мегабайты. GIF не трогаем (анимация), без
+     * GD на сервере кладём файл как есть.
+     */
+    private function storeAvatar(User $user, \Illuminate\Http\UploadedFile $file): string
+    {
+        $dir = "users/{$user->id}";
+        $mime = $file->getMimeType();
+
+        if ($mime === 'image/gif' || ! function_exists('imagewebp')) {
+            return $file->store($dir, 'public');
+        }
+
+        $source = match ($mime) {
+            'image/jpeg' => @imagecreatefromjpeg($file->getRealPath()),
+            'image/png' => @imagecreatefrompng($file->getRealPath()),
+            'image/webp' => @imagecreatefromwebp($file->getRealPath()),
+            default => false,
+        };
+
+        if (! $source) {
+            return $file->store($dir, 'public');
+        }
+
+        $width = imagesx($source);
+        $height = imagesy($source);
+        $scale = min(1, self::AVATAR_SIDE / max($width, $height));
+        $w = max(1, (int) round($width * $scale));
+        $h = max(1, (int) round($height * $scale));
+
+        $target = imagecreatetruecolor($w, $h);
+        imagealphablending($target, false);
+        imagesavealpha($target, true);
+        imagecopyresampled($target, $source, 0, 0, 0, 0, $w, $h, $width, $height);
+
+        ob_start();
+        imagewebp($target, null, 86);
+        $binary = ob_get_clean();
+
+        imagedestroy($source);
+        imagedestroy($target);
+
+        $path = $dir . '/' . \Illuminate\Support\Str::random(40) . '.webp';
+        \Illuminate\Support\Facades\Storage::disk('public')->put($path, $binary);
+
+        return $path;
     }
 
     /**

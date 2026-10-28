@@ -24,7 +24,7 @@ class UserCardResource extends JsonResource
             'username' => $user->username,
             'avatar' => $user->avatar,
             'avatar_url' => $user->avatar_url,
-            'tier' => $user->tier,
+            'tier' => $user->publicTier(),
             'display_rank' => $user->display_rank,
             'tier_score' => (int) $user->tier_score,
             'rating_points' => (int) $user->rating_points,

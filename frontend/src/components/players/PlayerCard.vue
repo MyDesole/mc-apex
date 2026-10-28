@@ -244,7 +244,8 @@ const profileStats = computed(() => [
     // что это бридж, и так понятно по подписи
     value: props.bridgeMode
         ? (props.bridgeRank?.label?.replace(/^bridge\s+/i, '') ?? 'Нет')
-        : (props.user.tier || '—'),
+        // До первого тир-теста тира нет, хотя в базе у новичка стоит E
+        : (props.user.tier_tested === false ? 'Нет' : (props.user.tier || '—')),
     label: props.bridgeMode ? 'Звание' : 'Тир',
     icon: '◆',
     accent: true,

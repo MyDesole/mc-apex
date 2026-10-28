@@ -353,13 +353,18 @@ const profileEffectStyle = computed(() => {
    TIER
    ========================================================= */
 
+// Новичку база ставит E по умолчанию — до первого тир-теста тира нет
 const tier = computed(() =>
-    props.user.tier || 'UNRANKED'
+    (props.user.tier_tested === false ? null : props.user.tier) || 'UNRANKED'
 )
 
 const tierLabel = computed(() => {
   if (props.bridgeMode) {
     return String(props.bridgeRank?.label ?? 'БЕЗ ЗВАНИЯ').toUpperCase()
+  }
+
+  if (tier.value === 'UNRANKED') {
+    return 'БЕЗ ТИРА'
   }
 
   return String(tier.value)
@@ -370,7 +375,7 @@ const tierLabel = computed(() => {
 const tierShort = computed(() => {
   const value = tierLabel.value
 
-  if (value === 'UNRANKED') {
+  if (tier.value === 'UNRANKED' && !props.bridgeMode) {
     return '—'
   }
 
@@ -608,7 +613,7 @@ const partEmpty = computed(() => {
          ===================================================== -->
 
     <div
-        v-if="!compact && !part"
+        v-if="!compact && !part && tierShort !== '—'"
         class="profile-header__tier-watermark"
         aria-hidden="true"
     >

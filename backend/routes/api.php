@@ -425,6 +425,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/players/{user}/respects', [\App\Domains\Players\Controllers\Api\RespectController::class, 'give'])
         ->whereNumber('user')
         ->middleware('throttle:20,1');
+    // Забрать свой сегодняшний респект
+    Route::delete('/players/{user}/respects', [\App\Domains\Players\Controllers\Api\RespectController::class, 'revoke'])
+        ->whereNumber('user')
+        ->middleware('throttle:20,1');
     Route::post('/players/{user}/visit', [\App\Domains\Players\Controllers\Api\RespectController::class, 'visit'])
         ->whereNumber('user')
         ->middleware('throttle:60,1');

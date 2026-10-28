@@ -27,6 +27,11 @@ class RespectController extends Controller
         return response()->json($this->respects->give($user, $request->user()));
     }
 
+    public function revoke(Request $request, User $user): JsonResponse
+    {
+        return response()->json($this->respects->revoke($user, $request->user()));
+    }
+
     public function visit(Request $request, User $user): JsonResponse
     {
         $this->respects->visit($user, $request->user());

@@ -68,6 +68,8 @@ class LootCaseService
                     ? now()->addDay()->startOfDay()->toIso8601String()
                     : null,
                 'pity_left' => $user && ! $case['free_daily'] ? $this->pityLeft($user, $case['slug']) : null,
+                // Ключи — бесплатные открытия этого кейса (награды, подарки)
+                'keys' => $user && ! $case['free_daily'] ? $this->keys($user, $case['slug']) : 0,
                 // Витрина содержимого: по нескольку предметов каждой редкости
                 'preview' => collect(LootCases::RARITIES)
                     ->filter(fn ($rarity) => ($case['chances'][$rarity] ?? 0) > 0)
@@ -92,7 +94,11 @@ class LootCaseService
             throw new RuntimeException('Бесплатный сундук уже открыт сегодня. Новый будет завтра.');
         }
 
-        if (! CoinService::canAfford($user, $case['price'])) {
+        // Есть ключ — открываем платный кейс бесплатно
+        $useKey = ! $case['free_daily'] && $this->keys($user, $slug) > 0;
+        $price = $useKey ? 0 : $case['price'];
+
+        if (! CoinService::canAfford($user, $price)) {
             throw new RuntimeException('Недостаточно ApexCoin. Не хватает ' . ($case['price'] - (int) $user->apex_coins) . '.');
         }
 
@@ -112,9 +118,15 @@ class LootCaseService
             $outcome = LootCases::COINS;
         }
 
-        $result = DB::transaction(function () use ($user, $case, $outcome, $item) {
-            if ($case['price'] > 0) {
-                CoinService::debit($user, $case['price'], CoinTransaction::SOURCE_CASE, "Открытие: {$case['name']}");
+        $result = DB::transaction(function () use ($user, $case, $outcome, $item, $useKey, $price) {
+            if ($useKey) {
+                DB::table('loot_case_keys')
+                    ->where('user_id', $user->id)
+                    ->where('case_slug', $case['slug'])
+                    ->where('count', '>', 0)
+                    ->decrement('count');
+            } elseif ($price > 0) {
+                CoinService::debit($user, $price, CoinTransaction::SOURCE_CASE, "Открытие: {$case['name']}");
             }
 
             $coins = 0;
@@ -156,7 +168,7 @@ class LootCaseService
                 'case_slug' => $case['slug'],
                 'shop_item_id' => $item?->id,
                 'outcome' => $outcome,
-                'price' => $case['price'],
+                'price' => $price,
                 'coins' => $coins,
                 'duplicate' => $duplicate,
             ]);
@@ -188,8 +200,33 @@ class LootCaseService
                 'available' => $this->freeAvailable($user, $case),
                 'next_free_at' => $case['free_daily'] ? now()->addDay()->startOfDay()->toIso8601String() : null,
                 'pity_left' => $case['free_daily'] ? null : $this->pityLeft($user, $case['slug']),
+                'keys' => $case['free_daily'] ? 0 : $this->keys($user, $case['slug']),
             ],
+            'used_key' => $useKey,
         ];
+    }
+
+    /** Сколько ключей (бесплатных открытий) этого кейса у игрока. */
+    public function keys(User $user, string $slug): int
+    {
+        return (int) DB::table('loot_case_keys')
+            ->where('user_id', $user->id)
+            ->where('case_slug', $slug)
+            ->value('count');
+    }
+
+    /** Выдать ключи кейса: награды недели, подарки персонала. */
+    public static function grantKeys(User $user, string $slug, int $count = 1): void
+    {
+        if (! LootCases::find($slug) || $count < 1) {
+            return;
+        }
+
+        DB::table('loot_case_keys')->upsert(
+            [['user_id' => $user->id, 'case_slug' => $slug, 'count' => $count, 'created_at' => now(), 'updated_at' => now()]],
+            ['user_id', 'case_slug'],
+            ['count' => DB::raw('count + ' . $count), 'updated_at' => now()],
+        );
     }
 
     public function dailyAvailable(User $user): bool

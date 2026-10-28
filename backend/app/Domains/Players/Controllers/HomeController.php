@@ -24,7 +24,7 @@ class HomeController extends Controller
                     'id' => $user->id,
                     'username' => $user->username,
                     'avatar_url' => $user->avatar_url,
-                    'tier' => $user->tier,
+                    'tier' => $user->publicTier(),
                     'display_rank' => $user->display_rank,
                     'tier_score' => $user->tier_score,
                     'rating_points' => $user->rating_points,

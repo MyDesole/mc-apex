@@ -75,13 +75,15 @@ function countdown(iso) {
 function canOpen(caseData) {
   if (!auth.isAuthenticated || opening.value) return false
   if (caseData.free_daily) return caseData.available
-  return balance.value >= caseData.price
+  // Ключ (награда, подарок) открывает платный кейс без монет
+  return caseData.keys > 0 || balance.value >= caseData.price
 }
 
 function openLabel(caseData) {
   if (!auth.isAuthenticated) return 'Войдите, чтобы открыть'
   if (opening.value) return 'Открываем…'
   if (caseData.free_daily) return caseData.available ? 'Открыть бесплатно' : `Новый через ${countdown(caseData.next_free_at)}`
+  if (caseData.keys > 0) return `Открыть ключом · осталось ${caseData.keys}`
   if (balance.value < caseData.price) return `Не хватает ₳ ${formatCoins(caseData.price - balance.value)}`
   return `Открыть за ₳ ${formatCoins(caseData.price)}`
 }
@@ -271,6 +273,7 @@ onUnmounted(() => {
             @click="selectCase(caseData.slug)"
         >
           <span v-if="caseData.free_daily && caseData.available" class="chest-card__ribbon">Бесплатно</span>
+          <span v-else-if="caseData.keys > 0" class="chest-card__ribbon">Ключ × {{ caseData.keys }}</span>
 
           <span class="chest" :class="`chest--${caseData.theme}`" aria-hidden="true">
             <span class="chest__shine"></span>

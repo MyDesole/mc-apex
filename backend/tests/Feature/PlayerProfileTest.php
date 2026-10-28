@@ -202,6 +202,39 @@ class PlayerProfileTest extends TestCase
         Storage::disk('public')->assertExists($fresh->avatar);
     }
 
+    public function test_big_avatar_is_accepted_and_shrunk_to_webp(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+
+        // 6 МБ и 2000px: раньше отказ (лимит 2 МБ), теперь сервер сам сжимает
+        $this->actingAs($user)
+            ->post('/api/players/me', [
+                '_method' => 'PUT',
+                'avatar' => UploadedFile::fake()->image('big.png', 2000, 1500)->size(6000),
+            ])
+            ->assertOk();
+
+        $path = $user->fresh()->avatar;
+        $this->assertStringEndsWith('.webp', $path);
+
+        [$width, $height] = getimagesizefromstring(Storage::disk('public')->get($path));
+        $this->assertSame(512, $width);
+        $this->assertSame(384, $height);
+
+        // GIF не трогаем — анимация бы пропала
+        $this->actingAs($user)
+            ->post('/api/players/me', ['_method' => 'PUT', 'avatar' => UploadedFile::fake()->image('a.gif', 100, 100)])
+            ->assertOk();
+        $this->assertStringEndsWith('.gif', $user->fresh()->avatar);
+
+        // Больше 10 МБ — нельзя
+        $this->actingAs($user)
+            ->post('/api/players/me', ['_method' => 'PUT', 'avatar' => UploadedFile::fake()->image('huge.png')->size(11000)], ['Accept' => 'application/json'])
+            ->assertStatus(422);
+    }
+
     public function test_avatar_and_cover_can_be_removed(): void
     {
         Storage::fake('public');

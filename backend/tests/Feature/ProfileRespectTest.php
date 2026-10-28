@@ -47,4 +47,30 @@ class ProfileRespectTest extends TestCase
 
         $this->getJson('/api/respects/top')->assertOk()->assertJsonPath('players.0.id', $owner->id)->assertJsonPath('players.0.respects', 1);
     }
+
+    public function test_respect_can_be_revoked_but_not_regiven_the_same_day(): void
+    {
+        $owner = User::factory()->create();
+        $fan = User::factory()->create(['tier' => 'E', 'tier_score' => 0]);
+
+        // Забирать нечего
+        $this->actingAs($fan)->deleteJson("/api/players/{$owner->id}/respects")->assertStatus(422);
+
+        $this->actingAs($fan)->postJson("/api/players/{$owner->id}/respects")
+            ->assertOk()
+            ->assertJsonPath('total', 1)
+            // Новичок без тир-теста — без тира, хотя в базе E
+            ->assertJsonPath('recent.0.tier', null);
+
+        $this->actingAs($fan)->deleteJson("/api/players/{$owner->id}/respects")
+            ->assertOk()
+            ->assertJsonPath('total', 0)
+            ->assertJsonPath('given_today', false)
+            ->assertJsonPath('revoked_today', true)
+            ->assertJsonCount(0, 'recent');
+
+        // Забранный в топ не идёт, а снова дать сегодня нельзя
+        $this->getJson('/api/respects/top')->assertJsonCount(0, 'players');
+        $this->actingAs($fan)->postJson("/api/players/{$owner->id}/respects")->assertStatus(422);
+    }
 }
