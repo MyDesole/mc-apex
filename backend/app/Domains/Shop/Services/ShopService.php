@@ -382,6 +382,9 @@ class ShopService
                     'inventory_id' => $row->id,
                     'shop_item_id' => $row->shop_item_id,
                     'quantity' => $row->quantity,
+                    // Продать магазину / подарить другу
+                    'tradeable' => InventoryTradeService::tradeable($row),
+                    'sell_value' => InventoryTradeService::sellValue($row),
                     'equipped' => $row->isEquipped(),
                     'equipped_at' => $row->equipped_at?->toIso8601String(),
                     'acquired_at' => $row->acquired_at?->toIso8601String(),
@@ -599,6 +602,8 @@ class ShopService
             $charges = (int) ($item->metadata['charges'] ?? 1);
             $inventory->quantity = ($inventory->quantity ?? 0) + ($charges * $quantity);
             $inventory->acquired_at = $inventory->acquired_at ?? now();
+            // Цена покупки — от неё считается продажа магазину
+            $inventory->paid_price = $item->price;
             $inventory->save();
 
             // Набор монет дополнительно зачисляем на баланс.

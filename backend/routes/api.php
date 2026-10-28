@@ -398,6 +398,11 @@ Route::middleware('auth:sanctum')->group(function () {
             ->whereIn('action', ['equip', 'unequip']);
         Route::get('/stickers', [ShopController::class, 'stickers']);
         Route::post('/{shopItem}/unequip', [ShopController::class, 'unequip'])->whereNumber('shopItem');
+        // Продать магазину или подарить другу (по строке инвентаря)
+        Route::post('/inventory/{row}/sell', [\App\Domains\Shop\Controllers\Api\InventoryTradeController::class, 'sell'])
+            ->whereNumber('row')->middleware(['feature:shop', 'throttle:30,1']);
+        Route::post('/inventory/{row}/gift', [\App\Domains\Shop\Controllers\Api\InventoryTradeController::class, 'gift'])
+            ->whereNumber('row')->middleware(['feature:shop', 'throttle:20,1']);
     });
 
     /*

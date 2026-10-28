@@ -55,6 +55,16 @@ export const shopApi = {
         return api.post(`/shop/pets/${inventoryId}/${equip ? 'equip' : 'unequip'}`)
     },
 
+    /** Продать строку инвентаря магазину (купленное — 50%, выпавшее — 15%). */
+    sell(inventoryId) {
+        return api.post(`/shop/inventory/${inventoryId}/sell`)
+    },
+
+    /** Подарить строку инвентаря другу. */
+    gift(inventoryId, userId) {
+        return api.post(`/shop/inventory/${inventoryId}/gift`, { user_id: userId })
+    },
+
     unequip(id) {
         return api.post(`/shop/${id}/unequip`)
     },

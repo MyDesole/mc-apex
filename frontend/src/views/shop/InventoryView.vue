@@ -5,6 +5,8 @@ import { useCursorList } from '@/composables/core/useCursorList.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import AppIcon from '@/components/core/AppIcon.vue'
 import ShopItemPreview from '@/components/shop/ShopItemPreview.vue'
+import { friendsApi } from '@/services/friends/friends.js'
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import {
   TYPE_LABELS,
   RARITY_LABELS,
@@ -257,6 +259,65 @@ async function toggleEquip(item) {
     error.value = e.message || 'Не удалось изменить экипировку.'
   } finally {
     busyId.value = null
+  }
+}
+
+/* ---------- Продать и подарить ---------- */
+
+async function sell(item) {
+  if (!await confirmDialog(`Продать «${item.name}» магазину за ${item.sell_value} ApexCoin?`)) return
+
+  busyId.value = item.id
+  error.value = ''
+  notice.value = ''
+  try {
+    const result = await shopApi.sell(item.inventory_id)
+    notice.value = `«${item.name}» продан за ${result.coins} ApexCoin.`
+    if (auth.user) auth.user.apex_coins = result.balance
+    await list.reload()
+  } catch (e) {
+    error.value = e.message || 'Не удалось продать.'
+  } finally {
+    busyId.value = null
+  }
+}
+
+const giftItem = ref(null)
+const giftFriends = ref([])
+const giftQuery = ref('')
+const giftBusy = ref(false)
+
+async function openGift(item) {
+  giftItem.value = item
+  giftQuery.value = ''
+  if (!giftFriends.value.length) {
+    try {
+      giftFriends.value = (await friendsApi.list()).friends || []
+    } catch {
+      giftFriends.value = []
+    }
+  }
+}
+
+const giftList = computed(() => {
+  const q = giftQuery.value.trim().toLowerCase()
+  return q ? giftFriends.value.filter((f) => f.username?.toLowerCase().includes(q)) : giftFriends.value
+})
+
+async function sendGift(friend) {
+  if (giftBusy.value) return
+  giftBusy.value = true
+  error.value = ''
+  try {
+    await shopApi.gift(giftItem.value.inventory_id, friend.id)
+    notice.value = `«${giftItem.value.name}» подарен ${friend.username}.`
+    giftItem.value = null
+    await Promise.all([list.reload(), auth.fetchMe()])
+  } catch (e) {
+    error.value = e.message || 'Не удалось подарить.'
+    giftItem.value = null
+  } finally {
+    giftBusy.value = false
   }
 }
 
@@ -726,6 +787,16 @@ onMounted(() => {
               </div>
             </div>
 
+            <!-- Продать магазину или подарить другу -->
+            <div v-if="item.tradeable && Number.isInteger(item.inventory_id)" class="inventory-card__trade">
+              <button type="button" :disabled="busyId === item.id" @click="sell(item)">
+                <AppIcon icon="coin" :size="13" /> Продать · {{ item.sell_value }}
+              </button>
+              <button type="button" :disabled="busyId === item.id" @click="openGift(item)">
+                <AppIcon icon="gift" :size="13" /> Подарить
+              </button>
+            </div>
+
             <!-- Equipped corner -->
             <div
                 v-if="item.equipped"
@@ -735,6 +806,43 @@ onMounted(() => {
             </div>
           </article>
       </div>
+
+      <!-- Выбор друга для подарка -->
+      <Teleport to="body">
+        <div v-if="giftItem" class="gift-modal" @click.self="giftItem = null">
+          <div class="gift-modal__card">
+            <header>
+              <div>
+                <small>Подарить</small>
+                <strong>{{ giftItem.name }}</strong>
+              </div>
+              <button type="button" aria-label="Закрыть" @click="giftItem = null"><AppIcon icon="close" :size="16" /></button>
+            </header>
+            <input v-model="giftQuery" class="gift-modal__search" placeholder="Найти друга по нику" />
+            <div class="gift-modal__list">
+              <button
+                  v-for="friend in giftList"
+                  :key="friend.id"
+                  type="button"
+                  class="gift-modal__friend"
+                  :disabled="giftBusy"
+                  @click="sendGift(friend)"
+              >
+                <span class="gift-modal__avatar">
+                  <img v-if="friend.avatar_url" :src="friend.avatar_url" :alt="friend.username" />
+                  <template v-else>{{ (friend.username || '?').charAt(0).toUpperCase() }}</template>
+                </span>
+                <span>{{ friend.username }}</span>
+                <AppIcon icon="gift" :size="15" />
+              </button>
+              <p v-if="!giftList.length" class="gift-modal__empty">
+                {{ giftFriends.length ? 'Никого с таким ником.' : 'Дарить можно только друзьям — сначала добавь кого-нибудь в друзья.' }}
+              </p>
+            </div>
+            <p class="gift-modal__note">У друга подарок продаётся магазину дешевле — как выпавший из сундука.</p>
+          </div>
+        </div>
+      </Teleport>
 
       <!-- Маячок догрузки следующей страницы -->
       <div

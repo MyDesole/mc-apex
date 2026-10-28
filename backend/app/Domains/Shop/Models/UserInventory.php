@@ -12,7 +12,7 @@ class UserInventory extends Model
     protected $table = 'user_inventory';
 
     protected $fillable = [
-        'user_id', 'shop_item_id', 'quantity', 'equipped_at', 'acquired_at', 'gifted_by', 'pet_name',
+        'user_id', 'shop_item_id', 'quantity', 'equipped_at', 'acquired_at', 'gifted_by', 'pet_name', 'paid_price',
     ];
 
     protected $casts = [
