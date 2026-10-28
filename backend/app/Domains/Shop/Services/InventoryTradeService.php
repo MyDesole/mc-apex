@@ -158,6 +158,10 @@ class InventoryTradeService
         if (! self::tradeable($row)) {
             throw new RuntimeException('Этот предмет нельзя продать или подарить.');
         }
+
+        if (PetAuctionService::onAuction($row->id)) {
+            throw new RuntimeException('Питомец выставлен на аукцион — сначала дождись конца торгов.');
+        }
     }
 
     /** Надетое — сначала снять, чтобы профиль не ссылался на чужое. */

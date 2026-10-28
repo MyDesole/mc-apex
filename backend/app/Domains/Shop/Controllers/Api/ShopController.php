@@ -132,6 +132,10 @@ class ShopController extends Controller
 
         abort_unless($row->user_id === $user->id && $row->item?->type === ShopItem::TYPE_PROFILE_PET, 404);
 
+        if ($action === 'equip' && \App\Domains\Shop\Services\PetAuctionService::onAuction($row->id)) {
+            return response()->json(['message' => 'Питомец выставлен на аукцион — надеть его нельзя до конца торгов.'], 422);
+        }
+
         $action === 'equip'
             ? ShopService::equipPetRow($user, $row)
             : ShopService::unequipPetRow($user, $row);

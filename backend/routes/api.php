@@ -122,6 +122,10 @@ Route::get('/players/{user}/pet', [\App\Domains\Players\Controllers\Api\PetContr
 Route::get('/players/teammates', [\App\Domains\Players\Controllers\Api\ProfileBuilderController::class, 'teammates'])
     ->middleware('throttle:60,1');
 
+// Аукцион питомцев: лоты видны и гостям
+Route::get('/auctions', [\App\Domains\Shop\Controllers\Api\PetAuctionController::class, 'index']);
+Route::get('/auctions/{auction}', [\App\Domains\Shop\Controllers\Api\PetAuctionController::class, 'show'])->whereNumber('auction');
+
 // Кейсы с косметикой: витрина видна и гостям
 Route::get('/cases', [\App\Domains\Shop\Controllers\Api\LootCaseController::class, 'index']);
 Route::get('/cases/status', [\App\Domains\Shop\Controllers\Api\LootCaseController::class, 'status']);
@@ -398,6 +402,13 @@ Route::middleware('auth:sanctum')->group(function () {
             ->whereIn('action', ['equip', 'unequip']);
         Route::get('/stickers', [ShopController::class, 'stickers']);
         Route::post('/{shopItem}/unequip', [ShopController::class, 'unequip'])->whereNumber('shopItem');
+        // Аукцион питомцев: выставить, ставка, снять лот без ставок
+        Route::post('/auctions', [\App\Domains\Shop\Controllers\Api\PetAuctionController::class, 'store'])
+            ->middleware(['feature:shop', 'throttle:10,1']);
+        Route::post('/auctions/{auction}/bid', [\App\Domains\Shop\Controllers\Api\PetAuctionController::class, 'bid'])
+            ->whereNumber('auction')->middleware(['feature:shop', 'throttle:30,1']);
+        Route::post('/auctions/{auction}/cancel', [\App\Domains\Shop\Controllers\Api\PetAuctionController::class, 'cancel'])
+            ->whereNumber('auction')->middleware(['feature:shop', 'throttle:10,1']);
         // Продать магазину или подарить другу (по строке инвентаря)
         Route::post('/inventory/{row}/sell', [\App\Domains\Shop\Controllers\Api\InventoryTradeController::class, 'sell'])
             ->whereNumber('row')->middleware(['feature:shop', 'throttle:30,1']);

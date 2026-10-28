@@ -566,6 +566,13 @@ watch(mobileMenuOpen, (open) => {
                     <span v-if="dailyCaseAvailable" class="dropdown-free">Бесплатно</span>
                   </RouterLink>
 
+                  <RouterLink to="/auction" class="dropdown-item" @click="menuOpen = false">
+                    <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 4l6 6M11 7l6 6M12.5 5.5l-6 6 6 6 6-6M7.5 12.5L3 17l4 4 4.5-4.5M3 21h9" />
+                    </svg>
+                    <span>Аукцион питомцев</span>
+                  </RouterLink>
+
                   <RouterLink to="/support" class="dropdown-item" @click="menuOpen = false">
                     <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                       <circle cx="12" cy="12" r="9" />

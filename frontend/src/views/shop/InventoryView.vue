@@ -6,6 +6,8 @@ import { useAuthStore } from '@/stores/core/auth.js'
 import AppIcon from '@/components/core/AppIcon.vue'
 import ShopItemPreview from '@/components/shop/ShopItemPreview.vue'
 import { friendsApi } from '@/services/friends/friends.js'
+import { api } from '@/services/core/api.js'
+import { useRouter } from 'vue-router'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 import {
   TYPE_LABELS,
@@ -15,6 +17,7 @@ import {
 } from '@/data/wallet/economy.js'
 
 const auth = useAuthStore()
+const router = useRouter()
 
 const loading = ref(true)
 const error = ref('')
@@ -318,6 +321,38 @@ async function sendGift(friend) {
     giftItem.value = null
   } finally {
     giftBusy.value = false
+  }
+}
+
+/* ---------- Аукцион питомцев ---------- */
+
+const auctionItem = ref(null)
+const auctionPrice = ref(100)
+const auctionHours = ref(24)
+const auctionBusy = ref(false)
+
+function openAuction(item) {
+  auctionItem.value = item
+  auctionPrice.value = Math.max(10, item.sell_value || 100)
+  auctionHours.value = 24
+}
+
+async function createAuction() {
+  auctionBusy.value = true
+  error.value = ''
+  try {
+    await api.post('/shop/auctions', {
+      inventory_id: auctionItem.value.inventory_id,
+      start_price: Number(auctionPrice.value),
+      hours: auctionHours.value,
+    })
+    auctionItem.value = null
+    router.push({ path: '/auction', query: { created: 1 } })
+  } catch (e) {
+    error.value = e.message || 'Не удалось выставить на аукцион.'
+    auctionItem.value = null
+  } finally {
+    auctionBusy.value = false
   }
 }
 
@@ -795,6 +830,15 @@ onMounted(() => {
               <button type="button" :disabled="busyId === item.id" @click="openGift(item)">
                 <AppIcon icon="gift" :size="13" /> Подарить
               </button>
+              <button
+                  v-if="item.type === 'profile_pet'"
+                  type="button"
+                  class="inventory-card__trade-wide"
+                  :disabled="busyId === item.id"
+                  @click="openAuction(item)"
+              >
+                <AppIcon icon="coin" :size="13" /> На аукцион
+              </button>
             </div>
 
             <!-- Equipped corner -->
@@ -841,6 +885,42 @@ onMounted(() => {
             </div>
             <p class="gift-modal__note">У друга подарок продаётся магазину дешевле — как выпавший из сундука.</p>
           </div>
+        </div>
+      </Teleport>
+
+      <!-- Выставить питомца на аукцион -->
+      <Teleport to="body">
+        <div v-if="auctionItem" class="gift-modal" @click.self="auctionItem = null">
+          <form class="gift-modal__card" @submit.prevent="createAuction">
+            <header>
+              <div>
+                <small>На аукцион</small>
+                <strong>{{ auctionItem.name }}<template v-if="auctionItem.pet?.serial"> #{{ auctionItem.pet.serial }}</template></strong>
+              </div>
+              <button type="button" aria-label="Закрыть" @click="auctionItem = null"><AppIcon icon="close" :size="16" /></button>
+            </header>
+            <label class="gift-modal__field">
+              <span>Стартовая цена, ApexCoin</span>
+              <input v-model.number="auctionPrice" class="gift-modal__search" type="number" min="10" step="1" required />
+            </label>
+            <div class="gift-modal__field">
+              <span>Сколько идут торги</span>
+              <div class="gift-modal__hours">
+                <button
+                    v-for="h in [12, 24, 48]"
+                    :key="h"
+                    type="button"
+                    :class="{ 'is-on': auctionHours === h }"
+                    @click="auctionHours = h"
+                >{{ h }} ч</button>
+              </div>
+            </div>
+            <p class="gift-modal__note">
+              Пока идут торги, питомца нельзя надеть, продать или подарить. Без ставок лот можно снять.
+              Монеты победителя придут тебе, когда торги закончатся.
+            </p>
+            <button type="submit" class="gift-modal__submit" :disabled="auctionBusy || auctionPrice < 10">Выставить</button>
+          </form>
         </div>
       </Teleport>
 

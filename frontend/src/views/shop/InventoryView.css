@@ -2162,3 +2162,57 @@
   color: #8a8598;
   font-size: 12px;
 }
+.inventory-card__trade-wide { grid-column: 1 / -1; }
+
+.gift-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  color: #a8a3b8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.gift-modal__hours {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.gift-modal__hours button {
+  min-height: 36px;
+
+  color: #c9c4d8;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+
+  font: inherit;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.gift-modal__hours button.is-on {
+  color: #1a1206;
+  background: #fbbf24;
+  border-color: transparent;
+}
+
+.gift-modal__submit {
+  min-height: 42px;
+
+  color: #1a1206;
+  background: linear-gradient(135deg, #fde047, #f59e0b);
+  border: 0;
+  border-radius: 11px;
+
+  font: inherit;
+  font-size: 14px;
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+.gift-modal__submit:disabled { opacity: 0.5; cursor: default; }
