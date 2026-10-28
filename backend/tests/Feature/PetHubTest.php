@@ -179,6 +179,18 @@ class PetHubTest extends TestCase
         $this->getJson('/api/pets/top?by=rating')->assertOk();
     }
 
+    public function test_rarity_shares_follow_targets(): void
+    {
+        $thresholds = \App\Domains\Players\Support\PetTraits::rarityThresholds();
+        $this->assertSame(['mythic', 'legendary', 'epic', 'rare'], array_keys($thresholds));
+        $this->assertTrue($thresholds['mythic'] < $thresholds['legendary'] && $thresholds['epic'] < $thresholds['rare']);
+
+        // Самое частое сочетание — обычное, самое редкое — мифическое
+        $present = fn ($traits) => \App\Domains\Players\Support\PetTraits::present($traits)['rarity'];
+        $this->assertSame('common', $present(['model' => 'classic', 'backdrop' => 'none', 'accessory' => 'none']));
+        $this->assertSame('mythic', $present(['model' => 'aurora', 'backdrop' => 'rift', 'accessory' => 'wizard']));
+    }
+
     public function test_season_pays_top_and_softens_rating(): void
     {
         $user = User::factory()->create(['apex_coins' => 0]);

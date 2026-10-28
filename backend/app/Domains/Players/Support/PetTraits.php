@@ -160,23 +160,116 @@ class PetTraits
             ];
         }
 
-        // Общая редкость — произведение шансов черт: чем меньше, тем реже
-        $result['rarity'] = self::rarityTier(
-            $result['model']['chance'] * $result['backdrop']['chance'] * $result['accessory']['chance'] / 10000,
-        );
+        // Общая редкость — по произведению шансов черт: чем меньше, тем реже
+        $result['rarity'] = self::rarityTier(self::comboChance(array_map(fn ($k) => $result[$k]['id'], [
+            'model' => 'model', 'backdrop' => 'backdrop', 'accessory' => 'accessory',
+        ])));
 
         return $result;
     }
 
-    /** Ранг экземпляра по общему шансу (в процентах). */
+    /**
+     * Какая доля всех выпадений приходится на редкость (сверху вниз).
+     * Пороги считаются из самих весов черт, поэтому новые варианты не
+     * ломают распределение: раньше пороги были числами, и после новых
+     * черт мифическим стал каждый четвёртый питомец, а обычных — ноль.
+     */
+    public const RARITY_SHARES = [
+        'mythic' => 0.005,
+        'legendary' => 0.025,
+        'epic' => 0.10,
+        'rare' => 0.27,
+        // остальное — common
+    ];
+
+    /** Вероятность сочетания черт (доля, не проценты). */
+    public static function comboChance(array $ids): float
+    {
+        $p = 1.0;
+        foreach (self::TRAITS as $trait => $variants) {
+            $total = array_sum(array_column($variants, 1));
+            $p *= ($variants[$ids[$trait] ?? ''][1] ?? $variants[array_key_first($variants)][1]) / $total;
+        }
+
+        return $p;
+    }
+
+    /** Ранг экземпляра: где его сочетание среди всех по редкости. */
     private static function rarityTier(float $chance): string
     {
-        return match (true) {
-            $chance < 0.01 => 'mythic',
-            $chance < 0.1 => 'legendary',
-            $chance < 0.5 => 'epic',
-            $chance < 2 => 'rare',
-            default => 'common',
-        };
+        foreach (self::rarityThresholds() as $tier => $limit) {
+            if ($chance <= $limit) {
+                return $tier;
+            }
+        }
+
+        return 'common';
+    }
+
+    /**
+     * Пороги вероятности сочетания для каждой редкости. Перебираем все
+     * сочетания от самых редких: пока набранная доля выпадений не дошла
+     * до границы редкости — сочетание этой редкости.
+     *
+     * @return array<string, float>
+     */
+    public static function rarityThresholds(): array
+    {
+        static $cache = null;
+
+        if ($cache !== null) {
+            return $cache;
+        }
+
+        // Пороги меняются только вместе с весами — ключ кэша от них
+        $key = 'pet-rarity-thresholds:' . md5(json_encode([self::TRAITS, self::RARITY_SHARES]));
+
+        return $cache = \Illuminate\Support\Facades\Cache::rememberForever($key, fn () => self::computeThresholds());
+    }
+
+    /** @return array<string, float> */
+    private static function computeThresholds(): array
+    {
+        $chances = [[]];
+        foreach (self::TRAITS as $variants) {
+            $total = array_sum(array_column($variants, 1));
+            $next = [];
+            foreach ($chances as $partial) {
+                foreach ($variants as $variant) {
+                    $next[] = [...$partial, $variant[1] / $total];
+                }
+            }
+            $chances = $next;
+        }
+
+        $combos = array_map(fn ($parts) => array_product($parts), $chances);
+        sort($combos);
+
+        $cache = [];
+        $tiers = self::RARITY_SHARES;
+        // Перебор от самых редких сочетаний к частым
+        $edge = 0.0;
+        $sum = 0.0;
+        $tier = array_key_first($tiers);
+
+        foreach ($combos as $p) {
+            while ($tier !== null && $sum + $p > $edge + $tiers[$tier] + 1e-12) {
+                // Граница пройдена: дальше — следующая редкость
+                $cache[$tier] = $cache[$tier] ?? 0.0;
+                $edge += $tiers[$tier];
+                $keys = array_keys($tiers);
+                $pos = array_search($tier, $keys, true);
+                $tier = $keys[$pos + 1] ?? null;
+            }
+
+            if ($tier === null) {
+                break;
+            }
+
+            $cache[$tier] = $p;
+            $sum += $p;
+        }
+
+        return $cache;
     }
 }
