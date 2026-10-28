@@ -191,7 +191,7 @@
 
   background: radial-gradient(circle at 50% 75%, color-mix(in srgb, var(--rar, #a8a3b8) 20%, transparent), transparent 70%);
 
-  cursor: pointer;
+  cursor: zoom-in;
 }
 
 .pc__lvl {
@@ -286,6 +286,36 @@
 
 .pc-perk.is-on { color: #1a1206; background: #fbbf24; border-color: transparent; }
 
+/* Уход — три кнопки с пиксельными картинками */
+.pc__care { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+
+.pc-care {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+
+  padding: 7px 4px 6px;
+
+  color: #e9e5f5;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.pc-care:hover:not(:disabled) { background: rgba(244, 114, 182, 0.14); border-color: rgba(244, 114, 182, 0.5); transform: translateY(-2px); }
+.pc-care.is-want { border-color: rgba(251, 191, 36, 0.7); box-shadow: 0 0 14px -6px #fbbf24; }
+.pc-care.is-done { opacity: 0.4; filter: grayscale(1); cursor: default; }
+
+.pc__hungry { margin: -4px 0 0; color: #fbbf24; font-size: 11.5px; font-weight: 700; }
+
 .pc__trick { display: flex; align-items: center; gap: 8px; color: #8a8598; font-size: 12px; font-weight: 700; }
 
 .pc__trick select {
@@ -367,31 +397,6 @@
 .pv-trip__text small { color: #8a8598; font-size: 12px; }
 .pv-trip__timer { display: inline-flex; align-items: center; gap: 5px; color: #a8a3b8; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
 
-.pv-pick { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.pv-pick > span { color: #8a8598; font-size: 13px; font-weight: 700; }
-
-.pv-pick__pet {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-
-  padding: 4px 10px 4px 6px;
-
-  color: #d6d2e2;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-
-  cursor: pointer;
-}
-
-.pv-pick__pet b { color: #8a8598; font-size: 11px; }
-.pv-pick__pet.is-on { color: #fff; background: rgba(244, 114, 182, 0.18); border-color: rgba(244, 114, 182, 0.6); }
-
 .pv-zones { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
 
 .pz {
@@ -427,47 +432,207 @@
 
 /* ---------- Арена ---------- */
 
-.pv-arena-info {
+.pa-label {
+  color: #8a8598;
+
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.pa-block { display: flex; flex-direction: column; gap: 10px; }
+.pa-block__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+.pa-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 5px 10px;
+
+  color: #c4b5fd;
+  background: none;
+  border: 1px solid rgba(196, 181, 253, 0.25);
+  border-radius: 8px;
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.pa-refresh:hover { color: #fff; border-color: rgba(196, 181, 253, 0.6); }
+
+.pa-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.pa-me {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
+  align-items: center;
+  gap: 18px;
+
+  padding: 14px 18px 14px 14px;
+
+  background:
+      radial-gradient(circle at 0 50%, color-mix(in srgb, var(--el) 18%, transparent), transparent 55%),
+      var(--bg-card, #15131c);
+  border: 1px solid color-mix(in srgb, var(--el) 35%, rgba(255, 255, 255, 0.06));
+  border-radius: 18px;
+}
+
+.pa-me__stage {
+  flex-shrink: 0;
+
+  width: 120px;
+  height: 110px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  background: none;
+  border: 0;
+
+  cursor: zoom-in;
+}
+
+.pa-me__info { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pa-me__info strong { color: #fff; font-family: var(--font-display); font-size: 22px; line-height: 1.1; }
+.pa-me__info small { color: #a8a3b8; font-size: 12.5px; }
+
+.pa-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+
+.pa-chip {
+  padding: 3px 9px;
+
+  color: #e9e5f5;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 999px;
+
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.pa-chip--el { color: var(--el); background: color-mix(in srgb, var(--el) 14%, transparent); border-color: color-mix(in srgb, var(--el) 40%, transparent); }
+
+.pa-side {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 
   padding: 14px 16px;
 
-  background: rgba(244, 63, 94, 0.06);
-  border: 1px solid rgba(244, 63, 94, 0.22);
-  border-radius: 14px;
+  background: var(--bg-card, #15131c);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 18px;
 }
 
-.pv-arena-info p { margin: 0; color: #a8a3b8; font-size: 13px; line-height: 1.55; }
-.pv-arena-left { flex-shrink: 0; color: #d6d2e2; font-size: 13px; }
-.pv-arena-left b { color: #fda4af; font-size: 18px; }
+.pa-left { display: flex; align-items: baseline; justify-content: space-between; }
+.pa-left b { color: #fda4af; font-family: var(--font-display); font-size: 28px; line-height: 1; }
 
-.pv-foes { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px; }
+.pa-wheel { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
+.pa-wheel span { color: #6f6a80; font-size: 12px; }
+.pa-wheel i { font-style: normal; font-weight: 800; }
 
-.pf-card {
+.pa-prize { color: #fde68a; font-size: 12px; }
+
+.pa-foes {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
 
-  padding: 12px 14px;
+.pa-foe {
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
 
   background: var(--bg-card, #15131c);
   border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 14px;
+  border-radius: 18px;
+
+  transition: border-color 0.15s ease, transform 0.15s ease;
 }
 
-.pf-card:hover { border-color: color-mix(in srgb, var(--el) 50%, transparent); }
+.pa-foe:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--el) 55%, transparent); }
 
-.pf-card__info { display: flex; flex-direction: column; min-width: 0; }
-.pf-card__info strong { color: #fff; font-size: 14px; }
-.pf-card__info small { color: #8a8598; font-size: 12px; }
-.pf-card__info span { color: #a8a3b8; font-size: 12px; }
-.pf-card__info i { color: var(--el); font-style: normal; font-weight: 800; }
+.pa-foe__stage {
+  position: relative;
 
-.pv-more { grid-column: 1 / -1; justify-self: center; }
+  height: 118px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  background: radial-gradient(circle at 50% 60%, color-mix(in srgb, var(--el) 20%, transparent) 0 30%, transparent 62%);
+  border: 0;
+
+  cursor: zoom-in;
+}
+
+.pa-foe__el {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+
+  padding: 2px 8px;
+
+  color: var(--el);
+  background: rgba(10, 8, 16, 0.7);
+  border: 1px solid color-mix(in srgb, var(--el) 45%, transparent);
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.pa-foe__body { flex: 1; display: flex; flex-direction: column; gap: 6px; padding: 0 14px 12px; }
+.pa-foe__body strong { overflow: hidden; color: #fff; font-size: 15px; text-overflow: ellipsis; white-space: nowrap; }
+.pa-foe__body > small { color: #8a8598; font-size: 12px; }
+
+.pa-odds {
+  position: relative;
+
+  height: 18px;
+
+  overflow: hidden;
+
+  background: rgba(239, 68, 68, 0.18);
+  border-radius: 6px;
+}
+
+.pa-odds i { display: block; height: 100%; background: linear-gradient(90deg, #16a34a, #4ade80); }
+
+.pa-odds span {
+  position: absolute;
+  inset: 0;
+
+  display: grid;
+  place-items: center;
+
+  color: #fff;
+  text-shadow: 0 1px 2px #000;
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.pa-matchup { font-size: 11.5px !important; font-weight: 700; }
+.pa-matchup.is-good { color: #86efac !important; }
+.pa-matchup.is-bad { color: #fca5a5 !important; }
+
+.pa-foe__go { margin: auto 14px 14px; }
 
 /* ---------- Добыча ---------- */
 
@@ -525,8 +690,7 @@
 @media (max-width: 720px) {
   .pv-head { grid-template-columns: minmax(0, 1fr); }
   .pv-head__stats div { flex: 1; min-width: 0; }
-  .pv-arena-info { flex-direction: column; }
-  .pv-foes, .pv-trips { grid-template-columns: minmax(0, 1fr); }
-  .pf-card { grid-template-columns: auto minmax(0, 1fr); }
-  .pf-card .pv-btn { grid-column: 1 / -1; }
+  .pv-trips { grid-template-columns: minmax(0, 1fr); }
+  .pa-top { grid-template-columns: minmax(0, 1fr); }
+  .pa-foes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

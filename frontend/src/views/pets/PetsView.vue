@@ -16,6 +16,9 @@ import PetFigure from '@/components/pets/PetFigure.vue'
 import PetBattle from '@/components/pets/PetBattle.vue'
 import PetDex from '@/components/pets/PetDex.vue'
 import PetTop from '@/components/pets/PetTop.vue'
+import PetViewer from '@/components/pets/PetViewer.vue'
+import PixelSprite from '@/components/shop/PixelSprite.vue'
+import PetPicker from '@/components/pets/PetPicker.vue'
 import { ELEMENTS, levelXp } from '@/data/players/petArena.js'
 import { PET_RARITY, chanceLabel } from '@/data/players/petTraits.js'
 
@@ -42,6 +45,7 @@ const notice = ref('')
 const busy = ref(null)
 const now = ref(Date.now())
 const playing = ref({})
+const viewing = ref(null)
 
 const pets = computed(() => hub.value?.pets ?? [])
 const freePets = computed(() => pets.value.filter((p) => !p.busy))
@@ -84,6 +88,34 @@ function xpPct(p) {
 
 function nextPerk(p) {
   return p.perks.find((perk) => !perk.unlocked) ?? null
+}
+
+/* ---------- Уход: погладить, покормить, поиграть ---------- */
+
+const CARE = [
+  { id: 'pet', label: 'Погладить', icon: 'heart', xp: 1, reaction: 'hearts' },
+  { id: 'feed', label: 'Покормить', icon: 'meat', xp: 2, reaction: 'dance' },
+  { id: 'play', label: 'Поиграть', icon: 'ball', xp: 2, reaction: 'flip' },
+]
+
+async function care(p, c) {
+  busy.value = `care-${p.inventory_id}`
+  try {
+    const result = await api.post(`/players/${auth.user.id}/pet/${c.id}`, { pet: p.inventory_id })
+    p.care = [...(p.care ?? []), c.id]
+    if (c.id === 'feed') p.hungry = false
+    // Опыт ухода сервер считает вместе с опытом экспедиций и боёв
+    p.xp = result.xp ?? p.xp
+    if (result.level && result.level > p.level) {
+      say(`${p.name} вырос до ${result.level} уровня!`)
+      p.level = result.level
+    }
+    showTrick(p, c.reaction)
+  } catch (e) {
+    fail(e, 'Не получилось.')
+  } finally {
+    busy.value = null
+  }
 }
 
 /* ---------- Трюки ---------- */
@@ -159,6 +191,28 @@ async function claim(trip) {
 const arenaPet = ref(null)
 const opponents = ref(null)
 const battle = ref(null)
+const fighter = computed(() => freePets.value.find((p) => p.inventory_id === arenaPet.value) ?? null)
+
+// Кто кого бьёт сильнее — как на сервере
+const STRONG = { fire: 'nature', nature: 'water', water: 'fire', shadow: 'beast' }
+
+/** Примерный шанс: Эло по рейтингу плюс поправка за разницу уровней и стихии. */
+function odds(foe) {
+  const me = fighter.value
+  if (!me) return 50
+  let diff = (me.rating - foe.rating) + (me.level - foe.level) * 25
+  if (STRONG[me.element] === foe.element) diff += 60
+  if (STRONG[foe.element] === me.element) diff -= 60
+  return Math.max(3, Math.min(97, Math.round(100 / (1 + 10 ** (-diff / 400)))))
+}
+
+function matchup(foe) {
+  const me = fighter.value
+  if (!me) return null
+  if (STRONG[me.element] === foe.element) return { text: 'Твоя стихия сильнее', cls: 'is-good' }
+  if (STRONG[foe.element] === me.element) return { text: 'Его стихия сильнее', cls: 'is-bad' }
+  return null
+}
 
 async function loadOpponents() {
   if (!arenaPet.value) return
@@ -245,7 +299,7 @@ onUnmounted(() => clearInterval(tick))
             class="pc"
             :style="{ '--rar': PET_RARITY[p.traits?.rarity]?.color, '--el': ELEMENTS[p.element]?.color }"
         >
-          <div class="pc__stage" :title="p.trick ? 'Нажми — покажет трюк' : null" @click="showTrick(p)">
+          <div class="pc__stage" title="Рассмотреть питомца" @click="viewing = p">
             <PetFigure :species="p.species" :traits="p.traits" :size="72" :trick="playing[p.inventory_id]" />
             <span class="pc__lvl"><small>УР</small>{{ p.level }}</span>
             <span class="pc__el">{{ ELEMENTS[p.element]?.name }}</span>
@@ -281,6 +335,23 @@ onUnmounted(() => clearInterval(tick))
               <small v-if="nextPerk(p)">Следующий перк на {{ nextPerk(p).level }} ур.</small>
               <small v-else>Все перки открыты</small>
             </div>
+
+            <div class="pc__care">
+              <button
+                  v-for="c in CARE"
+                  :key="c.id"
+                  type="button"
+                  class="pc-care"
+                  :class="{ 'is-done': p.care?.includes(c.id), 'is-want': c.id === 'feed' && p.hungry && !p.care?.includes('feed') }"
+                  :disabled="p.care?.includes(c.id) || busy === `care-${p.inventory_id}`"
+                  :title="p.care?.includes(c.id) ? `${c.label}: уже сегодня` : `${c.label}: +${c.xp} опыта`"
+                  @click="care(p, c)"
+              >
+                <PixelSprite :sprite="c.icon" :size="15" />
+                <span>{{ c.label }}</span>
+              </button>
+            </div>
+            <p v-if="p.hungry && !p.care?.includes('feed')" class="pc__hungry">Проголодался — покорми!</p>
 
             <label class="pc__trick">
               <span>Трюк</span>
@@ -326,19 +397,9 @@ onUnmounted(() => clearInterval(tick))
       <p v-if="!freePets.length" class="pv-empty">Все питомцы заняты — дождись возвращения.</p>
 
       <template v-else>
-        <div class="pv-pick">
-          <span>Кого отправить:</span>
-          <button
-              v-for="p in freePets"
-              :key="p.inventory_id"
-              type="button"
-              class="pv-pick__pet"
-              :class="{ 'is-on': expeditionPet === p.inventory_id }"
-              @click="expeditionPet = p.inventory_id"
-          >
-            <PetFigure :species="p.species" :traits="p.traits" :size="28" :backdrop="false" />
-            {{ p.name }} <b>{{ p.level }}</b>
-          </button>
+        <div class="pa-block">
+          <span class="pa-label">Кого отправить</span>
+          <PetPicker v-model="expeditionPet" :pets="freePets" />
         </div>
 
         <div class="pv-zones">
@@ -374,51 +435,78 @@ onUnmounted(() => clearInterval(tick))
       <PetBattle v-if="battle" :battle="battle" @update="battle = $event" @close="closeBattle" />
 
       <template v-else>
-        <div class="pv-arena-info">
-          <p>
-            Пошаговый бой против питомца другого игрока — им управляет компьютер. Каждый ход выбирай: атака, защита или умение стихии.
-            Огонь бьёт природу, природа — воду, вода — огонь, тень — зверя. Рейтинг остаётся у питомца, даже если его продать.
-            Каждый понедельник тройка лучших получает ₳ 20 000 / 10 000 / 5 000.
-          </p>
-          <span class="pv-arena-left">Боёв сегодня: <b>{{ hub.arena.fights_left }}</b></span>
-        </div>
-
-        <p v-if="!freePets.length" class="pv-empty">Свободных питомцев нет.</p>
+        <p v-if="!freePets.length" class="pv-empty">Свободных питомцев нет — все в походе или на торгах.</p>
 
         <template v-else>
-          <div class="pv-pick">
-            <span>Боец:</span>
-            <button
-                v-for="p in freePets"
-                :key="p.inventory_id"
-                type="button"
-                class="pv-pick__pet"
-                :class="{ 'is-on': arenaPet === p.inventory_id }"
-                @click="arenaPet = p.inventory_id"
-            >
-              <PetFigure :species="p.species" :traits="p.traits" :size="28" :backdrop="false" />
-              {{ p.name }} <b>{{ p.rating }}</b>
-            </button>
+          <!-- Боец и сводка арены -->
+          <div class="pa-top">
+            <section v-if="fighter" class="pa-me" :style="{ '--el': ELEMENTS[fighter.element]?.color }">
+              <button type="button" class="pa-me__stage" title="Рассмотреть" @click="viewing = fighter">
+                <PetFigure :species="fighter.species" :traits="fighter.traits" :size="72" />
+              </button>
+              <div class="pa-me__info">
+                <span class="pa-label">Твой боец</span>
+                <strong>{{ fighter.name }}</strong>
+                <div class="pa-chips">
+                  <span class="pa-chip pa-chip--el">{{ ELEMENTS[fighter.element]?.name }}</span>
+                  <span class="pa-chip">Ур. {{ fighter.level }}</span>
+                  <span class="pa-chip">Рейтинг {{ fighter.rating }}</span>
+                  <span class="pa-chip">{{ fighter.wins }}–{{ fighter.losses }}</span>
+                </div>
+                <small>Умение: {{ ELEMENTS[fighter.element]?.skill }}</small>
+              </div>
+            </section>
+
+            <section class="pa-side">
+              <div class="pa-left">
+                <span class="pa-label">Боёв сегодня</span>
+                <b>{{ hub.arena.fights_left }}</b>
+              </div>
+              <div class="pa-wheel" title="Кто кого бьёт сильнее">
+                <span v-for="[a, b] in [['fire', 'nature'], ['nature', 'water'], ['water', 'fire'], ['shadow', 'beast']]" :key="a">
+                  <i :style="{ color: ELEMENTS[a].color }">{{ ELEMENTS[a].name }}</i> → <i :style="{ color: ELEMENTS[b].color }">{{ ELEMENTS[b].name }}</i>
+                </span>
+              </div>
+              <small class="pa-prize">Каждый понедельник топ-3 арены: ₳ 20 000 / 10 000 / 5 000</small>
+            </section>
           </div>
 
-          <PageLoader v-if="!opponents" />
-          <p v-else-if="!opponents.length" class="pv-empty">Соперников пока нет.</p>
-          <div v-else class="pv-foes">
-            <article v-for="foe in opponents" :key="foe.inventory_id" class="pf-card" :style="{ '--el': ELEMENTS[foe.element]?.color }">
-              <PetFigure :species="foe.species" :traits="foe.traits" :size="52" flip />
-              <div class="pf-card__info">
-                <strong>{{ foe.name }}</strong>
-                <small>{{ foe.owner?.username }} · ур. {{ foe.level }}</small>
-                <span><i>{{ ELEMENTS[foe.element]?.name }}</i> рейтинг {{ foe.rating }} · {{ foe.wins }}–{{ foe.losses }}</span>
-              </div>
-              <button
-                  type="button"
-                  class="pv-btn pv-btn--fight"
-                  :disabled="!hub.arena.fights_left || busy === `fight-${foe.inventory_id}`"
-                  @click="challenge(foe)"
-              ><AppIcon icon="sword" :size="14" /> Вызвать</button>
-            </article>
-            <button type="button" class="pv-btn pv-more" @click="loadOpponents">Других соперников</button>
+          <div class="pa-block">
+            <span class="pa-label">Выбери бойца</span>
+            <PetPicker v-model="arenaPet" :pets="freePets" show="rating" />
+          </div>
+
+          <div class="pa-block">
+            <div class="pa-block__head">
+              <span class="pa-label">Соперники твоего уровня</span>
+              <button type="button" class="pa-refresh" @click="loadOpponents"><AppIcon icon="bolt" :size="13" /> Других</button>
+            </div>
+
+            <PageLoader v-if="!opponents" />
+            <p v-else-if="!opponents.length" class="pv-empty">Соперников пока нет.</p>
+            <div v-else class="pa-foes">
+              <article v-for="foe in opponents" :key="foe.inventory_id" class="pa-foe" :style="{ '--el': ELEMENTS[foe.element]?.color }">
+                <button type="button" class="pa-foe__stage" title="Рассмотреть соперника" @click="viewing = foe">
+                  <span class="pa-foe__el">{{ ELEMENTS[foe.element]?.name }}</span>
+                  <PetFigure :species="foe.species" :traits="foe.traits" :size="58" flip />
+                </button>
+                <div class="pa-foe__body">
+                  <strong>{{ foe.name }}</strong>
+                  <small>{{ foe.owner?.username }} · ур. {{ foe.level }} · рейтинг {{ foe.rating }}</small>
+                  <div class="pa-odds" :title="`Шанс победы по рейтингу и уровню ~${odds(foe)}%`">
+                    <i :style="{ width: `${odds(foe)}%` }"></i>
+                    <span>Шанс ~{{ odds(foe) }}%</span>
+                  </div>
+                  <small v-if="matchup(foe)" class="pa-matchup" :class="matchup(foe).cls">{{ matchup(foe).text }}</small>
+                </div>
+                <button
+                    type="button"
+                    class="pv-btn pv-btn--fight pa-foe__go"
+                    :disabled="!hub.arena.fights_left || busy === `fight-${foe.inventory_id}`"
+                    @click="challenge(foe)"
+                ><AppIcon icon="sword" :size="14" /> Вызвать</button>
+              </article>
+            </div>
           </div>
         </template>
       </template>
@@ -426,6 +514,13 @@ onUnmounted(() => clearInterval(tick))
 
     <PetDex v-else-if="tab === 'dex'" />
     <PetTop v-else-if="tab === 'top'" />
+
+    <PetViewer
+        v-if="viewing"
+        :pet="viewing"
+        :tricks="viewing.owner?.id === auth.user?.id ? hub?.tricks ?? [] : []"
+        @close="viewing = null"
+    />
 
     <!-- Добыча из экспедиции -->
     <Teleport to="body">

@@ -62,7 +62,15 @@ class PetHubService
         $xp = PetService::xpTotals($rows->pluck('id')->all());
         $trips = collect($this->expeditions->active($user))->keyBy('inventory_id');
 
-        $pets = $rows->map(function (UserInventory $row) use ($xp, $trips) {
+        // Уход: что хозяин уже сделал сегодня и когда питомца кормили
+        $ids = $rows->pluck('id')->all();
+        $done = DB::table('pet_interactions')->whereIn('inventory_id', $ids ?: [0])
+            ->where('actor_id', $user->id)->where('day', today()->toDateString())
+            ->get(['inventory_id', 'action'])->groupBy('inventory_id');
+        $fed = DB::table('pet_interactions')->whereIn('inventory_id', $ids ?: [0])->where('action', 'feed')
+            ->groupBy('inventory_id')->selectRaw('inventory_id, max(created_at) as at')->pluck('at', 'inventory_id');
+
+        $pets = $rows->map(function (UserInventory $row) use ($xp, $trips, $done, $fed) {
             $points = $xp[$row->id] ?? 0;
             $level = PetService::levelOf($points);
 
@@ -74,6 +82,8 @@ class PetHubService
                 'perks' => PetPerks::present($level),
                 'expedition' => $trips->get($row->id),
                 'busy' => PetLocks::reason($row->id),
+                'care' => ($done[$row->id] ?? collect())->pluck('action')->values()->all(),
+                'hungry' => ! isset($fed[$row->id]) || now()->diffInHours($fed[$row->id], true) >= 24,
             ];
         })->sortByDesc('level')->values()->all();
 

@@ -145,6 +145,23 @@ class PetHubTest extends TestCase
         $this->assertSame(1000, (int) $user->fresh()->apex_coins);
     }
 
+    public function test_owner_cares_for_pet_that_is_not_walking(): void
+    {
+        $user = User::factory()->create();
+        $row = $this->pet($user, 'cat');
+
+        $this->actingAs($user)->postJson("/api/players/{$user->id}/pet/feed", ['pet' => $row->id])
+            ->assertOk()
+            ->assertJsonPath('xp', 2);
+
+        $this->actingAs($user)->getJson('/api/pets')
+            ->assertJsonPath('pets.0.care.0', 'feed')
+            ->assertJsonPath('pets.0.hungry', false);
+
+        // Второй раз за день — нельзя
+        $this->actingAs($user)->postJson("/api/players/{$user->id}/pet/feed", ['pet' => $row->id])->assertStatus(422);
+    }
+
     public function test_hub_and_public_top(): void
     {
         $user = User::factory()->create();

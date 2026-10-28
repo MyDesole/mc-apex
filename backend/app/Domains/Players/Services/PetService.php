@@ -123,11 +123,11 @@ class PetService
             throw ValidationException::withMessages(['action' => ['Такого с питомцем сделать нельзя.']]);
         }
 
-        if (! $owner->profile_pet) {
+        $pet = $this->instanceKey($owner, $inventoryId);
+
+        if (! $owner->profile_pet && ! $pet) {
             throw ValidationException::withMessages(['action' => ['У игрока нет питомца.']]);
         }
-
-        $pet = $this->instanceKey($owner, $inventoryId);
         $levelBefore = $this->stats($owner, null, $pet ?: null)['level'];
 
         try {
@@ -159,6 +159,11 @@ class PetService
         $walking = collect($owner->profile_pets ?? [])->pluck('inventory_id')->filter()->map(fn ($id) => (int) $id);
 
         if ($inventoryId && $walking->contains($inventoryId)) {
+            return $inventoryId;
+        }
+
+        // Не гуляющий, но свой питомец — с ним можно возиться из «Моих питомцев»
+        if ($inventoryId && UserInventory::where('user_id', $owner->id)->whereKey($inventoryId)->whereNotNull('pet_traits')->exists()) {
             return $inventoryId;
         }
 

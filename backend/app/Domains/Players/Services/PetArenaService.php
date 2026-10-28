@@ -495,6 +495,7 @@ class PetArenaService
             'wins' => (int) $pet->pet_wins,
             'losses' => (int) $pet->pet_losses,
             'element' => self::element($species),
+            'trick' => $pet->pet_trick,
             'owner' => $pet->user ? ['id' => $pet->user->id, 'username' => $pet->user->username, 'avatar_url' => $pet->user->avatar_url] : null,
         ];
     }
