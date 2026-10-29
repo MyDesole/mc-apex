@@ -72,20 +72,38 @@ function countdown(iso) {
   return `${h}:${m}:${s}`
 }
 
+// Пачка: платный сундук можно открыть сразу 3, 5 или 10 раз
+const BATCHES = [1, 3, 5, 10]
+const batch = ref(1)
+
+/** Сколько монет уйдёт на пачку: ключи тратятся первыми. */
+function batchCost(caseData, count = batch.value) {
+  if (caseData.free_daily) return 0
+  return Math.max(0, count - (caseData.keys ?? 0)) * caseData.price
+}
+
+function missing(caseData, count = batch.value) {
+  return Math.max(0, batchCost(caseData, count) - balance.value)
+}
+
+// Монет не хватает — не ошибка, а подсказка, где их заработать
+const shortage = ref(null)
+
 function canOpen(caseData) {
   if (!auth.isAuthenticated || opening.value) return false
   if (caseData.free_daily) return caseData.available
-  // Ключ (награда, подарок) открывает платный кейс без монет
-  return caseData.keys > 0 || balance.value >= caseData.price
+  return true
 }
 
 function openLabel(caseData) {
   if (!auth.isAuthenticated) return 'Войдите, чтобы открыть'
   if (opening.value) return 'Открываем…'
   if (caseData.free_daily) return caseData.available ? 'Открыть бесплатно' : `Новый через ${countdown(caseData.next_free_at)}`
-  if (caseData.keys > 0) return `Открыть ключом · осталось ${caseData.keys}`
-  if (balance.value < caseData.price) return `Не хватает ₳ ${formatCoins(caseData.price - balance.value)}`
-  return `Открыть за ₳ ${formatCoins(caseData.price)}`
+  const count = batch.value
+  const times = count > 1 ? ` ×${count}` : ''
+  const cost = batchCost(caseData)
+  if (cost === 0) return `Открыть${times} ключом · осталось ${caseData.keys}`
+  return `Открыть${times} за ₳ ${formatCoins(cost)}`
 }
 
 /** Лента до прокрутки: содержимое кейса вперемешку, чтобы не пустовала. */
@@ -102,6 +120,8 @@ function idleReel(caseData) {
 function selectCase(slug) {
   if (opening.value) return
   selectedSlug.value = slug
+  batch.value = 1
+  shortage.value = null
   reelDuration.value = 0
   reelOffset.value = 0
   reel.value = idleReel(selected.value)
@@ -146,12 +166,21 @@ async function openCase() {
   const caseData = selected.value
   if (!caseData || !canOpen(caseData)) return
 
+  const count = caseData.free_daily ? 1 : batch.value
+
+  // Монет не хватает — сразу предлагаем заработать, без запроса
+  if (missing(caseData, count) > 0) {
+    shortage.value = { missing: missing(caseData, count), count }
+    return
+  }
+
   opening.value = true
   openError.value = ''
+  shortage.value = null
   showResult.value = false
 
   try {
-    const response = await casesApi.open(caseData.slug)
+    const response = await casesApi.open(caseData.slug, count)
 
     // Сбрасываем ленту в начало без анимации, затем крутим до выигрыша
     reelDuration.value = 0
@@ -190,10 +219,16 @@ async function openCase() {
       refreshHistory()
     }, SPIN_MS + 250)
   } catch (e) {
-    openError.value = e.message || 'Не удалось открыть кейс.'
+    if (e.data?.missing) shortage.value = { missing: e.data.missing, count }
+    else openError.value = e.message || 'Не удалось открыть кейс.'
     opening.value = false
   }
 }
+
+// Пачка: все награды разом, лучшая — первой
+const RANK = { nothing: 0, coins: 1, common: 2, rare: 3, epic: 4, legendary: 5 }
+const batchPrizes = computed(() => [...(result.value?.prizes ?? [])].sort((a, b) => (RANK[b.outcome] ?? 0) - (RANK[a.outcome] ?? 0)))
+const batchCoins = computed(() => (result.value?.prizes ?? []).reduce((sum, p) => sum + (p.coins || 0), 0))
 
 async function refreshHistory() {
   try {
@@ -347,6 +382,24 @@ onUnmounted(() => {
         </div>
 
         <div class="opener__actions">
+          <!-- Сколько открыть разом -->
+          <div v-if="!selected.free_daily && auth.isAuthenticated" class="batch" role="radiogroup" aria-label="Сколько открыть">
+            <button
+                v-for="n in BATCHES"
+                :key="n"
+                type="button"
+                role="radio"
+                class="batch__btn"
+                :class="{ 'is-on': batch === n, 'is-short': missing(selected, n) > 0 }"
+                :aria-checked="batch === n"
+                :disabled="opening"
+                @click="batch = n; shortage = null"
+            >
+              <b>×{{ n }}</b>
+              <small>{{ batchCost(selected, n) ? `₳ ${formatCoins(batchCost(selected, n))}` : 'ключами' }}</small>
+            </button>
+          </div>
+
           <button
               type="button"
               class="open-button"
@@ -357,6 +410,21 @@ onUnmounted(() => {
             {{ openLabel(selected) }}
           </button>
           <p v-if="openError" class="open-error">{{ openError }}</p>
+
+          <!-- Не хватает монет — подсказываем, где заработать -->
+          <div v-if="shortage" class="short">
+            <div class="short__text">
+              <strong>Не хватает ₳ {{ formatCoins(shortage.missing) }}</strong>
+              <span>
+                {{ shortage.count > 1 ? `На ${shortage.count} ${shortage.count < 5 ? 'сундука' : 'сундуков'}` : 'На сундук' }} нужно ₳ {{ formatCoins(batchCost(selected, shortage.count)) }},
+                а у тебя ₳ {{ formatCoins(balance) }}. Монеты можно накопать в шахте.
+              </span>
+            </div>
+            <div class="short__actions">
+              <RouterLink to="/miner" class="short__go">В шахту</RouterLink>
+              <RouterLink to="/pets?tab=expeditions" class="short__alt">Экспедиции питомцев</RouterLink>
+            </div>
+          </div>
         </div>
 
         <!-- Шансы -->
@@ -366,7 +434,7 @@ onUnmounted(() => {
             <span>{{ chance.label }}</span>
             <b>{{ chance.value }}%</b>
           </div>
-          <div class="chance chance--note">
+          <div v-if="selected.coins[1] > 0" class="chance chance--note">
             Монеты: ₳ {{ formatCoins(selected.coins[0]) }}–{{ formatCoins(selected.coins[1]) }}
           </div>
         </div>
@@ -417,7 +485,7 @@ onUnmounted(() => {
       <div v-if="showResult && prize" class="prize-overlay" @click.self="closeResult">
         <div
             class="prize-card"
-            :class="`prize-card--${prize.outcome}`"
+            :class="[`prize-card--${prize.outcome}`, { 'prize-card--batch': batchPrizes.length > 1 }]"
             :style="{ '--rarity': prizeColor }"
         >
           <div class="prize-card__rays"></div>
@@ -426,7 +494,7 @@ onUnmounted(() => {
           </div>
 
           <span class="prize-card__label">
-            {{ result.pity ? 'Гарантия сработала!' : prize.outcome === 'nothing' ? 'Не повезло' : 'Вам выпало' }}
+            {{ result.pity ? 'Гарантия сработала!' : batchPrizes.length > 1 ? `Открыто сундуков: ${batchPrizes.length} · лучшее` : prize.outcome === 'nothing' ? 'Не повезло' : 'Вам выпало' }}
           </span>
 
           <div class="prize-card__visual">
@@ -448,23 +516,46 @@ onUnmounted(() => {
           </p>
 
           <!-- Питомец уникален: показываем, какой экземпляр отчеканился -->
-          <ul v-if="prize.item?.pet" class="prize-pet">
+          <ul v-if="prize.item?.pet && batchPrizes.length <= 1" class="prize-pet">
             <li><span>Номер</span><b>#{{ prize.item.pet.serial }}</b></li>
             <li><span>Окрас</span><b>{{ prize.item.pet.model.name }}</b><i>{{ chanceLabel(prize.item.pet.model.chance) }}</i></li>
             <li><span>Фон</span><b>{{ prize.item.pet.backdrop.name }}</b><i>{{ chanceLabel(prize.item.pet.backdrop.chance) }}</i></li>
             <li><span>Аксессуар</span><b>{{ prize.item.pet.accessory.name }}</b><i>{{ chanceLabel(prize.item.pet.accessory.chance) }}</i></li>
           </ul>
 
-          <p v-if="result.duplicate" class="prize-card__dup">
+          <p v-if="result.duplicate && batchPrizes.length <= 1" class="prize-card__dup">
             Такой предмет уже есть — вместо него +{{ formatCoins(prize.coins) }} ApexCoin
           </p>
+
+          <!-- Пачка: все награды разом -->
+          <div v-if="batchPrizes.length > 1" class="batch-prizes">
+            <div
+                v-for="(p, i) in batchPrizes"
+                :key="i"
+                class="batch-prize"
+                :style="{ '--rarity': OUTCOME_COLORS[p.outcome] }"
+                :title="p.item ? p.item.name : p.outcome === 'coins' ? `${p.coins} ApexCoin` : 'Пусто'"
+            >
+              <div class="batch-prize__visual">
+                <ShopItemPreview v-if="p.item" :item="p.item" />
+                <span v-else-if="p.outcome === 'coins'" class="reel-coin">₳</span>
+                <span v-else class="reel-empty">∅</span>
+              </div>
+              <span class="batch-prize__name">
+                {{ p.item ? (p.item.pet ? `${p.item.name} #${p.item.pet.serial}` : p.item.name) : p.outcome === 'coins' ? `+${formatCoins(p.coins)} ₳` : 'Пусто' }}
+              </span>
+              <small v-if="p.duplicate">повтор · +{{ formatCoins(p.coins) }} ₳</small>
+              <small v-else-if="p.item?.pet">{{ p.item.pet.model.name }} · {{ p.item.pet.accessory.name }}</small>
+            </div>
+          </div>
+          <p v-if="batchPrizes.length > 1 && batchCoins" class="prize-card__sub">Монетами за пачку: +{{ formatCoins(batchCoins) }} ApexCoin</p>
 
           <div class="prize-card__actions">
             <RouterLink v-if="prize.item && !result.duplicate" to="/inventory" class="prize-button prize-button--ghost">
               Надеть в инвентаре
             </RouterLink>
             <button v-if="canOpen(selected)" type="button" class="prize-button" @click="again">
-              Открыть ещё
+              {{ batch > 1 && !selected.free_daily ? `Открыть ещё ×${batch}` : 'Открыть ещё' }}
             </button>
             <button v-else type="button" class="prize-button" @click="closeResult">Отлично</button>
           </div>

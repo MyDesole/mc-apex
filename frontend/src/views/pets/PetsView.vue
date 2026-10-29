@@ -21,7 +21,7 @@ import PixelSprite from '@/components/shop/PixelSprite.vue'
 import PetPicker from '@/components/pets/PetPicker.vue'
 import CountdownText from '@/components/core/CountdownText.vue'
 import { useNow } from '@/composables/core/useNow.js'
-import { ELEMENTS, levelXp } from '@/data/players/petArena.js'
+import { ELEMENTS, PET_NAMES, levelXp } from '@/data/players/petArena.js'
 import { PET_RARITY, chanceLabel } from '@/data/players/petTraits.js'
 
 const auth = useAuthStore()
@@ -51,6 +51,52 @@ const viewing = ref(null)
 
 const pets = computed(() => hub.value?.pets ?? [])
 const freePets = computed(() => pets.value.filter((p) => !p.busy))
+
+/* ---------- Поиск и фильтры вкладки «Питомцы» ---------- */
+
+const RARITY_ORDER = ['mythic', 'legendary', 'epic', 'rare', 'common']
+const query = ref('')
+const filters = ref({ species: '', rarity: '', element: '', status: '', sort: 'level' })
+
+// В списке видов — только те, что есть у игрока
+const ownedSpecies = computed(() => [...new Set(pets.value.map((p) => p.species))].sort((a, b) => (PET_NAMES[a] || a).localeCompare(PET_NAMES[b] || b, 'ru')))
+
+const STATUSES = {
+  walking: { label: 'В профиле', test: (p) => p.equipped },
+  free: { label: 'Свободные', test: (p) => !p.busy },
+  busy: { label: 'Заняты', test: (p) => !!p.busy },
+  hungry: { label: 'Голодные', test: (p) => p.hungry && !p.care?.includes('feed') },
+  care: { label: 'Ждут ухода', test: (p) => (p.care?.length ?? 0) < 3 },
+}
+
+const SORTS = {
+  level: { label: 'По уровню', fn: (a, b) => b.level - a.level || b.xp - a.xp },
+  rating: { label: 'По рейтингу арены', fn: (a, b) => b.rating - a.rating },
+  rarity: { label: 'По редкости', fn: (a, b) => RARITY_ORDER.indexOf(a.traits?.rarity) - RARITY_ORDER.indexOf(b.traits?.rarity) },
+  name: { label: 'По имени', fn: (a, b) => a.name.localeCompare(b.name, 'ru') },
+  newest: { label: 'Сначала новые', fn: (a, b) => b.inventory_id - a.inventory_id },
+}
+
+const shownPets = computed(() => {
+  const q = query.value.trim().toLowerCase()
+  const f = filters.value
+
+  return pets.value
+      .filter((p) => !q || [p.name, PET_NAMES[p.species], p.traits?.model?.name, p.traits?.backdrop?.name, p.traits?.accessory?.name, p.traits?.serial && `#${p.traits.serial}`]
+          .some((text) => text && String(text).toLowerCase().includes(q)))
+      .filter((p) => !f.species || p.species === f.species)
+      .filter((p) => !f.rarity || p.traits?.rarity === f.rarity)
+      .filter((p) => !f.element || p.element === f.element)
+      .filter((p) => !f.status || STATUSES[f.status].test(p))
+      .sort(SORTS[f.sort]?.fn ?? SORTS.level.fn)
+})
+
+const filtered = computed(() => !!query.value.trim() || Object.entries(filters.value).some(([k, v]) => k !== 'sort' && v))
+
+function resetFilters() {
+  query.value = ''
+  filters.value = { species: '', rarity: '', element: '', status: '', sort: filters.value.sort }
+}
 
 async function load() {
   try {
@@ -286,13 +332,54 @@ onMounted(async () => {
     <!-- ================= Питомцы ================= -->
     <template v-else-if="tab === 'pets'">
       <p v-if="!pets.length" class="pv-empty">
-        Питомцев пока нет. Они выпадают в <RouterLink to="/cases">сундуках</RouterLink>,
-        продаются в <RouterLink to="/shop">магазине</RouterLink> и на <RouterLink to="/auction">аукционе</RouterLink>.
+        Питомцев пока нет. Их выбивают в <RouterLink to="/cases">Сундуке питомцев</RouterLink>
+        или покупают у других игроков на <RouterLink to="/auction">аукционе</RouterLink>.
       </p>
 
-      <div v-else class="pv-grid">
+      <!-- Поиск и фильтры -->
+      <div v-if="pets.length > 1" class="pv-filters">
+        <label class="pv-search">
+          <AppIcon icon="target" :size="14" />
+          <input v-model="query" placeholder="Имя, вид, окрас, аксессуар или #номер" />
+        </label>
+
+        <select v-model="filters.species" aria-label="Вид">
+          <option value="">Все виды</option>
+          <option v-for="s in ownedSpecies" :key="s" :value="s">{{ PET_NAMES[s] || s }}</option>
+        </select>
+
+        <select v-model="filters.rarity" aria-label="Редкость">
+          <option value="">Любая редкость</option>
+          <option v-for="r in RARITY_ORDER" :key="r" :value="r">{{ PET_RARITY[r].label }}</option>
+        </select>
+
+        <select v-model="filters.element" aria-label="Стихия">
+          <option value="">Любая стихия</option>
+          <option v-for="(el, key) in ELEMENTS" :key="key" :value="key">{{ el.name }}</option>
+        </select>
+
+        <select v-model="filters.status" aria-label="Состояние">
+          <option value="">Все</option>
+          <option v-for="(s, key) in STATUSES" :key="key" :value="key">{{ s.label }}</option>
+        </select>
+
+        <select v-model="filters.sort" aria-label="Сортировка">
+          <option v-for="(s, key) in SORTS" :key="key" :value="key">{{ s.label }}</option>
+        </select>
+
+        <span class="pv-filters__count">
+          {{ shownPets.length }} из {{ pets.length }}
+          <button v-if="filtered" type="button" @click="resetFilters">Сбросить</button>
+        </span>
+      </div>
+
+      <p v-if="pets.length && !shownPets.length" class="pv-empty">
+        Никого не нашлось. <button type="button" class="pv-link" @click="resetFilters">Сбросить фильтры</button>
+      </p>
+
+      <div v-else-if="pets.length" class="pv-grid">
         <article
-            v-for="p in pets"
+            v-for="p in shownPets"
             :key="p.inventory_id"
             class="pc"
             :style="{ '--rar': PET_RARITY[p.traits?.rarity]?.color, '--el': ELEMENTS[p.element]?.color }"

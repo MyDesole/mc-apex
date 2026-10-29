@@ -2,7 +2,9 @@
 
 namespace App\Domains\Shop\Controllers\Api;
 
+use App\Domains\Shop\Exceptions\NotEnoughCoins;
 use App\Domains\Shop\Services\LootCaseService;
+use App\Domains\Shop\Support\LootCases;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -28,8 +30,13 @@ class LootCaseController extends Controller
 
     public function open(Request $request, string $slug, LootCaseService $cases): JsonResponse
     {
+        $data = $request->validate(['count' => ['nullable', 'integer', 'in:' . implode(',', LootCases::BATCHES)]]);
+
         try {
-            return response()->json($cases->open($request->user(), $slug));
+            return response()->json($cases->openMany($request->user(), $slug, (int) ($data['count'] ?? 1)));
+        } catch (NotEnoughCoins $e) {
+            // Клиент предложит заработать: шахта, экспедиции питомцев
+            return response()->json(['message' => $e->getMessage(), 'missing' => $e->missing, 'earn' => '/miner'], 422);
         } catch (RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }

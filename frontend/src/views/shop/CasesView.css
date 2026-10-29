@@ -1138,3 +1138,169 @@
   background: linear-gradient(135deg, #6ee7b7, #10b981);
   box-shadow: 0 12px 28px rgba(16, 185, 129, 0.35), inset 0 -4px 0 rgba(0, 0, 0, 0.18);
 }
+/* ---------- Пачка: выбор, нехватка монет, итог ---------- */
+
+.batch {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+
+  width: min(100%, 420px);
+}
+
+.batch__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+
+  padding: 7px 4px;
+
+  color: #d6d2e2;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+
+  font: inherit;
+
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.batch__btn b { font-size: 15px; font-weight: 900; }
+.batch__btn small { color: #8a8598; font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.batch__btn:hover:not(:disabled) { border-color: rgba(255, 255, 255, 0.25); }
+.batch__btn.is-on { color: #fff; background: rgba(250, 204, 21, 0.12); border-color: #facc15; }
+.batch__btn.is-on small { color: #fde68a; }
+.batch__btn.is-short small { color: #f87171; }
+.batch__btn:disabled { opacity: 0.5; cursor: default; }
+
+.short {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+
+  width: min(100%, 560px);
+  padding: 12px 14px;
+
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.12), rgba(34, 211, 238, 0.03));
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  border-radius: 14px;
+
+  animation: short-in 0.2s ease-out;
+}
+
+@keyframes short-in { from { opacity: 0; transform: translateY(-4px); } }
+
+.short__text { display: flex; flex: 1 1 260px; flex-direction: column; gap: 2px; }
+.short__text strong { color: #fff; font-size: 14px; }
+.short__text span { color: #a8a3b8; font-size: 12.5px; line-height: 1.45; }
+
+.short__actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.short__go,
+.short__alt {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 36px;
+  padding: 0 14px;
+
+  border-radius: 10px;
+
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.short__go { color: #083344; background: #22d3ee; }
+.short__go:hover { background: #67e8f9; }
+.short__alt { color: #d6d2e2; border: 1px solid rgba(255, 255, 255, 0.14); }
+.short__alt:hover { color: #fff; border-color: rgba(255, 255, 255, 0.3); }
+
+.prize-card--batch {
+  width: min(100%, 760px);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+.batch-prizes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 8px;
+
+  width: 100%;
+  margin-top: 6px;
+}
+
+.batch-prize {
+  --rarity: #a78bfa;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+
+  min-width: 0;
+  padding: 8px 6px;
+
+  background: color-mix(in srgb, var(--rarity) 10%, rgba(0, 0, 0, 0.3));
+  border: 1px solid color-mix(in srgb, var(--rarity) 45%, transparent);
+  border-radius: 12px;
+
+  text-align: center;
+
+  animation: batch-pop 0.35s ease-out backwards;
+}
+
+.batch-prize:nth-child(2) { animation-delay: 0.05s; }
+.batch-prize:nth-child(3) { animation-delay: 0.1s; }
+.batch-prize:nth-child(4) { animation-delay: 0.15s; }
+.batch-prize:nth-child(5) { animation-delay: 0.2s; }
+.batch-prize:nth-child(n + 6) { animation-delay: 0.25s; }
+
+@keyframes batch-pop { from { opacity: 0; transform: scale(0.85); } }
+
+.batch-prize__visual {
+  width: 100%;
+  height: 70px;
+
+  display: grid;
+  place-items: center;
+
+  overflow: hidden;
+
+  border-radius: 8px;
+}
+
+/* Превью занимает всю плитку, иначе сжимается в ноль и уходит вниз */
+.batch-prize__visual > * {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.batch-prize__name {
+  max-width: 100%;
+  overflow: hidden;
+
+  color: #fff;
+
+  font-size: 12px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.batch-prize small {
+  max-width: 100%;
+  overflow: hidden;
+
+  color: #a8a3b8;
+
+  font-size: 10.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

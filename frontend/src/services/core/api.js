@@ -80,6 +80,8 @@ async function request(url, options = {}) {
             status: response.status,
             message: data.message || 'Произошла ошибка.',
             errors: data.errors || {},
+            // Весь ответ: в нём бывают подсказки (например, сколько не хватает монет)
+            data,
         }
     }
 

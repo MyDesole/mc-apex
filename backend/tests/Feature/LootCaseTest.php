@@ -9,6 +9,7 @@ use App\Domains\Shop\Services\LootCaseService;
 use App\Domains\Shop\Support\LootCases;
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
@@ -72,6 +73,37 @@ class LootCaseTest extends TestCase
         $response = $this->actingAs($rich)->postJson('/api/shop/cases/seeker/open')->assertOk();
 
         $this->assertSame(1000 - 750 + $response->json('prize.coins'), (int) $rich->fresh()->apex_coins);
+    }
+
+    public function test_open_batch_of_cases_and_hint_when_short_of_coins(): void
+    {
+        $price = \App\Domains\Shop\Support\LootCases::find('seeker')['price'];
+
+        // Не хватает на пачку — ничего не открыто, ответ подсказывает, сколько нужно и где заработать
+        $poor = User::factory()->create(['apex_coins' => 4 * $price]);
+        $this->actingAs($poor)->postJson('/api/shop/cases/seeker/open', ['count' => 5])
+            ->assertStatus(422)
+            ->assertJsonPath('missing', $price)
+            ->assertJsonPath('earn', '/miner');
+        $this->assertSame(0, CaseOpening::where('user_id', $poor->id)->count());
+
+        // Пачка из 5: два ключа и три открытия за монеты
+        $rich = User::factory()->create(['apex_coins' => 3 * $price]);
+        DB::table('loot_case_keys')->insert(['user_id' => $rich->id, 'case_slug' => 'seeker', 'count' => 2]);
+
+        $response = $this->actingAs($rich)->postJson('/api/shop/cases/seeker/open', ['count' => 5])
+            ->assertOk()
+            ->assertJsonCount(5, 'prizes')
+            ->assertJsonPath('used_keys', 2)
+            ->assertJsonPath('spent', 3 * $price);
+
+        $this->assertSame(5, CaseOpening::where('user_id', $rich->id)->count());
+        $winnings = collect($response->json('prizes'))->sum('coins');
+        $this->assertSame($winnings, (int) $rich->fresh()->apex_coins);
+
+        // Бесплатный — только по одному, и странные размеры пачки не принимаются
+        $this->actingAs($rich)->postJson('/api/shop/cases/daily/open', ['count' => 3])->assertStatus(422);
+        $this->actingAs($rich)->postJson('/api/shop/cases/seeker/open', ['count' => 7])->assertStatus(422);
     }
 
     public function test_item_prize_lands_in_inventory_and_duplicate_pays_coins(): void

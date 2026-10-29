@@ -19,6 +19,9 @@ final class LootCases
     // следующее гарантированно эпическое или легендарное
     public const PITY_AFTER = 10;
 
+    // Платный сундук можно открыть пачкой
+    public const BATCHES = [1, 3, 5, 10];
+
     // Повтор предмета возвращает долю его цены монетами
     public const DUPLICATE_SHARE = 0.15;
 
@@ -55,7 +58,7 @@ final class LootCases
         'pets' => [
             'name' => 'Сундук питомцев',
             'description' => 'Всегда питомец — только здесь их и можно получить. Окрас, фон и аксессуар выпадают с обычными шансами.',
-            'price' => 750,
+            'price' => 10000,
             'free_daily' => false,
             'theme' => 'emerald',
             'coins' => [0, 0],

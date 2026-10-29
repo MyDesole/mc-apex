@@ -3,6 +3,7 @@
 namespace App\Domains\Shop\Services;
 
 use App\Domains\Players\Support\PetTraits;
+use App\Domains\Shop\Exceptions\NotEnoughCoins;
 use App\Domains\Shop\Models\CaseOpening;
 use App\Domains\Shop\Models\ShopItem;
 use App\Domains\Shop\Models\UserInventory;
@@ -97,7 +98,7 @@ class LootCaseService
         $price = $useKey ? 0 : $case['price'];
 
         if (! CoinService::canAfford($user, $price)) {
-            throw new RuntimeException('Недостаточно ApexCoin. Не хватает ' . ($case['price'] - (int) $user->apex_coins) . '.');
+            throw new NotEnoughCoins($case['price'] - (int) $user->apex_coins);
         }
 
         $outcome = $this->roll($case['chances']);
@@ -211,6 +212,58 @@ class LootCaseService
                 'keys' => $case['free_daily'] ? 0 : $this->keys($user, $case['slug']),
             ],
             'used_key' => $useKey,
+        ];
+    }
+
+    /**
+     * Открыть платный сундук сразу несколько раз (3, 5 или 10).
+     * Сначала тратятся ключи, потом монеты; хватает ли на всю пачку —
+     * проверяем заранее, чтобы не остановиться на середине.
+     */
+    public function openMany(User $user, string $slug, int $count): array
+    {
+        $case = LootCases::find($slug);
+
+        if (! $case) {
+            throw new RuntimeException('Такого кейса нет.');
+        }
+
+        if ($count === 1) {
+            return $this->open($user, $slug);
+        }
+
+        if ($case['free_daily'] || ! in_array($count, LootCases::BATCHES, true)) {
+            throw new RuntimeException('Сразу можно открыть 3, 5 или 10 платных сундуков.');
+        }
+
+        $paid = max(0, $count - $this->keys($user, $slug));
+        $cost = $paid * $case['price'];
+
+        if (! CoinService::canAfford($user->fresh(), $cost)) {
+            throw new NotEnoughCoins($cost - (int) $user->fresh()->apex_coins);
+        }
+
+        $openings = [];
+        for ($i = 0; $i < $count; $i++) {
+            $openings[] = $this->open($user->fresh(), $slug);
+        }
+
+        // Лента рулетки крутится до лучшей награды пачки
+        $rank = array_flip(['nothing', 'coins', ...LootCases::RARITIES]);
+        $best = collect($openings)->sortByDesc(fn ($o) => $rank[$o['prize']['outcome']] ?? 0)->first();
+        $last = end($openings);
+
+        return [
+            'prizes' => array_map(fn ($o) => $o['prize'] + ['duplicate' => $o['duplicate'], 'pity' => $o['pity']], $openings),
+            'prize' => $best['prize'],
+            'duplicate' => $best['duplicate'],
+            'pity' => collect($openings)->contains('pity', true),
+            'reel' => $best['reel'],
+            'win_index' => $best['win_index'],
+            'balance' => $last['balance'],
+            'case' => $last['case'],
+            'used_keys' => collect($openings)->where('used_key', true)->count(),
+            'spent' => $cost,
         ];
     }
 

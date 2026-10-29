@@ -11,7 +11,8 @@ export const casesApi = {
         return api.get('/cases/status')
     },
 
-    open(slug) {
-        return api.post(`/shop/cases/${slug}/open`)
+    /** Открыть сундук; платный — можно пачкой (3, 5, 10). */
+    open(slug, count = 1) {
+        return api.post(`/shop/cases/${slug}/open`, count > 1 ? { count } : {})
     },
 }

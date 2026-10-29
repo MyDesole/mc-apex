@@ -162,6 +162,89 @@
 .pv-btn--go:hover:not(:disabled) { background: #86efac; }
 .pv-btn--fight { color: #fff; background: linear-gradient(135deg, #f43f5e, #be123c); border-color: transparent; }
 
+/* ---------- Поиск и фильтры ---------- */
+
+.pv-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pv-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 260px;
+
+  padding: 0 12px;
+
+  color: #8a8598;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 11px;
+}
+
+.pv-search:focus-within { border-color: rgba(244, 114, 182, 0.6); }
+
+.pv-search input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+
+  color: #fff;
+  background: none;
+  border: 0;
+  outline: none;
+
+  font: inherit;
+  font-size: 13px;
+}
+
+.pv-filters select {
+  height: 40px;
+  padding: 0 10px;
+
+  color: #e9e5f5;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 11px;
+
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pv-filters select option { background: #15131c; }
+
+.pv-filters__count {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-left: auto;
+
+  color: #8a8598;
+
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pv-filters__count button,
+.pv-link {
+  padding: 0;
+
+  color: #f9a8d4;
+  background: none;
+  border: 0;
+
+  font: inherit;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
 /* ---------- Карточки питомцев ---------- */
 
 .pv-grid {
@@ -691,6 +774,8 @@
   .pv-head { grid-template-columns: minmax(0, 1fr); }
   .pv-head__stats div { flex: 1; min-width: 0; }
   .pv-trips { grid-template-columns: minmax(0, 1fr); }
+  .pv-filters select { flex: 1 1 calc(50% - 4px); min-width: 0; }
+  .pv-filters__count { margin-left: 0; }
   .pa-top { grid-template-columns: minmax(0, 1fr); }
   .pa-foes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
