@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { GUIDE_STEPS, onStepRoute } from '@/data/guide/steps.js'
 
 // Как в GuideService::STEPS
-const SERVER_STEPS = ['welcome', 'rating', 'test', 'profile', 'pet', 'pets', 'expedition', 'arena', 'auction', 'tops', 'miner']
+const SERVER_STEPS = ['welcome', 'rating', 'test', 'profile', 'clans', 'tournaments', 'shop', 'pet', 'pets', 'expedition', 'arena', 'auction', 'tops', 'miner']
 
 describe('guide steps', () => {
   it('каждый шаг сервера описан', () => {
@@ -24,6 +24,9 @@ describe('guide steps', () => {
   it('у шага про тест есть вариант для бриджа', () => {
     expect(GUIDE_STEPS.test.bridgeTitle).toContain('бридж')
     expect(GUIDE_STEPS.test.bridgeText).toBeTruthy()
+    expect(GUIDE_STEPS.test.bridgeTarget[0]).toContain('bridge')
+    // Шаг про тир-тест подсвечивает кнопку «Записаться», а не шапку профиля
+    expect(GUIDE_STEPS.test.target[0]).toContain('tests-section__button')
   })
 
   it('адрес шага сверяется вместе с вкладкой', () => {

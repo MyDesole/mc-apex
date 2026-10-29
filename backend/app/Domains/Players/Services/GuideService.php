@@ -13,7 +13,8 @@ use RuntimeException;
 
 /**
  * Путеводитель по сайту: шаг за шагом показывает рейтинг, тир-тест или
- * бридж, профиль, питомцев, арену, аукцион, топы и шахту.
+ * бридж, профиль, кланы, турниры, магазин, питомцев, арену, аукцион,
+ * топы и шахту.
  *
  * Стартовые 10 000 ApexCoin выдаются за первые шаги — ровно столько,
  * сколько стоит сундук питомцев, к которому путеводитель ведёт дальше.
@@ -34,6 +35,9 @@ class GuideService
         'rating' => ['reward' => 2000, 'check' => 'seen'],
         'test' => ['reward' => 2000, 'check' => 'seen'],
         'profile' => ['reward' => 0, 'check' => 'seen'],
+        'clans' => ['reward' => 0, 'check' => 'seen'],
+        'tournaments' => ['reward' => 0, 'check' => 'seen'],
+        'shop' => ['reward' => 0, 'check' => 'seen'],
         'pet' => ['reward' => 0, 'check' => 'pet'],
         'pets' => ['reward' => 0, 'check' => 'seen'],
         'expedition' => ['reward' => 0, 'check' => 'expedition'],

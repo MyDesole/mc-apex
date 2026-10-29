@@ -103,7 +103,8 @@ watch([spotActive, () => stepInfo.value?.auto], ([active, auto]) => {
 /* ---------- Подсветка ---------- */
 
 function findTarget() {
-  for (const selector of step.value?.target ?? []) {
+  const targets = isBridge.value && step.value?.bridgeTarget ? step.value.bridgeTarget : step.value?.target
+  for (const selector of targets ?? []) {
     const el = document.querySelector(selector)
     if (el && el.getBoundingClientRect().width > 0) return el
   }

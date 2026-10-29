@@ -52,7 +52,7 @@ class GuideTest extends TestCase
         $user = User::factory()->create(['apex_coins' => 0]);
         $this->actingAs($user)->postJson('/api/guide/start');
 
-        foreach (['rating', 'test', 'profile'] as $step) {
+        foreach (['rating', 'test', 'profile', 'clans', 'tournaments', 'shop'] as $step) {
             $this->actingAs($user)->postJson("/api/guide/steps/{$step}/complete")->assertOk();
         }
 
@@ -69,7 +69,8 @@ class GuideTest extends TestCase
         $this->actingAs($user)->getJson('/api/guide')
             ->assertOk()
             ->assertJsonPath('current', 'pets')
-            ->assertJsonPath('steps.4.status', 'done');
+            ->assertJsonPath('steps.7.id', 'pet')
+            ->assertJsonPath('steps.7.status', 'done');
     }
 
     public function test_skip_moves_on_without_reward_and_the_guide_finishes(): void
@@ -80,7 +81,7 @@ class GuideTest extends TestCase
         $this->actingAs($user)->postJson('/api/guide/steps/rating/skip')->assertOk()->assertJsonPath('current', 'test');
         $this->assertSame(6000, (int) $user->fresh()->apex_coins);
 
-        foreach (['test', 'profile', 'pet', 'pets', 'expedition', 'arena', 'auction', 'tops', 'miner'] as $step) {
+        foreach (['test', 'profile', 'clans', 'tournaments', 'shop', 'pet', 'pets', 'expedition', 'arena', 'auction', 'tops', 'miner'] as $step) {
             $this->actingAs($user)->postJson("/api/guide/steps/{$step}/skip")->assertOk();
         }
 

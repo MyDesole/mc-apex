@@ -39,8 +39,8 @@ const shouldShow = computed(() => {
   if (!auth.isAuthenticated) return false
   if (hiddenInSession.value) return false
   if (String(route.path).startsWith('/messages')) return false
-  // Пока идёт путеводитель, про тест рассказывает он — банер нужен только на его шаге
-  if (guide.started && !guide.finished && !guide.hidden && guide.current !== 'test') return false
+  // Пока идёт путеводитель, про тест рассказывает он — подсвечивает кнопку в профиле
+  if (guide.started && !guide.finished && !guide.hidden) return false
 
   // В бридже зовём подтвердить вид, а не проходить тир-тест
   if (isBridge.value) {
