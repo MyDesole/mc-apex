@@ -27,6 +27,12 @@ Schedule::command('sitemap:generate')->dailyAt('04:10');
 // Награды тройке самых уважаемых за прошедшую неделю
 Schedule::command('respects:weekly-rewards')->weeklyOn(1, '00:05');
 
+// Шахтёр: призы тройке лучших забегов прошедшей недели
+Schedule::call(fn () => app(\App\Domains\Games\Services\MinerProgress::class)->awardWeek())
+    ->weeklyOn(1, '00:15')
+    ->name('miner:weekly-prizes')
+    ->withoutOverlapping();
+
 // Арена питомцев: призы тройке лучших и мягкий сброс рейтинга — новый сезон
 Schedule::call(fn () => app(\App\Domains\Players\Services\PetArenaService::class)->closeSeason())
     ->weeklyOn(1, '00:10')

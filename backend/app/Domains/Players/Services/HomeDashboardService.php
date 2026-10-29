@@ -92,13 +92,8 @@ class HomeDashboardService
 
     private function minerState(User $user): array
     {
-        $state = $this->miner->state($user);
-
-        return [
-            'active' => (bool) $state['run'],
-            'cooldown_until' => $state['cooldown_until'],
-            'best' => $state['best'],
-        ];
+        // Полное состояние шахты тяжёлое (топ, задания) — главной хватает краткого
+        return $this->miner->brief($user);
     }
 
     private function auction(User $user): array

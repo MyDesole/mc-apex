@@ -437,6 +437,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/games/miner/start', [\App\Domains\Games\Controllers\MinerController::class, 'start'])->middleware('throttle:20,1');
     Route::post('/games/miner/dig', [\App\Domains\Games\Controllers\MinerController::class, 'dig'])->middleware('throttle:120,1');
     Route::post('/games/miner/cash-out', [\App\Domains\Games\Controllers\MinerController::class, 'cashOut'])->middleware('throttle:20,1');
+    Route::post('/games/miner/blast', [\App\Domains\Games\Controllers\MinerController::class, 'blast'])->middleware('throttle:60,1');
+    Route::post('/games/miner/chest', [\App\Domains\Games\Controllers\MinerController::class, 'chest'])->middleware('throttle:60,1');
+    Route::post('/games/miner/trade', [\App\Domains\Games\Controllers\MinerController::class, 'trade'])->middleware('throttle:60,1');
+    Route::post('/games/miner/descend', [\App\Domains\Games\Controllers\MinerController::class, 'descend'])->middleware('throttle:30,1');
+    Route::post('/games/miner/upgrade', [\App\Domains\Games\Controllers\MinerController::class, 'upgrade'])->middleware('throttle:30,1');
+    Route::post('/games/miner/quests/{quest}/claim', [\App\Domains\Games\Controllers\MinerController::class, 'claimQuest'])->middleware('throttle:30,1');
 
     Route::prefix('shop')->group(function () {
         Route::post('/{shopItem}/purchase', [ShopController::class, 'purchase'])->whereNumber('shopItem')->middleware('feature:shop');
