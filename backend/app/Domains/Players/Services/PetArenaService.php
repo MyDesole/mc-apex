@@ -3,6 +3,7 @@
 namespace App\Domains\Players\Services;
 
 use App\Domains\Moderation\Notifications\ModerationNotification;
+use App\Domains\Players\Support\PetBattleEngine;
 use App\Domains\Players\Support\PetLocks;
 use App\Domains\Players\Support\PetPerks;
 use App\Domains\Players\Support\PetTraits;
@@ -17,10 +18,11 @@ use RuntimeException;
  * Арена питомцев: пошаговый бой против питомца другого игрока под
  * управлением компьютера.
  *
- * Каждый раунд игрок выбирает приём — атака, защита или умение стихии,
- * — соперник тоже. Первым бьёт тот, кто быстрее; защита действует на
- * весь раунд. Рейтинг (Эло) хранится в питомце и уходит с ним при
- * продаже. За победу — монеты и опыт, проигравший теряет только очки.
+ * Каждый раунд игрок выбирает приём — атака, защита, контратака, умение
+ * стихии или ультимейт, — соперник тоже. Правила раунда (арены, ярость,
+ * статусы, события) — в PetBattleEngine. Рейтинг (Эло) хранится в питомце
+ * и уходит с ним при продаже. За победу — монеты и опыт, проигравший
+ * теряет только очки.
  */
 class PetArenaService
 {
@@ -43,18 +45,7 @@ class PetArenaService
     ];
 
     /** Умения стихий: название, множитель урона, особенность. */
-    public const SKILLS = [
-        'fire' => ['name' => 'Пламя', 'power' => 1.7],
-        'water' => ['name' => 'Волна', 'power' => 1.35, 'heal' => 0.12],
-        'nature' => ['name' => 'Шипы', 'power' => 1.3, 'thorns' => 0.4],
-        'shadow' => ['name' => 'Тень', 'power' => 1.45, 'pierce' => true],
-        'beast' => ['name' => 'Рывок', 'power' => 1.5, 'crit' => 30],
-    ];
-
-    /** Кто кого бьёт сильнее: огонь > природа > вода > огонь, тень > зверь. */
-    private const STRONG = ['fire' => 'nature', 'nature' => 'water', 'water' => 'fire', 'shadow' => 'beast'];
-
-    private const SKILL_COOLDOWN = 3;
+    public const SKILLS = PetBattleEngine::SKILLS;
 
     private const RARITY_BONUS = ['common' => 0, 'rare' => 1, 'epic' => 2, 'legendary' => 3, 'mythic' => 4];
 
@@ -166,12 +157,10 @@ class PetArenaService
 
         $levels = PetService::levels([$row->id, $foe->id]);
 
-        $state = [
-            'me' => $this->fighter($row, $levels[$row->id] ?? 1),
-            'foe' => $this->fighter($foe, $levels[$foe->id] ?? 1),
-            'round' => 0,
-            'log' => [],
-        ];
+        $state = app(PetBattleEngine::class)->begin(
+            $this->fighter($row, $levels[$row->id] ?? 1),
+            $this->fighter($foe, $levels[$foe->id] ?? 1),
+        );
 
         $id = DB::table('pet_battles')->insertGetId([
             'user_id' => $user->id,
@@ -204,10 +193,10 @@ class PetArenaService
         return $battle ? $this->present($battle) : null;
     }
 
-    /** Ход игрока: attack | defend | skill. */
+    /** Ход игрока: attack | defend | skill | counter | ultimate. */
     public function move(User $user, int $id, string $move): array
     {
-        if (! in_array($move, ['attack', 'defend', 'skill'], true)) {
+        if (! in_array($move, PetBattleEngine::MOVES, true)) {
             throw new RuntimeException('Такого приёма нет.');
         }
 
@@ -218,13 +207,16 @@ class PetArenaService
                 throw new RuntimeException('Бой уже закончен.');
             }
 
-            $state = json_decode($battle->state, true);
+            $engine = app(PetBattleEngine::class);
+            $state = $engine->normalize(json_decode($battle->state, true));
 
-            if ($move === 'skill' && $state['me']['cd'] > 0) {
-                throw new RuntimeException('Умение ещё перезаряжается.');
+            // Оглушённый пропускает ход, что бы ни выбрал
+            $stunned = ($state['me']['fx']['stun'] ?? 0) > 0;
+            if (! $stunned && ($reason = $engine->forbidden($state['me'], $move))) {
+                throw new RuntimeException($reason);
             }
 
-            $state = $this->round($state, $move, $this->aiMove($state['foe']));
+            $state = $engine->round($state, $move);
 
             $winner = null;
             if ($state['foe']['hp'] <= 0) {
@@ -343,118 +335,6 @@ class PetArenaService
         ];
     }
 
-    /** Компьютер: умение, когда готово; защита, когда мало здоровья. */
-    private function aiMove(array $foe): string
-    {
-        if ($foe['cd'] === 0 && random_int(1, 100) <= 65) {
-            return 'skill';
-        }
-
-        if ($foe['hp'] / $foe['max'] < 0.35 && random_int(1, 100) <= 35) {
-            return 'defend';
-        }
-
-        return 'attack';
-    }
-
-    private function round(array $state, string $myMove, string $foeMove): array
-    {
-        $state['round']++;
-        $moves = ['me' => $myMove, 'foe' => $foeMove];
-
-        // Быстрее — бьёт первым; при равенстве — монетка
-        $order = $state['me']['spd'] === $state['foe']['spd']
-            ? (random_int(0, 1) ? ['me', 'foe'] : ['foe', 'me'])
-            : ($state['me']['spd'] > $state['foe']['spd'] ? ['me', 'foe'] : ['foe', 'me']);
-
-        $thorns = ['me' => 0.0, 'foe' => 0.0];
-
-        foreach ($order as $who) {
-            $other = $who === 'me' ? 'foe' : 'me';
-
-            if ($state[$who]['hp'] <= 0 || $state[$other]['hp'] <= 0) {
-                break;
-            }
-
-            $move = $moves[$who];
-            $attacker = $state[$who];
-            $name = $attacker['name'];
-
-            if ($move === 'defend') {
-                $heal = (int) round($attacker['max'] * 0.06);
-                $state[$who]['hp'] = min($attacker['max'], $attacker['hp'] + $heal);
-                $state['log'][] = ['who' => $who, 'move' => 'defend', 'text' => "{$name} закрывается и восстанавливает {$heal} здоровья."];
-                continue;
-            }
-
-            $skill = $move === 'skill' ? self::SKILLS[$attacker['element']] : null;
-            $power = $skill['power'] ?? 1.0;
-
-            $damage = $attacker['atk'] * $power * random_int(90, 110) / 100;
-            $damage -= ($skill['pierce'] ?? false) ? 0 : $state[$other]['def'] * 0.6;
-
-            if ((self::STRONG[$attacker['element']] ?? null) === $state[$other]['element']) {
-                $damage *= 1.25;
-            } elseif ((self::STRONG[$state[$other]['element']] ?? null) === $attacker['element']) {
-                $damage *= 0.8;
-            }
-
-            $crit = random_int(1, 100) <= ($skill['crit'] ?? 8);
-            if ($crit) {
-                $damage *= 1.5;
-            }
-
-            if ($moves[$other] === 'defend') {
-                $damage *= 0.4;
-            }
-
-            $damage = max(1, (int) round($damage));
-            $state[$other]['hp'] = max(0, $state[$other]['hp'] - $damage);
-
-            $text = $skill
-                ? "{$name} применяет «{$skill['name']}» — {$damage} урона"
-                : "{$name} атакует — {$damage} урона";
-            if ($crit) {
-                $text .= ', критический удар!';
-            }
-
-            if ($skill) {
-                $state[$who]['cd'] = self::SKILL_COOLDOWN;
-
-                if (isset($skill['heal'])) {
-                    $heal = (int) round($attacker['max'] * $skill['heal']);
-                    $state[$who]['hp'] = min($attacker['max'], $state[$who]['hp'] + $heal);
-                    $text .= " и лечится на {$heal}";
-                }
-
-                if (isset($skill['thorns'])) {
-                    $thorns[$who] = $skill['thorns'];
-                }
-            }
-
-            // Шипы противника: часть урона возвращается
-            if ($thorns[$other] > 0 && $state[$who]['hp'] > 0) {
-                $back = max(1, (int) round($damage * $thorns[$other]));
-                $state[$who]['hp'] = max(0, $state[$who]['hp'] - $back);
-                $text .= ", шипы возвращают {$back}";
-            }
-
-            $state['log'][] = ['who' => $who, 'move' => $move, 'damage' => $damage, 'crit' => $crit, 'text' => $text . '.'];
-        }
-
-        // Перезарядка: умение, применённое в этом раунде, ждёт ещё SKILL_COOLDOWN раундов
-        foreach (['me', 'foe'] as $who) {
-            if ($moves[$who] !== 'skill' && $state[$who]['cd'] > 0) {
-                $state[$who]['cd']--;
-            }
-        }
-
-        $state['log'] = array_slice($state['log'], -40);
-        $state['last'] = $moves;
-
-        return $state;
-    }
-
     private function finish(User $user, int $battleId, bool $won): void
     {
         $battle = DB::table('pet_battles')->find($battleId);
@@ -504,19 +384,30 @@ class PetArenaService
 
     private function present(object $battle): array
     {
-        $state = json_decode($battle->state, true);
+        $engine = app(PetBattleEngine::class);
+        $state = $engine->normalize(json_decode($battle->state, true));
+        $arena = PetBattleEngine::ARENAS[$state['arena']] ?? PetBattleEngine::ARENAS['colosseum'];
 
+        // Замысел компьютера наружу не отдаём — только то, что видно по нему
         return [
             'id' => $battle->id,
             'status' => $battle->status,
             'round' => $state['round'],
             'me' => $state['me'],
-            'foe' => $state['foe'] + ['owner' => $this->ownerOf($battle->opponent_inventory_id)],
+            'foe' => $state['foe'] + [
+                'owner' => $this->ownerOf($battle->opponent_inventory_id),
+                'temper' => PetBattleEngine::temper($state['foe']['element']),
+            ],
             'log' => $state['log'],
             'last' => $state['last'] ?? null,
+            'arena' => ['key' => $state['arena']] + $arena,
+            'tell' => $battle->status === 'active' ? $engine->tell($state) : null,
             'rating_change' => (int) $battle->rating_change,
             'coins' => (int) $battle->coins,
             'skills' => self::SKILLS,
+            'ultimates' => PetBattleEngine::ULTIMATES,
+            'statuses' => PetBattleEngine::STATUSES,
+            'rage_max' => PetBattleEngine::RAGE_MAX,
         ];
     }
 
