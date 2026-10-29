@@ -44,7 +44,7 @@ const clanMember = computed(() => user.value?.clan_member ?? null)
  * Персонал не участвует в рейтинге, поэтому блок места в топе ему не
  * показываем: места у него нет и не будет.
  */
-// Вне рейтинга (админы, модераторы, кураторы) — тестеры в топах участвуют
+// Вне рейтинга только админы и модераторы — тестеры и кураторы бриджа в топах участвуют
 const isStaff = computed(() => Boolean(user.value?.is_unranked))
 const isMe = computed(() => auth.user?.id === user.value?.id)
 

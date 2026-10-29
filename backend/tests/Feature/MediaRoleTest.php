@@ -86,6 +86,7 @@ class MediaRoleTest extends TestCase
     {
         $tester = $this->withAspects(User::factory()->create(['role' => 'tester']), 30);
         $bridgeTester = $this->withAspects(User::factory()->create(['role' => 'bridge_tester']), 30);
+        $curator = $this->withAspects(User::factory()->create(['role' => 'bridge_curator']), 30);
         $moderator = $this->withAspects(User::factory()->create(['role' => 'moderator']), 30);
         $media = $this->withAspects(User::factory()->create(['role' => 'media']), 30);
 
@@ -94,6 +95,7 @@ class MediaRoleTest extends TestCase
 
         $this->assertContains($tester->id, $ids);
         $this->assertContains($bridgeTester->id, $ids);
+        $this->assertContains($curator->id, $ids);
         $this->assertNotContains($moderator->id, $ids);
         $this->assertContains($media->id, $ids);
 

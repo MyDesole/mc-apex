@@ -17,10 +17,11 @@ trait HasRoles
     public const STAFF_ROLES = ['admin', 'moderator', 'tester', 'bridge_tester', 'bridge_curator'];
 
     /**
-     * Роли, которые не участвуют в рейтингах и топах. Тестеры (и бридж-
-     * тестеры) соревнуются наравне с игроками — так решил владелец сайта.
+     * Роли, которые не участвуют в рейтингах и топах. Тестеры, бридж-
+     * тестеры и кураторы бриджа соревнуются наравне с игроками — так
+     * решил владелец сайта.
      */
-    public const UNRANKED_ROLES = ['admin', 'moderator', 'bridge_curator'];
+    public const UNRANKED_ROLES = ['admin', 'moderator'];
 
     /** Роли, которым доступна админка. */
     public const ADMIN_PANEL_ROLES = ['moderator', 'admin'];
@@ -110,7 +111,7 @@ trait HasRoles
 
     /**
      * Исключить из выборки тех, кто не участвует в рейтингах и топах
-     * (админы, модераторы, кураторы). Тестеры остаются.
+     * (админы и модераторы). Тестеры и кураторы бриджа остаются.
      */
     public function scopeExcludeStaff(Builder $query): Builder
     {

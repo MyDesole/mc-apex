@@ -9,7 +9,7 @@ use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 /**
- * Место в топе: админы, модераторы и кураторы не участвуют, тестеры — да.
+ * Место в топе: админы и модераторы не участвуют, тестеры и кураторы бриджа — да.
  *
  * В списке рейтинга персонал исключался, а место в профиле считалось по
  * всем: администратору показывался значок места, которого в топе нет.
@@ -36,7 +36,7 @@ class StaffRankTest extends TestCase
 
     public function test_staff_has_no_place(): void
     {
-        foreach (['admin', 'moderator', 'bridge_curator'] as $role) {
+        foreach (['admin', 'moderator'] as $role) {
             $staff = User::factory()->create(['role' => $role, 'tier_score' => 500]);
 
             [$position, $total] = $this->service()->rankOf($staff);
@@ -46,15 +46,18 @@ class StaffRankTest extends TestCase
         }
     }
 
-    public function test_tester_has_a_place(): void
+    public function test_testers_and_bridge_curator_have_a_place(): void
     {
-        $tester = User::factory()->create(['role' => 'tester', 'tier_score' => 500]);
         User::factory()->create(['role' => 'user', 'tier_score' => 100]);
 
-        [$position, $total] = $this->service()->rankOf($tester);
+        foreach (['tester', 'bridge_tester', 'bridge_curator'] as $i => $role) {
+            $player = User::factory()->create(['role' => $role, 'tier_score' => 500 + $i]);
 
-        $this->assertSame(1, $position);
-        $this->assertSame(2, $total);
+            [$position, $total] = $this->service()->rankOf($player);
+
+            $this->assertSame(1, $position, "Роль {$role} участвует в топе");
+            $this->assertSame($i + 2, $total);
+        }
     }
 
     public function test_staff_does_not_shift_other_places(): void
