@@ -250,6 +250,70 @@ function isNearBottom() {
   return !el || el.scrollHeight - el.scrollTop - el.clientHeight < 150
 }
 
+/*
+ * Якорь прокрутки: что держать на экране, пока игрок сам не листает.
+ *   'bottom' — последние сообщения;
+ *   'unread' — разделитель «Новые сообщения»;
+ *   null     — игрок листает сам, ленту не трогаем.
+ *
+ * Раньше при открытии диалога плавная прокрутка шла с самого верха,
+ * по пути включала догрузку старых сообщений, и та возвращала ленту
+ * наверх. А картинки, карточки и аватарки, догружаясь, сдвигали низ.
+ * Теперь лента ставится сразу и держит якорь после каждой догрузки.
+ */
+let anchor = null
+
+/** Поставить ленту по якорю — без анимации и без прокрутки самой страницы. */
+function applyAnchor() {
+  const el = messagesEl.value
+
+  if (!el || !anchor) return
+
+  const bottom = el.scrollHeight - el.clientHeight
+
+  if (anchor === 'unread') {
+    const divider = el.querySelector('.msg-unread')
+
+    if (divider) {
+      // Непрочитанные влезают целиком — просто низ; иначе разделитель сверху
+      el.scrollTop = Math.min(bottom, Math.max(0, divider.offsetTop - 12))
+      return
+    }
+  }
+
+  el.scrollTop = bottom
+}
+
+/** Игрок сам взялся за прокрутку — якорь отпускаем. */
+function releaseAnchor() {
+  anchor = null
+}
+
+/** Листание клавиатурой — тоже рука игрока. */
+function onFeedKey(event) {
+  if (['PageUp', 'PageDown', 'ArrowUp', 'ArrowDown', 'Home', 'End', ' '].includes(event.key)) releaseAnchor()
+}
+
+/** Что-то в ленте догрузилось (картинка, аватар) — высота могла измениться. */
+function onMediaLoaded() {
+  if (anchor) applyAnchor()
+}
+
+let feedObserver = null
+
+/*
+ * Размер самой ленты меняется: открылась клавиатура, панель ответа или
+ * вложений. Держим якорь и тогда.
+ */
+watch(messagesEl, (el, old) => {
+  if (old) feedObserver?.unobserve(old)
+
+  if (!el || typeof ResizeObserver === 'undefined') return
+
+  feedObserver ??= new ResizeObserver(() => onMediaLoaded())
+  feedObserver.observe(el)
+})
+
 /** Новые сообщения пришли: если лента не внизу, растёт счётчик на кнопке. */
 function noteArrivals(count) {
   if (!isNearBottom()) newBelow.value += count
@@ -446,6 +510,8 @@ async function openConversation(id) {
 
   showGift.value = false
   newBelow.value = 0
+  // Пока диалог грузится и ставится, догрузка старых не нужна
+  anchor = 'bottom'
 
   try {
     const data = await chatApi.show(id, { limit: 40 })
@@ -456,6 +522,13 @@ async function openConversation(id) {
     activeConversation.value = data.conversation
     messages.value = data.messages ?? []
     firstUnreadId.value = data.first_unread_id ?? null
+
+    /*
+     * Ленту показываем сразу, до прокрутки. Раньше индикатор загрузки
+     * снимался только в finally — уже после неё: прокручивать было
+     * нечего, и диалог открывался на самом верху.
+     */
+    loadingChat.value = false
 
     // Открытие помечает диалог прочитанным — сверяем счётчик в шапке
     chatApi.unreadCount().then((r) => setChatUnread(r.unread_count)).catch(() => {})
@@ -483,14 +556,17 @@ async function openConversation(id) {
       })
     }
 
-    // Есть непрочитанные — открываемся на разделителе, а не в самом низу
-    if (firstUnreadId.value && messages.value.some((m) => m.id === firstUnreadId.value)) {
-      await nextTick()
-      await nextTick()
-      document.querySelector('.msg-unread')?.scrollIntoView({ block: 'start' })
-    } else {
-      await scrollToBottom()
-    }
+    /*
+     * Есть непрочитанные — открываемся на разделителе (если они не
+     * влезают на экран целиком), иначе — на последних сообщениях.
+     */
+    anchor = firstUnreadId.value && messages.value.some((m) => m.id === firstUnreadId.value)
+        ? 'unread'
+        : 'bottom'
+
+    await nextTick()
+    applyAnchor()
+    requestAnimationFrame(applyAnchor)
   } catch (e) {
     if (request === openRequest) error.value = e.message || 'Не удалось открыть диалог'
   } finally {
@@ -564,6 +640,12 @@ function onMessagesScroll() {
   atBottom.value = isNearBottom()
 
   if (atBottom.value) newBelow.value = 0
+
+  // Пока лента держит якорь, верх не значит «хочу старые сообщения»
+  if (anchor) return
+
+  // Игрок сам долистал до низа — дальше новые сообщения держат низ
+  if (atBottom.value && el.scrollHeight - el.scrollTop - el.clientHeight < 4) anchor = 'bottom'
 
   if (
       renderLimit.value < messages.value.length &&
@@ -918,19 +1000,34 @@ function forgetMessage(conversationId, messageId, lastMessage) {
 // ============================================
 
 async function scrollToBottom(smooth = false) {
+  // Дальше лента держит низ, пока игрок сам не полистает
+  anchor = 'bottom'
+
   await nextTick()
-  await nextTick()
 
-  if (!messagesEl.value) return
+  const el = messagesEl.value
 
-  requestAnimationFrame(() => {
-    if (!messagesEl.value) return
+  if (!el) return
 
-    messagesEl.value.scrollTo({
-      top: messagesEl.value.scrollHeight,
-      behavior: smooth ? 'smooth' : 'auto',
-    })
-  })
+  if (smooth) smoothToBottom()
+  else applyAnchor()
+}
+
+/**
+ * Плавно вниз и доводка после анимации: пока лента едет, сообщение
+ * успевает дорисоваться (галочки, карточка), и плавная прокрутка
+ * останавливалась чуть выше низа.
+ */
+function smoothToBottom() {
+  const el = messagesEl.value
+
+  if (!el) return
+
+  el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+
+  setTimeout(() => {
+    if (anchor === 'bottom') applyAnchor()
+  }, 450)
 }
 
 /**
@@ -970,17 +1067,20 @@ async function ensureMessageLoaded(messageId) {
 }
 
 async function scrollToMessage(id) {
+  // Переход к сообщению — игрок смотрит его, низ больше не держим
+  releaseAnchor()
+
   await nextTick()
 
-  const el = document.querySelector(
-      `[data-message-id="${id}"]`,
-  )
+  const feed = messagesEl.value
+  const el = feed?.querySelector(`[data-message-id="${id}"]`)
 
   if (!el) return
 
-  el.scrollIntoView({
+  // Прокручиваем только ленту: scrollIntoView двигал ещё и саму страницу
+  feed.scrollTo({
+    top: Math.max(0, el.offsetTop - (feed.clientHeight - el.offsetHeight) / 2),
     behavior: 'smooth',
-    block: 'center',
   })
 
   el.classList.add('msg--highlight')
@@ -1655,36 +1755,26 @@ watch(
 
 watch(() => route.query.share, takeShare, { immediate: true })
 
+/*
+ * Пришло новое сообщение: если игрок внизу — показываем его. Открытие
+ * диалога (список был пуст) здесь не обрабатываем: ленту ставит
+ * openConversation сразу, без анимации с самого верха.
+ */
 watch(
     () => messages.value.length,
     async (newLen, oldLen) => {
-      if (
-          newLen === 0 ||
-          newLen <= oldLen
-      ) {
-        return
-      }
+      if (!newLen || newLen <= oldLen || !oldLen) return
 
-      const el = messagesEl.value
-      if (!el) return
+      // Догрузка старых сверху — не новое сообщение
+      if (loadingOlder.value) return
 
-      const wasNearBottom =
-          el.scrollHeight -
-          el.scrollTop -
-          el.clientHeight < 150
+      if (anchor !== 'bottom' && !isNearBottom()) return
+
+      anchor = 'bottom'
 
       await nextTick()
 
-      if (wasNearBottom) {
-        requestAnimationFrame(() => {
-          if (!messagesEl.value) return
-
-          messagesEl.value.scrollTo({
-            top: messagesEl.value.scrollHeight,
-            behavior: 'smooth',
-          })
-        })
-      }
+      smoothToBottom()
     },
 )
 
@@ -1910,6 +2000,7 @@ onUnmounted(() => {
   saveDraftNow()
   clearTimeout(markTimer)
   clearInterval(listTimer)
+  feedObserver?.disconnect()
 })
 
 onMounted(() => {
@@ -2495,6 +2586,11 @@ onUnmounted(() => {
             ref="messagesEl"
             class="chat__messages scroll-thin"
             @scroll.passive="onMessagesScroll"
+            @load.capture="onMediaLoaded"
+            @wheel.passive="releaseAnchor"
+            @touchmove.passive="releaseAnchor"
+            @pointerdown.self="releaseAnchor"
+            @keydown="onFeedKey"
         >
           <div
               v-if="loadingChat"
