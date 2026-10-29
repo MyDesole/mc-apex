@@ -58,9 +58,7 @@ class PetAuctionService
             ->limit(60)
             ->get();
 
-        $levels = PetService::levels($rows->pluck('inventory_id')->all());
-
-        return $rows->map(fn ($a) => $this->present($a, $viewer, $levels))->all();
+        return $this->presentMany($rows, $viewer);
     }
 
     public function show(int $id, ?User $viewer): array
@@ -449,16 +447,44 @@ class PetAuctionService
         }
     }
 
-    /**
-     * @param  array<int, int>|null  $levels  уровни заранее (для списка)
-     */
-    private function present(object $a, ?User $viewer, ?array $levels = null): array
+    private function present(object $a, ?User $viewer): array
     {
-        $row = UserInventory::with('item')->find($a->inventory_id);
-        $seller = User::find($a->seller_id, ['id', 'username', 'avatar']);
-        $leader = $a->top_bidder_id ? User::find($a->top_bidder_id, ['id', 'username', 'avatar']) : null;
-        $level = $levels[$a->inventory_id] ?? (PetService::levels([$a->inventory_id])[$a->inventory_id] ?? 1);
+        return $this->presentMany(collect([$a]), $viewer)[0];
+    }
 
+    /**
+     * Лоты пачкой: питомцы, продавцы, лидеры, уровни и счётчики чата —
+     * по одному запросу на всё, а не на каждый лот.
+     *
+     * @param  \Illuminate\Support\Collection<int, object>  $lots
+     */
+    private function presentMany(\Illuminate\Support\Collection $lots, ?User $viewer): array
+    {
+        if ($lots->isEmpty()) {
+            return [];
+        }
+
+        $inventoryIds = $lots->pluck('inventory_id')->all();
+        $pets = UserInventory::with('item')->whereIn('id', $inventoryIds)->get()->keyBy('id');
+        $users = User::whereIn('id', $lots->pluck('seller_id')->merge($lots->pluck('top_bidder_id'))->filter()->unique()->all())
+            ->get(['id', 'username', 'avatar'])->keyBy('id');
+        $levels = PetService::levels($inventoryIds);
+        $messages = DB::table('pet_auction_messages')->whereIn('auction_id', $lots->pluck('id')->all())
+            ->groupBy('auction_id')->selectRaw('auction_id, count(*) as total')->pluck('total', 'auction_id');
+
+        return $lots->map(fn ($a) => $this->presentLot(
+            $a,
+            $viewer,
+            $pets->get($a->inventory_id),
+            $users->get($a->seller_id),
+            $a->top_bidder_id ? $users->get($a->top_bidder_id) : null,
+            $levels[$a->inventory_id] ?? 1,
+            (int) ($messages[$a->id] ?? 0),
+        ))->values()->all();
+    }
+
+    private function presentLot(object $a, ?User $viewer, ?UserInventory $row, ?User $seller, ?User $leader, int $level, int $messages): array
+    {
         return [
             'id' => $a->id,
             'status' => $a->status,
@@ -485,7 +511,7 @@ class PetAuctionService
             'bids_count' => (int) $a->bids_count,
             'cancel_penalty' => self::penaltyFor($a),
             'ends_at' => Carbon::parse($a->ends_at)->toIso8601String(),
-            'messages_count' => DB::table('pet_auction_messages')->where('auction_id', $a->id)->count(),
+            'messages_count' => $messages,
             'mine' => $viewer && $viewer->id === $a->seller_id,
             'leading' => $viewer && $viewer->id === $a->top_bidder_id,
         ];

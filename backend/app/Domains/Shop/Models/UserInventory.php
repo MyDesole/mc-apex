@@ -50,6 +50,17 @@ class UserInventory extends Model
             if ($row->pet_traits && ($row->wasRecentlyCreated || $row->wasChanged('user_id'))) {
                 \App\Domains\Players\Services\PetHubService::record($row);
             }
+
+            // Топ питомцев закэширован — рейтинг, имя или владелец сменились
+            if ($row->pet_traits) {
+                \App\Domains\Players\Services\PetHubService::forgetTop();
+            }
+        });
+
+        static::deleted(function (UserInventory $row) {
+            if ($row->pet_traits) {
+                \App\Domains\Players\Services\PetHubService::forgetTop();
+            }
         });
     }
 

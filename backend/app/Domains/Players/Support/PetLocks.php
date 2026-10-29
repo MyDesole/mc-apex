@@ -10,21 +10,40 @@ use Illuminate\Support\Facades\DB;
  */
 class PetLocks
 {
+    public const AUCTION = 'Питомец выставлен на аукцион — сначала дождись конца торгов.';
+    public const EXPEDITION = 'Питомец в экспедиции — дождись возвращения и забери добычу.';
+    public const BATTLE = 'Питомец сейчас на арене — сначала закончи бой.';
+
     /** Причина занятости или null, если питомец свободен. */
     public static function reason(int $inventoryId): ?string
     {
-        if (DB::table('pet_auctions')->where('inventory_id', $inventoryId)->where('status', 'active')->exists()) {
-            return 'Питомец выставлен на аукцион — сначала дождись конца торгов.';
+        return self::reasons([$inventoryId])[$inventoryId] ?? null;
+    }
+
+    /**
+     * Причины для списка питомцев — три запроса на весь список.
+     *
+     * @param  array<int>  $inventoryIds
+     * @return array<int, string>  inventory_id => причина (свободных нет в ответе)
+     */
+    public static function reasons(array $inventoryIds): array
+    {
+        if (! $inventoryIds) {
+            return [];
         }
 
-        if (DB::table('pet_expeditions')->where('inventory_id', $inventoryId)->whereNull('claimed_at')->exists()) {
-            return 'Питомец в экспедиции — дождись возвращения и забери добычу.';
+        // Порядок важен: аукцион перекрывает экспедицию, экспедиция — бой
+        $busy = DB::table('pet_battles')->whereIn('inventory_id', $inventoryIds)->where('status', 'active')
+            ->pluck('inventory_id')->mapWithKeys(fn ($id) => [(int) $id => self::BATTLE])->all();
+
+        foreach (DB::table('pet_expeditions')->whereIn('inventory_id', $inventoryIds)->whereNull('claimed_at')->pluck('inventory_id') as $id) {
+            $busy[(int) $id] = self::EXPEDITION;
         }
 
-        if (DB::table('pet_battles')->where('inventory_id', $inventoryId)->where('status', 'active')->exists()) {
-            return 'Питомец сейчас на арене — сначала закончи бой.';
+        foreach (DB::table('pet_auctions')->whereIn('inventory_id', $inventoryIds)->where('status', 'active')->pluck('inventory_id') as $id) {
+            $busy[(int) $id] = self::AUCTION;
         }
 
-        return null;
+        return $busy;
     }
 }

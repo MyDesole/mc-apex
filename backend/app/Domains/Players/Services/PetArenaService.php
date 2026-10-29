@@ -266,6 +266,7 @@ class PetArenaService
             ->get(['id', 'pet_rating'])
             ->each(fn ($pet) => DB::table('user_inventory')->where('id', $pet->id)
                 ->update(['pet_rating' => 1000 + intdiv((int) $pet->pet_rating - 1000, 2)]));
+        PetHubService::forgetTop();
 
         return $paid;
     }

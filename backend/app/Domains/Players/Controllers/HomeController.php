@@ -109,13 +109,14 @@ class HomeController extends Controller
             ->limit(6)
             ->get();
 
-        // общая статистика
-        $statsData = [
+        // Общая статистика: четыре count(*) по большим таблицам на каждый
+        // заход на главную не нужны — счётчики живут в кэше пять минут
+        $statsData = \Illuminate\Support\Facades\Cache::remember('home:stats', 300, fn () => [
             'players' => \App\Domains\Users\Models\User::count(),
             'clans' => \App\Domains\Clan\Models\Clan::where('is_banned', false)->count(),
             'tournaments' => \App\Domains\Tournaments\Models\Tournament::whereIn('status', ['ongoing', 'registration'])->count(),
             'matches' => \App\Domains\Tournaments\Models\TournamentMatch::where('status', 'completed')->count(),
-        ];
+        ]);
 
         return response()->json([
             'hero' => $hero,

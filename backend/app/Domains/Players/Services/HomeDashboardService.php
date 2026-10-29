@@ -103,12 +103,15 @@ class HomeDashboardService
 
     private function auction(User $user): array
     {
-        $active = DB::table('pet_auctions')->where('status', 'active');
+        // Три счётчика одним запросом
+        $counts = DB::table('pet_auctions')->where('status', 'active')
+            ->selectRaw('count(*) as total, sum(case when seller_id = ? then 1 else 0 end) as mine, sum(case when top_bidder_id = ? then 1 else 0 end) as leading', [$user->id, $user->id])
+            ->first();
 
         return [
-            'mine' => (clone $active)->where('seller_id', $user->id)->count(),
-            'leading' => (clone $active)->where('top_bidder_id', $user->id)->count(),
-            'total' => (clone $active)->count(),
+            'mine' => (int) $counts->mine,
+            'leading' => (int) $counts->leading,
+            'total' => (int) $counts->total,
         ];
     }
 

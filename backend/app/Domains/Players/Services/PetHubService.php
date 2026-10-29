@@ -13,6 +13,7 @@ use App\Domains\Shop\Services\ShopService;
 use App\Domains\Users\Models\User;
 use App\Domains\Wallet\Models\CoinTransaction;
 use App\Domains\Wallet\Services\CoinService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -70,7 +71,9 @@ class PetHubService
         $fed = DB::table('pet_interactions')->whereIn('inventory_id', $ids ?: [0])->where('action', 'feed')
             ->groupBy('inventory_id')->selectRaw('inventory_id, max(created_at) as at')->pluck('at', 'inventory_id');
 
-        $pets = $rows->map(function (UserInventory $row) use ($xp, $trips, $done, $fed) {
+        $busy = PetLocks::reasons($ids);
+
+        $pets = $rows->map(function (UserInventory $row) use ($xp, $trips, $done, $fed, $busy) {
             $points = $xp[$row->id] ?? 0;
             $level = PetService::levelOf($points);
 
@@ -81,7 +84,7 @@ class PetHubService
                 'trick' => $row->pet_trick,
                 'perks' => PetPerks::present($level),
                 'expedition' => $trips->get($row->id),
-                'busy' => PetLocks::reason($row->id),
+                'busy' => $busy[$row->id] ?? null,
                 'care' => ($done[$row->id] ?? collect())->pluck('action')->values()->all(),
                 'hungry' => ! isset($fed[$row->id]) || now()->diffInHours($fed[$row->id], true) >= 24,
             ];
@@ -226,35 +229,89 @@ class PetHubService
 
     // ---- Топ ----
 
-    /** by: level | rating | rare. */
+    public const TOP_TTL = 120;
+
+    /**
+     * by: level | rating | rare. Кэш на пару минут; сбрасывается, когда
+     * у питомца меняется что-то в инвентаре (рейтинг, имя, владелец).
+     */
     public function top(string $by): array
     {
-        if ($by === 'rating') {
-            return $this->arena->leaderboard();
+        return Cache::remember("pets:top:{$by}", self::TOP_TTL, fn () => match ($by) {
+            'rating' => $this->arena->leaderboard(),
+            'rare' => $this->topRare(),
+            default => $this->topLevel(),
+        });
+    }
+
+    public static function forgetTop(): void
+    {
+        foreach (['level', 'rating', 'rare'] as $by) {
+            Cache::forget("pets:top:{$by}");
         }
+    }
 
-        $rows = UserInventory::with(['item', 'user:id,username,avatar'])
+    /** Самые опытные: опыт считает база, в память — только двадцать. */
+    private function topLevel(): array
+    {
+        $cases = collect(PetService::ACTIONS)->map(fn () => 'when ? then ?')->implode(' ');
+        $bindings = collect(PetService::ACTIONS)->flatMap(fn ($xp, $action) => [$action, $xp])->all();
+
+        $ids = $this->petQuery()
+            ->selectRaw(
+                "user_inventory.id, user_inventory.pet_xp + coalesce((select sum(case action {$cases} else 0 end) from pet_interactions where pet_interactions.inventory_id = user_inventory.id), 0) as xp",
+                $bindings,
+            )
+            ->orderByDesc('xp')
+            ->orderBy('user_inventory.id')
+            ->limit(20)
+            ->pluck('id')
+            ->all();
+
+        return $this->cards($ids);
+    }
+
+    /** Самые редкие: шанс считается по чертам, без загрузки моделей и опыта. */
+    private function topRare(): array
+    {
+        $ids = $this->petQuery()
+            ->orderBy('user_inventory.id')
+            ->get(['user_inventory.id', 'user_inventory.pet_traits'])
+            ->map(fn ($row) => ['id' => $row->id, 'chance' => self::chance(PetTraits::present($row->pet_traits))])
+            ->sortBy('chance')
+            ->take(20)
+            ->pluck('id')
+            ->all();
+
+        return $this->cards($ids);
+    }
+
+    private function petQuery()
+    {
+        return UserInventory::query()
             ->whereNotNull('pet_traits')
-            ->whereHas('item', fn ($q) => $q->where('type', ShopItem::TYPE_PROFILE_PET))
-            ->get();
+            ->whereHas('item', fn ($q) => $q->where('type', ShopItem::TYPE_PROFILE_PET));
+    }
 
-        $xp = PetService::xpTotals($rows->pluck('id')->all());
+    /** Карточки в порядке $ids. */
+    private function cards(array $ids): array
+    {
+        $rows = UserInventory::with(['item', 'user:id,username,avatar'])->whereIn('id', $ids)->get()->keyBy('id');
+        $xp = PetService::xpTotals($ids);
 
-        $cards = $rows->map(function ($row) use ($xp) {
-            $card = $this->arena->card($row, PetService::levelOf($xp[$row->id] ?? 0));
-            $t = $card['traits'];
-            // Общий шанс экземпляра — чем меньше, тем реже
-            $card['chance'] = round($t['model']['chance'] * $t['backdrop']['chance'] * $t['accessory']['chance'] / 10000, 5);
-            $card['xp'] = $xp[$row->id] ?? 0;
+        return collect($ids)->filter(fn ($id) => $rows->has($id))->map(function ($id) use ($rows, $xp) {
+            $card = $this->arena->card($rows[$id], PetService::levelOf($xp[$id] ?? 0));
+            $card['chance'] = self::chance($card['traits']);
+            $card['xp'] = $xp[$id] ?? 0;
 
             return $card;
-        });
+        })->values()->all();
+    }
 
-        $sorted = $by === 'rare'
-            ? $cards->sortBy('chance')
-            : $cards->sortByDesc('xp');
-
-        return $sorted->take(20)->values()->all();
+    /** Общий шанс экземпляра — чем меньше, тем реже. */
+    private static function chance(?array $t): float
+    {
+        return $t ? round($t['model']['chance'] * $t['backdrop']['chance'] * $t['accessory']['chance'] / 10000, 5) : 100.0;
     }
 
     private function pets(User $user)
