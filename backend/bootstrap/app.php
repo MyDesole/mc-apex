@@ -22,6 +22,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 'minecraft.server' => \App\Http\Middleware\EnsureMinecraftServer::class,
             // Переключатели функций с «Пульта» админки
             'feature' => \App\Http\Middleware\EnsureFeatureEnabled::class,
+            // Свой счётчик у каждого маршрута, а не один на все throttle:N,M
+            'throttle' => \App\Http\Middleware\ThrottlePerRoute::class,
         ]);
         // API-приложение без веб-роутов входа: гость должен получать 401 JSON,
         // а не попытку редиректа на несуществующий маршрут login (это давало 500).
