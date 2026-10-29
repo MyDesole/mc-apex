@@ -2,7 +2,7 @@
  * Подписи сообщений, право на правку, реакции из сокета и черновики.
  */
 import { beforeEach, describe, expect, it } from 'vitest'
-import { canEdit, conversationTime, formatDuration, previewText, readDrafts, withMine, writeDraft } from '@/utils/chatPreview.js'
+import { bodyWithoutCards, canEdit, conversationTime, formatDuration, previewText, readDrafts, withMine, writeDraft } from '@/utils/chatPreview.js'
 
 describe('previewText', () => {
   it('стикер, подарок, голосовое и фото подписаны словами, а не сырым текстом', () => {
@@ -13,6 +13,19 @@ describe('previewText', () => {
     expect(previewText({ body: '', attachments: [{ is_image: false }] })).toBe('Файл')
     expect(previewText({ body: '  привет ' })).toBe('привет')
     expect(previewText(null)).toBe('')
+  })
+})
+
+describe('bodyWithoutCards', () => {
+  it('ссылка, ставшая карточкой, из текста пропадает', () => {
+    const message = {
+      body: 'глянь https://mc-apex.ru/user/Steve и клан /clan/Sky',
+      cards: [{ source: 'https://mc-apex.ru/user/Steve' }, { source: '/clan/Sky' }],
+    }
+
+    expect(bodyWithoutCards(message)).toBe('глянь и клан')
+    expect(bodyWithoutCards({ body: 'https://mc-apex.ru/auction?lot=3', cards: [{ source: 'https://mc-apex.ru/auction?lot=3' }] })).toBe('')
+    expect(bodyWithoutCards({ body: 'просто текст', cards: [] })).toBe('просто текст')
   })
 })
 

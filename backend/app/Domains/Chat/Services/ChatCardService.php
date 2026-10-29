@@ -68,7 +68,7 @@ class ChatCardService
                 }
 
                 if ($card) {
-                    $cards[] = ['url' => $ref['url'], ...$card];
+                    $cards[] = ['url' => $ref['url'], 'source' => $ref['source'], ...$card];
                 }
             }
 
@@ -109,6 +109,12 @@ class ChatCardService
             if (! $ref) {
                 continue;
             }
+
+            /*
+             * Точный текст ссылки в сообщении: страница прячет его, когда
+             * ссылка стала карточкой, — двух копий одного и того же не нужно.
+             */
+            $ref['source'] = rtrim($match[0], '.,!?)');
 
             $key = implode(':', [$ref['type'], $ref['id'] ?? '', mb_strtolower($ref['name'] ?? ''), $ref['owner_id'] ?? '', mb_strtolower($ref['owner_name'] ?? '')]);
 

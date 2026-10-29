@@ -372,7 +372,9 @@ class ChatMessengerTest extends TestCase
             ->assertJsonPath('message.cards.0.type', 'player')
             ->assertJsonPath('message.cards.0.id', $b->id)
             ->assertJsonPath('message.cards.0.url', "/players/{$b->id}")
+            ->assertJsonPath('message.cards.0.source', "http://{$host}/user/steve_pro")
             ->assertJsonPath('message.cards.1.type', 'clan')
+            ->assertJsonPath('message.cards.1.source', "http://{$host}{$clanPath}")
             ->assertJsonPath('message.cards.1.tag', 'SKY');
     }
 

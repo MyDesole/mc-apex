@@ -22,7 +22,7 @@ import ChatVoiceRecorder from '@/components/chat/ChatVoiceRecorder.vue'
 import ChatGiftPanel from '@/components/chat/ChatGiftPanel.vue'
 import ChatGroupModal from '@/components/chat/ChatGroupModal.vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
-import { previewText, canEdit, withMine, conversationTime, readDrafts, writeDraft } from '@/utils/chatPreview.js'
+import { previewText, bodyWithoutCards, canEdit, withMine, conversationTime, readDrafts, writeDraft } from '@/utils/chatPreview.js'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -2752,10 +2752,11 @@ onUnmounted(() => {
                       v-else
                       class="msg__content"
                   >
-                    <span class="msg__text">
+                    <span v-if="parseSticker(m.body) || bodyWithoutCards(m)" class="msg__text">
                       <!-- Стикер из магазина: картинка вместо текста-метки -->
                       <ChatSticker v-if="parseSticker(m.body)" :sticker="parseSticker(m.body)" />
-                      <template v-else>{{ m.body }}</template>
+                      <!-- Ссылки, ставшие карточками, в тексте не дублируем -->
+                      <template v-else>{{ bodyWithoutCards(m) }}</template>
                     </span>
 
                     <!-- Ссылки на игрока, питомца, клан или лот — живыми карточками -->

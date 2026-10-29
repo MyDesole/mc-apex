@@ -39,6 +39,20 @@ export function previewText(message) {
     return ''
 }
 
+/**
+ * Текст сообщения без ссылок, ставших карточками: карточка уже показывает
+ * то же самое, и голая ссылка рядом с ней только мешает.
+ */
+export function bodyWithoutCards(message) {
+    let text = String(message?.body ?? '')
+
+    for (const card of message?.cards || []) {
+        if (card.source) text = text.split(card.source).join('')
+    }
+
+    return text.replace(/[ \t]{2,}/g, ' ').replace(/\n{3,}/g, '\n\n').trim()
+}
+
 /** Можно ли править сообщение: только свой обычный текст, не стикер. */
 export function canEdit(message, meId) {
     return Boolean(message)
