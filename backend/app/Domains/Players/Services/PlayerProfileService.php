@@ -64,7 +64,7 @@ class PlayerProfileService
                 'total' => $total,
             ],
             // Из чего сложились очки рейтинга — для блока в профиле
-            'rating' => $player->isStaff() ? null : app(RatingService::class)->breakdown($player),
+            'rating' => $player->isUnranked() ? null : app(RatingService::class)->breakdown($player),
             'bridge' => $this->bridgePayload($player),
             'recommendations' => $this->recommendations($player),
             'my_recommendation' => $me
@@ -89,7 +89,7 @@ class PlayerProfileService
      */
     public function rankOf(User $player): array
     {
-        if ((int) $player->rating_points <= 0 || $player->isStaff()) {
+        if ((int) $player->rating_points <= 0 || $player->isUnranked()) {
             return [null, 0];
         }
 

@@ -57,7 +57,7 @@ class ClanService
         $avgRating = '(SELECT COALESCE(AVG(u.rating_points), 0) FROM clan_members cm
             JOIN users u ON u.id = cm.user_id
             WHERE cm.clan_id = clans.id AND u.role NOT IN ('.implode(',', array_map(
-                fn ($role) => "'{$role}'", User::STAFF_ROLES,
+                fn ($role) => "'{$role}'", User::UNRANKED_ROLES,
             )).'))';
         $winrate = 'CASE WHEN (clans.wins + clans.losses) = 0 THEN 0
             ELSE clans.wins * 1.0 / (clans.wins + clans.losses) END';

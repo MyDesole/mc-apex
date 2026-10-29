@@ -103,7 +103,7 @@ class DashboardController extends Controller
             'forum' => $this->forumActivity($user),
             'referrals' => $this->referralsOf($user, $isAdmin),
             'rank' => ['position' => $position, 'total' => $total],
-            'rating' => $user->isStaff() ? null : $rating->breakdown($user),
+            'rating' => $user->isUnranked() ? null : $rating->breakdown($user),
             'tier_tests' => TierTest::where('user_id', $user->id)
                 ->with('tester:id,username')
                 ->latest()

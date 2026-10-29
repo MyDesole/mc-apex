@@ -13,13 +13,14 @@ use Illuminate\Database\Eloquent\Builder;
  */
 trait HasRoles
 {
-    /**
-     * Роли, которые не участвуют в рейтингах и топах.
-     *
-     * Бридж-тестер здесь по той же причине, что и обычный тестер:
-     * проверяющий не должен соревноваться с теми, кого проверяет.
-     */
+    /** Персонал: права в жалобах, профилях, правке аккаунтов. */
     public const STAFF_ROLES = ['admin', 'moderator', 'tester', 'bridge_tester', 'bridge_curator'];
+
+    /**
+     * Роли, которые не участвуют в рейтингах и топах. Тестеры (и бридж-
+     * тестеры) соревнуются наравне с игроками — так решил владелец сайта.
+     */
+    public const UNRANKED_ROLES = ['admin', 'moderator', 'bridge_curator'];
 
     /** Роли, которым доступна админка. */
     public const ADMIN_PANEL_ROLES = ['moderator', 'admin'];
@@ -85,13 +86,16 @@ trait HasRoles
         return in_array($this->role, self::BRIDGE_CURATOR_ROLES, true);
     }
 
-    /**
-     * Персонал: не попадает в рейтинги, топы и статистику игроков.
-     * Медийка персоналом НЕ считается — она участвует в топах.
-     */
+    /** Персонал, включая тестеров. Медийка персоналом НЕ считается. */
     public function isStaff(): bool
     {
         return in_array($this->role, self::STAFF_ROLES, true);
+    }
+
+    /** Не попадает в рейтинги, топы и статистику игроков. */
+    public function isUnranked(): bool
+    {
+        return in_array($this->role, self::UNRANKED_ROLES, true);
     }
 
     public function hasRole(string ...$roles): bool
@@ -105,11 +109,12 @@ trait HasRoles
     }
 
     /**
-     * Исключить персонал из выборки (для рейтингов и топов).
+     * Исключить из выборки тех, кто не участвует в рейтингах и топах
+     * (админы, модераторы, кураторы). Тестеры остаются.
      */
     public function scopeExcludeStaff(Builder $query): Builder
     {
-        return $query->whereNotIn('role', self::STAFF_ROLES);
+        return $query->whereNotIn('role', self::UNRANKED_ROLES);
     }
 
     /**

@@ -29,7 +29,7 @@ class ClanMember extends Model
     {
         $user = $this->user;
 
-        if (! $user || $user->isStaff()) {
+        if (! $user || $user->isUnranked()) {
             return 0;
         }
 

@@ -308,7 +308,7 @@ class AchievementRules
 
     private function groupTop(User $user): array
     {
-        if ($user->rating_points <= 0 || $user->isStaff()) {
+        if ($user->rating_points <= 0 || $user->isUnranked()) {
             return [];
         }
 

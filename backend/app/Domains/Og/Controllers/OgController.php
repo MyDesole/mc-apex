@@ -125,7 +125,7 @@ class OgController extends Controller
 
     private function userCard(User $player): array
     {
-        $ranked = ! $player->isStaff() && $player->rating_points > 0;
+        $ranked = ! $player->isUnranked() && $player->rating_points > 0;
         $tier = $ranked ? ($player->tier ?: 'E') : 'E';
         $score = (int) $player->tier_score;
 

@@ -101,7 +101,7 @@ class RatingService
         $sums = ClanMember::query()
             ->join('users', 'users.id', '=', 'clan_members.user_id')
             ->whereIn('clan_members.clan_id', $ids)
-            ->whereNotIn('users.role', User::STAFF_ROLES)
+            ->whereNotIn('users.role', User::UNRANKED_ROLES)
             ->groupBy('clan_members.clan_id')
             ->selectRaw('clan_members.clan_id, SUM(users.rating_points) as total')
             ->pluck('total', 'clan_id');

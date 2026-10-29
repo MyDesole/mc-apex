@@ -9,7 +9,7 @@ use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 /**
- * Место в топе: персонал не участвует.
+ * Место в топе: админы, модераторы и кураторы не участвуют, тестеры — да.
  *
  * В списке рейтинга персонал исключался, а место в профиле считалось по
  * всем: администратору показывался значок места, которого в топе нет.
@@ -36,7 +36,7 @@ class StaffRankTest extends TestCase
 
     public function test_staff_has_no_place(): void
     {
-        foreach (['admin', 'moderator', 'tester'] as $role) {
+        foreach (['admin', 'moderator', 'bridge_curator'] as $role) {
             $staff = User::factory()->create(['role' => $role, 'tier_score' => 500]);
 
             [$position, $total] = $this->service()->rankOf($staff);
@@ -44,6 +44,17 @@ class StaffRankTest extends TestCase
             $this->assertNull($position, "Роль {$role} не должна иметь места");
             $this->assertSame(0, $total, "Роль {$role} не должна иметь общего числа");
         }
+    }
+
+    public function test_tester_has_a_place(): void
+    {
+        $tester = User::factory()->create(['role' => 'tester', 'tier_score' => 500]);
+        User::factory()->create(['role' => 'user', 'tier_score' => 100]);
+
+        [$position, $total] = $this->service()->rankOf($tester);
+
+        $this->assertSame(1, $position);
+        $this->assertSame(2, $total);
     }
 
     public function test_staff_does_not_shift_other_places(): void

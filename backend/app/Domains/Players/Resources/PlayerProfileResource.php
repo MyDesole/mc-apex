@@ -27,6 +27,8 @@ class PlayerProfileResource extends JsonResource
              * сверять роль со списком. Персонал не участвует в рейтинге.
              */
             'is_staff' => $user->isStaff(),
+            // Вне рейтинга: профиль прячет место и разбор очков
+            'is_unranked' => $user->isUnranked(),
 
             // Единой связи aspects у User нет: это два разных отношения
             'aspects' => [

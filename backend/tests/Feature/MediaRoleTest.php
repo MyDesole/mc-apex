@@ -82,18 +82,25 @@ class MediaRoleTest extends TestCase
         $this->assertSame('Медийка', $media->role_badge);
     }
 
-    public function test_staff_roles_stay_out_of_ranking(): void
+    public function test_moderators_stay_out_of_ranking_but_testers_compete(): void
     {
         $tester = $this->withAspects(User::factory()->create(['role' => 'tester']), 30);
+        $bridgeTester = $this->withAspects(User::factory()->create(['role' => 'bridge_tester']), 30);
         $moderator = $this->withAspects(User::factory()->create(['role' => 'moderator']), 30);
         $media = $this->withAspects(User::factory()->create(['role' => 'media']), 30);
 
         $ranking = $this->getJson('/api/ranking')->assertOk();
         $ids = collect($ranking->json('data'))->pluck('id')->all();
 
-        $this->assertNotContains($tester->id, $ids);
+        $this->assertContains($tester->id, $ids);
+        $this->assertContains($bridgeTester->id, $ids);
         $this->assertNotContains($moderator->id, $ids);
         $this->assertContains($media->id, $ids);
+
+        // Тестер остаётся персоналом для прав, но в рейтинге участвует
+        $this->assertTrue($tester->isStaff());
+        $this->assertFalse($tester->isUnranked());
+        $this->assertTrue($moderator->isUnranked());
     }
 
     public function test_media_role_is_returned_in_forum_author_payload(): void

@@ -112,16 +112,17 @@ class HomeTest extends TestCase
         $best = $this->player(95, 'user', ['username' => 'best_player']);
         $this->player(100, 'admin', ['username' => 'admin_player']);
         $this->player(100, 'moderator', ['username' => 'mod_player']);
-        $this->player(100, 'tester', ['username' => 'tester_player']);
+        // Тестер участвует в топах наравне с игроками
+        $this->player(92, 'tester', ['username' => 'tester_player']);
 
         $response = $this->getJson('/api/home')->assertOk();
 
         $usernames = collect($response->json('players'))->pluck('username')->all();
 
-        $this->assertSame(['best_player', 'media_king'], $usernames);
+        $this->assertSame(['best_player', 'tester_player', 'media_king'], $usernames);
         $this->assertSame($best->id, $response->json('players.0.id'));
         $this->assertSame(95.0, (float) $response->json('players.0.tier_score'));
-        $this->assertSame($media->id, $response->json('players.1.id'));
+        $this->assertSame($media->id, $response->json('players.2.id'));
 
         // Поля карточки игрока
         foreach (['id', 'username', 'avatar_url', 'tier', 'tier_score', 'clan_tag', 'clan_color'] as $key) {
@@ -224,7 +225,7 @@ class HomeTest extends TestCase
         $this->player(80, 'user', ['username' => 'top_player']);
         $this->player(99, 'admin', ['username' => 'admin_player']);
         $this->player(98, 'moderator');
-        $this->player(97, 'tester');
+        $this->player(97, 'tester', ['username' => 'tester_player']);
         $this->player(96, 'media', ['username' => 'media_player']);
 
         $clan = $this->clan('Топ-клан', 300);
@@ -236,8 +237,8 @@ class HomeTest extends TestCase
 
         $usernames = collect($response->json('players'))->pluck('username')->all();
 
-        // Персонал исключён, медийка и игроки — по убыванию tier_score
-        $this->assertSame(['media_player', 'top_player'], array_slice($usernames, 0, 2));
+        // Админы и модераторы исключены; тестер, медийка и игроки — по убыванию tier_score
+        $this->assertSame(['tester_player', 'media_player', 'top_player'], array_slice($usernames, 0, 3));
         $this->assertNotContains('admin_player', $usernames);
 
         $this->assertSame($clan->id, $response->json('clans.0.id'));

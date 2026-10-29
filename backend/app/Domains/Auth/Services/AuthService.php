@@ -154,7 +154,7 @@ class AuthService
                 'position' => $position,
                 'total' => $total,
             ],
-            'rating' => $user->isStaff() ? null : app(\App\Domains\Players\Services\RatingService::class)->breakdown($user),
+            'rating' => $user->isUnranked() ? null : app(\App\Domains\Players\Services\RatingService::class)->breakdown($user),
         ];
     }
 
