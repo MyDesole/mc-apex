@@ -787,3 +787,13 @@
     margin-top: 7px;
   }
 }
+
+/* Картинка — кнопка просмотра, а не ссылка в новую вкладку */
+button.forum-reply__attachment {
+  padding: 0;
+
+  font: inherit;
+  color: inherit;
+
+  cursor: zoom-in;
+}

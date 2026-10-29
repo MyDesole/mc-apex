@@ -1321,3 +1321,13 @@
     width: 100%;
   }
 }
+
+/* Картинка — кнопка просмотра, а не ссылка в новую вкладку */
+button.attachment-image {
+  padding: 0;
+
+  font: inherit;
+  color: inherit;
+
+  cursor: zoom-in;
+}

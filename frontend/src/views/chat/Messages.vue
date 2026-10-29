@@ -22,6 +22,8 @@ import ChatVoiceRecorder from '@/components/chat/ChatVoiceRecorder.vue'
 import ChatGiftPanel from '@/components/chat/ChatGiftPanel.vue'
 import ChatGroupModal from '@/components/chat/ChatGroupModal.vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
+import ImageLightbox from '@/components/core/ImageLightbox.vue'
+import { filesFromClipboard, useFileDrop } from '@/composables/core/useFileDrop.js'
 import { previewText, bodyWithoutCards, canEdit, withMine, conversationTime, readDrafts, writeDraft } from '@/utils/chatPreview.js'
 
 const auth = useAuthStore()
@@ -365,10 +367,37 @@ function applyShare() {
 // ============================================
 
 const pendingAttachments = ref([])
-const previewImage = ref(null)
 
 // Выбор файлов: кнопка-скрепка в поле ввода открывает его
 const attachInput = ref(null)
+
+/**
+ * Ctrl+V с картинкой или файлом в буфере — вложение, а не текст.
+ * Обычный текст вставляется как раньше: событие тогда не трогаем.
+ */
+function onPaste(event) {
+  const files = filesFromClipboard(event)
+
+  if (!files.length || !activeConversation.value) return
+
+  event.preventDefault()
+  attachInput.value?.addFiles(files)
+}
+
+// Файлы, брошенные на окно диалога, — тоже во вложения
+const { dragging: dropActive, dropHandlers } = useFileDrop(
+    (files) => attachInput.value?.addFiles(files),
+    { enabled: () => Boolean(activeConversation.value) },
+)
+
+/** Просмотр картинок сообщения: { images, start } или null. */
+const lightbox = ref(null)
+
+function openImage(message, file) {
+  const images = (message.attachments || []).filter((a) => a.is_image && !a.is_voice)
+
+  lightbox.value = { images, start: Math.max(0, images.findIndex((a) => a.id === file.id)) }
+}
 
 // ============================================
 // ЗАГРУЗКА ДИАЛОГОВ
@@ -2275,7 +2304,9 @@ onUnmounted(() => {
         class="chat"
         :class="{
         'chat--empty': !activeConversation,
+        'chat--dropping': dropActive,
       }"
+        v-on="dropHandlers"
     >
       <template v-if="!activeConversation">
         <div class="chat__empty">
@@ -2668,9 +2699,7 @@ onUnmounted(() => {
                           v-else-if="file.is_image"
                           class="msg__image"
                           type="button"
-                          @click="
-                          previewImage = file
-                        "
+                          @click="openImage(m, file)"
                       >
                         <img
                             :src="file.url"
@@ -3048,45 +3077,20 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- IMAGE PREVIEW: в body, иначе картинка уходит под шапку сайта -->
+        <!-- Картинки сообщения: листание, увеличение, Esc -->
+        <ImageLightbox
+            v-if="lightbox"
+            :images="lightbox.images"
+            :start="lightbox.start"
+            @close="lightbox = null"
+        />
 
-        <Teleport to="body">
-        <div
-            v-if="previewImage"
-            class="chat__image-preview"
-            @click.self="
-            previewImage = null
-          "
-        >
-          <div class="chat__image-preview-inner">
-            <img
-                :src="previewImage.url"
-                :alt="previewImage.name"
-            />
-
-            <button
-                class="chat__image-preview-close"
-                type="button"
-                aria-label="Закрыть"
-                @click="
-                previewImage = null
-              "
-            >
-              <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.2"
-                  stroke-linecap="round"
-              >
-                <path d="M18 6 6 18M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+        <!-- Тащат файлы над диалогом -->
+        <div v-if="dropActive" class="chat__drop">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M17 8l-5-5-5 5" /><path d="M12 3v12" /></svg>
+          <strong>Отпусти, чтобы приложить</strong>
+          <span>до 10 файлов, каждый до 12 МБ</span>
         </div>
-        </Teleport>
 
         <!-- FOOTER -->
 
@@ -3283,6 +3287,7 @@ onUnmounted(() => {
                 maxlength="5000"
                 rows="1"
                 @input="onBodyInput"
+                @paste="onPaste"
                 @keydown.enter.exact.prevent="
                 sendMessage
               "

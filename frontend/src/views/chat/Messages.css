@@ -4182,3 +4182,34 @@ opacity: 0.35;
     right: 12px;
   }
 }
+
+/* Файлы тащат над диалогом */
+.chat__drop {
+  position: absolute;
+  inset: 8px;
+  z-index: 40;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  color: #ddd6fe;
+  text-align: center;
+
+  background: rgba(18, 12, 30, 0.88);
+  border: 2px dashed rgba(167, 139, 250, 0.75);
+  border-radius: 8px;
+
+  pointer-events: none;
+}
+
+.chat__drop strong {
+  font-size: 16px;
+}
+
+.chat__drop span {
+  font-size: 12px;
+  opacity: 0.7;
+}

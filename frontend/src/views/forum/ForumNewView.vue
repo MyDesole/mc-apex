@@ -5,6 +5,8 @@ import { forumApi } from '@/services/forum/forum.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import AppIcon from '@/components/core/AppIcon.vue'
 import ForumAttachmentsInput from '@/components/forum/ForumAttachmentsInput.vue'
+import FileDropOverlay from '@/components/core/FileDropOverlay.vue'
+import { filesFromClipboard, useFileDrop } from '@/composables/core/useFileDrop.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -20,6 +22,23 @@ const categoryId = ref(null)
 const title = ref('')
 const body = ref('')
 const attachments = ref([])
+
+/*
+ * Скриншот из буфера (Ctrl+V в тексте) и файлы, брошенные на форму, —
+ * во вложения темы. Обычный текст вставляется как раньше.
+ */
+const attachInput = ref(null)
+
+function onPaste(event) {
+  const files = filesFromClipboard(event)
+
+  if (!files.length) return
+
+  event.preventDefault()
+  attachInput.value?.addFiles(files)
+}
+
+const { dragging: dropActive, dropHandlers } = useFileDrop((files) => attachInput.value?.addFiles(files))
 
 const availableCategories = computed(() =>
     categories.value.filter((category) => category.can_post)
@@ -250,7 +269,11 @@ onMounted(load)
         v-else
         class="editor"
         @submit.prevent="submit"
+        v-on="dropHandlers"
     >
+      <!-- Файлы тащат над формой: сброс — во вложения -->
+      <FileDropOverlay v-if="dropActive" hint="картинки, pdf, тексты и архивы до 10 МБ" />
+
       <!-- CATEGORY -->
       <section class="editor-section">
         <div class="section-heading">
@@ -379,7 +402,8 @@ onMounted(load)
               class="textarea"
               rows="12"
               maxlength="30000"
-              placeholder="Подробно опиши ситуацию, вопрос или свою идею..."
+              placeholder="Подробно опиши ситуацию, вопрос или свою идею... Скриншот можно вставить сюда через Ctrl+V"
+              @paste="onPaste"
           ></textarea>
 
           <div class="field-footer">
@@ -431,6 +455,7 @@ onMounted(load)
           </div>
 
           <ForumAttachmentsInput
+              ref="attachInput"
               v-model="attachments"
           />
         </div>

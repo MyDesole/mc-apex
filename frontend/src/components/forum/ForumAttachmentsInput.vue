@@ -35,7 +35,22 @@ async function onPick(event) {
   const picked = Array.from(event.target.files || [])
   event.target.value = ''
 
-  if (!picked.length) return
+  await addFiles(picked)
+}
+
+/**
+ * Приложить файлы: из выбора, из буфера (Ctrl+V в поле текста) или
+ * перетаскиванием на форму.
+ *
+ * @param {File[]} picked
+ */
+async function addFiles(picked) {
+  if (!picked?.length) return
+
+  if (uploading.value) {
+    error.value = 'Подожди, пока загрузятся предыдущие файлы.'
+    return
+  }
 
   error.value = ''
 
@@ -81,6 +96,8 @@ function remove(index) {
   next.splice(index, 1)
   emit('update:modelValue', next)
 }
+
+defineExpose({ addFiles, uploading })
 </script>
 
 <template>
@@ -98,7 +115,7 @@ function remove(index) {
       </label>
 
       <span class="attach__hint">
-        до 10 МБ · картинки, pdf, txt, архивы · {{ files.length }}/{{ max }}
+        до 10 МБ · картинки, pdf, txt, архивы · можно вставить Ctrl+V или перетащить · {{ files.length }}/{{ max }}
       </span>
     </div>
 

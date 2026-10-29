@@ -9,6 +9,9 @@ import { openReport } from '@/composables/core/useReport.js'
 import AppIcon from '@/components/core/AppIcon.vue'
 import ForumAttachmentsInput from '@/components/forum/ForumAttachmentsInput.vue'
 import ForumReplyNode from '@/components/forum/ForumReplyNode.vue'
+import FileDropOverlay from '@/components/core/FileDropOverlay.vue'
+import ImageLightbox from '@/components/core/ImageLightbox.vue'
+import { filesFromClipboard, useFileDrop } from '@/composables/core/useFileDrop.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -37,6 +40,32 @@ const editingReply = ref(null)
 const editReplyBody = ref('')
 
 const topicId = computed(() => route.params.id)
+
+/*
+ * Скриншот из буфера (Ctrl+V в ответе) и файлы, брошенные на форму
+ * ответа, — во вложения. Обычный текст вставляется как раньше.
+ */
+const replyAttachInput = ref(null)
+
+function onReplyPaste(event) {
+  const files = filesFromClipboard(event)
+
+  if (!files.length) return
+
+  event.preventDefault()
+  replyAttachInput.value?.addFiles(files)
+}
+
+const { dragging: dropActive, dropHandlers } = useFileDrop((files) => replyAttachInput.value?.addFiles(files))
+
+/** Картинки темы поверх страницы: { images, start } или null. */
+const lightbox = ref(null)
+
+function openTopicImage(file) {
+  const images = (topic.value?.attachments || []).filter((a) => a.is_image)
+
+  lightbox.value = { images, start: Math.max(0, images.findIndex((a) => a.id === file.id)) }
+}
 
 const parentReply = computed(() => {
   if (!replyParent.value) return null
@@ -522,22 +551,24 @@ onMounted(load)
                   v-for="file in topic.attachments"
                   :key="file.id"
               >
-                <a
+                <!-- Картинка открывается поверх страницы, а не в новой вкладке -->
+                <button
                     v-if="file.is_image"
-                    :href="file.url"
-                    target="_blank"
-                    rel="noopener"
+                    type="button"
                     class="attachment-image"
+                    :title="`Открыть ${file.name}`"
+                    @click="openTopicImage(file)"
                 >
                   <img
                       :src="file.url"
                       :alt="file.name"
+                      loading="lazy"
                   >
 
                   <span class="attachment-image__overlay">
-                    <AppIcon icon="send" :size="15" />
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3M11 8v6M8 11h6" /></svg>
                   </span>
-                </a>
+                </button>
 
                 <a
                     v-else
@@ -730,7 +761,11 @@ onMounted(load)
         <section
             v-if="canReply"
             class="reply-form"
+            v-on="dropHandlers"
         >
+          <!-- Файлы тащат над ответом: сброс — во вложения -->
+          <FileDropOverlay v-if="dropActive" hint="картинки, pdf, тексты и архивы до 10 МБ" />
+
           <div class="reply-form__top">
             <div>
 
@@ -782,6 +817,7 @@ onMounted(load)
                 id="reply-input"
                 v-model="replyBody"
                 class="textarea textarea--reply"
+                @paste="onReplyPaste"
                 rows="6"
                 maxlength="20000"
                 :placeholder="
@@ -799,6 +835,7 @@ onMounted(load)
           </div>
 
           <ForumAttachmentsInput
+              ref="replyAttachInput"
               v-model="replyAttachments"
           />
 
@@ -869,6 +906,14 @@ onMounted(load)
         </div>
       </template>
     </div>
+
+    <!-- Картинки темы: листание, увеличение, Esc -->
+    <ImageLightbox
+        v-if="lightbox"
+        :images="lightbox.images"
+        :start="lightbox.start"
+        @close="lightbox = null"
+    />
   </main>
 </template>
 

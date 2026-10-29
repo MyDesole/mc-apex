@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 import { userLink } from '@/utils/links.js'
 import AppIcon from '@/components/core/AppIcon.vue'
 import { openReport } from '@/composables/core/useReport.js'
+import ImageLightbox from '@/components/core/ImageLightbox.vue'
 
 const props = defineProps({
   reply: {
@@ -145,6 +146,19 @@ const body = computed(() => {
 const attachments = computed(() => {
   return props.reply.attachments ?? []
 })
+
+/** Просмотр картинок ответа: { images, start } или null. */
+const lightbox = ref(null)
+
+function openImage(attachment) {
+  const images = attachments.value
+      .filter((a) => isImage(a))
+      .map((a) => ({ url: attachmentUrl(a), name: attachmentName(a) }))
+
+  const start = images.findIndex((image) => image.url === attachmentUrl(attachment))
+
+  lightbox.value = { images, start: Math.max(0, start) }
+}
 
 function formatDate(value) {
   if (!value) return ''
@@ -417,18 +431,18 @@ function onDelete() {
             v-if="!isDeleted && attachments.length"
             class="forum-reply__attachments"
         >
-          <a
+          <template
               v-for="(attachment, index) in attachments"
               :key="attachment.id ?? attachment.uuid ?? index"
-              :href="attachmentUrl(attachment)"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="forum-reply__attachment"
-              :class="{
-              'forum-reply__attachment--image': isImage(attachment),
-            }"
           >
-            <template v-if="isImage(attachment)">
+            <!-- Картинка открывается поверх страницы, а не в новой вкладке -->
+            <button
+                v-if="isImage(attachment)"
+                type="button"
+                class="forum-reply__attachment forum-reply__attachment--image"
+                :title="`Открыть ${attachmentName(attachment)}`"
+                @click="openImage(attachment)"
+            >
               <img
                   :src="attachmentUrl(attachment)"
                   :alt="attachmentName(attachment)"
@@ -436,14 +450,17 @@ function onDelete() {
               />
 
               <span class="forum-reply__attachment-overlay">
-                <AppIcon
-                    icon="send"
-                    :size="15"
-                />
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3M11 8v6M8 11h6" /></svg>
               </span>
-            </template>
+            </button>
 
-            <template v-else>
+            <a
+                v-else
+                :href="attachmentUrl(attachment)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="forum-reply__attachment"
+            >
               <span class="forum-reply__file-icon">
                 <AppIcon
                     icon="doc"
@@ -463,9 +480,17 @@ function onDelete() {
                   icon="send"
                   :size="13"
               />
-            </template>
-          </a>
+            </a>
+          </template>
         </div>
+
+        <!-- Картинки ответа: листание, увеличение, Esc -->
+        <ImageLightbox
+            v-if="lightbox"
+            :images="lightbox.images"
+            :start="lightbox.start"
+            @close="lightbox = null"
+        />
       </div>
 
       <!-- ACTIONS -->

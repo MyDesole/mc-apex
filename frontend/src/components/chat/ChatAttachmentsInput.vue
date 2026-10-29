@@ -54,7 +54,22 @@ async function onPick(event) {
   const picked = Array.from(event.target.files || [])
   resetInput(event)
 
-  if (!picked.length) return
+  await addFiles(picked)
+}
+
+/**
+ * Приложить файлы: из выбора, из буфера обмена (Ctrl+V) или перетаскиванием.
+ *
+ * @param {File[]} picked
+ */
+async function addFiles(picked) {
+  if (!picked?.length) return
+
+  // Пока идёт загрузка, вторая пачка перепутала бы порядок и прогресс
+  if (uploading.value) {
+    error.value = 'Подожди, пока загрузятся предыдущие файлы.'
+    return
+  }
 
   error.value = ''
 
@@ -200,7 +215,7 @@ function closePreview() {
   previewOpen.value = null
 }
 
-defineExpose({ open, uploading, progress })
+defineExpose({ open, addFiles, uploading, progress })
 </script>
 
 <template>
