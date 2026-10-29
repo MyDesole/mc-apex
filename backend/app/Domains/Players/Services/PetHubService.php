@@ -95,8 +95,12 @@ class PetHubService
             'zones' => $this->expeditions->zones(),
             'tricks' => collect(self::TRICKS)->map(fn ($t, $key) => ['key' => $key, 'level' => $t[0], 'name' => $t[1]])->values()->all(),
             'perks' => collect(PetPerks::LIST)->map(fn ($p, $level) => ['level' => $level, 'key' => $p[0], 'label' => $p[1]])->values()->all(),
+            // Всё разом за монеты: считаем из уже загруженного, без новых запросов
+            'bulk' => PetBulkService::previewFrom($pets),
             'arena' => [
                 'fights_left' => $this->arena->fightsLeft($user),
+                'extra_price' => PetArenaService::EXTRA_FIGHT_BASE + $this->arena->extraBought($user) * PetArenaService::EXTRA_FIGHT_STEP,
+                'win_multiplier' => PetArenaService::WIN_MULTIPLIER,
                 'active' => $this->arena->active($user),
                 'skills' => PetArenaService::SKILLS,
             ],

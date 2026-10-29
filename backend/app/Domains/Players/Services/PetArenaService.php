@@ -25,6 +25,11 @@ use RuntimeException;
 class PetArenaService
 {
     public const DAILY_FIGHTS = 5;
+    // Награда за победу: (40 + 3 за уровень) × множитель
+    public const WIN_MULTIPLIER = 3;
+    // Дополнительный бой сверх бесплатных: 300, потом +100 за каждый следующий за день
+    public const EXTRA_FIGHT_BASE = 300;
+    public const EXTRA_FIGHT_STEP = 100;
     public const MAX_ROUNDS = 30;
     private const K = 32;
 
@@ -64,13 +69,54 @@ class PetArenaService
         return 'beast';
     }
 
-    /** Боёв на сегодня осталось. */
+    /** Боёв на сегодня осталось: бесплатные плюс купленные. */
     public function fightsLeft(User $user): int
     {
-        $limit = self::DAILY_FIGHTS + ($this->bestLevel($user) >= 20 ? 1 : 0);
+        $limit = self::DAILY_FIGHTS + ($this->bestLevel($user) >= 20 ? 1 : 0) + $this->extraBought($user);
         $used = DB::table('pet_battles')->where('user_id', $user->id)->where('created_at', '>=', today())->count();
 
         return max(0, $limit - $used);
+    }
+
+    /** Сколько дополнительных боёв куплено сегодня. */
+    public function extraBought(User $user): int
+    {
+        return (int) DB::table('pet_arena_extra_fights')
+            ->where('user_id', $user->id)
+            ->where('day', today()->toDateString())
+            ->value('bought');
+    }
+
+    /** Цена следующего дополнительного боя: 300, 400, 500… — чем больше за день, тем дороже. */
+    public function extraFightPrice(User $user): int
+    {
+        return self::EXTRA_FIGHT_BASE + $this->extraBought($user) * self::EXTRA_FIGHT_STEP;
+    }
+
+    /** Купить ещё один бой на сегодня. */
+    public function buyExtraFight(User $user): array
+    {
+        return DB::transaction(function () use ($user) {
+            $price = $this->extraFightPrice($user);
+
+            if (! CoinService::canAfford($user->fresh(), $price)) {
+                throw new \App\Domains\Shop\Exceptions\NotEnoughCoins($price - (int) $user->fresh()->apex_coins);
+            }
+
+            CoinService::debit($user, $price, CoinTransaction::SOURCE_OTHER, 'Арена питомцев: дополнительный бой');
+
+            DB::table('pet_arena_extra_fights')->upsert(
+                [['user_id' => $user->id, 'day' => today()->toDateString(), 'bought' => 1, 'created_at' => now(), 'updated_at' => now()]],
+                ['user_id', 'day'],
+                ['bought' => DB::raw('bought + 1'), 'updated_at' => now()],
+            );
+
+            return [
+                'fights_left' => $this->fightsLeft($user),
+                'next_price' => $this->extraFightPrice($user),
+                'balance' => (int) $user->fresh()->apex_coins,
+            ];
+        });
     }
 
     /** Соперники примерно своего рейтинга — питомцы других игроков. */
@@ -110,7 +156,7 @@ class PetArenaService
         }
 
         if ($this->fightsLeft($user) <= 0) {
-            throw new RuntimeException('Бои на сегодня закончились — питомцам нужен отдых. Приходи завтра.');
+            throw new RuntimeException('Бесплатные бои на сегодня закончились — купи ещё бой или приходи завтра.');
         }
 
         $foe = UserInventory::with('item')->find($opponentId);
@@ -444,7 +490,7 @@ class PetArenaService
         }
 
         if ($won) {
-            $coins = (int) round((40 + $level * 3) * (PetPerks::arenaBonus($level) ? 1.25 : 1));
+            $coins = (int) round((40 + $level * 3) * self::WIN_MULTIPLIER * (PetPerks::arenaBonus($level) ? 1.25 : 1));
             CoinService::credit($user, $coins, CoinTransaction::SOURCE_OTHER, 'Победа на арене питомцев', "pet-battle:{$battleId}");
         }
 

@@ -414,6 +414,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Мои питомцы: экспедиции, арена, трюки, питомцедекс
     Route::prefix('pets')->controller(\App\Domains\Players\Controllers\Api\PetHubController::class)->group(function () {
         Route::get('/', 'index');
+        // Всё разом за монеты и дополнительный бой на арене
+        Route::post('/bulk/{action}', 'bulk')->whereIn('action', ['feed', 'send', 'claim'])->middleware('throttle:20,1');
+        Route::post('/arena/buy-fight', 'buyFight')->middleware('throttle:20,1');
         Route::post('/{row}/trick', 'trick')->whereNumber('row')->middleware('throttle:30,1');
         Route::post('/{row}/expedition', 'expedition')->whereNumber('row')->middleware('throttle:30,1');
         Route::post('/expeditions/{expedition}/claim', 'claimExpedition')->whereNumber('expedition')->middleware('throttle:30,1');

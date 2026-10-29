@@ -114,8 +114,65 @@ function say(text) {
 }
 
 function fail(e, fallback) {
-  error.value = e.message || fallback
+  // Не хватает монет — подсказываем, где заработать, а не просто ошибка
+  if (e.data?.missing) {
+    shortage.value = e.data.missing
+    error.value = ''
+  } else {
+    error.value = e.message || fallback
+  }
   notice.value = ''
+}
+
+const shortage = ref(0)
+
+/* ---------- Всё разом за монеты ---------- */
+
+const bulk = computed(() => hub.value?.bulk ?? null)
+const fees = computed(() => bulk.value?.fees ?? { feed: 0, send: 0, claim: 0 })
+
+/** Сколько свободных питомцев подходят для земли (по уровню). */
+function sendable(zone) {
+  return freePets.value.filter((p) => p.level >= zone.min_level).length
+}
+
+async function bulkAction(action, payload = {}) {
+  busy.value = `bulk-${action}`
+  shortage.value = 0
+  error.value = ''
+  try {
+    const result = await api.post(`/pets/bulk/${action}`, payload)
+    if (action === 'claim') {
+      const keys = Object.values(result.loot?.keys ?? {}).reduce((sum, n) => sum + n, 0)
+      say(`Добыча с ${result.done} экспедиций: ₳ ${result.loot.coins.toLocaleString('ru-RU')}, +${result.loot.xp} опыта${keys ? `, ключей: ${keys}` : ''}. Плата — ₳ ${result.spent}.`)
+    } else if (action === 'feed') {
+      say(`Накормлено питомцев: ${result.done}. Плата — ₳ ${result.spent}.`)
+    } else {
+      say(`В экспедицию ушли: ${result.done}. Плата — ₳ ${result.spent}.`)
+    }
+    auth.fetchMe()
+    await load()
+  } catch (e) {
+    fail(e, 'Не получилось.')
+  } finally {
+    busy.value = null
+  }
+}
+
+async function buyFight() {
+  busy.value = 'buy-fight'
+  shortage.value = 0
+  try {
+    const result = await api.post('/pets/arena/buy-fight')
+    hub.value.arena.fights_left = result.fights_left
+    hub.value.arena.extra_price = result.next_price
+    say('Ещё один бой куплен — выбирай соперника.')
+    auth.fetchMe()
+  } catch (e) {
+    fail(e, 'Не удалось купить бой.')
+  } finally {
+    busy.value = null
+  }
 }
 
 // Вернувшиеся экспедиции. Строка, а не массив: computed отдаёт новое
@@ -327,6 +384,13 @@ onMounted(async () => {
     <p v-if="notice" class="pv-msg pv-msg--ok">{{ notice }}</p>
     <p v-if="error" class="pv-msg pv-msg--err">{{ error }}</p>
 
+    <!-- Не хватает монет -->
+    <div v-if="shortage" class="pv-short">
+      <span><strong>Не хватает ₳ {{ shortage.toLocaleString('ru-RU') }}.</strong> Монеты можно накопать в шахте или принести из экспедиций.</span>
+      <RouterLink to="/miner" class="pv-short__go">В шахту</RouterLink>
+      <button type="button" class="pv-short__close" aria-label="Скрыть" @click="shortage = 0"><AppIcon icon="close" :size="14" /></button>
+    </div>
+
     <PageLoader v-if="!hub && !['dex', 'top'].includes(tab)" />
 
     <!-- ================= Питомцы ================= -->
@@ -335,6 +399,47 @@ onMounted(async () => {
         Питомцев пока нет. Их выбивают в <RouterLink to="/cases">Сундуке питомцев</RouterLink>
         или покупают у других игроков на <RouterLink to="/auction">аукционе</RouterLink>.
       </p>
+
+      <!-- Всё разом за монеты -->
+      <div v-if="pets.length > 1 && bulk" class="pv-bulk">
+        <button
+            type="button"
+            class="pv-bulk__btn"
+            :disabled="!bulk.feed.count || busy === 'bulk-feed'"
+            @click="bulkAction('feed')"
+        >
+          <PixelSprite sprite="meat" :size="16" />
+          <span>
+            <b>Покормить всех</b>
+            <small>{{ bulk.feed.count ? `${bulk.feed.count} голодных · ₳ ${bulk.feed.cost}` : 'все сыты' }}</small>
+          </span>
+        </button>
+        <button
+            type="button"
+            class="pv-bulk__btn"
+            :disabled="!bulk.send.count"
+            @click="tab = 'expeditions'"
+        >
+          <AppIcon icon="globe" :size="16" />
+          <span>
+            <b>Отправить всех</b>
+            <small>{{ bulk.send.count ? `${bulk.send.count} свободных · ₳ ${fees.send} за каждого` : 'свободных нет' }}</small>
+          </span>
+        </button>
+        <button
+            type="button"
+            class="pv-bulk__btn"
+            :class="{ 'is-ready': bulk.claim.count }"
+            :disabled="!bulk.claim.count || busy === 'bulk-claim'"
+            @click="bulkAction('claim')"
+        >
+          <AppIcon icon="gift" :size="16" />
+          <span>
+            <b>Забрать у всех</b>
+            <small>{{ bulk.claim.count ? `${bulk.claim.count} вернулись · ₳ ${bulk.claim.cost}` : 'никто не вернулся' }}</small>
+          </span>
+        </button>
+      </div>
 
       <!-- Поиск и фильтры -->
       <div v-if="pets.length > 1" class="pv-filters">
@@ -467,6 +572,16 @@ onMounted(async () => {
 
     <!-- ================= Экспедиции ================= -->
     <template v-else-if="tab === 'expeditions'">
+      <div v-if="bulk?.claim.count > 1" class="pv-bulk">
+        <button type="button" class="pv-bulk__btn is-ready" :disabled="busy === 'bulk-claim'" @click="bulkAction('claim')">
+          <AppIcon icon="gift" :size="16" />
+          <span>
+            <b>Забрать у всех</b>
+            <small>{{ bulk.claim.count }} вернулись · ₳ {{ bulk.claim.cost }}</small>
+          </span>
+        </button>
+      </div>
+
       <section v-if="trips.length" class="pv-trips">
         <article v-for="trip in trips" :key="trip.id" class="pv-trip" :class="{ 'is-ready': isReady(trip) }">
           <PetFigure :species="trip.pet.species" :traits="trip.pet.traits" :size="40" :backdrop="false" />
@@ -510,6 +625,14 @@ onMounted(async () => {
                 :disabled="!selectedPet || selectedPet.level < zone.min_level || busy === `zone-${zone.key}`"
                 @click="sendExpedition(zone)"
             >{{ selectedPet && selectedPet.level < zone.min_level ? `С ${zone.min_level} уровня` : 'Отправить' }}</button>
+            <!-- Всех подходящих по уровню — сразу, за плату -->
+            <button
+                v-if="sendable(zone) > 1"
+                type="button"
+                class="pv-btn pz__all"
+                :disabled="busy === 'bulk-send'"
+                @click="bulkAction('send', { zone: zone.key })"
+            >Всех сюда ({{ sendable(zone) }}) · ₳ {{ sendable(zone) * fees.send }}</button>
           </article>
         </div>
       </template>
@@ -547,6 +670,17 @@ onMounted(async () => {
                 <span class="pa-label">Боёв сегодня</span>
                 <b>{{ hub.arena.fights_left }}</b>
               </div>
+              <!-- Бесплатные кончились — можно докупить -->
+              <button
+                  type="button"
+                  class="pa-buy"
+                  :class="{ 'is-hot': !hub.arena.fights_left }"
+                  :disabled="busy === 'buy-fight'"
+                  @click="buyFight"
+              >
+                <AppIcon icon="sword" :size="13" /> Ещё бой · ₳ {{ hub.arena.extra_price }}
+              </button>
+              <small class="pa-prize">Победа — монеты ×{{ hub.arena.win_multiplier }}</small>
               <div class="pa-wheel" title="Кто кого бьёт сильнее">
                 <span v-for="[a, b] in [['fire', 'nature'], ['nature', 'water'], ['water', 'fire'], ['shadow', 'beast']]" :key="a">
                   <i :style="{ color: ELEMENTS[a].color }">{{ ELEMENTS[a].name }}</i> → <i :style="{ color: ELEMENTS[b].color }">{{ ELEMENTS[b].name }}</i>

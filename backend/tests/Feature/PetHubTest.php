@@ -191,6 +191,79 @@ class PetHubTest extends TestCase
         $this->assertSame('mythic', $present(['model' => 'aurora', 'backdrop' => 'rift', 'accessory' => 'wizard']));
     }
 
+    public function test_bulk_feed_send_and_claim_for_coins(): void
+    {
+        $fees = \App\Domains\Players\Services\PetBulkService::FEES;
+        $user = User::factory()->create(['apex_coins' => 1000]);
+        $pets = [$this->pet($user, 'fox'), $this->pet($user, 'cat'), $this->pet($user, 'owl')];
+
+        // Один уже накормлен руками — его не трогаем и за него не платим
+        $this->actingAs($user)->postJson("/api/players/{$user->id}/pet/feed", ['pet' => $pets[0]->id])->assertOk();
+
+        $this->actingAs($user)->getJson('/api/pets')
+            ->assertJsonPath('bulk.feed.count', 2)
+            ->assertJsonPath('bulk.send.count', 3);
+
+        $this->actingAs($user)->postJson('/api/pets/bulk/feed')->assertOk()->assertJsonPath('done', 2);
+        $this->assertSame(1000 - 2 * $fees['feed'], (int) $user->fresh()->apex_coins);
+        $this->actingAs($user)->postJson('/api/pets/bulk/feed')->assertStatus(422);
+
+        // Все трое — на луг
+        $this->actingAs($user)->postJson('/api/pets/bulk/send', ['zone' => 'meadow'])->assertOk()->assertJsonPath('done', 3);
+        $this->actingAs($user)->postJson('/api/pets/bulk/send', ['zone' => 'meadow'])->assertStatus(422);
+        $this->actingAs($user)->postJson('/api/pets/bulk/claim')->assertStatus(422);
+
+        $before = (int) $user->fresh()->apex_coins;
+        $this->travel(61)->minutes();
+
+        $loot = $this->actingAs($user)->postJson('/api/pets/bulk/claim')
+            ->assertOk()
+            ->assertJsonPath('done', 3)
+            ->json('loot');
+
+        $this->assertSame($before - 3 * $fees['claim'] + $loot['coins'], (int) $user->fresh()->apex_coins);
+        $this->assertSame(9, $loot['xp']);
+    }
+
+    public function test_bulk_action_without_coins_suggests_the_miner(): void
+    {
+        $user = User::factory()->create(['apex_coins' => 0]);
+        $this->pet($user);
+
+        $this->actingAs($user)->postJson('/api/pets/bulk/feed')
+            ->assertStatus(422)
+            ->assertJsonPath('earn', '/miner');
+    }
+
+    public function test_extra_arena_fights_cost_more_each_time_and_win_pays_triple(): void
+    {
+        $user = User::factory()->create(['apex_coins' => 1000]);
+        $mine = $this->pet($user, 'dragon', 2200);
+        $foe = $this->pet(User::factory()->create(), 'frog');
+
+        // Бесплатные бои кончились
+        foreach (range(1, PetArenaService::DAILY_FIGHTS + 1) as $i) {
+            DB::table('pet_battles')->insert(['user_id' => $user->id, 'inventory_id' => $mine->id, 'opponent_inventory_id' => $foe->id, 'status' => 'lost', 'state' => '{}', 'created_at' => now(), 'updated_at' => now()]);
+        }
+        $this->actingAs($user)->postJson("/api/pets/{$mine->id}/battle", ['opponent' => $foe->id])->assertStatus(422);
+
+        $this->actingAs($user)->postJson('/api/pets/arena/buy-fight')->assertOk()
+            ->assertJsonPath('fights_left', 1)
+            ->assertJsonPath('next_price', PetArenaService::EXTRA_FIGHT_BASE + PetArenaService::EXTRA_FIGHT_STEP);
+        $this->assertSame(1000 - PetArenaService::EXTRA_FIGHT_BASE, (int) $user->fresh()->apex_coins);
+
+        $battle = $this->actingAs($user)->postJson("/api/pets/{$mine->id}/battle", ['opponent' => $foe->id])->assertCreated()->json('id');
+        $status = 'active';
+        for ($i = 0; $i < 40 && $status === 'active'; $i++) {
+            $response = $this->actingAs($user)->postJson("/api/pets/battles/{$battle}/move", ['move' => 'attack']);
+            $status = $response->json('status');
+        }
+
+        $this->assertSame('won', $status);
+        // 30 уровень: (40 + 90) × 3 × 1,25 за перк
+        $this->assertSame((int) round((40 + 30 * 3) * PetArenaService::WIN_MULTIPLIER * 1.25), $response->json('coins'));
+    }
+
     public function test_season_pays_top_and_softens_rating(): void
     {
         $user = User::factory()->create(['apex_coins' => 0]);

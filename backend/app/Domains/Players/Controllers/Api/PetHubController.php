@@ -3,6 +3,8 @@
 namespace App\Domains\Players\Controllers\Api;
 
 use App\Domains\Players\Services\PetArenaService;
+use App\Domains\Players\Services\PetBulkService;
+use App\Domains\Shop\Exceptions\NotEnoughCoins;
 use App\Domains\Players\Services\PetExpeditionService;
 use App\Domains\Players\Services\PetHubService;
 use App\Http\Controllers\Controller;
@@ -25,6 +27,24 @@ class PetHubController extends Controller
     public function index(Request $request): JsonResponse
     {
         return response()->json($this->hub->overview($request->user()));
+    }
+
+    /** Всё разом за монеты: feed | send | claim. */
+    public function bulk(Request $request, string $action, PetBulkService $bulk): JsonResponse
+    {
+        $data = $request->validate(['zone' => ['required_if:action,send', 'nullable', 'string', 'max:24']]);
+
+        return $this->run(fn () => match ($action) {
+            'feed' => $bulk->feedAll($request->user()),
+            'send' => $bulk->sendAll($request->user(), (string) ($data['zone'] ?? '')),
+            'claim' => $bulk->claimAll($request->user()),
+        });
+    }
+
+    /** Купить ещё один бой на арене сегодня. */
+    public function buyFight(Request $request): JsonResponse
+    {
+        return $this->run(fn () => $this->arena->buyExtraFight($request->user()));
     }
 
     public function trick(Request $request, int $row): JsonResponse
@@ -96,6 +116,9 @@ class PetHubController extends Controller
     {
         try {
             return response()->json($operation(), $status);
+        } catch (NotEnoughCoins $e) {
+            // Клиент предложит заработать — как у сундуков
+            return response()->json(['message' => $e->getMessage(), 'missing' => $e->missing, 'earn' => '/miner'], 422);
         } catch (RuntimeException $e) {
             if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
                 throw $e;
