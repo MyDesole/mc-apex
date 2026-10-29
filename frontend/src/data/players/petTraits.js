@@ -33,6 +33,15 @@ export const PET_MODELS = {
     abyss: { filter: 'invert(1) hue-rotate(200deg) brightness(0.7) drop-shadow(0 0 6px rgba(34, 211, 238, 0.9))' },
     glitch: { filter: 'saturate(1.4)', animated: 'pet-glitch' },
     aurora: { filter: 'hue-rotate(100deg) saturate(1.8)', animated: 'pet-aurora' },
+    // Седьмая волна
+    cotton: { filter: 'hue-rotate(280deg) saturate(0.7) brightness(1.35) drop-shadow(0 0 3px rgba(251, 207, 232, 0.8))' },
+    mossy: { filter: 'sepia(0.3) hue-rotate(70deg) saturate(0.9) brightness(0.85)' },
+    ink: { filter: 'grayscale(1) contrast(1.8) brightness(0.8) drop-shadow(0 0 4px rgba(59, 130, 246, 0.9))' },
+    royal: { filter: 'hue-rotate(250deg) saturate(1.6) drop-shadow(0 0 4px rgba(250, 204, 21, 0.9))' },
+    ember: { filter: 'sepia(1) saturate(3) hue-rotate(-20deg) brightness(0.9) drop-shadow(0 0 6px rgba(249, 115, 22, 0.95))' },
+    mirror: { filter: 'grayscale(1) brightness(1.7) contrast(1.2) drop-shadow(0 0 6px rgba(255, 255, 255, 0.95))' },
+    cursed: { filter: 'hue-rotate(320deg) saturate(2) brightness(0.8)', animated: 'pet-cursed' },
+    starlight: { filter: 'brightness(1.3) saturate(0.6)', animated: 'pet-starlight' },
 }
 
 /** Фон: сияние позади питомца (в шапке — мягкое, в карточке — во всю плашку). */
@@ -59,6 +68,13 @@ export const PET_BACKDROPS = {
     rainbow: 'repeating-linear-gradient(135deg, rgba(248, 113, 113, 0.5) 0 6px, rgba(251, 191, 36, 0.5) 6px 12px, rgba(74, 222, 128, 0.5) 12px 18px, rgba(96, 165, 250, 0.5) 18px 24px, rgba(192, 132, 252, 0.5) 24px 30px)',
     eclipse: 'radial-gradient(circle, #050308 0 36%, rgba(253, 224, 71, 0.9) 40%, rgba(251, 146, 60, 0.4) 50%, transparent 68%)',
     rift: 'radial-gradient(circle, rgba(0, 0, 0, 0.9) 0 28%, rgba(168, 85, 247, 0.75) 34%, rgba(76, 29, 149, 0.3) 50%, transparent 70%)',
+    // Седьмая волна
+    meadow: 'radial-gradient(circle, rgba(250, 204, 21, 0.85) 0 1.5px, transparent 2px) 0 0 / 12px 10px, radial-gradient(circle, rgba(134, 239, 172, 0.55), rgba(22, 101, 52, 0.25) 60%, transparent 72%)',
+    bubbles: 'radial-gradient(circle, transparent 0 3px, rgba(186, 230, 253, 0.75) 3px 4px, transparent 4.5px) 0 0 / 16px 18px, radial-gradient(circle, rgba(56, 189, 248, 0.45), rgba(14, 116, 144, 0.2) 60%, transparent 72%)',
+    hearts: 'radial-gradient(circle, rgba(244, 114, 182, 0.75) 0 2px, transparent 2.5px) 0 0 / 11px 11px, radial-gradient(circle, rgba(251, 207, 232, 0.55), rgba(190, 24, 93, 0.2) 60%, transparent 72%)',
+    storm: 'linear-gradient(115deg, transparent 46%, rgba(253, 224, 71, 0.9) 47% 49%, transparent 50%), radial-gradient(circle, rgba(71, 85, 105, 0.85), rgba(30, 41, 59, 0.5) 60%, transparent 72%)',
+    portal: 'repeating-conic-gradient(from 0deg, rgba(147, 51, 234, 0.7) 0 15deg, rgba(76, 29, 149, 0.6) 15deg 30deg)',
+    ender: 'radial-gradient(circle, rgba(255, 255, 255, 0.85) 0 1px, transparent 1.5px) 0 0 / 8px 9px, radial-gradient(circle, rgba(15, 10, 25, 0.95) 0 40%, rgba(250, 240, 170, 0.65) 46%, rgba(88, 28, 135, 0.4) 60%, transparent 72%)',
 }
 
 /**
@@ -92,6 +108,14 @@ export const PET_ACCESSORIES = {
     antenna: { dy: 0.86, w: 0.24 },
     bandana: { dy: 0.74, w: 0.66 },
     star: { dy: 0.98, w: 0.34 },
+    beanie: { dy: 0.76, w: 0.6 },
+    cherry: { dy: 0.86, w: 0.26 },
+    goggles: { dy: 0.42, w: 0.66 },
+    cowboy: { dy: 0.78, w: 0.84 },
+    mask: { dy: 0.42, w: 0.66 },
+    propeller: { dy: 0.8, w: 0.56 },
+    tiara: { dy: 0.78, w: 0.5 },
+    icecrown: { dy: 0.78, w: 0.56 },
 }
 
 /** Пиксель-арт аксессуаров: строки одной длины, «.» — пусто. */
@@ -347,6 +371,103 @@ export const PET_ACCESSORY_ART = {
             '...........D',
         ],
     },
+    // Седьмая волна
+    beanie: {
+        palette: { R: '#2563eb', W: '#bfdbfe', D: '#1e3a8a' },
+        map: [
+            '....WW....',
+            '..RRRRRR..',
+            '.RRWRRWRR.',
+            'RRRRRRRRRR',
+            'DDDDDDDDDD',
+        ],
+    },
+    cherry: {
+        palette: { R: '#dc2626', W: '#fecaca', G: '#16a34a' },
+        map: [
+            '...G.',
+            '..GG.',
+            '.G..G',
+            'RR.RR',
+            'RW.RW',
+            'RR.RR',
+        ],
+    },
+    // Линзы — там же, где у обычных очков (2.5 и 9.5 из 12)
+    goggles: {
+        palette: { K: '#78350f', G: '#38bdf8', W: '#e0f2fe' },
+        map: [
+            'KKKKKKKKKKKK',
+            'KGGGKKKKGGGK',
+            'KGWGK..KGWGK',
+            '.KKK....KKK.',
+        ],
+    },
+    goggles_side: {
+        palette: { K: '#78350f', G: '#38bdf8', W: '#e0f2fe' },
+        map: [
+            'KKKKKKK',
+            'KGGGK..',
+            'KGWGK..',
+            '.KKK...',
+        ],
+    },
+    mask: {
+        palette: { R: '#dc2626', D: '#7f1d1d' },
+        map: [
+            '.RRRRRRRRRR.',
+            'R...RRRR...R',
+            '.DDD.DD.DDD.',
+        ],
+    },
+    mask_side: {
+        palette: { R: '#dc2626', D: '#7f1d1d' },
+        map: [
+            'RRRRRR.',
+            'R...RR.',
+            '.DDD...',
+        ],
+    },
+    cowboy: {
+        palette: { B: '#a16207', D: '#78350f', L: '#ca8a04' },
+        map: [
+            '...BBBBBB...',
+            '..BBLBBBBB..',
+            '..DDDDDDDD..',
+            'BBBBBBBBBBBB',
+            '.BB......BB.',
+        ],
+    },
+    propeller: {
+        palette: { R: '#ef4444', B: '#3b82f6', Y: '#facc15', G: '#22c55e', D: '#15803d' },
+        map: [
+            '.RRRYBBBB.',
+            '....Y.....',
+            '..GGGGGG..',
+            '.GYGGYGGG.',
+            'GGGGGGGGGG',
+            'DDDDDDDDDD',
+        ],
+    },
+    tiara: {
+        palette: { W: '#e5e7eb', S: '#9ca3af', P: '#ec4899' },
+        map: [
+            '....P....',
+            '.W.WPW.W.',
+            'WSWSWSWSW',
+        ],
+    },
+    icecrown: {
+        palette: { C: '#a5f3fc', W: '#ffffff', B: '#3b82f6', D: '#0891b2' },
+        glow: true,
+        map: [
+            'C...C...C',
+            'CW.CWC.WC',
+            'CCCCCCCCC',
+            'CBCCWCCBC',
+            'DDDDDDDDD',
+        ],
+    },
     star: {
         palette: { Y: '#fde047', W: '#fffbeb' },
         glow: true,
@@ -420,6 +541,14 @@ const ACCESSORY_FIT = {
     antenna: { on: 'top', w: 0.3 },
     bandana: { on: 'top', w: 1.15 },
     star: { on: 'halo', w: 0.45 },
+    beanie: { on: 'top', w: 1.0 },
+    cherry: { on: 'top', w: 0.4 },
+    goggles: { on: 'eyes' },
+    cowboy: { on: 'top', w: 1.3 },
+    mask: { on: 'eyes' },
+    propeller: { on: 'top', w: 0.95 },
+    tiara: { on: 'top', w: 0.8 },
+    icecrown: { on: 'top', w: 1.05 },
 }
 
 /**

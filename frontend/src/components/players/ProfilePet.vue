@@ -1035,6 +1035,20 @@ onUnmounted(() => {
   50% { filter: hue-rotate(200deg) saturate(2) brightness(1.3) drop-shadow(0 0 8px rgba(139, 92, 246, 0.9)); }
 }
 
+/* Проклятый: тёмно-красный, временами вспыхивает и «моргает» негативом */
+@keyframes pet-cursed {
+  0%, 100% { filter: hue-rotate(320deg) saturate(2) brightness(0.8) drop-shadow(0 0 5px rgba(220, 38, 38, 0.9)); }
+  45% { filter: hue-rotate(320deg) saturate(2.4) brightness(1.15) drop-shadow(0 0 10px rgba(127, 29, 29, 0.95)); }
+  47% { filter: invert(1) hue-rotate(140deg) drop-shadow(0 0 8px rgba(220, 38, 38, 0.95)); }
+  49% { filter: hue-rotate(320deg) saturate(2) brightness(0.8) drop-shadow(0 0 5px rgba(220, 38, 38, 0.9)); }
+}
+
+/* Звёздный: светлый, мерцает то белым, то золотым */
+@keyframes pet-starlight {
+  0%, 100% { filter: brightness(1.3) saturate(0.6) drop-shadow(0 0 4px rgba(255, 255, 255, 0.95)); }
+  50% { filter: brightness(1.55) saturate(0.9) hue-rotate(20deg) drop-shadow(0 0 11px rgba(253, 224, 71, 0.95)); }
+}
+
 @keyframes pet-galaxy {
   0%, 100% { filter: hue-rotate(230deg) saturate(2) drop-shadow(0 0 5px rgba(236, 72, 153, 0.9)); }
   50% { filter: hue-rotate(290deg) saturate(2.4) drop-shadow(0 0 8px rgba(99, 102, 241, 0.9)); }

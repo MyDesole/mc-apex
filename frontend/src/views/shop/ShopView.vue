@@ -1,7 +1,8 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useCursorList } from '@/composables/core/useCursorList.js'
-import { useRoute } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
+import PixelSprite from '@/components/shop/PixelSprite.vue'
 import { shopApi } from '@/services/shop/shop.js'
 import { walletApi } from '@/services/wallet/wallet.js'
 import { useAuthStore } from '@/stores/core/auth.js'
@@ -32,7 +33,6 @@ const TABS = [
   { value: 'all', label: 'Всё' },
   { value: 'sticker_pack', label: 'Стикеры' },
   { value: 'name_icon', label: 'Значки у ника' },
-  { value: 'profile_pet', label: 'Питомцы' },
   { value: 'profile_title', label: 'Титулы' },
   { value: 'chat_bubble', label: 'Сообщения' },
   { value: 'name_effect', label: 'Эффекты ника' },
@@ -429,6 +429,16 @@ onMounted(load)
       </div>
     </section>
 
+    <!-- Питомцы не продаются — подсказываем, где их взять -->
+    <RouterLink to="/cases" class="shop-pets-hint">
+      <PixelSprite sprite="paw" :size="22" />
+      <span>
+        <strong>Питомцы — только из «Сундука питомцев»</strong>
+        <small>Каждый уникален: свой номер, окрас, фон и аксессуар. Купить питомца в магазине нельзя.</small>
+      </span>
+      <b>К сундукам →</b>
+    </RouterLink>
+
     <!-- ===================== Каталог ===================== -->
     <div class="catalog-head">
       <h2 class="section-title">Предметы</h2>
@@ -622,4 +632,31 @@ onMounted(load)
 
 <style scoped>
 @import "@/views/shop/ShopView.css";
+
+.shop-pets-hint {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  margin-bottom: 18px;
+  padding: 14px 18px;
+
+  color: inherit;
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.14), rgba(16, 185, 129, 0.03));
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 14px;
+
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.shop-pets-hint:hover { border-color: rgba(16, 185, 129, 0.7); }
+.shop-pets-hint span { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; }
+.shop-pets-hint strong { color: #fff; font-size: 14px; }
+.shop-pets-hint small { color: #a8a3b8; font-size: 12.5px; }
+.shop-pets-hint b { color: #6ee7b7; font-size: 13px; white-space: nowrap; }
+
+@media (max-width: 560px) {
+  .shop-pets-hint b { display: none; }
+}
 </style>

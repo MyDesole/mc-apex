@@ -21,7 +21,7 @@ class ShopPaginationTest extends TestCase
         $user = User::factory()->create();
 
         $expected = ShopItem::active()->where('type', '!=', 'bundle')
-            ->whereNotIn('type', ['clan_highlight', 'clan_highlight_style'])
+            ->whereNotIn('type', ['clan_highlight', 'clan_highlight_style', 'profile_pet'])
             ->count();
 
         $first = $this->actingAs($user)->getJson('/api/shop?limit=25')->assertOk();
@@ -42,9 +42,12 @@ class ShopPaginationTest extends TestCase
         $this->assertSame($ids->count(), $ids->unique()->count());
 
         // Вкладка фильтрует на сервере
-        $pets = $this->getJson('/api/shop?limit=60&type=profile_pet')->assertOk()->json('items');
-        $this->assertNotEmpty($pets);
-        $this->assertSame(['profile_pet'], collect($pets)->pluck('type')->unique()->values()->all());
+        $frames = $this->getJson('/api/shop?limit=60&type=avatar_frame')->assertOk()->json('items');
+        $this->assertNotEmpty($frames);
+        $this->assertSame(['avatar_frame'], collect($frames)->pluck('type')->unique()->values()->all());
+
+        // Питомцев на витрине нет — только из сундука
+        $this->getJson('/api/shop?limit=60&type=profile_pet')->assertOk()->assertJsonCount(0, 'items');
 
         // Битый курсор — с начала, без ошибки
         $this->getJson('/api/shop?limit=5&cursor=garbage')->assertOk()->assertJsonCount(5, 'items');

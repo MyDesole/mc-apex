@@ -26,7 +26,10 @@ class BundleService
 
         $items = ShopItem::whereIn('slug', $slugs)->get()->keyBy('slug');
 
-        return collect($slugs)->map(fn ($slug) => $items->get($slug))->filter()->values();
+        // Питомцы — только из сундука, даже если остались в старом наборе
+        return collect($slugs)->map(fn ($slug) => $items->get($slug))
+            ->filter(fn (?ShopItem $item) => $item && ! $item->isCaseOnly())
+            ->values();
     }
 
     /**

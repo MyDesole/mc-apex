@@ -39,6 +39,8 @@ class ShopService
     {
         $query = ShopItem::query()
             ->active()
+            // Питомцы — только из сундука, на витрине их нет
+            ->where('type', '!=', ShopItem::TYPE_PROFILE_PET)
             ->orderBy('sort_order')
             ->orderBy('price')
             ->orderBy('id');
@@ -484,6 +486,10 @@ class ShopService
     {
         if (! $item->is_active) {
             throw new RuntimeException('Этот предмет больше не продаётся.');
+        }
+
+        if ($item->isCaseOnly()) {
+            throw new RuntimeException('Питомцы не продаются — их можно выбить в «Сундуке питомцев».');
         }
 
         if ($item->isBundle()) {

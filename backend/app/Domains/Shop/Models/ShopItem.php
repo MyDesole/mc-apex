@@ -128,6 +128,15 @@ class ShopItem extends Model
         return $this->isEquippable() && ! $this->isClanItem();
     }
 
+    /**
+     * Только из сундука: питомцы не продаются в магазине и наборах —
+     * их выбивают в «Сундуке питомцев» (и изредка в других сундуках).
+     */
+    public function isCaseOnly(): bool
+    {
+        return $this->type === self::TYPE_PROFILE_PET;
+    }
+
     /** Админу бесплатно: вся личная косметика и стикерпаки. */
     public function isFreeForAdmin(): bool
     {

@@ -38,6 +38,12 @@ class ProfilePetTest extends TestCase
         $this->actingAs($guest)->postJson("/api/players/{$owner->id}/pet/dance")->assertNotFound();
     }
 
+    /** Питомец в инвентаре — как из сундука: чеканится при появлении. */
+    private function give(User $user, \App\Domains\Shop\Models\ShopItem $pet): void
+    {
+        \App\Domains\Shop\Models\UserInventory::create(['user_id' => $user->id, 'shop_item_id' => $pet->id, 'quantity' => 1, 'acquired_at' => now()]);
+    }
+
     public function test_each_pet_is_minted_with_traits_and_serial(): void
     {
         $pet = \App\Domains\Shop\Models\ShopItem::create([
@@ -48,8 +54,10 @@ class ProfilePetTest extends TestCase
         $first = User::factory()->create(['apex_coins' => 100]);
         $second = User::factory()->create(['apex_coins' => 100]);
 
-        $this->actingAs($first)->postJson("/api/shop/{$pet->id}/purchase")->assertSuccessful();
-        $this->actingAs($second)->postJson("/api/shop/{$pet->id}/purchase")->assertSuccessful();
+        // Питомцы не продаются — только из сундука
+        $this->actingAs($first)->postJson("/api/shop/{$pet->id}/purchase")->assertStatus(422);
+        $this->give($first, $pet);
+        $this->give($second, $pet);
 
         $rows = \App\Domains\Shop\Models\UserInventory::where('shop_item_id', $pet->id)->orderBy('id')->get();
         $this->assertSame([1, 2], $rows->pluck('pet_serial')->all());
@@ -85,7 +93,7 @@ class ProfilePetTest extends TestCase
 
         // Три лисёнка и котик — четыре разных экземпляра
         foreach ([$fox, $fox, $fox, $cat] as $pet) {
-            $this->actingAs($user)->postJson("/api/shop/{$pet->id}/purchase")->assertSuccessful();
+            $this->give($user, $pet);
         }
 
         $rows = \App\Domains\Shop\Models\UserInventory::where('user_id', $user->id)->orderBy('id')->get();
