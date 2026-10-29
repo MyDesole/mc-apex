@@ -12,6 +12,7 @@ use App\Domains\Shop\Services\PetAuctionService;
 use App\Domains\Shop\Services\ShopService;
 use App\Domains\Users\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
@@ -38,9 +39,12 @@ class ChatCardService
         $wanted = ['player' => [], 'pet' => [], 'clan' => [], 'lot' => []];
 
         foreach ($messages as $message) {
-            $refs = $message->kind === Message::KIND_TEXT ? $this->parse((string) $message->body) : [];
-            $refsByMessage[$message->id] = $refs;
+            $refsByMessage[$message->id] = $message->kind === Message::KIND_TEXT ? $this->parse((string) $message->body) : [];
+        }
 
+        $refsByMessage = $this->resolveNames($refsByMessage);
+
+        foreach ($refsByMessage as $refs) {
             foreach ($refs as $ref) {
                 $wanted[$ref['type']][$ref['id']] = true;
 
@@ -79,7 +83,7 @@ class ChatCardService
      */
     public function parse(string $body): array
     {
-        if ($body === '' || ! preg_match_all('~(?:https?://([a-z0-9.\-]+)(?::\d+)?)?(/(?:players|user|clans|auction)[^\s<>"\']*)~iu', $body, $matches, PREG_SET_ORDER)) {
+        if ($body === '' || ! preg_match_all('~(?:https?://([a-z0-9.\-]+)(?::\d+)?)?(/(?:players|user|clans?|auction)[^\s<>"\']*)~iu', $body, $matches, PREG_SET_ORDER)) {
             return [];
         }
 
@@ -106,14 +110,14 @@ class ChatCardService
                 continue;
             }
 
-            $key = $ref['type'] . ':' . $ref['id'];
+            $key = implode(':', [$ref['type'], $ref['id'] ?? '', mb_strtolower($ref['name'] ?? ''), $ref['owner_id'] ?? '', mb_strtolower($ref['owner_name'] ?? '')]);
 
             if (isset($seen[$key])) {
                 continue;
             }
 
             $seen[$key] = true;
-            $refs[] = $ref + ['url' => $this->pathOf($ref)];
+            $refs[] = $ref;
 
             if (count($refs) >= self::MAX_PER_MESSAGE) {
                 break;
@@ -129,17 +133,28 @@ class ChatCardService
         $route = rtrim($parts['path'] ?? '', '/');
         parse_str($parts['query'] ?? '', $query);
 
-        if (preg_match('~^/(?:players|user)/(\d+)$~', $route, $m)) {
-            $userId = (int) $m[1];
+        /*
+         * Игрок — по id или по нику: сайт сам строит ссылки вида /user/Ник,
+         * и раньше такие оставались просто текстом.
+         */
+        if (preg_match('~^/(?:players|user)/([^/]+)$~u', $route, $m)) {
+            $who = $this->identifier($m[1]);
             $pet = isset($query['pet']) ? (int) $query['pet'] : 0;
 
+            if ($who === null) {
+                return null;
+            }
+
             return $pet > 0
-                ? ['type' => 'pet', 'id' => $pet, 'owner_id' => $userId]
-                : ['type' => 'player', 'id' => $userId];
+                ? ['type' => 'pet', 'id' => $pet, 'owner_id' => $who['id'], 'owner_name' => $who['name']]
+                : ['type' => 'player', 'id' => $who['id'], 'name' => $who['name']];
         }
 
-        if (preg_match('~^/clans/(\d+)$~', $route, $m)) {
-            return ['type' => 'clan', 'id' => (int) $m[1]];
+        // Клан — по id (/clans/7) или по имени (/clan/Имя_клана)
+        if (preg_match('~^/clans?/([^/]+)$~u', $route, $m)) {
+            $which = $this->identifier($m[1]);
+
+            return $which ? ['type' => 'clan', 'id' => $which['id'], 'name' => $which['name']] : null;
         }
 
         if ($route === '/auction' && isset($query['lot']) && (int) $query['lot'] > 0) {
@@ -147,6 +162,101 @@ class ChatCardService
         }
 
         return null;
+    }
+
+    /**
+     * Часть адреса: число — это id, иначе имя (ник или название клана).
+     *
+     * @return array{id: ?int, name: ?string}|null
+     */
+    private function identifier(string $segment): ?array
+    {
+        $value = trim(rawurldecode($segment));
+
+        if ($value === '' || mb_strlen($value) > 64) {
+            return null;
+        }
+
+        return ctype_digit($value)
+            ? ['id' => (int) $value, 'name' => null]
+            : ['id' => null, 'name' => $value];
+    }
+
+    /**
+     * Ники и названия кланов — в id, одним запросом на вид. Ссылки на
+     * несуществующих игроков и кланы отбрасываются.
+     *
+     * @param  array<int, array<int, array>>  $refsByMessage
+     * @return array<int, array<int, array>>
+     */
+    private function resolveNames(array $refsByMessage): array
+    {
+        $userNames = [];
+        $clanNames = [];
+
+        foreach ($refsByMessage as $refs) {
+            foreach ($refs as $ref) {
+                if ($ref['type'] === 'player' && $ref['name'] !== null) {
+                    $userNames[] = $ref['name'];
+                } elseif ($ref['type'] === 'pet' && $ref['owner_name'] !== null) {
+                    $userNames[] = $ref['owner_name'];
+                } elseif ($ref['type'] === 'clan' && $ref['name'] !== null) {
+                    // В ссылке на клан пробелы заменены подчёркиваниями
+                    $clanNames[] = $ref['name'];
+                    $clanNames[] = str_replace('_', ' ', $ref['name']);
+                }
+            }
+        }
+
+        $users = $this->idsByName(User::query(), 'username', $userNames);
+        $clans = $this->idsByName(Clan::query(), 'name', $clanNames);
+
+        foreach ($refsByMessage as $messageId => $refs) {
+            $resolved = [];
+
+            foreach ($refs as $ref) {
+                if ($ref['type'] === 'player' && $ref['id'] === null) {
+                    $ref['id'] = $users[mb_strtolower($ref['name'])] ?? null;
+                } elseif ($ref['type'] === 'pet' && $ref['owner_id'] === null) {
+                    $ref['owner_id'] = $users[mb_strtolower($ref['owner_name'])] ?? null;
+                } elseif ($ref['type'] === 'clan' && $ref['id'] === null) {
+                    $name = mb_strtolower($ref['name']);
+                    $ref['id'] = $clans[$name] ?? $clans[str_replace('_', ' ', $name)] ?? null;
+                }
+
+                if ($ref['id'] === null || ($ref['type'] === 'pet' && $ref['owner_id'] === null)) {
+                    continue;
+                }
+
+                $resolved[] = $ref + ['url' => $this->pathOf($ref)];
+            }
+
+            $refsByMessage[$messageId] = $resolved;
+        }
+
+        return $refsByMessage;
+    }
+
+    /**
+     * { имя в нижнем регистре => id } без учёта регистра.
+     *
+     * В MySQL сравнение и так без регистра; в SQLite lower() понимает
+     * только латиницу, поэтому ищем и по точному написанию.
+     */
+    private function idsByName($query, string $column, array $names): Collection
+    {
+        $names = array_values(array_unique($names));
+
+        if (! $names) {
+            return collect();
+        }
+
+        $lower = array_values(array_unique(array_map('mb_strtolower', $names)));
+
+        return $query
+            ->where(fn ($q) => $q->whereIn($column, $names)->orWhereIn(DB::raw("lower({$column})"), $lower))
+            ->pluck('id', $column)
+            ->mapWithKeys(fn ($id, $name) => [mb_strtolower($name) => (int) $id]);
     }
 
     /** Ссылка карточки — всегда относительная: страница откроет её роутером. */

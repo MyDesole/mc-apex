@@ -7,7 +7,8 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import UserName from '@/components/players/UserName.vue'
-import ShopItemPreview from '@/components/shop/ShopItemPreview.vue'
+import { profilePet } from '@/data/players/flair.js'
+import { petModelStyle } from '@/data/players/petTraits.js'
 import AppIcon from '@/components/core/AppIcon.vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
 import { PET_RARITY } from '@/data/players/petTraits.js'
@@ -23,6 +24,27 @@ const label = computed(() => LABELS[props.card.type] ?? 'Ссылка')
 const petTraits = computed(() => props.card.pet?.pet ?? null)
 
 const rarity = computed(() => PET_RARITY[petTraits.value?.rarity] ?? null)
+
+// Спрайт вида и окрас экземпляра (фильтр модели), без анимации прогулки
+const petSprite = computed(() => profilePet(props.card.pet?.effect_value)?.sprite ?? null)
+const petStyle = computed(() => {
+  const { filter, opacity } = petModelStyle(petTraits.value)
+
+  return { filter, opacity }
+})
+
+// «1 ставка», «3 ставки», «5 ставок»
+const bidsLabel = computed(() => {
+  const n = Number(props.card.bids_count) || 0
+  const mod10 = n % 10
+  const mod100 = n % 100
+
+  if (n === 0) return 'без ставок'
+  if (mod10 === 1 && mod100 !== 11) return `${n} ставка`
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${n} ставки`
+
+  return `${n} ставок`
+})
 
 const lotState = computed(() => {
   if (props.card.type !== 'lot') return ''
@@ -59,8 +81,12 @@ const lotState = computed(() => {
 
     <!-- Питомец и лот: питомец крупно -->
     <template v-else-if="card.type === 'pet' || card.type === 'lot'">
+      <!--
+        Сам питомец, без обёртки превью магазина: та рассчитана на
+        высоту 132px и в маленькой рамке обрезалась до пустоты.
+      -->
       <span class="link-card__pet">
-        <ShopItemPreview v-if="card.pet" :item="card.pet" />
+        <PixelSprite v-if="petSprite" :sprite="petSprite" :size="32" :style="petStyle" />
       </span>
       <span class="link-card__body">
         <span class="link-card__label">
@@ -76,7 +102,7 @@ const lotState = computed(() => {
           <PixelSprite sprite="diamond" :size="12" />
           {{ Number(card.price).toLocaleString('ru-RU') }} ApexCoin
           <span class="link-card__dot">·</span>
-          {{ card.bids_count }} ставок
+          {{ bidsLabel }}
           <span class="link-card__dot">·</span>
           {{ lotState }}
         </span>
@@ -152,17 +178,16 @@ const lotState = computed(() => {
 }
 
 .link-card__pet {
+  position: relative;
+
   display: grid;
   flex-shrink: 0;
   place-items: center;
-  width: 46px;
-  height: 46px;
-  overflow: hidden;
-}
+  width: 52px;
+  height: 52px;
 
-.link-card__pet :deep(*) {
-  max-width: 46px;
-  max-height: 46px;
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 6px;
 }
 
 .link-card__body {

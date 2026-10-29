@@ -351,4 +351,48 @@ class ChatMessengerTest extends TestCase
         $this->getJson("/api/chat/conversations/{$conversation->id}")
             ->assertJsonCount(2, 'messages.0.cards');
     }
+
+    public function test_links_by_nickname_and_clan_name_become_cards(): void
+    {
+        [$a, $b, $conversation] = $this->direct();
+        $b->forceFill(['username' => 'Steve_Pro'])->save();
+        Clan::create(['name' => 'Небо Над Бриджем', 'tag' => 'SKY', 'leader_id' => $b->id]);
+        $host = parse_url(config('app.url'), PHP_URL_HOST);
+
+        Sanctum::actingAs($a);
+
+        // Ник в другом регистре и закодированное имя клана, как их копирует браузер
+        $clanPath = '/clan/' . rawurlencode('Небо_Над_Бриджем');
+
+        $this->postJson("/api/chat/conversations/{$conversation->id}/messages", [
+            'body' => "профиль http://{$host}/user/steve_pro и клан http://{$host}{$clanPath} и нет такого /user/nobody_here",
+        ])
+            ->assertCreated()
+            ->assertJsonCount(2, 'message.cards')
+            ->assertJsonPath('message.cards.0.type', 'player')
+            ->assertJsonPath('message.cards.0.id', $b->id)
+            ->assertJsonPath('message.cards.0.url', "/players/{$b->id}")
+            ->assertJsonPath('message.cards.1.type', 'clan')
+            ->assertJsonPath('message.cards.1.tag', 'SKY');
+    }
+
+    public function test_pet_link_by_nickname_becomes_pet_card(): void
+    {
+        [$a, $b, $conversation] = $this->direct();
+        $item = ShopItem::create([
+            'slug' => 'pet-dog', 'name' => 'Питомец «Пёсик»', 'type' => ShopItem::TYPE_PROFILE_PET,
+            'effect_value' => 'dog', 'rarity' => 'common', 'price' => 100, 'is_active' => true,
+        ]);
+        $row = \App\Domains\Shop\Models\UserInventory::create(['user_id' => $b->id, 'shop_item_id' => $item->id, 'quantity' => 1]);
+
+        Sanctum::actingAs($a);
+
+        $this->postJson("/api/chat/conversations/{$conversation->id}/messages", [
+            'body' => '/user/' . $b->username . '?pet=' . $row->id,
+        ])
+            ->assertCreated()
+            ->assertJsonPath('message.cards.0.type', 'pet')
+            ->assertJsonPath('message.cards.0.pet.effect_value', 'dog')
+            ->assertJsonPath('message.cards.0.owner.id', $b->id);
+    }
 }

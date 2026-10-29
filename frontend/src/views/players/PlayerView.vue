@@ -205,11 +205,20 @@ watch(
 
         <section v-if="!isMe" class="fact">
           <h3 class="block-title">Дружба</h3>
-          <FriendButton
-              :user-id="user.id"
-              :friendship="friendship"
-              @update="onFriendshipUpdate"
-          />
+          <div class="fact__actions">
+            <FriendButton
+                :user-id="user.id"
+                :friendship="friendship"
+                @update="onFriendshipUpdate"
+            />
+            <ShareToChatButton :path="`/players/${user.id}`" label="Поделиться" />
+          </div>
+        </section>
+
+        <!-- Свой профиль тоже можно отправить в сообщения -->
+        <section v-else-if="auth.isAuthenticated" class="fact">
+          <h3 class="block-title">Поделиться</h3>
+          <ShareToChatButton :path="`/players/${user.id}`" label="Отправить в сообщения" />
         </section>
 
         <button
