@@ -33,6 +33,9 @@ class ChatService
     /** Сколько диалогов показываем в списке. */
     public const CONVERSATION_LIMIT = 50;
 
+    /** Самое длинное голосовое, секунд. */
+    public const VOICE_MAX_SECONDS = 120;
+
     private const MESSAGE_RELATIONS = [
         'user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,name_icon,is_verified',
         'reads:id,message_id,user_id',
@@ -47,6 +50,7 @@ class ChatService
         'users:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,name_icon,is_verified',
         'clan:id,name,tag,banner_color,avatar',
         'author:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,name_icon,is_verified',
+        'owner:id,username',
     ];
 
     /* ----------------------------- Диалоги ----------------------------- */
@@ -61,7 +65,14 @@ class ChatService
     {
         $conversations = Conversation::query()
             ->whereHas('participants', fn ($q) => $q->where('user_id', $me->id))
-            ->with([...self::CONVERSATION_RELATIONS, 'lastMessage.user:id,username,avatar'])
+            /*
+             * Пустой личный диалог не показываем: он создаётся, как только
+             * кто-то открыл чат с игроком, и у собеседника висел «Новый
+             * диалог» без единого сообщения.
+             */
+            ->where(fn ($q) => $q->where('type', '!=', 'direct')->orWhereHas('messages'))
+            // Вложения последнего — чтобы превью писало «Фото» или «Голосовое», а не пустоту
+            ->with([...self::CONVERSATION_RELATIONS, 'lastMessage.user:id,username,avatar', 'lastMessage.attachments'])
             ->orderByDesc('last_message_at')
             ->orderByDesc('id')
             ->limit(self::CONVERSATION_LIMIT)
@@ -105,6 +116,14 @@ class ChatService
         int $limit = self::PAGE_SIZE,
         bool $markRead = true,
     ): array {
+        /*
+         * Первое непрочитанное — до отметки прочтения, иначе его уже не
+         * найти. По нему страница рисует разделитель «Новые сообщения».
+         */
+        $firstUnreadId = (! $beforeId && ! $afterId)
+            ? $this->unreadQuery($me)->where('conversation_id', $conversation->id)->min('id')
+            : null;
+
         if ($markRead) {
             $this->markRead($conversation, $me);
         }
@@ -118,26 +137,36 @@ class ChatService
         }
 
         if ($afterId) {
-            $query->where('id', '>', $afterId);
+            /*
+             * Догрузка новых — с начала по порядку. Раньше и здесь брался
+             * «хвост», и при большом разрыве середина терялась навсегда:
+             * следующий запрос шёл уже после самого свежего id.
+             */
+            $messages = $query->where('id', '>', $afterId)->orderBy('id')->limit($limit + 1)->get();
+            $hasMore = $messages->count() > $limit;
+            $messages = $messages->slice(0, $limit)->values();
+        } else {
+            // Берём «хвост» — свежие сообщения, затем разворачиваем в хронологию
+            $messages = $query->orderByDesc('id')->limit($limit + 1)->get();
+            $hasMore = $messages->count() > $limit;
+            $messages = $messages->slice(0, $limit)->sortBy('id')->values();
         }
-
-        // Берём «хвост» — свежие сообщения, затем разворачиваем в хронологию
-        $messages = $query->orderByDesc('id')->limit($limit + 1)->get();
-
-        $hasMore = $messages->count() > $limit;
-
-        if ($hasMore) {
-            $messages = $messages->slice(0, $limit);
-        }
-
-        $messages = $messages->sortBy('id')->values();
 
         return [
             'messages' => $this->presentMessages($messages, $me),
             'has_more' => $hasMore,
             'oldest_id' => $messages->first()->id ?? null,
             'newest_id' => $messages->last()->id ?? null,
+            'first_unread_id' => $firstUnreadId ? (int) $firstUnreadId : null,
         ];
+    }
+
+    /** Чужие сообщения, которые я ещё не прочитал. */
+    private function unreadQuery(User $me)
+    {
+        return Message::query()
+            ->where('user_id', '!=', $me->id)
+            ->whereDoesntHave('reads', fn ($q) => $q->where('user_id', $me->id));
     }
 
     /**
@@ -232,10 +261,21 @@ class ChatService
         User $me,
         ?string $body,
         ?int $replyToId = null,
-        ?int $forwardedFromUserId = null,
         array $attachmentIds = [],
     ): Message {
         $body = trim((string) $body);
+
+        /*
+         * Вложения — только свои и ещё ни к чему не привязанные. Проверяем
+         * до записи: иначе сообщение из одних чужих id уходило пустым.
+         */
+        $attachmentIds = $attachmentIds
+            ? MessageAttachment::whereIn('id', $attachmentIds)
+                ->where('user_id', $me->id)
+                ->whereNull('message_id')
+                ->pluck('id')
+                ->all()
+            : [];
 
         if ($body === '' && ! $attachmentIds) {
             throw ValidationException::withMessages([
@@ -247,39 +287,57 @@ class ChatService
             $this->assertReplyTargetInConversation($conversation, $replyToId);
         }
 
-        // Стикер — только из своих наборов; пересланный стикер не проверяем
-        if (! $forwardedFromUserId) {
-            app(\App\Domains\Shop\Services\StickerService::class)->guard($me, $body);
-        }
+        /*
+         * Стикер — только из своих наборов. Раньше проверку можно было
+         * обойти, передав forwarded_from_user_id: платные наборы уходили
+         * бесплатно. Пересылка теперь идёт только через forward().
+         */
+        app(\App\Domains\Shop\Services\StickerService::class)->guard($me, $body);
 
-        $message = DB::transaction(function () use (
-            $conversation, $me, $body, $replyToId, $forwardedFromUserId, $attachmentIds
-        ) {
+        $message = DB::transaction(function () use ($conversation, $me, $body, $replyToId, $attachmentIds) {
             $message = Message::create([
                 'conversation_id' => $conversation->id,
                 'user_id' => $me->id,
                 'reply_to_id' => $replyToId,
-                'forwarded_from_user_id' => $forwardedFromUserId,
                 'body' => $body,
             ]);
 
             $this->attachFiles($message, $attachmentIds);
 
-            $conversation->update(['last_message_at' => now()]);
-
-            MessageRead::firstOrCreate(
-                ['message_id' => $message->id, 'user_id' => $me->id],
-                ['read_at' => now()]
-            );
-
-            ConversationParticipant::where('conversation_id', $conversation->id)
-                ->where('user_id', $me->id)
-                ->update(['last_read_at' => now()]);
+            $this->touchAfterWrite($conversation, $message, $me);
 
             return $message;
         });
 
-        return $message->fresh()->load(self::MESSAGE_RELATIONS);
+        return $this->reload($message, $me);
+    }
+
+    /**
+     * После нового сообщения: диалог поднимается в списке, а у автора
+     * оно сразу прочитано.
+     */
+    private function touchAfterWrite(Conversation $conversation, Message $message, User $me): void
+    {
+        $conversation->update(['last_message_at' => now()]);
+
+        MessageRead::firstOrCreate(
+            ['message_id' => $message->id, 'user_id' => $me->id],
+            ['read_at' => now()]
+        );
+
+        ConversationParticipant::where('conversation_id', $conversation->id)
+            ->where('user_id', $me->id)
+            ->update(['last_read_at' => now()]);
+    }
+
+    /** Свежая копия сообщения со связями и карточками ссылок. */
+    public function reload(Message $message, ?User $me = null): Message
+    {
+        $message = $message->fresh()->load(self::MESSAGE_RELATIONS);
+
+        app(ChatCardService::class)->attach(collect([$message]), $me);
+
+        return $message;
     }
 
     /**
@@ -293,11 +351,18 @@ class ChatService
             ]);
         }
 
+        // Подарок и служебная отметка — события своего диалога, их не пересылают
+        if ($message->kind !== Message::KIND_TEXT) {
+            throw ValidationException::withMessages([
+                'message' => ['Это сообщение нельзя переслать.'],
+            ]);
+        }
+
         $forwarded = DB::transaction(function () use ($message, $target, $me) {
             $copy = Message::create([
                 'conversation_id' => $target->id,
                 'user_id' => $me->id,
-                'forwarded_from_user_id' => $message->user_id,
+                'forwarded_from_user_id' => $message->forwarded_from_user_id ?: $message->user_id,
                 'body' => $message->body,
             ]);
 
@@ -310,52 +375,74 @@ class ChatService
                     'mime' => $attachment->mime,
                     'size' => $attachment->size,
                     'is_image' => $attachment->is_image,
+                    'is_voice' => $attachment->is_voice,
+                    'duration' => $attachment->duration,
                 ]);
             }
 
-            $target->update(['last_message_at' => now()]);
-
-            MessageRead::firstOrCreate(
-                ['message_id' => $copy->id, 'user_id' => $me->id],
-                ['read_at' => now()]
-            );
-
-            ConversationParticipant::where('conversation_id', $target->id)
-                ->where('user_id', $me->id)
-                ->update(['last_read_at' => now()]);
+            $this->touchAfterWrite($target, $copy, $me);
 
             return $copy;
         });
 
-        return $forwarded->fresh()->load(self::MESSAGE_RELATIONS);
+        return $this->reload($forwarded, $me);
     }
 
     /**
      * Изменить текст своего сообщения (в течение суток).
      */
-    public function updateMessage(Message $message, string $body): Message
+    public function updateMessage(Message $message, User $me, string $body): Message
     {
-        if ($message->created_at && $message->created_at->diffInHours(now()) > 24) {
+        if ($message->created_at && abs($message->created_at->diffInHours(now())) > 24) {
             throw ValidationException::withMessages([
                 'body' => ['Редактировать сообщение можно в течение 24 часов.'],
             ]);
         }
 
+        $stickers = app(\App\Domains\Shop\Services\StickerService::class);
+
+        /*
+         * Подарок, отметку и стикер не правят. А правка текста в метку
+         * стикера обходила проверку покупки набора.
+         */
+        if ($message->kind !== Message::KIND_TEXT || preg_match($stickers::PATTERN, (string) $message->body)) {
+            throw ValidationException::withMessages([
+                'body' => ['Это сообщение нельзя изменить.'],
+            ]);
+        }
+
+        $body = trim($body);
+
+        if ($body === '' && $message->attachments()->doesntExist()) {
+            throw ValidationException::withMessages([
+                'body' => ['Сообщение не может быть пустым.'],
+            ]);
+        }
+
+        $stickers->guard($me, $body);
+
         $message->update([
-            'body' => trim($body),
+            'body' => $body,
             'edited_at' => now(),
         ]);
 
-        return $message->fresh()->load(self::MESSAGE_RELATIONS);
+        return $this->reload($message, $me);
     }
 
     public function deleteMessage(Message $message): void
     {
-        $conversationId = $message->conversation_id;
+        $conversation = $message->conversation;
 
         $message->delete();
 
-        Conversation::whereKey($conversationId)->update(['last_message_at' => now()]);
+        /*
+         * Время диалога — по последнему оставшемуся сообщению. Раньше
+         * ставилось «сейчас», и удаление старого сообщения поднимало
+         * диалог наверх списка.
+         */
+        $last = Message::where('conversation_id', $conversation->id)->max('created_at');
+
+        $conversation->update(['last_message_at' => $last ?? $conversation->created_at]);
     }
 
     /* ----------------------------- Вложения ----------------------------- */
@@ -454,10 +541,8 @@ class ChatService
         $conversationIds = ConversationParticipant::where('user_id', $me->id)
             ->pluck('conversation_id');
 
-        return Message::query()
+        return $this->unreadQuery($me)
             ->whereIn('conversation_id', $conversationIds)
-            ->where('user_id', '!=', $me->id)
-            ->whereDoesntHave('reads', fn ($q) => $q->where('user_id', $me->id))
             ->count();
     }
 
@@ -517,10 +602,18 @@ class ChatService
             return [];
         }
 
+        /*
+         * % и _ в запросе — обычные символы, а не шаблон LIKE. Экранируем
+         * восклицательным знаком: обратная косая в MySQL сама экранирует
+         * кавычку и ломает запрос.
+         */
+        $escaped = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $query);
+
         $messages = Message::query()
             ->where('conversation_id', $conversation->id)
+            ->where('kind', Message::KIND_TEXT)
             ->whereNotNull('body')
-            ->where('body', 'like', '%' . $query . '%')
+            ->whereRaw("body like ? escape '!'", ['%' . $escaped . '%'])
             ->with(['user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,name_icon,is_verified'])
             ->orderByDesc('id')
             ->limit($limit)
@@ -600,6 +693,7 @@ class ChatService
         }
 
         MessageAttachment::whereIn('id', $attachmentIds)
+            ->where('user_id', $message->user_id)
             ->whereNull('message_id')
             ->update(['message_id' => $message->id]);
     }
@@ -623,8 +717,11 @@ class ChatService
      *
      * @param  iterable<Message>  $messages
      */
-    private function presentMessages(iterable $messages, ?User $me): array
+    private function presentMessages(Collection $messages, ?User $me): array
     {
+        // Карточки ссылок — одной пачкой на всю страницу истории
+        app(ChatCardService::class)->attach($messages, $me);
+
         $request = request();
 
         $previous = $request->getUserResolver();
@@ -648,6 +745,14 @@ class ChatService
     public function conversationPayload(Conversation $conversation): array
     {
         return $conversation->load([...self::CONVERSATION_RELATIONS, 'pinnedMessage.user:id,username'])->toArray();
+    }
+
+    /** Последнее сообщение диалога для превью в списке (после удаления). */
+    public function lastMessagePayload(Conversation $conversation): ?array
+    {
+        $last = $conversation->lastMessage()->with(['user:id,username,avatar', 'attachments'])->first();
+
+        return $last?->toArray();
     }
 
     /**
@@ -676,7 +781,12 @@ class ChatService
         $conversation->forceFill(['pinned_message_id' => $message?->id])->save();
     }
 
-    /** [{emoji, count, mine}] в порядке первой реакции. */
+    /**
+     * [{emoji, count, mine, user_ids}] в порядке первой реакции.
+     *
+     * user_ids нужны событию по сокету: оно одно на всех, и «моя ли
+     * реакция» каждый получатель считает сам.
+     */
     public static function groupReactions($reactions, ?int $meId): array
     {
         return collect($reactions)
@@ -685,8 +795,84 @@ class ChatService
                 'emoji' => $emoji,
                 'count' => $group->count(),
                 'mine' => $meId !== null && $group->contains('user_id', $meId),
+                'user_ids' => $group->pluck('user_id')->map(fn ($id) => (int) $id)->values()->all(),
             ])
             ->values()
             ->all();
+    }
+
+    /* ----------------------------- Подарок ----------------------------- */
+
+    /**
+     * Подарок монет собеседнику прямо из личного диалога.
+     *
+     * Деньги идут через CoinService::gift — те же правила, что у подарка
+     * из кошелька: только другу, мин/макс, дневной лимит и комиссия. В
+     * ленте остаётся сообщение-посылка с суммой.
+     */
+    public function gift(Conversation $conversation, User $me, int $amount, ?string $note): Message
+    {
+        if (! $conversation->isDirect()) {
+            throw ValidationException::withMessages([
+                'amount' => ['Монеты можно подарить только в личном диалоге.'],
+            ]);
+        }
+
+        $partnerId = $conversation->participants()->where('user_id', '!=', $me->id)->value('user_id');
+        $partner = $partnerId ? User::find($partnerId) : null;
+
+        if (! $partner) {
+            throw ValidationException::withMessages(['amount' => ['Собеседник не найден.']]);
+        }
+
+        $note = trim((string) $note);
+
+        // Подпись к подарку — обычный текст, метка стикера в ней не пройдёт
+        app(\App\Domains\Shop\Services\StickerService::class)->guard($me, $note);
+
+        $message = DB::transaction(function () use ($conversation, $me, $partner, $amount, $note) {
+            try {
+                [$received, $fee] = \App\Domains\Wallet\Services\CoinService::gift($me, $partner, $amount);
+            } catch (\RuntimeException $e) {
+                throw ValidationException::withMessages(['amount' => [$e->getMessage()]]);
+            }
+
+            $message = Message::create([
+                'conversation_id' => $conversation->id,
+                'user_id' => $me->id,
+                'kind' => Message::KIND_GIFT,
+                'body' => $note,
+                'meta' => ['amount' => $amount, 'received' => $received, 'fee' => $fee],
+            ]);
+
+            $this->touchAfterWrite($conversation, $message, $me);
+
+            return $message;
+        });
+
+        return $this->reload($message, $me);
+    }
+
+    /* ----------------------------- Голосовые ----------------------------- */
+
+    /**
+     * Голосовое сообщение «про запас», как обычное вложение: id потом
+     * уходит при отправке. Длительность пишет запись в браузере.
+     */
+    public function uploadVoice(User $me, UploadedFile $file, int $duration): MessageAttachment
+    {
+        $path = $file->store('chat/voice/' . now()->format('Y/m'), 'public');
+
+        return MessageAttachment::create([
+            'message_id' => null,
+            'user_id' => $me->id,
+            'original_name' => 'voice-' . now()->format('Ymd-His') . '.' . ($file->guessExtension() ?: 'webm'),
+            'path' => $path,
+            'mime' => $file->getMimeType() ?: $file->getClientMimeType(),
+            'size' => $file->getSize(),
+            'is_image' => false,
+            'is_voice' => true,
+            'duration' => max(1, min(self::VOICE_MAX_SECONDS, $duration)),
+        ]);
     }
 }

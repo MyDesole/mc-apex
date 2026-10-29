@@ -3938,3 +3938,247 @@ opacity: 0.35;
     display: none;
   }
 }
+
+/* =========================================================
+   МЕССЕНДЖЕР: беседы, подарки, голосовые, черновики
+   ========================================================= */
+
+.conv-share {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin: 8px 10px 0;
+  padding: 9px 10px;
+
+  color: #ddd6fe;
+  font-size: 12px;
+
+  background: rgba(124, 58, 237, 0.14);
+  border: 1px dashed rgba(167, 139, 250, 0.5);
+  border-radius: 6px;
+}
+
+.conv-share span {
+  flex: 1;
+}
+
+.conv-share button {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+
+  color: inherit;
+  background: transparent;
+  border: 0;
+
+  cursor: pointer;
+}
+
+.conv__group {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #120c1f;
+  font-size: 15px;
+  font-weight: 850;
+
+  background: linear-gradient(135deg, #a78bfa, #5eead4);
+}
+
+.conv__group-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.conv__preview-draft {
+  color: #f87171;
+  font-weight: 700;
+}
+
+.chat__head-btn {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-left: auto;
+
+  color: #a8a3b8;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+
+  cursor: pointer;
+}
+
+.chat__head-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.msg-unread {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  margin: 12px 0 8px;
+
+  color: #fbbf24;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.msg-unread::before,
+.msg-unread::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, rgba(251, 191, 36, 0.6) 0 6px, transparent 6px 10px);
+}
+
+.msg-system {
+  display: flex;
+  justify-content: center;
+
+  margin: 8px 0;
+}
+
+.msg-system span {
+  max-width: min(90%, 460px);
+  padding: 5px 12px;
+
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+}
+
+.msg__bubble--gift {
+  background: linear-gradient(160deg, rgba(251, 191, 36, 0.16), rgba(124, 58, 237, 0.12)) !important;
+  border: 1px solid rgba(251, 191, 36, 0.45) !important;
+}
+
+.msg__gift {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 4px 2px 6px;
+}
+
+.msg__gift-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.msg__gift-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.msg__gift-amount {
+  color: #fbbf24;
+  font-size: 17px;
+  font-weight: 850;
+}
+
+.msg__gift-fee {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.msg__cards {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.chat__to-bottom {
+  position: absolute;
+  right: 18px;
+  bottom: calc(100% + 12px);
+  z-index: 5;
+
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+
+  color: #ede9f6;
+  background: #1d1628;
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+
+  cursor: pointer;
+}
+
+.chat__to-bottom b {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+
+  min-width: 20px;
+  padding: 2px 5px;
+
+  color: #120c1f;
+  font-size: 11px;
+  text-align: center;
+
+  background: #a78bfa;
+  border-radius: 4px;
+}
+
+.chat-gift {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.chat-gift__toggle.is-open {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+}
+
+.chat-gift__panel {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 0;
+  z-index: 30;
+}
+
+.chat__form.is-recording > :not(.voice-rec) {
+  display: none;
+}
+
+.action-sheet__item--danger {
+  color: #fca5a5;
+}
+
+@media (max-width: 480px) {
+  .chat-gift__panel {
+    position: fixed;
+    right: 16px;
+    bottom: 90px;
+    left: 16px;
+  }
+
+  .chat__to-bottom {
+    right: 12px;
+  }
+}

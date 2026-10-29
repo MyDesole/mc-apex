@@ -8,11 +8,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class MessageAttachment extends Model
 {
     protected $fillable = [
-        'message_id', 'user_id', 'original_name', 'path', 'mime', 'size', 'is_image',
+        'message_id', 'user_id', 'original_name', 'path', 'mime', 'size', 'is_image', 'is_voice', 'duration',
     ];
 
     protected $casts = [
         'is_image' => 'boolean',
+        'is_voice' => 'boolean',
+        'duration' => 'integer',
         'size' => 'integer',
     ];
 

@@ -338,6 +338,25 @@ Route::middleware('auth:sanctum')->group(function () {
             ->whereNumber('message');
         Route::delete('/messages/{message}', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'destroy'])
             ->whereNumber('message');
+
+        // --- ПОДАРОК МОНЕТ И ГОЛОСОВЫЕ — apex:chat-gift-voice ---
+        Route::post('/conversations/{conversation}/gift', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'gift'])
+            ->whereNumber('conversation')
+            ->middleware('throttle:10,1');
+        Route::post('/voice', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'uploadVoice'])
+            ->middleware('throttle:30,1');
+
+        // --- ГРУППОВЫЕ БЕСЕДЫ — apex:chat-groups ---
+        Route::post('/groups', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'createGroup'])
+            ->middleware('throttle:10,1');
+        Route::post('/groups/{conversation}/members', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'addMembers'])
+            ->whereNumber('conversation')
+            ->middleware('throttle:30,1');
+        Route::delete('/groups/{conversation}/members/{user}', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'removeMember'])
+            ->whereNumber(['conversation', 'user']);
+        Route::put('/groups/{conversation}',[\App\Domains\Chat\Controllers\Api\ChatController::class, 'renameGroup'])
+            ->whereNumber('conversation')
+            ->middleware('throttle:20,1');
     });
 
     /*

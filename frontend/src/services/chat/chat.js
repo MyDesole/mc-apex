@@ -102,7 +102,46 @@ export const chatApi = {
         return api.post('/chat/attachments', data)
     },
 
-    // Пометить диалог прочитанным
+    /**
+     * Голосовое: запись уходит «про запас», id потом — в send().
+     *
+     * @param {Blob} blob      запись с микрофона
+     * @param {number} duration длительность, секунд
+     */
+    uploadVoice(blob, duration) {
+        const data = new FormData()
+        const ext = blob.type.includes('mp4') ? 'm4a' : blob.type.includes('ogg') ? 'ogg' : 'webm'
+
+        data.append('file', blob, `voice.${ext}`)
+        data.append('duration', String(duration))
+
+        return api.post('/chat/voice', data)
+    },
+
+    // Подарить монеты собеседнику прямо из диалога
+    gift(conversationId, amount, note = '') {
+        return api.post(`/chat/conversations/${conversationId}/gift`, { amount, note })
+    },
+
+    /* ----------------------------- Беседы ----------------------------- */
+
+    createGroup(title, userIds) {
+        return api.post('/chat/groups', { title, user_ids: userIds })
+    },
+
+    addMembers(conversationId, userIds) {
+        return api.post(`/chat/groups/${conversationId}/members`, { user_ids: userIds })
+    },
+
+    // Исключить участника; свой id — выйти из беседы
+    removeMember(conversationId, userId) {
+        return api.delete(`/chat/groups/${conversationId}/members/${userId}`)
+    },
+
+    renameGroup(conversationId, title) {
+        return api.put(`/chat/groups/${conversationId}`, { title })
+    },
+
     /**
      * Сообщить собеседникам, что идёт набор текста.
      *

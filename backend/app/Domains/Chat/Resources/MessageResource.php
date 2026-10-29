@@ -27,7 +27,10 @@ class MessageResource extends JsonResource
         return [
             'id' => $message->id,
             'conversation_id' => $message->conversation_id,
+            'kind' => $message->kind ?? 'text',
             'body' => $message->body ?? '',
+            'meta' => $message->meta ?: null,
+            'cards' => $message->relationLoaded('linkCards') ? $message->getRelation('linkCards')->values()->all() : [],
             'created_at' => $message->created_at?->toIso8601String(),
             'edited_at' => $message->edited_at?->toIso8601String(),
             'user' => $this->userPayload(),
@@ -103,6 +106,7 @@ class MessageResource extends JsonResource
                     'id' => $a->id,
                     'name' => $a->original_name,
                     'is_image' => (bool) $a->is_image,
+                    'is_voice' => (bool) $a->is_voice,
                 ])->values()->all()
                 : [],
         ];
@@ -122,6 +126,8 @@ class MessageResource extends JsonResource
             'url' => $a->url,
             'size' => $a->human_size,
             'is_image' => (bool) $a->is_image,
+            'is_voice' => (bool) $a->is_voice,
+            'duration' => $a->duration,
         ])->values()->all();
     }
 }

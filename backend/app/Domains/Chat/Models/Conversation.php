@@ -13,6 +13,8 @@ class Conversation extends Model
 {
     protected $fillable = [
         'type',
+        'title',
+        'owner_id',
         'user_min_id',
         'user_max_id',
         'clan_id',
@@ -60,6 +62,22 @@ class Conversation extends Model
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'author_id');
+    }
+
+    /** Создатель групповой беседы: переименовывает и исключает. */
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function isGroup(): bool
+    {
+        return $this->type === 'group';
+    }
+
+    public function isDirect(): bool
+    {
+        return $this->type === 'direct';
     }
 
     /**

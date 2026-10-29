@@ -10,6 +10,7 @@ import PlayerShowcase from '@/components/players/PlayerShowcase.vue'
 import PlayerSeasons from '@/components/players/profile/PlayerSeasons.vue'
 import PlayerRatingBreakdown from '@/components/players/profile/PlayerRatingBreakdown.vue'
 import { openReport } from '@/composables/core/useReport.js'
+import ShareToChatButton from '@/components/chat/ShareToChatButton.vue'
 import { api } from '@/services/core/api.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 
@@ -151,6 +152,7 @@ watch(
             :friendship="friendship"
             @update="onFriendshipUpdate"
         />
+        <ShareToChatButton :path="`/players/${user.id}`" />
         <button
             v-if="auth.isAuthenticated"
             type="button"

@@ -14,13 +14,25 @@ class Message extends Model
         'user_id',
         'reply_to_id',
         'forwarded_from_user_id',
+        'kind',
         'body',
+        'meta',
         'edited_at',
     ];
 
     protected $casts = [
         'edited_at' => 'datetime',
+        'meta' => 'array',
     ];
+
+    /** Обычное сообщение. */
+    public const KIND_TEXT = 'text';
+
+    /** Подарок монет: сумма в meta. */
+    public const KIND_GIFT = 'gift';
+
+    /** Служебная отметка беседы: кто вошёл, вышел, переименовал. */
+    public const KIND_SYSTEM = 'system';
 
     public function conversation(): BelongsTo
     {

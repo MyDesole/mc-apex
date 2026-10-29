@@ -10,6 +10,22 @@ const newMessageArrived = ref(false)
 /** Последнее событие прочтения: кто и в каком диалоге прочитал. */
 const latestRead = ref(null)
 
+/**
+ * Последнее изменение в диалоге: правка, удаление, реакции, закреп,
+ * состав беседы. Раньше собеседник видел их только после перезагрузки.
+ */
+const latestChange = ref(null)
+
+/**
+ * Непрочитанные в шапке сайта. Общие на приложение: страница диалогов
+ * обновляет их ответом сервера сразу после прочтения, а не через минуту.
+ */
+export const chatUnread = ref(0)
+
+export function setChatUnread(value) {
+    chatUnread.value = Math.max(0, Number(value) || 0)
+}
+
 /** Кто сейчас печатает: { [conversationId]: { id, username, at } }. */
 const typingUsers = ref({})
 
@@ -53,6 +69,21 @@ export function useRealtimeMessages() {
         }, TYPING_TTL_MS))
     }
 
+    /** Пришло сообщение — значит автор допечатал: надпись гасим сразу. */
+    function clearTyping(conversationId, userId) {
+        const entry = typingUsers.value[conversationId]
+
+        if (!entry || entry.id !== userId) return
+
+        clearTimeout(typingTimers.get(conversationId))
+        typingTimers.delete(conversationId)
+
+        const next = { ...typingUsers.value }
+
+        delete next[conversationId]
+        typingUsers.value = next
+    }
+
     function subscribe() {
         if (!auth.user?.id || !window.Echo) return
         if (channel) return // уже подписаны
@@ -65,6 +96,8 @@ export function useRealtimeMessages() {
             // Свои сообщения (с другой вкладки) не озвучиваем
             const senderId = payload.message?.user_id ?? payload.message?.user?.id
             if (senderId !== auth.user?.id) playSound('message')
+
+            clearTyping(payload.message?.conversation_id, senderId)
             newMessageArrived.value = true
 
             setTimeout(() => {
@@ -83,6 +116,11 @@ export function useRealtimeMessages() {
         /* Собеседник печатает */
         channel.listen('.user.typing', (payload) => {
             markTyping(payload)
+        })
+
+        /* Правка, удаление, реакции, закреп, состав беседы */
+        channel.listen('.conversation.changed', (payload) => {
+            latestChange.value = payload
         })
     }
 
@@ -115,6 +153,9 @@ export function useRealtimeMessages() {
         latestMessage,
         newMessageArrived,
         latestRead,
+        latestChange,
         typingUsers,
+        chatUnread,
+        setChatUnread,
     }
 }

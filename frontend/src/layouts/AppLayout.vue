@@ -52,7 +52,7 @@ const {
   newNotificationArrived,
 } = useRealtimeNotifications()
 
-const { latestMessage } = useRealtimeMessages()
+const { latestMessage, chatUnread, setChatUnread } = useRealtimeMessages()
 
 const { pulse: clanPulse, attention: clanAttention } = useClanPulse()
 
@@ -108,8 +108,6 @@ const STAFF_LINKS = [
 
 const staffLinks = computed(() => STAFF_LINKS.filter((link) => link.roles.includes(auth.user?.role)))
 
-const chatUnread = ref(0)
-
 async function logout() {
   menuOpen.value = false
   mobileMenuOpen.value = false
@@ -137,7 +135,7 @@ async function loadChatUnread() {
 
   try {
     const data = await chatApi.unreadCount()
-    chatUnread.value = data.unread_count || 0
+    setChatUnread(data.unread_count)
   } catch (e) {
     // ignore
   }
@@ -163,17 +161,23 @@ function onClickOutside(e) {
 watch(latestMessage, (message) => {
   if (!message) return
 
-  loadChatUnread()
+  /*
+   * На странице диалогов счётчик ведёт она сама: открытый диалог тут же
+   * помечается прочитанным. Запрос отсюда успевал вернуть старое число,
+   * и в шапке висело «1» у уже прочитанного сообщения.
+   */
+  if (route.path.startsWith('/messages')) return
 
-  if (!route.path.startsWith('/messages')) {
-    startBlink()
-  }
+  loadChatUnread()
+  startBlink()
 })
 
-watch(() => route.path, (path) => {
+watch(() => route.path, (path, previous) => {
   if (path.startsWith('/messages')) {
     stopBlink()
-    setTimeout(loadChatUnread, 500)
+  } else if (previous?.startsWith('/messages')) {
+    // Ушли из диалогов — сверяемся с сервером
+    loadChatUnread()
   }
 })
 

@@ -26,6 +26,18 @@ import { mergeMessages } from '@/utils/chatMessages.js'
 const INTERVAL_MS = 2000
 
 /**
+ * Пока сокет жив, опрос — лишь страховка от потерянного события: раз в
+ * 15 секунд. Раньше он шёл каждые 2 секунды всегда, и каждый круг
+ * тянул данные диалога целиком.
+ */
+const LIVE_INTERVAL_MS = 15000
+
+/** Подключён ли сокет. Читаем напрямую: echo.js в тестах подменяется. */
+function socketAlive() {
+  return window.Echo?.connector?.pusher?.connection?.state === 'connected'
+}
+
+/**
  * Опрашивает сервер, пока открыт диалог.
  *
  * @param {import('vue').Ref<number|null>} conversationId  текущий диалог
@@ -47,10 +59,22 @@ export function useMessagePolling(conversationId, messages, options = {}) {
   /** Идёт ли запрос: медленный ответ не должен накладываться на следующий круг. */
   let inFlight = false
 
+  /** Когда был последний опрос. */
+  let lastTickAt = 0
+
+  /** Круг таймера: при живом сокете большинство кругов пропускаем. */
+  function scheduledTick() {
+    if (socketAlive() && Date.now() - lastTickAt < LIVE_INTERVAL_MS) return
+
+    tick()
+  }
+
   async function tick() {
     const id = conversationId.value
 
     if (!id || inFlight) return
+
+    lastTickAt = Date.now()
 
     inFlight = true
 
@@ -96,7 +120,7 @@ export function useMessagePolling(conversationId, messages, options = {}) {
     // Первый опрос сразу: вдруг соединение уже мертво
     tick()
 
-    timer = setInterval(tick, INTERVAL_MS)
+    timer = setInterval(scheduledTick, INTERVAL_MS)
   }
 
   function stop() {

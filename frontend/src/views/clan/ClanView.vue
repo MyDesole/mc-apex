@@ -13,6 +13,7 @@ import ClanApplications from '@/components/clan/dialogs/ClanApplications.vue'
 import TabTransition from '@/components/core/TabTransition.vue'
 import ClanEditModal from "@/components/clan/dialogs/ClanEditModal.vue";
 import PageState from '@/components/core/PageState.vue'
+import ShareToChatButton from '@/components/chat/ShareToChatButton.vue'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -184,6 +185,8 @@ onMounted(load)
       </div>
 
       <div class="header-actions">
+
+        <ShareToChatButton v-if="clan?.id" :path="`/clans/${clan.id}`" label="Поделиться" />
 
         <button v-if="isLeader" class="btn-settings" @click="showEdit = true">
           Настройки

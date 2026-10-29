@@ -15,6 +15,7 @@ import { useLiveChannel } from '@/composables/shop/useLiveChannel.js'
 import { pageHidden, useNow } from '@/composables/core/useNow.js'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { userLink } from '@/utils/links.js'
+import ShareToChatButton from '@/components/chat/ShareToChatButton.vue'
 
 const props = defineProps({
   lot: { type: Object, required: true },
@@ -223,6 +224,9 @@ onUnmounted(() => {
           <AppIcon icon="close" :size="16" />
         </button>
 
+        <ShareToChatButton class="lp__share" :path="`/auction?lot=${lot.id}`" />
+
+
         <!-- Лот -->
         <section class="lp__lot">
           <div class="lp__stage">
@@ -390,6 +394,13 @@ onUnmounted(() => {
   border: 1px solid color-mix(in srgb, var(--rar) 40%, rgba(255, 255, 255, 0.08));
   border-radius: 22px;
   box-shadow: 0 30px 80px -30px color-mix(in srgb, var(--rar) 60%, #000);
+}
+
+.lp__share {
+  position: absolute;
+  top: 12px;
+  right: 54px;
+  z-index: 2;
 }
 
 .lp__close {

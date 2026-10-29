@@ -153,7 +153,12 @@ function startWatchdog() {
      */
     const stuck = state === 'connecting' && Date.now() - lastOkAt > STUCK_MS
 
-    if (state === 'failed' || state === 'unavailable' || stuck) {
+    /*
+     * disconnected — тоже тупик: сам pusher-js из него не выходит, а
+     * намеренно соединение у нас никто не закрывает. Так застревало,
+     * если Reverb не отвечал в момент загрузки страницы.
+     */
+    if (state === 'failed' || state === 'unavailable' || state === 'disconnected' || stuck) {
       resetEcho()
       lastOkAt = Date.now()
     }

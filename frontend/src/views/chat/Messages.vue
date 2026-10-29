@@ -16,12 +16,19 @@ import { useMessagePolling } from '@/composables/chat/useMessagePolling.js'
 import { mergeMessages } from '@/utils/chatMessages.js'
 import { dayLabel, startsNewDay } from '@/utils/chatDates.js'
 import { openReport } from '@/composables/core/useReport.js'
+import ChatLinkCard from '@/components/chat/ChatLinkCard.vue'
+import ChatVoicePlayer from '@/components/chat/ChatVoicePlayer.vue'
+import ChatVoiceRecorder from '@/components/chat/ChatVoiceRecorder.vue'
+import ChatGiftPanel from '@/components/chat/ChatGiftPanel.vue'
+import ChatGroupModal from '@/components/chat/ChatGroupModal.vue'
+import PixelSprite from '@/components/shop/PixelSprite.vue'
+import { previewText, canEdit, withMine, conversationTime, readDrafts, writeDraft } from '@/utils/chatPreview.js'
 
 const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
 
-const { latestMessage, latestRead, typingUsers } = useRealtimeMessages()
+const { latestMessage, latestRead, latestChange, typingUsers, chatUnread, setChatUnread } = useRealtimeMessages()
 /* Присутствие подключается ниже: нужен activeConversation */
 
 
@@ -74,6 +81,21 @@ const {
 useMessagePolling(
     computed(() => activeConversation.value?.id ?? null),
     messages,
+    {
+      /*
+       * Опрос приносил сообщения, но не помечал их прочитанными: при
+       * мёртвом сокете у собеседника не вставала галочка, а у себя висел
+       * счётчик непрочитанных.
+       */
+      onNew(added) {
+        const fromOthers = added.filter((m) => m.user?.id !== auth.user?.id)
+
+        if (!fromOthers.length) return
+
+        noteArrivals(fromOthers.length)
+        markActiveRead()
+      },
+    },
 )
 
 /*
@@ -121,9 +143,11 @@ const otherParticipantsCount = computed(() => {
   return Math.max(0, (activeConversation.value.users || []).length - 1)
 })
 
+const isGroup = computed(() => activeConversation.value?.type === 'group')
+
 const directPartner = computed(() => {
   if (!activeConversation.value) return null
-  if (activeConversation.value.type === 'clan_message') return null
+  if (activeConversation.value.type !== 'direct') return null
 
   return (
       (activeConversation.value.users || []).find(
@@ -153,7 +177,7 @@ const directPartnerOnline = computed(() => {
 
 /** Онлайн ли кто-то из участников диалога в списке. */
 function conversationOnline(conversation) {
-  if (conversation.type === 'clan_message') return false
+  if (conversation.type !== 'direct') return false
 
   return (conversation.users || [])
       .filter((u) => u.id !== auth.user?.id)
@@ -209,6 +233,133 @@ const hiddenCount = computed(() =>
     Math.max(0, messages.value.length - visibleMessages.value.length),
 )
 
+/** Первое непрочитанное при открытии: перед ним — «Новые сообщения». */
+const firstUnreadId = ref(null)
+
+/** Сколько новых пришло, пока лента прокручена вверх. */
+const newBelow = ref(0)
+
+/** Лента у нижнего края: новое сообщение можно показать прокруткой. */
+const atBottom = ref(true)
+
+function isNearBottom() {
+  const el = messagesEl.value
+
+  return !el || el.scrollHeight - el.scrollTop - el.clientHeight < 150
+}
+
+/** Новые сообщения пришли: если лента не внизу, растёт счётчик на кнопке. */
+function noteArrivals(count) {
+  if (!isNearBottom()) newBelow.value += count
+}
+
+function jumpToBottom() {
+  newBelow.value = 0
+  scrollToBottom(true)
+}
+
+/*
+ * Прочтение открытого диалога. Только когда вкладку видно: раньше
+ * сообщение в фоновой вкладке сразу получало галочку «прочитано».
+ * Отложенное прочтение срабатывает при возврате на вкладку.
+ */
+let markTimer = null
+let readPending = false
+
+function markActiveRead() {
+  const id = activeConversation.value?.id
+
+  if (!id) return
+
+  if (document.visibilityState !== 'visible') {
+    readPending = true
+
+    return
+  }
+
+  readPending = false
+  clearTimeout(markTimer)
+
+  markTimer = setTimeout(async () => {
+    try {
+      const data = await chatApi.markConversationRead(id)
+
+      setChatUnread(data.unread_count)
+    } catch {
+      // прочитаем при следующем сообщении
+    }
+  }, 250)
+}
+
+function onVisibility() {
+  if (document.visibilityState === 'visible' && readPending) markActiveRead()
+}
+
+// ============================================
+// ЧЕРНОВИКИ
+// ============================================
+
+/*
+ * Недописанное сообщение запоминается для каждого диалога. Раньше текст
+ * оставался в поле при переходе в другой диалог — и легко уходил не тому.
+ */
+const drafts = ref(readDrafts())
+
+/** Какому диалогу принадлежит текст в поле. */
+let draftOwner = null
+let draftTimer = null
+
+function saveDraftNow() {
+  clearTimeout(draftTimer)
+
+  if (draftOwner) drafts.value = writeDraft(drafts.value, draftOwner, body.value)
+}
+
+function switchDraft(id) {
+  saveDraftNow()
+  draftOwner = id
+  body.value = id ? (drafts.value[id] ?? '') : ''
+  nextTick(autoGrow)
+}
+
+function draftOf(conversation) {
+  return conversation.id !== activeConversation.value?.id ? drafts.value[conversation.id] : null
+}
+
+// ============================================
+// ПОДЕЛИТЬСЯ
+// ============================================
+
+/**
+ * Ссылка, которой делятся со страницы игрока, клана или лота: приходит
+ * в адресе (?share=), подставляется в поле выбранного диалога.
+ */
+const shareText = ref('')
+
+function takeShare() {
+  const value = String(route.query.share || '').trim()
+
+  if (!value) return
+
+  shareText.value = value.startsWith('/') ? `${window.location.origin}${value}` : value
+
+  const { share: _drop, ...rest } = route.query
+
+  router.replace({ query: rest })
+}
+
+function applyShare() {
+  if (!shareText.value) return
+
+  body.value = body.value.trim() ? `${body.value.trim()} ${shareText.value}` : shareText.value
+  shareText.value = ''
+
+  nextTick(() => {
+    autoGrow()
+    inputEl.value?.focus()
+  })
+}
+
 // ============================================
 // ВЛОЖЕНИЯ
 // ============================================
@@ -223,17 +374,29 @@ const attachInput = ref(null)
 // ЗАГРУЗКА ДИАЛОГОВ
 // ============================================
 
-async function loadConversations() {
-  loadingList.value = true
+async function loadConversations(silent = false) {
+  if (!silent) loadingList.value = true
 
   try {
     const data = await chatApi.conversations()
     conversations.value = data.conversations ?? []
   } catch (e) {
-    error.value = e.message || 'Не удалось загрузить диалоги'
+    if (!silent) error.value = e.message || 'Не удалось загрузить диалоги'
   } finally {
     loadingList.value = false
   }
+}
+
+/*
+ * Без сокета список диалогов не узнавал о новых сообщениях до перезагрузки
+ * страницы. Пока соединения нет, сверяемся с сервером раз в 20 секунд.
+ */
+let listTimer = null
+
+function refreshListIfOffline() {
+  const alive = window.Echo?.connector?.pusher?.connection?.state === 'connected'
+
+  if (!alive && document.visibilityState === 'visible') loadConversations(true)
 }
 
 /** Номер последнего открытия: ответ на прошлое открытие не должен затереть новое. */
@@ -250,6 +413,11 @@ async function openConversation(id) {
 
   lastReadAt.value = restReads
 
+  if (draftOwner !== id) switchDraft(id)
+
+  showGift.value = false
+  newBelow.value = 0
+
   try {
     const data = await chatApi.show(id, { limit: 40 })
 
@@ -258,6 +426,12 @@ async function openConversation(id) {
 
     activeConversation.value = data.conversation
     messages.value = data.messages ?? []
+    firstUnreadId.value = data.first_unread_id ?? null
+
+    // Открытие помечает диалог прочитанным — сверяем счётчик в шапке
+    chatApi.unreadCount().then((r) => setChatUnread(r.unread_count)).catch(() => {})
+
+    applyShare()
 
     oldestId.value =
         data.oldest_id ??
@@ -280,7 +454,14 @@ async function openConversation(id) {
       })
     }
 
-    await scrollToBottom()
+    // Есть непрочитанные — открываемся на разделителе, а не в самом низу
+    if (firstUnreadId.value && messages.value.some((m) => m.id === firstUnreadId.value)) {
+      await nextTick()
+      await nextTick()
+      document.querySelector('.msg-unread')?.scrollIntoView({ block: 'start' })
+    } else {
+      await scrollToBottom()
+    }
   } catch (e) {
     if (request === openRequest) error.value = e.message || 'Не удалось открыть диалог'
   } finally {
@@ -351,6 +532,10 @@ function onMessagesScroll() {
   const el = messagesEl.value
   if (!el) return
 
+  atBottom.value = isNearBottom()
+
+  if (atBottom.value) newBelow.value = 0
+
   if (
       renderLimit.value < messages.value.length &&
       el.scrollTop < 400
@@ -385,6 +570,7 @@ async function sendMessage() {
   const attachmentsBackup = [...pendingAttachments.value]
 
   body.value = ''
+  saveDraftNow()
   replyTo.value = null
   pendingAttachments.value = []
   sending.value = true
@@ -400,30 +586,12 @@ async function sendMessage() {
         attachmentIds,
     )
 
-    // Опрос мог уже принести это сообщение, пока шла отправка
-    messages.value = mergeMessages(messages.value, data.message).list
-    renderLimit.value = RENDER_WINDOW
-
-    const idx = conversations.value.findIndex(
-        c => c.id === activeConversation.value.id,
-    )
-
-    if (idx !== -1) {
-      conversations.value[idx].last_message = data.message
-      conversations.value[idx].last_message_at =
-          data.message.created_at
-
-      const [conversation] =
-          conversations.value.splice(idx, 1)
-
-      conversations.value.unshift(conversation)
-    }
-
-    await scrollToBottom(true)
+    await pushOwnMessage(data.message)
   } catch (e) {
     error.value = e.message || 'Не удалось отправить'
 
     body.value = text
+    saveDraftNow()
     pendingAttachments.value = attachmentsBackup
     replyTo.value = replyId
         ? messages.value.find(m => m.id === replyId)
@@ -431,6 +599,142 @@ async function sendMessage() {
   } finally {
     sending.value = false
   }
+}
+
+/**
+ * Своё сообщение в ленту и наверх списка диалогов.
+ *
+ * Общая точка для текста, стикера, голосового и подарка: опрос мог уже
+ * принести это сообщение, поэтому только через слияние.
+ */
+async function pushOwnMessage(message, conversationId = activeConversation.value?.id) {
+  if (conversationId === activeConversation.value?.id) {
+    messages.value = mergeMessages(messages.value, message).list
+    renderLimit.value = RENDER_WINDOW
+    // Своё сообщение — всё выше уже прочитано
+    firstUnreadId.value = null
+  }
+
+  bumpConversation(conversationId, message)
+
+  await scrollToBottom(true)
+}
+
+/** Диалог с новым сообщением — наверх списка, с новым превью. */
+function bumpConversation(conversationId, message) {
+  const idx = conversations.value.findIndex((c) => c.id === conversationId)
+
+  if (idx === -1) return false
+
+  const [conversation] = conversations.value.splice(idx, 1)
+
+  conversation.last_message = message
+  conversation.last_message_at = message.created_at
+  conversations.value.unshift(conversation)
+
+  return true
+}
+
+// ============================================
+// ГОЛОСОВЫЕ
+// ============================================
+
+const voiceRecording = ref(false)
+const voiceSending = ref(false)
+
+async function sendVoice({ blob, duration }) {
+  const conversationId = activeConversation.value?.id
+
+  if (!conversationId) return
+
+  voiceSending.value = true
+  error.value = ''
+
+  const replyId = replyTo.value?.id ?? null
+
+  try {
+    const uploaded = await chatApi.uploadVoice(blob, duration)
+    const data = await chatApi.send(conversationId, '', replyId, [uploaded.attachment.id])
+
+    replyTo.value = null
+    await pushOwnMessage(data.message, conversationId)
+  } catch (e) {
+    error.value = e.message || 'Не удалось отправить голосовое'
+  } finally {
+    voiceSending.value = false
+  }
+}
+
+// ============================================
+// ПОДАРОК
+// ============================================
+
+const showGift = ref(false)
+
+async function onGiftSent(data) {
+  showGift.value = false
+
+  // Баланс в шапке — сразу, как после покупки в магазине
+  if (auth.user && data.balance !== undefined) auth.user.apex_coins = data.balance
+
+  await pushOwnMessage(data.message)
+}
+
+// ============================================
+// БЕСЕДЫ
+// ============================================
+
+/** null — закрыто, 'create' — новая беседа, 'manage' — открытая. */
+const groupModal = ref(null)
+
+async function onGroupCreated(conversation) {
+  groupModal.value = null
+
+  await loadConversations()
+  router.push(`/messages/${conversation.id}`)
+}
+
+function onGroupUpdated(data) {
+  if (data.conversation) applyConversation(data.conversation)
+
+  if (data.message) pushOwnMessage(data.message, data.conversation?.id)
+}
+
+function onGroupLeft(id) {
+  groupModal.value = null
+  dropConversation(id)
+}
+
+/** Новые данные диалога: в открытый и в список. */
+function applyConversation(conversation) {
+  if (activeConversation.value?.id === conversation.id) {
+    activeConversation.value = { ...activeConversation.value, ...conversation }
+  }
+
+  const idx = conversations.value.findIndex((c) => c.id === conversation.id)
+
+  if (idx !== -1) {
+    conversations.value[idx] = { ...conversations.value[idx], ...conversation }
+  }
+}
+
+/** Диалога у меня больше нет: вышел из беседы или исключили. */
+function dropConversation(id) {
+  conversations.value = conversations.value.filter((c) => c.id !== id)
+  drafts.value = writeDraft(drafts.value, id, '')
+
+  if (activeConversation.value?.id === id) {
+    draftOwner = null
+    closeChat()
+  }
+}
+
+/** Название диалога для списка и шапки. */
+function conversationTitle(conversation) {
+  if (conversation.type === 'group') return conversation.title || 'Беседа'
+  if (conversation.type === 'clan_message') return conversation.clan?.name || 'Клан'
+
+  return (conversation.users || []).find((u) => u.id !== auth.user?.id)?.username || 'Диалог'
 }
 
 // ============================================
@@ -460,9 +764,27 @@ async function toggleStickers() {
 
 /** Стикер уходит обычным сообщением-меткой; сервер проверит, что набор есть. */
 async function sendSticker(pack, id) {
+  const conversationId = activeConversation.value?.id
+
+  if (!conversationId || sending.value) return
+
   stickerPanel.value = false
-  body.value = stickerToken(pack, id)
-  await sendMessage()
+  sending.value = true
+
+  /*
+   * Стикер уходит отдельно и не трогает поле ввода. Раньше он подменял
+   * собой набранный текст, и недописанное сообщение терялось.
+   */
+  try {
+    const data = await chatApi.send(conversationId, stickerToken(pack, id), replyTo.value?.id ?? null, [])
+
+    replyTo.value = null
+    await pushOwnMessage(data.message, conversationId)
+  } catch (e) {
+    error.value = e.message || 'Не удалось отправить стикер'
+  } finally {
+    sending.value = false
+  }
 }
 
 // ============================================
@@ -473,6 +795,8 @@ const editingId = ref(null)
 const editingBody = ref('')
 
 function startEdit(message) {
+  if (!canEdit(message, auth.user?.id)) return
+
   editingId.value = message.id
   editingBody.value = message.body || ''
 }
@@ -489,16 +813,7 @@ async function saveEdit(message) {
         editingBody.value,
     )
 
-    const idx = messages.value.findIndex(
-        m => m.id === message.id,
-    )
-
-    if (idx !== -1) {
-      messages.value[idx] = {
-        ...messages.value[idx],
-        ...data.message,
-      }
-    }
+    replaceMessage(data.message)
 
     cancelEdit()
   } catch (e) {
@@ -513,12 +828,59 @@ async function removeMessage(message) {
   try {
     await chatApi.deleteMessage(message.id)
 
-    messages.value = messages.value.filter(
-        m => m.id !== message.id,
-    )
+    forgetMessage(message.conversation_id, message.id)
   } catch (e) {
     error.value =
         e.message || 'Не удалось удалить сообщение'
+  }
+}
+
+/** Изменённое сообщение — в ленту, закреп и превью списка. */
+function replaceMessage(message) {
+  const idx = messages.value.findIndex((m) => m.id === message.id)
+
+  if (idx !== -1) {
+    messages.value[idx] = { ...messages.value[idx], ...message, reactions: messages.value[idx].reactions }
+  }
+
+  const active = activeConversation.value
+
+  if (active?.id === message.conversation_id && active.pinned_message?.id === message.id) {
+    activeConversation.value = { ...active, pinned_message: { ...active.pinned_message, body: message.body } }
+  }
+
+  const conversation = conversations.value.find((c) => c.id === message.conversation_id)
+
+  if (conversation?.last_message?.id === message.id) {
+    conversation.last_message = { ...conversation.last_message, body: message.body }
+  }
+}
+
+/** Перейти к сообщению, даже если оно выше загруженной истории. */
+async function goToMessage(id) {
+  if (!id) return
+
+  await ensureMessageLoaded(id)
+  await scrollToMessage(id)
+}
+
+/**
+ * Сообщение удалено (мной или собеседником): из ленты, из закрепа и из
+ * превью списка. Раньше закреп и превью показывали удалённый текст.
+ */
+function forgetMessage(conversationId, messageId, lastMessage) {
+  messages.value = messages.value.filter((m) => m.id !== messageId)
+
+  if (activeConversation.value?.id === conversationId && activeConversation.value.pinned_message_id === messageId) {
+    activeConversation.value = { ...activeConversation.value, pinned_message_id: null, pinned_message: null }
+  }
+
+  const conversation = conversations.value.find((c) => c.id === conversationId)
+
+  if (conversation && conversation.last_message?.id === messageId) {
+    conversation.last_message = lastMessage !== undefined
+        ? lastMessage
+        : (conversationId === activeConversation.value?.id ? messages.value[messages.value.length - 1] ?? null : null)
   }
 }
 
@@ -600,8 +962,12 @@ async function scrollToMessage(id) {
 }
 
 function closeChat() {
+  switchDraft(null)
+
   activeConversation.value = null
   messages.value = []
+  firstUnreadId.value = null
+  showGift.value = false
 
   clearReply()
   closeForward()
@@ -625,6 +991,9 @@ function closeChat() {
 function onBodyInput() {
   autoGrow()
   notifyTyping()
+
+  clearTimeout(draftTimer)
+  draftTimer = setTimeout(saveDraftNow, 400)
 }
 
 function autoGrow() {
@@ -699,10 +1068,18 @@ async function toggleReaction(message, emoji) {
 
   try {
     const res = await chatApi.react(message.id, emoji)
-    message.reactions = res.reactions ?? []
+
+    // Объект из меню действий может быть копией — обновляем ленту по id
+    setReactions(message.id, res.reactions ?? [])
   } catch (e) {
     error.value = e.message || 'Не удалось поставить реакцию.'
   }
+}
+
+function setReactions(messageId, reactions) {
+  const target = messages.value.find((m) => m.id === messageId)
+
+  if (target) target.reactions = withMine(reactions, auth.user?.id)
 }
 
 async function setPin(messageId) {
@@ -997,6 +1374,24 @@ function actionReport() {
   reportMessage(message)
 }
 
+/*
+ * На телефоне нет наведения, и кнопок «изменить» и «удалить» не было
+ * видно вовсе: своё сообщение нельзя было ни поправить, ни удалить.
+ */
+function actionEdit() {
+  const message = actionSheetMessage.value
+
+  closeActionSheet()
+  startEdit(message)
+}
+
+function actionDelete() {
+  const message = actionSheetMessage.value
+
+  closeActionSheet()
+  removeMessage(message)
+}
+
 function actionForward() {
   if (!actionSheetMessage.value) return
 
@@ -1150,6 +1545,7 @@ function resetSearch() {
   searchResults.value = {
     users: [],
     clans: [],
+    messages: [],
   }
 
   searchLoading.value = false
@@ -1220,12 +1616,15 @@ watch(
       if (id) {
         openConversation(Number(id))
       } else {
+        switchDraft(null)
         activeConversation.value = null
         messages.value = []
       }
     },
     { immediate: true },
 )
+
+watch(() => route.query.share, takeShare, { immediate: true })
 
 watch(
     () => messages.value.length,
@@ -1305,36 +1704,107 @@ watch(latestMessage, async message => {
 
   if (!message) return
 
+  const mine = message.user?.id === auth.user?.id
+
+  // Подарили монеты — баланс в шапке растёт сразу
+  if (!mine && message.kind === 'gift' && auth.user) {
+    auth.user.apex_coins = (auth.user.apex_coins ?? 0) + Number(message.meta?.received || 0)
+  }
+
   if (
       activeConversation.value &&
       message.conversation_id ===
       activeConversation.value.id
   ) {
     // Опрос мог принести его раньше сокета
-    messages.value = mergeMessages(messages.value, message).list
+    const { list, added } = mergeMessages(messages.value, message)
 
-    chatApi
-        .show(message.conversation_id)
-        .catch(() => {})
+    if (added.length && !mine) noteArrivals(1)
+
+    messages.value = list
+    bumpConversation(message.conversation_id, message)
+
+    /*
+     * Раньше здесь заново грузилась вся история (40 сообщений) только
+     * ради отметки прочтения — и в фоновой вкладке тоже.
+     */
+    if (!mine) markActiveRead()
+
+    // Служебная отметка беседы: состав или название могли измениться
+    if (message.kind === 'system') refreshActiveConversation()
+  } else if (bumpConversation(message.conversation_id, message)) {
+    if (!mine) {
+      const conversation = conversations.value[0]
+
+      conversation.unread_count = (conversation.unread_count || 0) + 1
+      setChatUnread(chatUnread.value + 1)
+    }
   } else {
-    const idx = conversations.value.findIndex(
-        c => c.id === message.conversation_id,
-    )
+    // Новый диалог или беседа, куда позвали
+    loadConversations()
 
-    if (idx !== -1) {
-      conversations.value[idx].unread_count =
-          (conversations.value[idx].unread_count || 0) + 1
+    if (!mine) setChatUnread(chatUnread.value + 1)
+  }
+})
 
-      conversations.value[idx].last_message = message
-      conversations.value[idx].last_message_at =
-          message.created_at
+/** Данные открытого диалога без истории: состав, название, закреп. */
+async function refreshActiveConversation() {
+  const id = activeConversation.value?.id
 
-      const [conversation] =
-          conversations.value.splice(idx, 1)
+  if (!id) return
 
-      conversations.value.unshift(conversation)
-    } else {
-      loadConversations()
+  try {
+    const data = await chatApi.show(id, { limit: 1, markRead: false })
+
+    if (activeConversation.value?.id === id) applyConversation(data.conversation)
+  } catch {
+    // не страшно: обновится при следующем открытии
+  }
+}
+
+/*
+ * Изменения в диалогах от собеседников и других вкладок: правка,
+ * удаление, реакции, закреп, состав беседы.
+ */
+watch(latestChange, (change) => {
+  if (!change) return
+
+  const id = change.conversation_id
+  const isActive = activeConversation.value?.id === id
+
+  switch (change.kind) {
+    case 'message.updated':
+      if (change.message) replaceMessage(change.message)
+      break
+
+    case 'message.deleted':
+      forgetMessage(id, change.message_id, change.last_message ?? null)
+      break
+
+    case 'reactions':
+      if (isActive) setReactions(change.message_id, change.reactions)
+      break
+
+    case 'pinned':
+      if (isActive) {
+        activeConversation.value = {
+          ...activeConversation.value,
+          pinned_message_id: change.pinned_message_id,
+          pinned_message: change.pinned_message,
+        }
+      }
+      break
+
+    case 'conversation': {
+      const conversation = change.conversation
+
+      // Меня исключили — беседа пропадает из списка
+      if (conversation && !(conversation.users || []).some((u) => u.id === auth.user?.id)) {
+        dropConversation(id)
+      } else if (conversation) {
+        applyConversation(conversation)
+      }
+      break
     }
   }
 })
@@ -1344,6 +1814,8 @@ watch(latestMessage, async message => {
 // ============================================
 
 function onClickOutsideSearch(e) {
+  if (showGift.value && !e.target.closest('.chat-gift')) showGift.value = false
+
   if (!searchOpen.value) return
   if (e.target.closest('.search-dropdown')) return
   if (e.target.closest('.conversations__search-wrap')) return
@@ -1396,11 +1868,19 @@ function onViewportChange() {
 onMounted(() => {
   window.visualViewport?.addEventListener('resize', onViewportChange)
   window.visualViewport?.addEventListener('scroll', onViewportChange)
+  document.addEventListener('visibilitychange', onVisibility)
+  listTimer = setInterval(refreshListIfOffline, 20000)
 })
 
 onUnmounted(() => {
   window.visualViewport?.removeEventListener('resize', onViewportChange)
   window.visualViewport?.removeEventListener('scroll', onViewportChange)
+  document.removeEventListener('visibilitychange', onVisibility)
+
+  // Ушли со страницы посреди фразы — черновик сохраняем сразу
+  saveDraftNow()
+  clearTimeout(markTimer)
+  clearInterval(listTimer)
 })
 
 onMounted(() => {
@@ -1492,6 +1972,20 @@ onUnmounted(() => {
             ref="searchWrapEl"
             class="conversations__search-wrap"
         >
+          <!-- Новая групповая беседа с друзьями -->
+          <button
+              class="conversations__new"
+              type="button"
+              title="Новая беседа"
+              @click.stop="groupModal = 'create'"
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M19 8v6M22 11h-6" />
+            </svg>
+          </button>
+
           <button
               class="conversations__new"
               :class="{
@@ -1573,6 +2067,15 @@ onUnmounted(() => {
         </span>
       </div>
 
+      <!-- Ссылкой поделились со страницы игрока, клана или лота -->
+      <div v-if="shareText" class="conv-share">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17l5-5-5-5" /><path d="M4 18v-2a4 4 0 0 1 4-4h12" /></svg>
+        <span>Выбери диалог — ссылка встанет в поле ввода.</span>
+        <button type="button" aria-label="Отменить" @click="shareText = ''">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+        </button>
+      </div>
+
       <!-- Фильтры списка -->
       <div v-if="!loadingList && conversations.length" class="conv-filters">
         <button
@@ -1652,6 +2155,11 @@ onUnmounted(() => {
                 <!-- У клана нет статуса одного игрока: точку не показываем -->
               </template>
 
+              <!-- Беседа: первая буква названия на плашке -->
+              <div v-else-if="c.type === 'group'" class="conv__group">
+                {{ (c.title || 'Б').charAt(0).toUpperCase() }}
+              </div>
+
               <template v-else>
                 <template
                     v-for="u in (c.users || []).filter(
@@ -1698,6 +2206,11 @@ onUnmounted(() => {
                   </span>
                 </template>
 
+                <template v-else-if="c.type === 'group'">
+                  <span class="conv__group-title">{{ c.title }}</span>
+                  <span class="conv__tag">{{ (c.users || []).length }}</span>
+                </template>
+
                 <template v-else>
                   <template
                       v-for="u in (c.users || []).filter(
@@ -1714,12 +2227,18 @@ onUnmounted(() => {
               </div>
 
               <div class="conv__preview">
-                <template v-if="c.last_message">
-                  <span class="conv__preview-author">
-                    {{ c.last_message.user?.username }}:
+                <!-- Недописанное сообщение важнее последнего -->
+                <template v-if="draftOf(c)">
+                  <span class="conv__preview-draft">Черновик:</span>
+                  {{ draftOf(c) }}
+                </template>
+
+                <template v-else-if="c.last_message">
+                  <span v-if="c.last_message.kind !== 'system'" class="conv__preview-author">
+                    {{ c.last_message.user?.id === auth.user?.id ? 'Вы' : c.last_message.user?.username }}:
                   </span>
 
-                  {{ parseSticker(c.last_message.body) ? `Стикер «${parseSticker(c.last_message.body).caption}»` : c.last_message.body }}
+                  {{ previewText(c.last_message) }}
                 </template>
 
                 <template v-else>
@@ -1733,17 +2252,7 @@ onUnmounted(() => {
                   v-if="c.last_message_at"
                   class="conv__time"
               >
-                {{
-                  new Date(
-                      c.last_message_at,
-                  ).toLocaleDateString(
-                      'ru-RU',
-                      {
-                        day: '2-digit',
-                        month: 'short',
-                      },
-                  )
-                }}
+                {{ conversationTime(c.last_message_at) }}
               </span>
 
               <span
@@ -1869,9 +2378,21 @@ onUnmounted(() => {
                 {{ activeConversation.clan?.name }}
               </div>
 
-              <div class="chat__head-sub">
-                Обращение от
-                {{ activeConversation.author?.username }}
+              <div class="chat__head-sub" :class="{ 'chat__head-sub--typing': typingPeer }">
+                <template v-if="typingPeer">{{ typingPeer.username }} печатает…</template>
+                <template v-else>Обращение от {{ activeConversation.author?.username }}</template>
+              </div>
+            </template>
+
+            <!-- Беседа: клик — участники и настройки -->
+            <template v-else-if="isGroup">
+              <div class="chat__head-name chat__head-name--link" title="Участники беседы" @click="groupModal = 'manage'">
+                {{ activeConversation.title }}
+              </div>
+
+              <div class="chat__head-sub" :class="{ 'chat__head-sub--typing': typingPeer }">
+                <template v-if="typingPeer">{{ typingPeer.username }} печатает…</template>
+                <template v-else>Беседа · {{ (activeConversation.users || []).length }} участн.</template>
               </div>
             </template>
 
@@ -1906,19 +2427,35 @@ onUnmounted(() => {
             </template>
           </div>
 
+          <button
+              v-if="isGroup"
+              type="button"
+              class="chat__head-btn"
+              title="Участники беседы"
+              @click="groupModal = 'manage'"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          </button>
+
           <div class="chat__head-accent"></div>
         </header>
 
         <!-- Закреплённое сообщение: клик — перейти к нему -->
         <div v-if="activeConversation?.pinned_message" class="chat__pinned">
-          <button type="button" class="chat__pinned-body" @click="scrollToMessage(activeConversation.pinned_message.id)">
+          <button type="button" class="chat__pinned-body" @click="goToMessage(activeConversation.pinned_message.id)">
             <span class="chat__pinned-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5" /><path d="M9 10.8V4h6v6.8l3 3.2v2H6v-2z" /></svg></span>
             <span class="chat__pinned-text">
               <b>Закреплено{{ activeConversation.pinned_message.user ? ` · ${activeConversation.pinned_message.user.username}` : '' }}</b>
-              <span>{{ activeConversation.pinned_message.body || 'Вложение' }}</span>
+              <span>{{ previewText(activeConversation.pinned_message) || 'Вложение' }}</span>
             </span>
           </button>
-          <button type="button" class="chat__pinned-close" title="Открепить" @click="unpin">✕</button>
+          <button type="button" class="chat__pinned-close" title="Открепить" aria-label="Открепить" @click="unpin">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+          </button>
         </div>
 
         <!-- MESSAGES -->
@@ -1999,12 +2536,24 @@ onUnmounted(() => {
               <span>{{ dayLabel(m.created_at) }}</span>
             </div>
 
+            <!-- С этого места — то, что пришло, пока диалог был закрыт -->
+            <div v-if="m.id === firstUnreadId" class="msg-unread">
+              <span>Новые сообщения</span>
+            </div>
+
+            <!-- Служебная отметка беседы: кто вошёл, вышел, переименовал -->
+            <div v-if="m.kind === 'system'" :data-message-id="m.id" class="msg-system">
+              <span>{{ m.body }}</span>
+            </div>
+
             <div
+                v-else
                 :data-message-id="m.id"
                 class="msg"
                 :class="{
                 'msg--mine':
                   m.user?.id === auth.user?.id,
+                'msg--gift': m.kind === 'gift',
               }"
                 @touchstart.passive="
                 onMsgTouchStart($event, m)
@@ -2047,8 +2596,8 @@ onUnmounted(() => {
                 <div
                     class="msg__bubble"
                     :class="[
-                      m.user?.chat_bubble && !parseSticker(m.body) ? ['bubble-fx', `bubble-fx--${m.user.chat_bubble}`] : null,
-                      { 'msg__bubble--sticker': parseSticker(m.body) },
+                      m.user?.chat_bubble && !parseSticker(m.body) && m.kind !== 'gift' ? ['bubble-fx', `bubble-fx--${m.user.chat_bubble}`] : null,
+                      { 'msg__bubble--sticker': parseSticker(m.body), 'msg__bubble--gift': m.kind === 'gift' },
                     ]"
                     title="Двойной клик — ❤️"
                     @dblclick="toggleReaction(m, '❤️')"
@@ -2082,18 +2631,26 @@ onUnmounted(() => {
                   <div
                       v-if="m.reply_to"
                       class="msg__reply"
-                      @click="
-                      scrollToMessage(
-                        m.reply_to.id,
-                      )
-                    "
+                      @click="goToMessage(m.reply_to.id)"
                   >
                     <div class="msg__reply-author">
                       {{ m.reply_to.user?.username }}
                     </div>
 
                     <div class="msg__reply-body">
-                      {{ m.reply_to.body }}
+                      {{ previewText(m.reply_to) || 'Вложение' }}
+                    </div>
+                  </div>
+
+                  <!-- Подарок монет: посылка с суммой -->
+                  <div v-if="m.kind === 'gift'" class="msg__gift">
+                    <PixelSprite sprite="diamond" :size="30" anim="bounce" glow="rgba(251, 191, 36, .7)" />
+                    <div class="msg__gift-body">
+                      <span class="msg__gift-label">
+                        {{ m.user?.id === auth.user?.id ? 'Вы подарили' : 'Вам подарок' }}
+                      </span>
+                      <strong class="msg__gift-amount">{{ Number(m.meta?.amount || 0).toLocaleString('ru-RU') }} ApexCoin</strong>
+                      <span v-if="m.meta?.fee" class="msg__gift-fee">дошло {{ Number(m.meta.received).toLocaleString('ru-RU') }}, комиссия {{ m.meta.fee }}</span>
                     </div>
                   </div>
 
@@ -2105,8 +2662,10 @@ onUnmounted(() => {
                         v-for="file in m.attachments"
                         :key="file.id"
                     >
+                      <ChatVoicePlayer v-if="file.is_voice" :file="file" />
+
                       <button
-                          v-if="file.is_image"
+                          v-else-if="file.is_image"
                           class="msg__image"
                           type="button"
                           @click="
@@ -2162,6 +2721,9 @@ onUnmounted(() => {
                         v-model="editingBody"
                         class="msg__edit-input"
                         rows="3"
+                        maxlength="5000"
+                        @keydown.esc.prevent="cancelEdit"
+                        @keydown.enter.ctrl.prevent="saveEdit(m)"
                     />
 
                     <div class="msg__edit-actions">
@@ -2194,6 +2756,11 @@ onUnmounted(() => {
                       <!-- Стикер из магазина: картинка вместо текста-метки -->
                       <ChatSticker v-if="parseSticker(m.body)" :sticker="parseSticker(m.body)" />
                       <template v-else>{{ m.body }}</template>
+                    </span>
+
+                    <!-- Ссылки на игрока, питомца, клан или лот — живыми карточками -->
+                    <span v-if="m.cards?.length" class="msg__cards">
+                      <ChatLinkCard v-for="card in m.cards" :key="card.url" :card="card" />
                     </span>
 
                     <span
@@ -2352,6 +2919,7 @@ onUnmounted(() => {
                 </button>
 
                 <button
+                    v-if="m.kind !== 'gift'"
                     class="msg__action"
                     type="button"
                     title="Переслать"
@@ -2395,6 +2963,7 @@ onUnmounted(() => {
                   "
                 >
                   <button
+                      v-if="canEdit(m, auth.user?.id)"
                       class="msg__action"
                       type="button"
                       title="Изменить"
@@ -2521,6 +3090,18 @@ onUnmounted(() => {
         <!-- FOOTER -->
 
         <footer class="chat__footer">
+          <!-- Новые сообщения ниже, а лента прокручена вверх -->
+          <button
+              v-if="!atBottom && messages.length"
+              type="button"
+              class="chat__to-bottom"
+              :title="newBelow ? `Новых: ${newBelow}` : 'Вниз'"
+              @click="jumpToBottom"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
+            <b v-if="newBelow">{{ newBelow > 99 ? '99+' : newBelow }}</b>
+          </button>
+
           <div
               v-if="replyTo"
               class="chat__reply-bar"
@@ -2549,7 +3130,7 @@ onUnmounted(() => {
               </div>
 
               <div class="chat__reply-bar-text">
-                {{ replyTo.body?.slice(0, 100) }}
+                {{ (previewText(replyTo) || 'Вложение').slice(0, 100) }}
               </div>
             </div>
 
@@ -2581,9 +3162,10 @@ onUnmounted(() => {
 
             <button
                 type="button"
+                aria-label="Скрыть"
                 @click="error = ''"
             >
-              ×
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
             </button>
           </div>
 
@@ -2601,6 +3183,7 @@ onUnmounted(() => {
 
           <form
               class="chat__form"
+              :class="{ 'is-recording': voiceRecording }"
               @submit.prevent="sendMessage"
           >
             <!-- Скрепка: файлы до 12 МБ, до 10 штук -->
@@ -2664,12 +3247,39 @@ onUnmounted(() => {
               </div>
             </div>
 
+            <!-- Подарок монет: только в личном диалоге -->
+            <div v-if="directPartner" class="chat-gift">
+              <button
+                  type="button"
+                  class="chat__attach chat-gift__toggle"
+                  :class="{ 'is-open': showGift }"
+                  title="Подарить ApexCoin"
+                  @click.stop="showGift = !showGift"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 12v9H4v-9" />
+                  <path d="M2 7h20v5H2z" />
+                  <path d="M12 21V7" />
+                  <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+                </svg>
+              </button>
+
+              <ChatGiftPanel
+                  v-if="showGift"
+                  class="chat-gift__panel"
+                  :conversation-id="activeConversation.id"
+                  :partner="directPartner"
+                  @sent="onGiftSent"
+                  @close="showGift = false"
+              />
+            </div>
+
             <textarea
                 ref="inputEl"
                 v-model="body"
                 class="chat__input"
                 placeholder="Написать сообщение..."
-                maxlength="2000"
+                maxlength="5000"
                 rows="1"
                 @input="onBodyInput"
                 @keydown.enter.exact.prevent="
@@ -2677,7 +3287,17 @@ onUnmounted(() => {
               "
             />
 
+            <!-- Поле пустое — вместо отправки микрофон, как в мессенджерах -->
+            <ChatVoiceRecorder
+                v-if="!body.trim() && !pendingAttachments.length"
+                :disabled="voiceSending || sending"
+                @recorded="sendVoice"
+                @error="(message) => (error = message)"
+                @state="(on) => (voiceRecording = on)"
+            />
+
             <button
+                v-else
                 class="chat__send"
                 type="submit"
                 :disabled="
@@ -3347,12 +3967,7 @@ onUnmounted(() => {
                   action-sheet__preview-body
                 "
               >
-                {{
-                  actionSheetMessage.body?.slice(
-                      0,
-                      120,
-                  )
-                }}
+                {{ previewText(actionSheetMessage).slice(0, 120) }}
               </div>
             </div>
 
@@ -3383,6 +3998,20 @@ onUnmounted(() => {
             </button>
 
             <button
+                v-if="canEdit(actionSheetMessage, auth.user?.id)"
+                class="action-sheet__item"
+                type="button"
+                @click="actionEdit"
+            >
+              <span class="action-sheet__icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
+              </span>
+
+              Изменить
+            </button>
+
+            <button
+                v-if="actionSheetMessage?.kind !== 'gift'"
                 class="action-sheet__item"
                 type="button"
                 @click="actionForward"
@@ -3425,6 +4054,19 @@ onUnmounted(() => {
             </button>
 
             <button
+                v-if="actionSheetMessage && actionSheetMessage.user?.id === auth.user?.id"
+                class="action-sheet__item action-sheet__item--danger"
+                type="button"
+                @click="actionDelete"
+            >
+              <span class="action-sheet__icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 16h10l1-16" /></svg>
+              </span>
+
+              Удалить
+            </button>
+
+            <button
                 class="
                 action-sheet__item
                 action-sheet__item--cancel
@@ -3438,6 +4080,17 @@ onUnmounted(() => {
         </div>
       </Transition>
     </Teleport>
+
+    <!-- Беседа: создать новую или управлять открытой -->
+    <ChatGroupModal
+        v-if="groupModal"
+        :conversation="groupModal === 'manage' ? activeConversation : null"
+        :me-id="auth.user?.id"
+        @close="groupModal = null"
+        @created="onGroupCreated"
+        @updated="onGroupUpdated"
+        @left="onGroupLeft"
+    />
   </div>
 </template>
 

@@ -2,7 +2,10 @@
 
 namespace App\Domains\Chat\Controllers\Api;
 
+use App\Domains\Chat\Events\ConversationChanged;
 use App\Domains\Chat\Events\MessageSent;
+use App\Domains\Chat\Services\ChatGroupService;
+use App\Domains\Users\Models\User;
 use App\Domains\Chat\Events\MessagesRead;
 use App\Domains\Chat\Events\UserTyping;
 use App\Http\Controllers\Controller;
@@ -101,9 +104,6 @@ class ChatController extends Controller
             me: $request->user(),
             body: $request->input('body'),
             replyToId: $request->filled('reply_to_id') ? $request->integer('reply_to_id') : null,
-            forwardedFromUserId: $request->filled('forwarded_from_user_id')
-                ? $request->integer('forwarded_from_user_id')
-                : null,
             attachmentIds: $request->input('attachments', []),
         );
 
@@ -135,7 +135,11 @@ class ChatController extends Controller
     {
         $this->authorize('update', $message);
 
-        $updated = $this->chat->updateMessage($message, $request->string('body')->toString());
+        $updated = $this->chat->updateMessage($message, $request->user(), $request->string('body')->toString());
+
+        $this->changed($updated->conversation, 'message.updated', [
+            'message' => (new MessageResource($updated))->resolve(),
+        ]);
 
         return response()->json([
             'message' => new MessageResource($updated),
@@ -146,7 +150,16 @@ class ChatController extends Controller
     {
         $this->authorize('delete', $message);
 
+        $conversation = $message->conversation;
+        $messageId = $message->id;
+
         $this->chat->deleteMessage($message);
+
+        // Собеседник видит удаление сразу, превью списка — по новому последнему
+        $this->changed($conversation->fresh(), 'message.deleted', [
+            'message_id' => $messageId,
+            'last_message' => $this->chat->lastMessagePayload($conversation),
+        ]);
 
         return response()->json(['ok' => true]);
     }
@@ -158,9 +171,72 @@ class ChatController extends Controller
 
         $data = $request->validate(['emoji' => ['required', 'string', \Illuminate\Validation\Rule::in(\App\Domains\Chat\Models\MessageReaction::EMOJI)]]);
 
-        return response()->json([
-            'reactions' => $this->chat->toggleReaction($message, $request->user(), $data['emoji']),
+        $reactions = $this->chat->toggleReaction($message, $request->user(), $data['emoji']);
+
+        $this->changed($message->conversation, 'reactions', [
+            'message_id' => $message->id,
+            'reactions' => $reactions,
         ]);
+
+        return response()->json(['reactions' => $reactions]);
+    }
+
+    /** Подарок монет собеседнику прямо из личного диалога. */
+    public function gift(Request $request, Conversation $conversation): JsonResponse
+    {
+        $this->authorize('send', $conversation);
+
+        $data = $request->validate([
+            'amount' => ['required', 'integer', 'min:1', 'max:1000000'],
+            'note' => ['nullable', 'string', 'max:200'],
+        ]);
+
+        $message = $this->chat->gift($conversation, $request->user(), (int) $data['amount'], $data['note'] ?? null);
+
+        SafeBroadcast::send(new MessageSent($message), toOthers: true);
+
+        return response()->json([
+            'message' => new MessageResource($message),
+            'balance' => (int) $request->user()->fresh()->apex_coins,
+        ], 201);
+    }
+
+    /** Голосовое: загрузка «про запас», id уходит при отправке. */
+    public function uploadVoice(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            // Браузеры пишут по-разному: Chrome и Firefox — webm/ogg, Safari — mp4
+            'file' => ['required', 'file', 'max:4096', 'mimetypes:audio/webm,video/webm,audio/ogg,application/ogg,audio/mp4,video/mp4,audio/x-m4a,audio/aac,audio/mpeg'],
+            'duration' => ['required', 'integer', 'min:1', 'max:' . ChatService::VOICE_MAX_SECONDS],
+        ], [
+            'file.mimetypes' => 'Не удалось распознать запись — попробуй ещё раз.',
+            'file.max' => 'Запись слишком большая.',
+        ]);
+
+        $file = $this->chat->uploadVoice($request->user(), $data['file'], (int) $data['duration']);
+
+        return response()->json([
+            'attachment' => [
+                'id' => $file->id,
+                'name' => $file->original_name,
+                'url' => $file->url,
+                'size' => $file->human_size,
+                'is_image' => false,
+                'is_voice' => true,
+                'duration' => $file->duration,
+            ],
+        ], 201);
+    }
+
+    /**
+     * Сообщить участникам об изменении в диалоге.
+     *
+     * Себе тоже: другие вкладки того же игрока должны обновиться. Эта
+     * вкладка отсеивается по X-Socket-ID.
+     */
+    private function changed(Conversation $conversation, string $kind, array $data = [], array $extraUserIds = []): void
+    {
+        SafeBroadcast::send(new ConversationChanged($conversation, $kind, $data, $extraUserIds), toOthers: true);
     }
 
     /** Закрепить сообщение в диалоге или открепить (message_id = null). */
@@ -176,7 +252,90 @@ class ChatController extends Controller
 
         $this->chat->pin($conversation, $message);
 
-        return response()->json(['conversation' => $this->chat->conversationPayload($conversation->fresh())]);
+        $payload = $this->chat->conversationPayload($conversation->fresh());
+
+        $this->changed($conversation, 'pinned', [
+            'pinned_message_id' => $payload['pinned_message_id'] ?? null,
+            'pinned_message' => $payload['pinned_message'] ?? null,
+        ]);
+
+        return response()->json(['conversation' => $payload]);
+    }
+
+    /* ----------------------------- Беседы ----------------------------- */
+
+    public function createGroup(Request $request, ChatGroupService $groups): JsonResponse
+    {
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:64'],
+            'user_ids' => ['required', 'array', 'min:1', 'max:' . ChatGroupService::MAX_MEMBERS],
+            'user_ids.*' => ['integer'],
+        ]);
+
+        [$conversation, $message] = $groups->create($request->user(), $data['title'], $data['user_ids']);
+
+        SafeBroadcast::send(new MessageSent($message), toOthers: true);
+
+        return response()->json([
+            'conversation' => $this->chat->conversationPayload($conversation),
+        ], 201);
+    }
+
+    public function addMembers(Request $request, Conversation $conversation, ChatGroupService $groups): JsonResponse
+    {
+        $this->authorize('send', $conversation);
+
+        $data = $request->validate([
+            'user_ids' => ['required', 'array', 'min:1', 'max:' . ChatGroupService::MAX_MEMBERS],
+            'user_ids.*' => ['integer'],
+        ]);
+
+        $message = $groups->addMembers($conversation, $request->user(), $data['user_ids']);
+
+        return $this->groupChanged($conversation, $message);
+    }
+
+    public function removeMember(Request $request, Conversation $conversation, User $user, ChatGroupService $groups): JsonResponse
+    {
+        $this->authorize('send', $conversation);
+
+        $message = $groups->removeMember($conversation, $request->user(), $user);
+
+        // Ушёл последний — беседы больше нет
+        if (! $message) {
+            return response()->json(['ok' => true, 'conversation' => null]);
+        }
+
+        return $this->groupChanged($conversation, $message, [$user->id]);
+    }
+
+    public function renameGroup(Request $request, Conversation $conversation, ChatGroupService $groups): JsonResponse
+    {
+        $this->authorize('send', $conversation);
+
+        $data = $request->validate(['title' => ['required', 'string', 'max:64']]);
+
+        $message = $groups->rename($conversation, $request->user(), $data['title']);
+
+        return $this->groupChanged($conversation, $message);
+    }
+
+    /**
+     * Беседа изменилась: служебная отметка уходит в ленту, а новый состав
+     * и название — всем участникам и тому, кого исключили.
+     */
+    private function groupChanged(Conversation $conversation, Message $message, array $extraUserIds = []): JsonResponse
+    {
+        SafeBroadcast::send(new MessageSent($message), toOthers: true);
+
+        $payload = $this->chat->conversationPayload($conversation->fresh());
+
+        $this->changed($conversation, 'conversation', ['conversation' => $payload], $extraUserIds);
+
+        return response()->json([
+            'conversation' => $payload,
+            'message' => new MessageResource($message),
+        ]);
     }
 
     /* ----------------------------- Вложения ----------------------------- */
