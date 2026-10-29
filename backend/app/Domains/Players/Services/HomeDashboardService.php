@@ -103,15 +103,17 @@ class HomeDashboardService
 
     private function auction(User $user): array
     {
-        // Три счётчика одним запросом
+        // Три счётчика одним запросом. Псевдонимы — не зарезервированные
+        // слова MySQL: «leading» там ключевое слово (TRIM LEADING), и на
+        // проде запрос падал, а тесты на SQLite этого не видели
         $counts = DB::table('pet_auctions')->where('status', 'active')
-            ->selectRaw('count(*) as total, sum(case when seller_id = ? then 1 else 0 end) as mine, sum(case when top_bidder_id = ? then 1 else 0 end) as leading', [$user->id, $user->id])
+            ->selectRaw('count(*) as total_count, sum(case when seller_id = ? then 1 else 0 end) as mine_count, sum(case when top_bidder_id = ? then 1 else 0 end) as leading_count', [$user->id, $user->id])
             ->first();
 
         return [
-            'mine' => (int) $counts->mine,
-            'leading' => (int) $counts->leading,
-            'total' => (int) $counts->total,
+            'mine' => (int) $counts->mine_count,
+            'leading' => (int) $counts->leading_count,
+            'total' => (int) $counts->total_count,
         ];
     }
 
