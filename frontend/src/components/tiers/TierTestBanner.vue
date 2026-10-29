@@ -9,10 +9,12 @@
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/core/auth.js'
+import { useGuideStore } from '@/stores/core/guide.js'
 import TierTestForm from '@/components/tiers/TierTestForm.vue'
 import BridgeTechniqueForm from '@/components/bridge/BridgeTechniqueForm.vue'
 
 const auth = useAuthStore()
+const guide = useGuideStore()
 
 const STORAGE_KEY = 'tier_banner_hidden'
 
@@ -37,6 +39,8 @@ const shouldShow = computed(() => {
   if (!auth.isAuthenticated) return false
   if (hiddenInSession.value) return false
   if (String(route.path).startsWith('/messages')) return false
+  // Пока идёт путеводитель, про тест рассказывает он — банер нужен только на его шаге
+  if (guide.started && !guide.finished && !guide.hidden && guide.current !== 'test') return false
 
   // В бридже зовём подтвердить вид, а не проходить тир-тест
   if (isBridge.value) {

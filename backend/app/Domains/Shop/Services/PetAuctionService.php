@@ -86,6 +86,9 @@ class PetAuctionService
 
     public function create(User $seller, int $inventoryId, int $startPrice, int $hours): array
     {
+        // Стартовые монеты путеводителя неделю нельзя перегнать через аукцион
+        \App\Domains\Players\Services\GuideService::assertCanTrade($seller, 'Аукцион');
+
         if (! in_array($hours, self::DURATIONS, true)) {
             throw new RuntimeException('Срок торгов: 12, 24 или 48 часов.');
         }
@@ -145,6 +148,8 @@ class PetAuctionService
 
     public function bid(User $bidder, int $id, int $amount): array
     {
+        \App\Domains\Players\Services\GuideService::assertCanTrade($bidder, 'Аукцион');
+
         $this->closeExpired();
 
         DB::transaction(function () use ($bidder, $id, $amount) {

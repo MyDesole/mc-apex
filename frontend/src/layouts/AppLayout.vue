@@ -11,6 +11,8 @@ import UserName from '@/components/players/UserName.vue'
 import VerifyEmailBanner from '@/components/notifications/VerifyEmailBanner.vue'
 import CoinBadge from '@/components/shop/CoinBadge.vue'
 import TierTestBanner from '@/components/tiers/TierTestBanner.vue'
+import GuideCoach from '@/components/guide/GuideCoach.vue'
+import { useGuideStore } from '@/stores/core/guide.js'
 import NotificationToast from '@/components/notifications/NotificationToast.vue'
 import BrandCube from '@/components/core/BrandCube.vue'
 import CommandPalette from '@/components/core/CommandPalette.vue'
@@ -32,6 +34,15 @@ const router = useRouter()
 const route = useRoute()
 
 const menuOpen = ref(false)
+const guide = useGuideStore()
+
+/** Открыть путеводитель из меню — даже если его скрывали. */
+function openGuide() {
+  menuOpen.value = false
+  mobileMenuOpen.value = false
+  if (guide.hidden) guide.setHidden(false)
+  else guide.panelOpen = true
+}
 const mobileMenuOpen = ref(false)
 
 const { open: openPalette } = useCommandPalette()
@@ -96,6 +107,8 @@ const MOBILE_ACCOUNT = [
   { to: '/notifications', label: 'Уведомления', icon: 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0', count: () => unreadCount.value },
   { to: '/friends', label: 'Друзья', icon: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75' },
   { to: '/support', label: 'Техподдержка', icon: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4M12 17h.01' },
+  // Открывает путеводитель (его ловит GuideCoach по ?guide=1)
+  { to: '/?guide=1', label: 'Путеводитель', icon: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18M15.5 8.5l-2 5-5 2 2-5 5-2Z' },
 ]
 
 /** Служебные разделы: показываем только ролям с доступом. */
@@ -591,6 +604,14 @@ watch(mobileMenuOpen, (open) => {
                     <span>Шахтёр</span>
                   </RouterLink>
 
+                  <button type="button" class="dropdown-item" @click="openGuide">
+                    <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="m15.5 8.5-2 5-5 2 2-5 5-2Z" />
+                    </svg>
+                    <span>Путеводитель</span>
+                  </button>
+
                   <RouterLink to="/support" class="dropdown-item" @click="menuOpen = false">
                     <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                       <circle cx="12" cy="12" r="9" />
@@ -795,6 +816,8 @@ watch(mobileMenuOpen, (open) => {
   </div>
 
   <TierTestBanner />
+  <!-- Путеводитель для новичков: гид-питомец, первые шаги и подсветка -->
+  <GuideCoach />
 
   <CommandPalette />
   <!-- Окно жалобы: открывается из профиля, чата и форума через openReport() -->

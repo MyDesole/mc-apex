@@ -160,6 +160,9 @@ class CoinService
      */
     public static function gift(User $from, User $to, int $amount): array
     {
+        // Стартовые монеты путеводителя неделю нельзя перегнать на другой аккаунт
+        \App\Domains\Players\Services\GuideService::assertCanTrade($from, 'Дарить монеты');
+
         // Правила подарков берём через ShopSettingService, чтобы значения,
         // изменённые в админке, действительно применялись.
         $gift = [

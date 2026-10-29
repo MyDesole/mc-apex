@@ -435,6 +435,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Панель игрока на главной: кулдауны и быстрые действия
     Route::get('/home/me', [HomeController::class, 'dashboard']);
 
+    // Путеводитель по сайту
+    Route::get('/guide', [\App\Domains\Players\Controllers\Api\GuideController::class, 'show']);
+    Route::post('/guide/start', [\App\Domains\Players\Controllers\Api\GuideController::class, 'start'])->middleware('throttle:10,1');
+    Route::post('/guide/steps/{step}/complete', [\App\Domains\Players\Controllers\Api\GuideController::class, 'complete'])->middleware('throttle:60,1');
+    Route::post('/guide/steps/{step}/skip', [\App\Domains\Players\Controllers\Api\GuideController::class, 'skip'])->middleware('throttle:60,1');
+    Route::post('/guide/hide', [\App\Domains\Players\Controllers\Api\GuideController::class, 'hide'])->middleware('throttle:60,1');
+
     // Мини-игра «Шахтёр»
     Route::get('/games/miner', [\App\Domains\Games\Controllers\MinerController::class, 'show']);
     Route::post('/games/miner/start', [\App\Domains\Games\Controllers\MinerController::class, 'start'])->middleware('throttle:20,1');
