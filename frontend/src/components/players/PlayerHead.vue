@@ -1,6 +1,6 @@
 <script setup>
 /**
- * Голова игрока: лицо скина Minecraft, если ник привязан, иначе
+ * Голова игрока: лицо скина (своего или из Minecraft), иначе
  * аватарка сайта, иначе первая буква ника.
  */
 import { onMounted, ref, watch } from 'vue'
@@ -16,10 +16,10 @@ const skinHead = ref('')
 async function load() {
   skinHead.value = ''
 
-  // Без привязанного ника сервер вернёт 404 — не дёргаем его зря
-  if (!props.user?.minecraft_username) return
+  // Без ника и своего скина сервер вернёт 404 — не дёргаем его зря
+  if (!props.user?.minecraft_username && !props.user?.skin_version) return
 
-  const skin = await loadSkin(props.user.id)
+  const skin = await loadSkin(props.user.id, props.user.skin_version)
 
   if (skin) {
     skinHead.value = renderSkinHead(skin.image, 64).toDataURL()
@@ -27,7 +27,7 @@ async function load() {
 }
 
 onMounted(load)
-watch(() => props.user?.id, load)
+watch(() => [props.user?.id, props.user?.skin_version], load)
 </script>
 
 <template>

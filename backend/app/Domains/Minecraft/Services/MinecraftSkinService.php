@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -18,6 +19,8 @@ use Throwable;
  *
  * Если Mojang недоступен, отдаём то, что уже лежит на диске: устаревший
  * скин лучше пустого места в профиле.
+ *
+ * Игрок может загрузить и свой PNG — тогда он важнее скина из Minecraft.
  */
 class MinecraftSkinService
 {
@@ -39,13 +42,21 @@ class MinecraftSkinService
 
     private const SESSION_URL = 'https://sessionserver.mojang.com/session/minecraft/profile/';
 
+    /** Свои скины игроков: {id}.png. */
+    private const CUSTOM_DIR = 'custom-skins';
+
     /**
      * Скин игрока: путь к PNG на диске и модель рук (classic или slim).
+     * Загруженный игроком скин важнее скина из Minecraft.
      *
      * @return array{path: string, model: string}|null
      */
     public function skinFor(User $user): ?array
     {
+        if ($custom = $this->customFor($user)) {
+            return $custom;
+        }
+
         $uuid = $this->uuidFor($user);
 
         if (! $uuid) {
@@ -75,6 +86,51 @@ class MinecraftSkinService
         }
 
         return null;
+    }
+
+    /**
+     * Сохранить свой скин игрока. Принимаем только настоящую текстуру
+     * скина: PNG 64×64 или старый 64×32.
+     */
+    public function saveCustom(User $user, string $bytes, string $model): void
+    {
+        if (! $this->isSkinPng($bytes)) {
+            throw new RuntimeException('Нужен PNG-файл скина 64×64 (или старый 64×32), как для Minecraft.');
+        }
+
+        Storage::disk(self::DISK)->put($this->customPath($user), $bytes);
+
+        $user->forceFill([
+            'custom_skin_at' => now(),
+            'custom_skin_model' => $model === 'slim' ? 'slim' : 'classic',
+        ])->save();
+    }
+
+    /** Убрать свой скин — снова показываем скин из Minecraft. */
+    public function removeCustom(User $user): void
+    {
+        Storage::disk(self::DISK)->delete($this->customPath($user));
+
+        $user->forceFill(['custom_skin_at' => null, 'custom_skin_model' => null])->save();
+    }
+
+    /**
+     * @return array{path: string, model: string}|null
+     */
+    private function customFor(User $user): ?array
+    {
+        $path = $this->customPath($user);
+
+        if (! $user->custom_skin_at || ! Storage::disk(self::DISK)->exists($path)) {
+            return null;
+        }
+
+        return ['path' => Storage::disk(self::DISK)->path($path), 'model' => $user->custom_skin_model ?: 'classic'];
+    }
+
+    private function customPath(User $user): string
+    {
+        return self::CUSTOM_DIR . "/{$user->id}.png";
     }
 
     /**

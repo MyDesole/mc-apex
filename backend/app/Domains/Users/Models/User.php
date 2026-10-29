@@ -50,6 +50,9 @@ class User extends Authenticatable implements MustVerifyEmail
 
         // UUID майнкрафта наружу не отдаём: страницам он не нужен
         'minecraft_uuid',
+
+        // Свой скин наружу — одной версией skin_version
+        'custom_skin_at', 'custom_skin_model',
     ];
 
     public function recalcTierFromAspects(): void
@@ -125,6 +128,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'bridge_rank_at' => 'datetime',
         'bridge_primary' => 'boolean',
         'minecraft_linked_at' => 'datetime',
+        'custom_skin_at' => 'datetime',
         'featured_achievements' => 'array',
         'is_verified' => 'boolean',
         'apex_coins' => 'integer',
@@ -211,7 +215,17 @@ class User extends Authenticatable implements MustVerifyEmail
         'friends_all',
         'display_rank',
         'tier_tested',
+        'skin_version',
     ];
+
+    /**
+     * Версия своего скина (время загрузки) или null, если его нет.
+     * Клиент добавляет её к адресу скина, чтобы браузер не держал старый.
+     */
+    public function getSkinVersionAttribute(): ?int
+    {
+        return $this->custom_skin_at?->getTimestamp();
+    }
 
     /**
      * Что показывать рядом с ником: звание бриджера, если игрок выбрал

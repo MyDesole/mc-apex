@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Domains\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -131,5 +132,85 @@ class MinecraftSkinTest extends TestCase
         $this->getJson('/api/players/desole/skin')->assertNotFound();
 
         Http::assertNothingSent();
+    }
+
+    /* ------------------------------ Свой скин ------------------------------ */
+
+    private function skinFile(int $width = 64, int $height = 64): UploadedFile
+    {
+        return UploadedFile::fake()->createWithContent('skin.png', $this->png($width, $height));
+    }
+
+    public function test_own_skin_replaces_minecraft_one_and_can_be_removed(): void
+    {
+        $this->fakeMojang('classic');
+
+        $user = User::factory()->create(['username' => 'desole', 'minecraft_username' => 'Notch']);
+
+        $version = $this->actingAs($user)
+            ->post('/api/players/me/skin', ['skin' => $this->skinFile(), 'model' => 'slim'], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->json('skin_version');
+
+        $this->assertIsInt($version);
+        Storage::disk('local')->assertExists("custom-skins/{$user->id}.png");
+
+        // Свой скин важнее Mojang, а модель рук — та, что выбрал игрок
+        $this->get('/api/players/desole/skin')->assertOk()->assertHeader('X-Skin-Model', 'slim');
+        Http::assertNothingSent();
+
+        // Версия видна в данных игрока, а служебные поля — нет
+        $payload = $user->fresh()->toArray();
+        $this->assertSame($version, $payload['skin_version']);
+        $this->assertArrayNotHasKey('custom_skin_at', $payload);
+
+        $this->actingAs($user)->deleteJson('/api/players/me/skin')->assertOk()->assertJsonPath('skin_version', null);
+        Storage::disk('local')->assertMissing("custom-skins/{$user->id}.png");
+
+        // Снова скин из Minecraft
+        $this->get('/api/players/desole/skin')->assertOk()->assertHeader('X-Skin-Model', 'classic');
+    }
+
+    public function test_own_skin_works_without_minecraft_nickname(): void
+    {
+        Http::fake();
+
+        $user = User::factory()->create(['username' => 'desole']);
+
+        $this->actingAs($user)
+            ->post('/api/players/me/skin', ['skin' => $this->skinFile(64, 32), 'model' => 'classic'], ['Accept' => 'application/json'])
+            ->assertOk();
+
+        $this->get('/api/players/desole/skin')->assertOk()->assertHeader('X-Skin-Model', 'classic');
+        Http::assertNothingSent();
+    }
+
+    public function test_rejects_upload_that_is_not_a_skin(): void
+    {
+        $user = User::factory()->create();
+
+        // Не те размеры
+        $this->actingAs($user)
+            ->post('/api/players/me/skin', ['skin' => $this->skinFile(128, 128), 'model' => 'classic'], ['Accept' => 'application/json'])
+            ->assertStatus(422);
+
+        // Не PNG
+        $this->actingAs($user)
+            ->post('/api/players/me/skin', ['skin' => UploadedFile::fake()->create('skin.png', 4, 'image/jpeg'), 'model' => 'classic'], ['Accept' => 'application/json'])
+            ->assertStatus(422);
+
+        // Неизвестная модель рук
+        $this->actingAs($user)
+            ->post('/api/players/me/skin', ['skin' => $this->skinFile(), 'model' => 'giant'], ['Accept' => 'application/json'])
+            ->assertStatus(422);
+
+        $this->assertNull($user->fresh()->skin_version);
+        Storage::disk('local')->assertMissing("custom-skins/{$user->id}.png");
+    }
+
+    public function test_guest_cannot_upload_skin(): void
+    {
+        $this->post('/api/players/me/skin', ['skin' => $this->skinFile(), 'model' => 'classic'], ['Accept' => 'application/json'])
+            ->assertUnauthorized();
     }
 }

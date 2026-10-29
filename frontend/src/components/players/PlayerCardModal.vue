@@ -60,7 +60,7 @@ async function render() {
 
   try {
     const [skin, avatar] = await Promise.all([
-      loadSkin(props.user.id),
+      loadSkin(props.user.id, props.user.skin_version),
       loadAvatar(props.user.avatar_url),
       ensureCardFonts(),
     ])

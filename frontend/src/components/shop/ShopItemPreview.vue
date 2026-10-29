@@ -78,7 +78,7 @@ onMounted(async () => {
   // Голова из скина нужна только рамкам и фонам — остальным не грузим
   if (!['avatar_frame', 'skin_backdrop'].includes(props.item.type) || !auth.user?.id) return
 
-  const skin = await loadSkin(auth.user.id)
+  const skin = await loadSkin(auth.user.id, auth.user.skin_version)
 
   if (skin) head.value = renderSkinHead(skin.image, 64).toDataURL()
 })

@@ -285,6 +285,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/minecraft/link', [MinecraftLinkController::class, 'show']);
         Route::post('/minecraft/link', [MinecraftLinkController::class, 'store']);
         Route::delete('/minecraft/link', [MinecraftLinkController::class, 'destroy']);
+        // Свой скин вместо скина из Minecraft
+        Route::post('/skin', [MinecraftSkinController::class, 'upload'])->middleware('throttle:10,1');
+        Route::delete('/skin', [MinecraftSkinController::class, 'destroy'])->middleware('throttle:10,1');
         Route::put('/aspects', [PlayerController::class, 'updateAspects']);
 
         Route::post('/avatar/remove', [PlayerController::class, 'removeAvatar']);

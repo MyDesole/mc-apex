@@ -66,7 +66,7 @@ async function loadSlot(side, key) {
 
     const [history, skin] = await Promise.all([
       api.get(`/players/${user.id}/tier-history`).then((r) => r.history ?? []).catch(() => []),
-      loadSkin(user.id),
+      loadSkin(user.id, user.skin_version),
     ])
 
     // Пока грузили, игрока могли сменить — устаревший ответ не нужен

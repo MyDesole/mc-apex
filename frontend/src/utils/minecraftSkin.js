@@ -13,21 +13,47 @@ const cache = new Map()
 /**
  * Скин игрока или null, если ник не привязан или скин недоступен.
  * @param {string|number} key id или ник на сайте
+ * @param {number|null} version skin_version игрока: свой скин сменился —
+ *   адрес другой, и ни наш кэш, ни кэш браузера не покажут старый
  */
-export function loadSkin(key) {
+export function loadSkin(key, version = null) {
     if (key === undefined || key === null || key === '') return Promise.resolve(null)
 
     const id = String(key)
+    const cacheKey = version ? `${id}@${version}` : id
 
-    if (!cache.has(id)) {
-        cache.set(id, fetchSkin(id).catch(() => null))
+    if (!cache.has(cacheKey)) {
+        cache.set(cacheKey, fetchSkin(id, version).catch(() => null))
     }
 
-    return cache.get(id)
+    return cache.get(cacheKey)
 }
 
-async function fetchSkin(id) {
-    const response = await fetch(`/api/players/${encodeURIComponent(id)}/skin`, {
+/** Файл PNG прямо с диска игрока — для предпросмотра перед загрузкой. */
+export async function readSkinFile(file) {
+    const url = URL.createObjectURL(file)
+    const image = await loadImage(url)
+
+    return { url, image }
+}
+
+/** Похож ли скин на «тонкий» (slim): у таких рука 3 пикселя и столбец за ней прозрачный. */
+export function guessSkinModel(image) {
+    if (image.naturalHeight !== 64) return 'classic'
+
+    const probe = document.createElement('canvas')
+    probe.width = 1
+    probe.height = 1
+
+    const ctx = probe.getContext('2d', { willReadFrequently: true })
+    ctx.drawImage(image, 54, 20, 1, 1, 0, 0, 1, 1)
+
+    return ctx.getImageData(0, 0, 1, 1).data[3] === 0 ? 'slim' : 'classic'
+}
+
+async function fetchSkin(id, version) {
+    const query = version ? `?v=${encodeURIComponent(version)}` : ''
+    const response = await fetch(`/api/players/${encodeURIComponent(id)}/skin${query}`, {
         credentials: 'include',
     })
 
