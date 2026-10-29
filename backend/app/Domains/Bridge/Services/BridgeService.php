@@ -25,8 +25,12 @@ class BridgeService
 {
     use AbortsWithMessage;
 
-    /** Сколько подтверждённых видов приносит один «вес» при ранжировании. */
-    private const TECHNIQUE_WEIGHT = 1000;
+    /**
+     * Во сколько раз очки рейтинга важнее числа видов при сортировке:
+     * больше любого реального числа видов, поэтому виды решают только
+     * при равных очках.
+     */
+    private const TOTAL_WEIGHT = 1000;
 
     /* ----------------------------- Каталог ----------------------------- */
 
@@ -504,15 +508,18 @@ class BridgeService
     /* ----------------------------- Топ ----------------------------- */
 
     /**
-     * Место в бридже: сначала число подтверждённых видов, затем сумма
-     * аспектов. Одно число, чтобы работала общая курсорная пагинация.
+     * Место в бридже: по очкам рейтинга (сумма аспектов — то, что видно в
+     * топе), при равных очках — у кого больше подтверждённых видов.
+     * Раньше было наоборот, и игрок с 169 очками стоял выше игрока с 210
+     * только потому, что подтвердил больше видов.
+     * Одно число, чтобы работала общая курсорная пагинация.
      */
     public function scoreExpression(): string
     {
         $count = $this->confirmedCountExpression();
         $total = $this->aspectsTotalExpression();
 
-        return '(' . $count . ' * ' . self::TECHNIQUE_WEIGHT . ' + ' . $total . ')';
+        return '(' . $total . ' * ' . self::TOTAL_WEIGHT . ' + ' . $count . ')';
     }
 
     public function confirmedCountExpression(): string
@@ -553,7 +560,7 @@ class BridgeService
             return [null, 0];
         }
 
-        $score = $summary['confirmed_count'] * self::TECHNIQUE_WEIGHT + $summary['aspects_total'];
+        $score = $summary['aspects_total'] * self::TOTAL_WEIGHT + $summary['confirmed_count'];
 
         $ahead = User::query()
             ->excludeStaff()

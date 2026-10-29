@@ -309,38 +309,43 @@ class BridgeTechniqueTest extends TestCase
         ]);
     }
 
-    public function test_bridge_ranking_orders_by_techniques_then_total(): void
+    public function test_bridge_ranking_orders_by_points_then_techniques(): void
     {
         $tester = User::factory()->create(['role' => 'bridge_tester']);
+        $confirm = function (User $user, string $label, int $points) use ($tester) {
+            $submission = $this->service()->declare($user, $this->technique($label)->id, 'https://youtu.be/x');
+            $this->service()->confirm($submission, $tester, [
+                'stability' => $points, 'speed' => $points, 'difficulty' => $points, 'score' => 5,
+            ]);
+        };
 
         $one = User::factory()->create(['username' => 'OneTech']);
         $two = User::factory()->create(['username' => 'TwoTech']);
+        $tie = User::factory()->create(['username' => 'TieTech']);
 
-        // У первого один вид, но высокие оценки
-        foreach ([['A', 90, 90, 90, 10]] as [$label, $st, $sp, $df, $sc]) {
-            $technique = $this->technique($label);
-            $submission = $this->service()->declare($one, $technique->id, 'https://youtu.be/a');
-
-            $this->service()->confirm($submission, $tester, [
-                'stability' => $st, 'speed' => $sp, 'difficulty' => $df, 'score' => $sc,
-            ]);
-        }
-
-        // У второго два вида с низкими
-        foreach (['B', 'C'] as $label) {
-            $technique = $this->technique($label);
-            $submission = $this->service()->declare($two, $technique->id, 'https://youtu.be/b');
-
-            $this->service()->confirm($submission, $tester, [
-                'stability' => 10, 'speed' => 10, 'difficulty' => 10, 'score' => 2,
-            ]);
-        }
+        // Один вид, но 270 очков
+        $confirm($one, 'A', 90);
+        // Два вида, всего 60 очков
+        $confirm($two, 'B', 10);
+        $confirm($two, 'C', 10);
+        // Те же 270 очков, но двумя видами
+        $confirm($tie, 'D', 45);
+        $confirm($tie, 'E', 45);
 
         [$positionOne] = $this->service()->rankOf($one);
         [$positionTwo] = $this->service()->rankOf($two);
+        [$positionTie] = $this->service()->rankOf($tie);
 
-        $this->assertSame(2, $positionOne, 'Один вид ниже двух');
-        $this->assertSame(1, $positionTwo, 'Больше видов — выше');
+        // Больше очков — выше, даже если видов меньше
+        $this->assertSame(3, $positionTwo, 'Меньше очков — ниже, сколько бы ни было видов');
+        // При равных очках выше тот, у кого больше видов
+        $this->assertSame(1, $positionTie);
+        $this->assertSame(2, $positionOne);
+
+        // Топ «Не PvP» в том же порядке
+        Sanctum::actingAs(User::factory()->create());
+        $ids = collect($this->getJson('/api/ranking?mode=bridge')->json('data'))->pluck('id')->all();
+        $this->assertSame([$tie->id, $one->id, $two->id], $ids);
     }
 
     public function test_ranking_endpoint_returns_bridge_mode(): void
