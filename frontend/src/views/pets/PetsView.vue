@@ -6,7 +6,7 @@
  * ключами; Арена — пошаговые бои с рейтингом; Питомцедекс — коллекция
  * видов и черт с наградами; Топ — лучшие питомцы сервера.
  */
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { api } from '@/services/core/api.js'
 import { useAuthStore } from '@/stores/core/auth.js'
@@ -19,6 +19,8 @@ import PetTop from '@/components/pets/PetTop.vue'
 import PetViewer from '@/components/pets/PetViewer.vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
 import PetPicker from '@/components/pets/PetPicker.vue'
+import CountdownText from '@/components/core/CountdownText.vue'
+import { useNow } from '@/composables/core/useNow.js'
 import { ELEMENTS, levelXp } from '@/data/players/petArena.js'
 import { PET_RARITY, chanceLabel } from '@/data/players/petTraits.js'
 
@@ -43,7 +45,7 @@ const hub = ref(null)
 const error = ref('')
 const notice = ref('')
 const busy = ref(null)
-const now = ref(Date.now())
+const now = useNow()
 const playing = ref({})
 const viewing = ref(null)
 
@@ -70,14 +72,15 @@ function fail(e, fallback) {
   notice.value = ''
 }
 
-function left(iso) {
-  const ms = new Date(iso).getTime() - now.value
-  if (ms <= 0) return null
-  const h = Math.floor(ms / 3600000)
-  const m = Math.floor((ms % 3600000) / 60000)
-  const s = Math.floor((ms % 60000) / 1000)
-  return h > 0 ? `${h} ч ${m} мин` : `${m}:${String(s).padStart(2, '0')}`
-}
+// Вернувшиеся экспедиции. Строка, а не массив: computed отдаёт новое
+// значение только когда кто-то вернулся — страница со всеми питомцами
+// не перерисовывается каждую секунду, тикает лишь CountdownText
+const readyKey = computed(() => trips.value
+  .filter((t) => new Date(t.ends_at).getTime() <= now.value)
+  .map((t) => t.id)
+  .join(','))
+const readyIds = computed(() => new Set(readyKey.value ? readyKey.value.split(',').map(Number) : []))
+const isReady = (trip) => readyIds.value.has(trip.id)
 
 function xpPct(p) {
   if (p.level >= 30) return 100
@@ -246,16 +249,11 @@ async function closeBattle() {
 watch(arenaPet, () => { if (tab.value === 'arena') loadOpponents() })
 watch(tab, (t) => { if (t === 'arena' && !opponents.value) loadOpponents() })
 
-let tick = null
-
 onMounted(async () => {
   await load()
   battle.value = hub.value?.arena?.active ?? null
   if (tab.value === 'arena') loadOpponents()
-  tick = setInterval(() => { now.value = Date.now() }, 1000)
 })
-
-onUnmounted(() => clearInterval(tick))
 </script>
 
 <template>
@@ -276,7 +274,7 @@ onUnmounted(() => clearInterval(tick))
     <nav class="pv-tabs">
       <button v-for="[id, label, icon] in TABS" :key="id" type="button" :class="{ 'is-on': tab === id }" @click="tab = id">
         <AppIcon :icon="icon" :size="14" /> {{ label }}
-        <i v-if="id === 'expeditions' && trips.some((t) => !left(t.ends_at))" class="pv-dot"></i>
+        <i v-if="id === 'expeditions' && readyIds.size" class="pv-dot"></i>
       </button>
     </nav>
 
@@ -383,14 +381,14 @@ onUnmounted(() => clearInterval(tick))
     <!-- ================= Экспедиции ================= -->
     <template v-else-if="tab === 'expeditions'">
       <section v-if="trips.length" class="pv-trips">
-        <article v-for="trip in trips" :key="trip.id" class="pv-trip" :class="{ 'is-ready': !left(trip.ends_at) }">
+        <article v-for="trip in trips" :key="trip.id" class="pv-trip" :class="{ 'is-ready': isReady(trip) }">
           <PetFigure :species="trip.pet.species" :traits="trip.pet.traits" :size="40" :backdrop="false" />
           <span class="pv-trip__text">
             <strong>{{ trip.pet.name }}</strong>
             <small>{{ trip.zone_name }}</small>
           </span>
-          <button v-if="!left(trip.ends_at)" type="button" class="pv-btn pv-btn--go" :disabled="busy === `claim-${trip.id}`" @click="claim(trip)">Забрать добычу</button>
-          <span v-else class="pv-trip__timer"><AppIcon icon="clock" :size="13" /> {{ left(trip.ends_at) }}</span>
+          <button v-if="isReady(trip)" type="button" class="pv-btn pv-btn--go" :disabled="busy === `claim-${trip.id}`" @click="claim(trip)">Забрать добычу</button>
+          <span v-else class="pv-trip__timer"><AppIcon icon="clock" :size="13" /> <CountdownText :to="trip.ends_at" /></span>
         </article>
       </section>
 

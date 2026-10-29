@@ -466,9 +466,19 @@ export const PIXEL_SPRITES = {
 }
 
 const cache = new Map()
+const svgCache = new Map()
 
-/** SVG-разметка спрайта (viewBox по размеру сетки). */
+/**
+ * SVG-разметка спрайта (viewBox по размеру сетки). Спрайты статичны —
+ * строку собираем один раз: в инвентаре и на аукционе их сотни.
+ */
 export function spriteSvg(key) {
+    if (!svgCache.has(key)) svgCache.set(key, buildSvg(key))
+
+    return svgCache.get(key)
+}
+
+function buildSvg(key) {
     const sprite = PIXEL_SPRITES[key]
     if (!sprite) return ''
 

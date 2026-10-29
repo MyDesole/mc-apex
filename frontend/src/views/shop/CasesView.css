@@ -547,6 +547,11 @@
   height: 100%;
 }
 
+/* Лента рулетки летит через экран — превью рисуем всегда, без пропуска */
+.reel-card__visual > .preview {
+  content-visibility: visible;
+}
+
 .reel-card__name {
   width: 100%;
   overflow: hidden;

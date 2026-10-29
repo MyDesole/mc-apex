@@ -5,7 +5,8 @@
  * Копать можно только рядом с открытыми блоками. Ударов кирки на забег
  * ограничено, TNT бесплатно взрывает соседей, бедрок не копается.
  */
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useNow } from '@/composables/core/useNow.js'
 import { api } from '@/services/core/api.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import AppIcon from '@/components/core/AppIcon.vue'
@@ -34,7 +35,7 @@ const busy = ref(false)
 const error = ref('')
 const result = ref(null)
 const pops = ref([])
-const now = ref(Date.now())
+const now = useNow()
 
 const run = computed(() => state.value?.run ?? null)
 const cols = computed(() => state.value?.cols ?? 8)
@@ -133,12 +134,7 @@ function popsFor(i) {
   return pops.value.filter((p) => p.cell === i)
 }
 
-let tick = null
-onMounted(() => {
-  load()
-  tick = setInterval(() => { now.value = Date.now() }, 1000)
-})
-onUnmounted(() => clearInterval(tick))
+onMounted(load)
 </script>
 
 <template>

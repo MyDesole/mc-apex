@@ -2,21 +2,23 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useTitleBlink } from '@/composables/core/useTitleBlink.js'
 import { applySeo } from '@/utils/seo.js'
 
+// Сразу грузится только главная — остальные страницы своими чанками,
+// иначе профиль, магазин, кланы и форум попадали в стартовый бандл
 import HomeView from '@/views/players/HomeView.vue'
-import LoginView from '@/views/auth/LoginView.vue'
-import RegisterView from '@/views/auth/RegisterView.vue'
-import ProfileView from '@/views/players/ProfileView.vue'
-import PlayerView from '@/views/players/PlayerView.vue'
-import PlayersView from "@/views/players/PlayersView.vue";
-import FriendsView from "@/views/friends/FriendsView.vue";
-import NotificationsView from "@/views/notifications/NotificationsView.vue";
-import ClansView from "@/views/clan/ClansView.vue";
-import ClanCreateView from "@/views/clan/ClanCreateView.vue";
-import ShopView from '@/views/shop/ShopView.vue'
-import InventoryView from '@/views/shop/InventoryView.vue'
-import CasesView from '@/views/shop/CasesView.vue'
-import ClanView from "@/views/clan/ClanView.vue";
-import ForumView from '@/views/forum/ForumView.vue'
+const LoginView = () => import('@/views/auth/LoginView.vue')
+const RegisterView = () => import('@/views/auth/RegisterView.vue')
+const ProfileView = () => import('@/views/players/ProfileView.vue')
+const PlayerView = () => import('@/views/players/PlayerView.vue')
+const PlayersView = () => import('@/views/players/PlayersView.vue')
+const FriendsView = () => import('@/views/friends/FriendsView.vue')
+const NotificationsView = () => import('@/views/notifications/NotificationsView.vue')
+const ClansView = () => import('@/views/clan/ClansView.vue')
+const ClanCreateView = () => import('@/views/clan/ClanCreateView.vue')
+const ShopView = () => import('@/views/shop/ShopView.vue')
+const InventoryView = () => import('@/views/shop/InventoryView.vue')
+const CasesView = () => import('@/views/shop/CasesView.vue')
+const ClanView = () => import('@/views/clan/ClanView.vue')
+const ForumView = () => import('@/views/forum/ForumView.vue')
 
 const router = createRouter({
   history: createWebHistory(),

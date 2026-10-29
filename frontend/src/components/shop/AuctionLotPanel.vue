@@ -12,15 +12,19 @@ import AppIcon from '@/components/core/AppIcon.vue'
 import ShopItemPreview from '@/components/shop/ShopItemPreview.vue'
 import { PET_RARITY, chanceLabel } from '@/data/players/petTraits.js'
 import { useLiveChannel } from '@/composables/shop/useLiveChannel.js'
+import { pageHidden, useNow } from '@/composables/core/useNow.js'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { userLink } from '@/utils/links.js'
 
 const props = defineProps({
   lot: { type: Object, required: true },
-  now: { type: Number, required: true },
+  // Не передано — общие часы (см. AuctionLotCard)
+  now: { type: Number, default: null },
 })
 
 const emit = defineEmits(['close', 'changed'])
+
+const clock = useNow()
 
 const auth = useAuthStore()
 
@@ -41,7 +45,7 @@ const leading = computed(() => auth.user?.id && props.lot.leader?.id === auth.us
 const active = computed(() => props.lot.status === 'active')
 const canModerate = computed(() => ['admin', 'moderator'].includes(auth.user?.role))
 
-const msLeft = computed(() => new Date(props.lot.ends_at).getTime() - props.now)
+const msLeft = computed(() => new Date(props.lot.ends_at).getTime() - (props.now ?? clock.value))
 const timer = computed(() => {
   const ms = msLeft.value
   if (ms <= 0) return 'завершается'
@@ -195,7 +199,7 @@ onMounted(() => {
   subscribe(`auction.${props.lot.id}`)
   // Сокет лежит — опрашиваем чаще, жив — изредка для надёжности
   poll = setInterval(() => {
-    if (!live.value) {
+    if (!live.value && !pageHidden()) {
       loadMessages()
       loadLot()
     }

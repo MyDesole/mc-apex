@@ -7,18 +7,23 @@ import { computed } from 'vue'
 import AppIcon from '@/components/core/AppIcon.vue'
 import ShopItemPreview from '@/components/shop/ShopItemPreview.vue'
 import { PET_RARITY } from '@/data/players/petTraits.js'
+import { useNow } from '@/composables/core/useNow.js'
 
 const props = defineProps({
   lot: { type: Object, required: true },
-  now: { type: Number, required: true },
+  // Своё время можно передать (тесты), иначе — общие часы: страница
+  // не перерисовывается целиком каждую секунду, тикает только таймер
+  now: { type: Number, default: null },
 })
 
 defineEmits(['open'])
 
+const clock = useNow()
+
 const traits = computed(() => props.lot.pet?.pet ?? null)
 const rarity = computed(() => PET_RARITY[traits.value?.rarity] ?? { label: 'Питомец', color: '#a8a3b8' })
 
-const msLeft = computed(() => new Date(props.lot.ends_at).getTime() - props.now)
+const msLeft = computed(() => new Date(props.lot.ends_at).getTime() - (props.now ?? clock.value))
 
 const timer = computed(() => {
   const ms = msLeft.value

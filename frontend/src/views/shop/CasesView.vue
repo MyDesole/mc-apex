@@ -5,6 +5,7 @@
  * докручивается до выигрыша, и карточка награды.
  */
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { useNow } from '@/composables/core/useNow.js'
 import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/core/auth.js'
 import { casesApi } from '@/services/shop/cases.js'
@@ -33,8 +34,7 @@ const trackEl = ref(null)
 const result = ref(null)
 const showResult = ref(false)
 
-const now = ref(Date.now())
-let clock = null
+const now = useNow()
 let tickFrame = null
 
 const CARD_WIDTH = 132
@@ -224,13 +224,9 @@ function timeAgo(value) {
   return `${Math.floor(diff / 86400)} дн назад`
 }
 
-onMounted(() => {
-  load()
-  clock = setInterval(() => { now.value = Date.now() }, 1000)
-})
+onMounted(load)
 
 onUnmounted(() => {
-  clearInterval(clock)
   cancelAnimationFrame(tickFrame)
 })
 </script>

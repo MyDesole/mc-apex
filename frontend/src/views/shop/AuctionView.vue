@@ -17,6 +17,7 @@ import PageLoader from '@/components/core/PageLoader.vue'
 import AuctionLotCard from '@/components/shop/AuctionLotCard.vue'
 import AuctionLotPanel from '@/components/shop/AuctionLotPanel.vue'
 import { useLiveChannel } from '@/composables/shop/useLiveChannel.js'
+import { pageHidden } from '@/composables/core/useNow.js'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -30,7 +31,6 @@ const error = ref('')
 const notice = ref('')
 const filter = ref('all')
 const sort = ref('ending')
-const now = ref(Date.now())
 
 /** mine/leading считаем на месте: из сокета лот приходит без зрителя. */
 function withViewer(lot) {
@@ -120,21 +120,18 @@ function changed(lot) {
   upsert(lot)
 }
 
-let tick = null
 let poll = null
 
 onMounted(() => {
   load()
   subscribe('auctions')
-  tick = setInterval(() => { now.value = Date.now() }, 1000)
-  // Сокет лежит — опрашиваем чаще, жив — изредка для надёжности
+  // Сокет лежит — опрашиваем чаще, жив — изредка для надёжности; в фоне — никогда
   let ticks = 0
-  poll = setInterval(() => { if (!live.value || ++ticks % 4 === 0) load() }, 15000)
+  poll = setInterval(() => { if (!pageHidden() && (!live.value || ++ticks % 4 === 0)) load() }, 15000)
   if (route.query.created) notice.value = 'Питомец выставлен на торги.'
 })
 
 onUnmounted(() => {
-  clearInterval(tick)
   clearInterval(poll)
 })
 </script>
@@ -191,14 +188,13 @@ onUnmounted(() => {
     </p>
 
     <div v-else class="au-grid">
-      <AuctionLotCard v-for="lot in shown" :key="lot.id" :lot="lot" :now="now" @open="open" />
+      <AuctionLotCard v-for="lot in shown" :key="lot.id" :lot="lot" @open="open" />
     </div>
 
     <AuctionLotPanel
         v-if="openLot"
         :key="openLot.id"
         :lot="openLot"
-        :now="now"
         @close="close"
         @changed="changed"
     />

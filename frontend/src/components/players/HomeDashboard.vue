@@ -5,7 +5,8 @@
  * отметка в клане, бесплатный сундук, шахта, аукцион и надетый образ.
  * Ежедневное сбрасывается в полночь — таймер до сброса тикает на месте.
  */
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useNow } from '@/composables/core/useNow.js'
 import { RouterLink } from 'vue-router'
 import { api } from '@/services/core/api.js'
 import { walletApi } from '@/services/wallet/wallet.js'
@@ -19,7 +20,7 @@ import { TYPE_LABELS, RARITY_COLORS, formatCoins } from '@/data/wallet/economy.j
 const auth = useAuthStore()
 
 const data = ref(null)
-const now = ref(Date.now())
+const now = useNow()
 
 const PET_ACTIONS = [
   ['feed', 'meat', 'Покормить'],
@@ -91,14 +92,7 @@ function spriteOf(pet) {
   return PIXEL_SPRITES[pet.sprite] ? pet.sprite : 'paw'
 }
 
-let tick = null
-
-onMounted(() => {
-  load()
-  tick = setInterval(() => { now.value = Date.now() }, 1000)
-})
-
-onUnmounted(() => clearInterval(tick))
+onMounted(load)
 </script>
 
 <template>

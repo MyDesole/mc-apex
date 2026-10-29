@@ -437,6 +437,11 @@ onMounted(async () => {
   schedule(800 + props.lane * 500)
 
   zoneEl.value?.parentElement?.addEventListener('mousemove', onZoneMove)
+
+  // Превью в магазине и инвентаре — просто гуляет: карточки, сервера
+  // и напоминаний нет, а слушатели на window на каждый экземпляр не нужны
+  if (!props.interactive) return
+
   window.addEventListener('keydown', onKey)
   window.addEventListener('scroll', closePanel, { passive: true })
 

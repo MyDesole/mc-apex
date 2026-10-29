@@ -337,6 +337,11 @@ onMounted(async () => {
 .preview {
   height: 132px;
 
+  /* В сетках магазина, инвентаря и аукциона сотни превью с бесконечными
+     анимациями и blur: за пределами экрана браузер их не рисует */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 132px;
+
   display: flex;
   align-items: center;
   justify-content: center;
