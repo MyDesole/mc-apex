@@ -125,7 +125,10 @@ class PetArenaService
 
         if ($near->count() < 6) {
             $more = (clone $base)->whereNotIn('id', $near->pluck('id'))
-                ->orderByRaw('abs(pet_rating - ?)', [$rating])->limit(6 - $near->count())->get();
+                // Без abs(pet_rating - ?): колонка беззнаковая, и в MySQL
+                // отрицательная разность падает с ошибкой out of range
+                ->orderByRaw('case when pet_rating > ? then pet_rating - ? else ? - pet_rating end', [$rating, $rating, $rating])
+                ->limit(6 - $near->count())->get();
             $near = $near->concat($more);
         }
 
