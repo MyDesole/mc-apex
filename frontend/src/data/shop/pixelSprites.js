@@ -398,6 +398,20 @@ export const PIXEL_SPRITES = {
             '..p..p...',
         ],
     },
+    // Ворона: только выдача из админки
+    crow: {
+        palette: { k: '#3f3f46', K: '#18181b', w: '#e9d5ff', y: '#f59e0b' },
+        rows: [
+            '..kkkk..',
+            '.kkkkkk.',
+            '.kwkkwk.',
+            '.kkyykk.',
+            'KkkyykkK',
+            'KKkkkkKK',
+            '.KkkkkK.',
+            '..y..y..',
+        ],
+    },
     // Для меню питомца: еда, мячик, настроение
     meat: {
         palette: { r: '#dc2626', R: '#991b1b', p: '#fca5a5', b: '#f5f5f4', B: '#d6d3d1' },

@@ -499,6 +499,7 @@ export const PET_SHAPES = {
     dragon: { top: 2, head: [1, 9], eyes: [3, 8], eyeY: 3.5, neck: 6 },
     robot: { top: 2, head: [0, 8], eyes: [2, 6], eyeY: 4, neck: 6 },
     penguin: { top: 0, head: [1, 7], eyes: [2.5, 5.5], eyeY: 2.5, neck: 4 },
+    crow: { top: 0, head: [1, 7], eyes: [2.5, 5.5], eyeY: 2.5, neck: 5 },
     owl: { top: 1, head: [0, 8], eyes: [2, 6], eyeY: 3.5, neck: 5 },
     // Глаза лягушки торчат над головой: шапка — между ними, голова уже спрайта
     frog: { top: 0, head: [2, 8], eyes: [2.5, 7.5], eyeY: 1.5, neck: 5 },

@@ -216,7 +216,8 @@ class PetHubService
     /** Все виды и черты, что вообще бывают. */
     private function catalog(): array
     {
-        $species = ShopItem::where('type', ShopItem::TYPE_PROFILE_PET)->orderBy('sort_order')->get(['effect_value', 'rarity'])
+        // Неактивные (ворона — только из админки) в коллекцию не входят
+        $species = ShopItem::active()->where('type', ShopItem::TYPE_PROFILE_PET)->orderBy('sort_order')->get(['effect_value', 'rarity'])
             ->map(fn ($item) => ['key' => $item->effect_value, 'name' => PetNames::species($item->effect_value), 'rarity' => $item->rarity])
             ->values()->all();
 

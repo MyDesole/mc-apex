@@ -321,6 +321,9 @@ class ShopItemSeeder extends Seeder
             ['slug' => 'frame-creeper', 'name' => 'Рамка «Криппер»', 'description' => 'Криппер выглядывает из-за аватара, а рамка шипит и мигает, как перед взрывом.', 'type' => ShopItem::TYPE_AVATAR_FRAME, 'effect_value' => 'creeper', 'rarity' => 'epic', 'price' => 4000, 'sort_order' => 114, 'metadata' => ['icon' => 'bolt', 'color' => '#4ade80', 'sprite' => 'creeper']],
             ['slug' => 'frame-beehive', 'name' => 'Рамка «Улей»', 'description' => 'Медовая рамка, вокруг которой кружат три пчёлки.', 'type' => ShopItem::TYPE_AVATAR_FRAME, 'effect_value' => 'beehive', 'rarity' => 'epic', 'price' => 4000, 'sort_order' => 115, 'metadata' => ['icon' => 'heart', 'color' => '#facc15', 'sprite' => 'bee']],
 
+            // Неактивна: нет в магазине и сундуках, выдаётся только из админки
+            ['slug' => 'pet-crow', 'name' => 'Питомец «Ворона»', 'description' => 'Редчайшая ворона: её нельзя выбить, только получить от администрации.', 'type' => ShopItem::TYPE_PROFILE_PET, 'effect_value' => 'crow', 'rarity' => 'legendary', 'price' => 0, 'sort_order' => 559, 'is_active' => false, 'metadata' => ['icon' => 'star', 'color' => '#3f3f46', 'sprite' => 'crow']],
+
             // Шестая волна питомцев
             ['slug' => 'pet-owl', 'name' => 'Питомец «Совёнок»', 'description' => 'Совёнок летает над профилем по ночам и всё замечает.', 'type' => ShopItem::TYPE_PROFILE_PET, 'effect_value' => 'owl', 'rarity' => 'rare', 'price' => 4500, 'sort_order' => 570, 'metadata' => ['icon' => 'star', 'color' => '#a16207', 'sprite' => 'owl']],
             ['slug' => 'pet-frog', 'name' => 'Питомец «Лягушонок»', 'description' => 'Квакает, прыгает и уверяет, что он заколдованный принц.', 'type' => ShopItem::TYPE_PROFILE_PET, 'effect_value' => 'frog', 'rarity' => 'rare', 'price' => 3500, 'sort_order' => 571, 'metadata' => ['icon' => 'leaf', 'color' => '#4ade80', 'sprite' => 'frog']],

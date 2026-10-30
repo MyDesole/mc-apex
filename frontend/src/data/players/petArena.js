@@ -37,6 +37,6 @@ export function levelXp(level) {
 export const PET_NAMES = {
     cat: 'Котик', dog: 'Пёсик', fox: 'Лисёнок', axolotl: 'Аксолотль', slime: 'Слизень',
     ghost: 'Призрак', dragon: 'Дракончик', robot: 'Робот', penguin: 'Пингвин', bee: 'Пчёлка',
-    owl: 'Совёнок', frog: 'Лягушонок', bunny: 'Зайчик', panda: 'Панда', shroom: 'Грибочек',
+    crow: 'Ворона', owl: 'Совёнок', frog: 'Лягушонок', bunny: 'Зайчик', panda: 'Панда', shroom: 'Грибочек',
     octopus: 'Осьминожка', capybara: 'Капибара', jelly: 'Медуза', phoenix: 'Феникс', unicorn: 'Единорог',
 }

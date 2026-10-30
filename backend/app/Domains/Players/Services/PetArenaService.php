@@ -40,7 +40,7 @@ class PetArenaService
         'fire' => ['dragon', 'phoenix'],
         'water' => ['axolotl', 'penguin', 'octopus', 'jelly'],
         'nature' => ['frog', 'bee', 'shroom', 'bunny', 'slime'],
-        'shadow' => ['ghost', 'owl', 'robot'],
+        'shadow' => ['ghost', 'owl', 'robot', 'crow'],
         'beast' => ['cat', 'dog', 'fox', 'panda', 'capybara', 'unicorn'],
     ];
 
