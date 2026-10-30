@@ -600,10 +600,11 @@ onMounted(load)
                 :permissions="permissions"
                 :clan="clan"
             />
-
             <ClanMembersTab
                 v-else-if="tab === 'members'"
+                :my-role="data?.my_role"
                 :clan="clan"
+
             />
 
             <ClanNewsTab
