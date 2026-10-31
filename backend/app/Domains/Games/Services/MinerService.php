@@ -32,6 +32,10 @@ class MinerService
     public const COOLDOWN_SECONDS = 600;
     /** Вагонетка: минус секунд перерыва за уровень. */
     public const CART_STEP = 15;
+    /** Выносливость: +ударов за уровень. */
+    public const STAMINA_STEP = 2;
+    /** Магнит: +% монет за руду за уровень. */
+    public const MAGNET_STEP = 0.03;
     /** Удары на спуск по лестнице и сколько добавляет уровень кирки. */
     public const DESCEND_COST = 4;
     public const PICKAXE_STEP = 1;
@@ -58,7 +62,7 @@ class MinerService
     public const CHEST_LOOT = [30, 80];
     public const CHEST_ARTIFACT = 15;
     public const CHEST_DYNAMITE = 25;
-    public const TIER_LOOT = [1 => 1.0, 2 => 1.6, 3 => 2.4, 4 => 3.2];
+    public const TIER_LOOT = [1 => 1.0, 2 => 1.6, 3 => 2.4, 4 => 3.2, 5 => 4.0];
     /** Повторный артефакт продаётся: монеты × ярус. */
     public const DUPLICATE_ARTIFACT = 40;
 
@@ -139,6 +143,8 @@ class MinerService
             'pickaxe' => (int) $profile->pickaxe,
             'fortune' => (int) $profile->fortune,
             'lantern' => (int) $profile->lantern,
+            'stamina' => (int) ($profile->stamina ?? 0),
+            'magnet' => (int) ($profile->magnet ?? 0),
             'rush' => MinerProgress::rush()['active'],
         ] + $this->freshTier();
 
@@ -324,7 +330,7 @@ class MinerService
         return $this->act($user, function (array &$s) {
             if (! $this->canDescend($s)) {
                 throw new RuntimeException($s['meta']['tier'] >= count(MinerWorld::TIERS)
-                    ? 'Глубже Энда ничего нет.'
+                    ? 'Глубже ' . MinerWorld::tier(count(MinerWorld::TIERS))['name'] . ' ничего нет.'
                     : 'Сначала докопайся до дна яруса.');
             }
 
@@ -435,7 +441,9 @@ class MinerService
 
         if (MinerWorld::isOre($block)) {
             $double = random_int(1, 100) <= self::FORTUNE_DOUBLE * $s['meta']['fortune'];
-            $value = (int) round($value * $this->comboMult($s) * ($double ? 2 : 1));
+            // Магнит прибавляет к добыче руды
+            $magnet = 1 + self::MAGNET_STEP * (int) ($s['meta']['magnet'] ?? 0);
+            $value = (int) round($value * $this->comboMult($s) * ($double ? 2 : 1) * $magnet);
 
             if ($block === 'diamond') {
                 $s['track']['diamonds'] = ($s['track']['diamonds'] ?? 0) + 1;
@@ -649,6 +657,8 @@ class MinerService
             'pickaxe' => 0,
             'fortune' => 0,
             'lantern' => 0,
+            'stamina' => 0,
+            'magnet' => 0,
             'rush' => false,
             'artifacts' => [],
             'last' => null,
@@ -662,7 +672,9 @@ class MinerService
 
     private function energyFor(object $profile): int
     {
-        return self::ENERGY + self::PICKAXE_STEP * (int) $profile->pickaxe;
+        return self::ENERGY
+            + self::PICKAXE_STEP * (int) $profile->pickaxe
+            + self::STAMINA_STEP * (int) ($profile->stamina ?? 0);
     }
 
     private function cooldownSeconds(object $profile): int

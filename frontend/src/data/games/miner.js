@@ -69,6 +69,8 @@ export const UPGRADE_SPRITES = {
   lantern: 'mine_lantern',
   cart: 'mine_cart',
   dynamite: 'mine_dynamite',
+  stamina: 'heart',
+  magnet: 'sparkle',
 }
 
 export const ARTIFACT_SPRITES = {
@@ -85,6 +87,8 @@ export const ARTIFACT_SPRITES = {
 export const TRADE_SPRITES = {
   strikes: 'mine_pickaxe',
   dynamite: 'mine_dynamite',
+  stamina: 'heart',
+  magnet: 'sparkle',
   map: 'art_map',
 }
 

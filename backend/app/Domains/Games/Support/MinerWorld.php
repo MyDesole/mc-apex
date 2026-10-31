@@ -36,6 +36,8 @@ final class MinerWorld
         'chorus' => 70,
         'purpur' => 100,
         'shulker' => 270,
+        'ender_shard' => 320,
+        'dragon_breath' => 520,
         // Особые: стоят ноль, но что-то делают
         'tnt' => 0,
         'gravel' => 0,
@@ -55,7 +57,7 @@ final class MinerWorld
     public const WALLS = ['bedrock', 'obsidian'];
 
     /** Редкая руда: на неё действуют Удача и золотая лихорадка. */
-    public const RARE = ['lapis', 'gold', 'diamond', 'emerald', 'amethyst', 'nether_gold', 'debris', 'chorus', 'purpur', 'shulker'];
+    public const RARE = ['lapis', 'gold', 'diamond', 'emerald', 'amethyst', 'nether_gold', 'debris', 'chorus', 'purpur', 'shulker', 'ender_shard', 'dragon_breath'];
 
     /** Номер яруса => название, порода и веса блоков по глубине (ряд => веса). */
     public const TIERS = [
@@ -92,6 +94,14 @@ final class MinerWorld
                 6 => ['end_stone' => 50, 'chorus' => 14, 'purpur' => 8, 'shulker' => 3, 'obsidian' => 18, 'tnt' => 2, 'chest' => 3, 'relic' => 2],
             ],
         ],
+        5 => [
+            'name' => 'Руины Энда',
+            'rock' => 'end_stone',
+            'rows' => [
+                5 => ['end_stone' => 42, 'chorus' => 16, 'purpur' => 10, 'shulker' => 5, 'ender_shard' => 8, 'dragon_breath' => 3, 'obsidian' => 20, 'tnt' => 3, 'chest' => 3, 'relic' => 2],
+                6 => ['end_stone' => 34, 'chorus' => 12, 'purpur' => 12, 'shulker' => 6, 'ender_shard' => 12, 'dragon_breath' => 6, 'obsidian' => 24, 'tnt' => 4, 'chest' => 3, 'relic' => 2],
+            ],
+        ],
     ];
 
     /** Улучшения: цены уровней по порядку (сколько цен — столько уровней). */
@@ -120,6 +130,16 @@ final class MinerWorld
             'name' => 'Динамит',
             'prices' => [6000],
             'about' => 'Заряд на каждый забег: взрыв крестом без удара кирки.',
+        ],
+        'stamina' => [
+            'name' => 'Выносливость',
+            'prices' => [1200, 3000, 6000, 11000, 20000],
+            'about' => '+2 удара кирки за уровень. Дольше копаешь — глубже залезешь.',
+        ],
+        'magnet' => [
+            'name' => 'Магнит',
+            'prices' => [1500, 3500, 7000, 13000, 22000],
+            'about' => '+3% монет за руду за уровень. Руда липнет к кирке.',
         ],
     ];
 

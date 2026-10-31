@@ -16,6 +16,30 @@ class MinerGameTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_miner_has_five_tiers(): void
+    {
+        $this->assertCount(5, \App\Domains\Games\Support\MinerWorld::TIERS, 'пять ярусов');
+        $this->assertArrayHasKey(5, \App\Domains\Games\Services\MinerService::TIER_LOOT, 'множитель пятого яруса');
+        $this->assertSame('Руины Энда', \App\Domains\Games\Support\MinerWorld::tier(5)['name']);
+
+        // Новые улучшения в справочнике
+        $upgrades = \App\Domains\Games\Support\MinerWorld::UPGRADES;
+        $this->assertArrayHasKey('stamina', $upgrades);
+        $this->assertArrayHasKey('magnet', $upgrades);
+    }
+
+    public function test_stamina_upgrade_adds_energy(): void
+    {
+        $user = User::factory()->create(['apex_coins' => 5000]);
+
+        $this->actingAs($user)->postJson('/api/games/miner/upgrade', ['upgrade' => 'stamina'])->assertOk();
+
+        // 24 базовых + 2 за первый уровень выносливости
+        $this->actingAs($user)->getJson('/api/games/miner')
+            ->assertOk()
+            ->assertJsonPath('energy', 26);
+    }
+
     public function test_run_digs_pays_and_cools_down(): void
     {
         $user = User::factory()->create(['apex_coins' => 0]);
