@@ -74,6 +74,12 @@ const router = createRouter({
     { path: '/inventory', name: 'inventory', component: InventoryView, meta: { title: 'Инвентарь', auth: true } },
     { path: '/cases', name: 'cases', component: CasesView, meta: { title: 'Кейсы' } },
     { path: '/pets', name: 'pets', component: () => import('@/views/pets/PetsView.vue'), meta: { title: 'Мои питомцы', auth: true } },
+    {
+        path: '/pets/dungeon',
+        name: 'dungeons',
+        component: () => import('@/views/pets/DungeonView.vue'),
+        meta: { title: 'Подземелья', auth: true },
+    },
     { path: '/miner', name: 'miner', component: () => import('@/views/games/MinerView.vue'), meta: { title: 'Шахтёр', auth: true } },
     { path: '/auction', name: 'auction', component: () => import('@/views/shop/AuctionView.vue'), meta: { title: 'Аукцион питомцев' } },
     { path: '/wallet', name: 'wallet', component: () => import('@/views/shop/WalletView.vue'), meta: { title: 'Кошелёк', auth: true } },

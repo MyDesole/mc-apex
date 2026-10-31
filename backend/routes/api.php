@@ -432,6 +432,22 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/dex/{milestone}/claim', 'claimDex')->middleware('throttle:20,1');
     });
 
+    /*
+     * Подземелья: поход отрядом 2–3 питомцев, добыча экипировки.
+     * Экипировка надевается на питомца и усиливает его на арене.
+     */
+    Route::prefix('dungeons')->controller(\App\Domains\Players\Controllers\Api\DungeonController::class)->group(function () {
+        Route::get('/', 'index');
+        Route::post('/start', 'start')->middleware('throttle:20,1');
+        Route::post('/buy-run', 'buyRun')->middleware('throttle:20,1');
+        Route::post('/{run}/advance', 'advance')->whereNumber('run')->middleware('throttle:120,1');
+        Route::post('/{run}/move', 'move')->whereNumber('run')->middleware('throttle:120,1');
+        Route::post('/{run}/retreat', 'retreat')->whereNumber('run')->middleware('throttle:20,1');
+        Route::get('/gear', 'gear');
+        Route::post('/gear/{pet}/equip', 'equip')->whereNumber('pet')->middleware('throttle:60,1');
+        Route::post('/gear/{pet}/unequip/{slot}', 'unequip')->whereNumber('pet')->middleware('throttle:60,1');
+    });
+
     // Панель игрока на главной: кулдауны и быстрые действия
     Route::get('/home/me', [HomeController::class, 'dashboard']);
 

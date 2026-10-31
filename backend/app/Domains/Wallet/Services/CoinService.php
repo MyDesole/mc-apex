@@ -135,6 +135,71 @@ class CoinService
     }
 
     /**
+     * Штраф: списание не больше остатка и без записи в «потрачено».
+     *
+     * Это не покупка, поэтому apex_coins_spent не растёт — иначе штраф
+     * попал бы в «заработано» (оно считается как баланс + потрачено).
+     *
+     * @return int сколько реально списали
+     */
+    public static function penalty(
+        User $user,
+        int $amount,
+        string $source,
+        ?string $description = null,
+        array $options = []
+    ): int {
+        $amount = abs($amount);
+
+        if ($amount === 0) {
+            return 0;
+        }
+
+        return DB::transaction(function () use ($user, $amount, $source, $description, $options) {
+            $query = User::whereKey($user->id);
+
+            if (self::supportsRowLock()) {
+                $query->lockForUpdate();
+            }
+
+            /** @var User $locked */
+            $locked = $query->firstOrFail();
+
+            $balance = (int) $locked->apex_coins;
+            $paid = min($amount, max(0, $balance));
+
+            if ($paid === 0) {
+                $user->setAttribute('apex_coins', $balance);
+
+                return 0;
+            }
+
+            $balance -= $paid;
+
+            $locked->apex_coins = $balance;
+            $locked->save();
+
+            CoinTransaction::create([
+                'user_id' => $locked->id,
+                'amount' => -$paid,
+                'balance_after' => $balance,
+                'source' => $source,
+                'description' => $description,
+                'reference_type' => self::morphType($options['reference_type'] ?? null),
+                'reference_id' => $options['reference_id'] ?? null,
+                'idempotency_key' => $options['idempotency_key'] ?? null,
+                'actor_id' => $options['actor_id'] ?? null,
+                'meta' => $options['meta'] ?? null,
+            ]);
+
+            $user->setAttribute('apex_coins', $balance);
+            $user->syncOriginalAttributes(['apex_coins']);
+
+            return $paid;
+        });
+    }
+
+    /**
      * Списание с проверкой достаточности средств (без исключения).
      */
     public static function canAfford(User $user, int $amount): bool

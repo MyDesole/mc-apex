@@ -320,7 +320,15 @@ class PetArenaService
         $traits = PetTraits::present($pet->pet_traits, $pet->pet_serial);
         $r = self::RARITY_BONUS[$traits['rarity'] ?? 'common'] ?? 0;
         $element = self::element($species);
-        $hp = 60 + $level * 6 + $r * 8;
+
+        /*
+         * Экипировка из подземелий прибавляется к характеристикам здесь,
+         * до боя: здоровье умножает уже движок (PetBattleEngine::HP_FACTOR),
+         * поэтому бонус доспеха растягивается вместе с базовым здоровьем.
+         */
+        $gear = app(\App\Domains\Players\Services\PetGearService::class)->bonus($pet);
+
+        $hp = 60 + $level * 6 + $r * 8 + $gear['hp'];
 
         return [
             'inventory_id' => $pet->id,
@@ -331,9 +339,9 @@ class PetArenaService
             'element' => $element,
             'hp' => $hp,
             'max' => $hp,
-            'atk' => (int) round(10 + $level * 1.2 + $r * 1.5),
-            'def' => (int) round(5 + $level * 0.6 + $r),
-            'spd' => (int) round(10 + $level * 0.4 + ($element === 'shadow' ? 2 : 0) + ($element === 'beast' ? 1 : 0)),
+            'atk' => (int) round(10 + $level * 1.2 + $r * 1.5 + $gear['atk']),
+            'def' => (int) round(5 + $level * 0.6 + $r + $gear['def']),
+            'spd' => (int) round(10 + $level * 0.4 + ($element === 'shadow' ? 2 : 0) + ($element === 'beast' ? 1 : 0) + $gear['spd']),
             'cd' => 0,
         ];
     }
@@ -405,12 +413,34 @@ class PetArenaService
             'last' => $state['last'] ?? null,
             'arena' => ['key' => $state['arena']] + $arena,
             'tell' => $battle->status === 'active' ? $engine->tell($state) : null,
+            // Снаряжение обоих: иначе непонятно, почему питомец с виду
+            // слабее, а бьёт сильнее
+            'gear' => [
+                'me' => $this->gearOf((int) $battle->inventory_id),
+                'foe' => $this->gearOf((int) $battle->opponent_inventory_id),
+            ],
             'rating_change' => (int) $battle->rating_change,
             'coins' => (int) $battle->coins,
             'skills' => self::SKILLS,
             'ultimates' => PetBattleEngine::ULTIMATES,
             'statuses' => PetBattleEngine::STATUSES,
             'rage_max' => PetBattleEngine::RAGE_MAX,
+        ];
+    }
+
+    /**
+     * Надетая экипировка питомца: предметы по слотам и суммарный бонус.
+     *
+     * @return array{items: array, bonus: array}
+     */
+    private function gearOf(int $inventoryId): array
+    {
+        $pet = UserInventory::with('item')->find($inventoryId);
+        $gear = app(\App\Domains\Players\Services\PetGearService::class);
+
+        return [
+            'items' => array_values($gear->equipped($pet)),
+            'bonus' => $gear->bonus($pet),
         ];
     }
 

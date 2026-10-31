@@ -15,6 +15,7 @@ import PageLoader from '@/components/core/PageLoader.vue'
 import PetFigure from '@/components/pets/PetFigure.vue'
 import PetBattle from '@/components/pets/PetBattle.vue'
 import PetDex from '@/components/pets/PetDex.vue'
+import PetGear from '@/components/pets/PetGear.vue'
 import PetTop from '@/components/pets/PetTop.vue'
 import PetViewer from '@/components/pets/PetViewer.vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
@@ -32,6 +33,7 @@ const TABS = [
   ['pets', 'Питомцы', 'heart'],
   ['expeditions', 'Экспедиции', 'globe'],
   ['arena', 'Арена', 'sword'],
+  ['gear', 'Экипировка', 'shield'],
   ['dex', 'Питомцедекс', 'box'],
   ['top', 'Топ', 'trophy'],
 ]
@@ -391,7 +393,7 @@ onMounted(async () => {
       <button type="button" class="pv-short__close" aria-label="Скрыть" @click="shortage = 0"><AppIcon icon="close" :size="14" /></button>
     </div>
 
-    <PageLoader v-if="!hub && !['dex', 'top'].includes(tab)" />
+    <PageLoader v-if="!hub && !['dex', 'top', 'gear'].includes(tab)" />
 
     <!-- ================= Питомцы ================= -->
     <template v-else-if="tab === 'pets'">
@@ -557,6 +559,7 @@ onMounted(async () => {
             <div v-else class="pc__actions">
               <button type="button" @click="expeditionPet = p.inventory_id; tab = 'expeditions'"><AppIcon icon="globe" :size="13" /> В поход</button>
               <button type="button" @click="arenaPet = p.inventory_id; tab = 'arena'"><AppIcon icon="sword" :size="13" /> На арену</button>
+              <button type="button" class="pc__actions-wide" @click="router.push('/pets/dungeon')"><AppIcon icon="rocket" :size="13" /> В подземелье</button>
             </div>
           </div>
         </article>
@@ -731,6 +734,7 @@ onMounted(async () => {
       </template>
     </template>
 
+    <PetGear v-else-if="tab === 'gear'" />
     <PetDex v-else-if="tab === 'dex'" />
     <PetTop v-else-if="tab === 'top'" />
 

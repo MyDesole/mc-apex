@@ -12,7 +12,7 @@ class UserInventory extends Model
     protected $table = 'user_inventory';
 
     protected $fillable = [
-        'user_id', 'shop_item_id', 'quantity', 'equipped_at', 'acquired_at', 'gifted_by', 'pet_name', 'paid_price',
+        'user_id', 'shop_item_id', 'quantity', 'equipped_at', 'acquired_at', 'gifted_by', 'pet_name', 'pet_gear', 'gear_stats', 'paid_price',
     ];
 
     protected $casts = [
@@ -20,6 +20,10 @@ class UserInventory extends Model
         'acquired_at' => 'datetime',
         'quantity' => 'integer',
         'pet_traits' => 'array',
+        // Что надето на питомца: слот => id строки экипировки
+        'pet_gear' => 'array',
+        // Редкость и характеристики экземпляра экипировки
+        'gear_stats' => 'array',
         'pet_serial' => 'integer',
     ];
 

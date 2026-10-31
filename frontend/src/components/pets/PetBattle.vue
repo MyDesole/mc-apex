@@ -10,12 +10,31 @@ import { api } from '@/services/core/api.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import AppIcon from '@/components/core/AppIcon.vue'
 import PetFigure from '@/components/pets/PetFigure.vue'
+import PixelSprite from '@/components/shop/PixelSprite.vue'
 import { ARENA_THEMES, ELEMENTS, STATUS_COLORS } from '@/data/players/petArena.js'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 
 const props = defineProps({
   battle: { type: Object, required: true },
 })
+
+/** Слоты экипировки в том же порядке, что в инвентаре. */
+const GEAR_SLOTS = ['weapon', 'armor', 'trinket']
+
+const gearFor = (side) => props.battle.gear?.[side] ?? { items: [], bonus: {} }
+
+/** Предметы по слотам: слот => предмет. */
+const gearBySlot = (side) =>
+  Object.fromEntries((gearFor(side).items ?? []).map((item) => [item.slot, item]))
+
+/** Подсказка при наведении: что надето и сколько даёт. */
+function gearTitle(side) {
+  const items = gearFor(side).items ?? []
+
+  if (!items.length) return 'Без экипировки'
+
+  return items.map((item) => `${item.slot_name}: ${item.name}`).join(' · ')
+}
 
 const emit = defineEmits(['update', 'close'])
 
@@ -160,6 +179,21 @@ async function forfeit() {
           <AppIcon icon="flame" :size="11" />
           <span class="pb-rage__bar"><i :style="{ width: `${ragePct(battle[side])}%` }"></i></span>
         </div>
+        <div class="pb-gear" :title="gearTitle(side)">
+          <span
+              v-for="slot in GEAR_SLOTS"
+              :key="slot"
+              class="pb-gear__slot"
+              :class="{ 'is-empty': !gearBySlot(side)[slot] }"
+          >
+            <PixelSprite
+                v-if="gearBySlot(side)[slot]"
+                :sprite="gearBySlot(side)[slot].sprite || 'mob-rat'"
+                :size="16"
+            />
+          </span>
+        </div>
+
         <div class="pb-hud__tags">
           <span v-if="side === 'foe' && foe.temper" class="pb-tag">{{ foe.temper }}</span>
           <span v-if="side === 'foe' && foe.owner" class="pb-tag pb-tag--dim">{{ foe.owner.username }}</span>
@@ -880,6 +914,35 @@ async function forfeit() {
   .pb-move--ult { grid-column: 1 / -1; }
 
   .pb-sum { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Экипировка в HUD бойца */
+
+.pb-gear {
+  display: flex;
+  gap: 4px;
+
+  margin: 6px 0 2px;
+}
+
+.pb-gear__slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 24px;
+  height: 24px;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 7px;
+
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.pb-gear__slot.is-empty {
+  border-style: dashed;
+
+  opacity: 0.4;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -43,6 +43,8 @@ log "Миграции и каталог"
 php artisan migrate --force
 php artisan db:seed --class=AchievementSeeder --force
 php artisan db:seed --class=ShopItemSeeder --force
+# Экипировка подземелий: скрытые предметы магазина, сидер идемпотентный
+php artisan db:seed --class=DungeonGearSeeder --force
 # Очки рейтинга и сила кланов — страховка, если формулу или данные меняли миграцией
 php artisan apex:rating-recalc
 

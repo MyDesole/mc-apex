@@ -522,6 +522,9 @@
 
 .pc__actions button:hover { color: #fff; border-color: rgba(244, 114, 182, 0.5); }
 
+/* В поход и на арену — рядом, подземелье отдельной строкой */
+.pc__actions .pc__actions-wide { grid-column: 1 / -1; }
+
 .pv-perks {
   padding: 16px;
 
