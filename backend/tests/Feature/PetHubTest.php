@@ -105,6 +105,70 @@ class PetHubTest extends TestCase
         $this->actingAs($other)->postJson("/api/pets/expeditions/{$trip}/recall")->assertStatus(422);
     }
 
+    public function test_breeding_creates_offspring_and_costs_coins(): void
+    {
+        $user = User::factory()->create(['apex_coins' => 1000]);
+        $p1 = $this->pet($user, 'cat');
+        $p2 = $this->pet($user, 'fox');
+
+        $result = $this->actingAs($user)
+            ->postJson('/api/pets/breeding', ['parent1' => $p1->id, 'parent2' => $p2->id])
+            ->assertOk()
+            ->json();
+
+        $this->assertNotNull($result['offspring']['inventory_id']);
+
+        // Вид — один из родителей
+        $species = \App\Domains\Shop\Models\UserInventory::find($result['offspring']['inventory_id'])->shop_item_id;
+        $this->assertContains($species, [$p1->shop_item_id, $p2->shop_item_id]);
+
+        // Потрачено 300 монет
+        $this->assertSame(700, (int) $user->fresh()->apex_coins);
+
+        $this->assertDatabaseHas('user_inventory', [
+            'id' => $result['offspring']['inventory_id'],
+            'user_id' => $user->id,
+        ]);
+    }
+
+    public function test_breeding_requires_two_distinct_own_pets(): void
+    {
+        $user = User::factory()->create(['apex_coins' => 1000]);
+        $p1 = $this->pet($user, 'cat');
+
+        $this->actingAs($user)
+            ->postJson('/api/pets/breeding', ['parent1' => $p1->id, 'parent2' => $p1->id])
+            ->assertStatus(422);
+    }
+
+    public function test_breeding_has_daily_cooldown(): void
+    {
+        $user = User::factory()->create(['apex_coins' => 2000]);
+        $p1 = $this->pet($user, 'cat');
+        $p2 = $this->pet($user, 'fox');
+        $p3 = $this->pet($user, 'dog');
+
+        $this->actingAs($user)
+            ->postJson('/api/pets/breeding', ['parent1' => $p1->id, 'parent2' => $p2->id])
+            ->assertOk();
+
+        // Тот же родитель в новой паре — нельзя
+        $this->actingAs($user)
+            ->postJson('/api/pets/breeding', ['parent1' => $p1->id, 'parent2' => $p3->id])
+            ->assertStatus(422);
+    }
+
+    public function test_breeding_requires_coins(): void
+    {
+        $user = User::factory()->create(['apex_coins' => 100]);
+        $p1 = $this->pet($user, 'cat');
+        $p2 = $this->pet($user, 'fox');
+
+        $this->actingAs($user)
+            ->postJson('/api/pets/breeding', ['parent1' => $p1->id, 'parent2' => $p2->id])
+            ->assertStatus(422);
+    }
+
     public function test_arena_battle_until_the_end_changes_rating(): void
     {
         $user = User::factory()->create(['apex_coins' => 0]);

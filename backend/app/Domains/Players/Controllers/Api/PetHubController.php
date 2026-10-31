@@ -6,6 +6,7 @@ use App\Domains\Players\Services\PetArenaService;
 use App\Domains\Players\Services\PetBulkService;
 use App\Domains\Shop\Exceptions\NotEnoughCoins;
 use App\Domains\Players\Services\PetExpeditionService;
+use App\Domains\Players\Services\PetBreedingService;
 use App\Domains\Players\Services\PetHubService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -21,7 +22,23 @@ class PetHubController extends Controller
         private readonly PetHubService $hub,
         private readonly PetExpeditionService $expeditions,
         private readonly PetArenaService $arena,
+        private readonly PetBreedingService $breeding,
     ) {
+    }
+
+    /** Скрестить двух своих питомцев. */
+    public function breed(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'parent1' => ['required', 'integer', 'min:1'],
+            'parent2' => ['required', 'integer', 'min:1'],
+        ]);
+
+        return $this->run(fn () => $this->breeding->breed(
+            $request->user(),
+            (int) $data['parent1'],
+            (int) $data['parent2'],
+        ));
     }
 
     public function index(Request $request): JsonResponse
