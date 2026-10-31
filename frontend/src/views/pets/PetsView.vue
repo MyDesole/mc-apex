@@ -9,6 +9,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { api } from '@/services/core/api.js'
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import AppIcon from '@/components/core/AppIcon.vue'
 import PageLoader from '@/components/core/PageLoader.vue'
@@ -273,6 +274,28 @@ async function sendExpedition(zone) {
     await load()
   } catch (e) {
     fail(e, 'Не удалось отправить.')
+  } finally {
+    busy.value = null
+  }
+}
+
+/** Вернуть питомца досрочно — без награды. */
+async function recall(trip) {
+  busy.value = `recall-${trip.id}`
+
+  try {
+    const ok = await confirmDialog(
+        `Вернуть «${trip.pet.name}» досрочно? Награды не будет, даже если до конца оставалась минута.`,
+        { title: 'Отозвать с экспедиции', confirmText: 'Вернуть' },
+    )
+
+    if (!ok) return
+
+    await api.post(`/pets/expeditions/${trip.id}/recall`)
+    say(`${trip.pet.name} вернулся досрочно — без добычи.`)
+    await load()
+  } catch (e) {
+    fail(e, 'Не удалось вернуть.')
   } finally {
     busy.value = null
   }
@@ -593,7 +616,10 @@ onMounted(async () => {
             <small>{{ trip.zone_name }}</small>
           </span>
           <button v-if="isReady(trip)" type="button" class="pv-btn pv-btn--go" :disabled="busy === `claim-${trip.id}`" @click="claim(trip)">Забрать добычу</button>
-          <span v-else class="pv-trip__timer"><AppIcon icon="clock" :size="13" /> <CountdownText :to="trip.ends_at" /></span>
+          <template v-else>
+            <span class="pv-trip__timer"><AppIcon icon="clock" :size="13" /> <CountdownText :to="trip.ends_at" /></span>
+            <button type="button" class="pv-btn pv-btn--ghost" :disabled="busy === `recall-${trip.id}`" @click="recall(trip)">Вернуть</button>
+          </template>
         </article>
       </section>
 

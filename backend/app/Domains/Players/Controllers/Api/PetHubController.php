@@ -61,6 +61,12 @@ class PetHubController extends Controller
         return $this->run(fn () => $this->expeditions->start($request->user(), $row, $data['zone']), 201);
     }
 
+    /** Вернуть питомца досрочно, без награды. */
+    public function recallExpedition(Request $request, int $expedition): JsonResponse
+    {
+        return $this->run(fn () => $this->expeditions->recall($request->user(), $expedition));
+    }
+
     public function claimExpedition(Request $request, int $expedition): JsonResponse
     {
         return $this->run(fn () => $this->expeditions->claim($request->user(), $expedition));

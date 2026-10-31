@@ -423,6 +423,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{row}/trick', 'trick')->whereNumber('row')->middleware('throttle:30,1');
         Route::post('/{row}/expedition', 'expedition')->whereNumber('row')->middleware('throttle:30,1');
         Route::post('/expeditions/{expedition}/claim', 'claimExpedition')->whereNumber('expedition')->middleware('throttle:30,1');
+        Route::post('/expeditions/{expedition}/recall', 'recallExpedition')->whereNumber('expedition')->middleware('throttle:30,1');
         Route::get('/{row}/opponents', 'opponents')->whereNumber('row')->middleware('throttle:30,1');
         Route::post('/{row}/battle', 'battle')->whereNumber('row')->middleware('throttle:20,1');
         Route::get('/battles/{battle}', 'showBattle')->whereNumber('battle');

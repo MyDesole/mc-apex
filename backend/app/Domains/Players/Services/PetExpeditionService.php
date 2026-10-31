@@ -115,6 +115,37 @@ class PetExpeditionService
         });
     }
 
+    /**
+     * Вернуть питомца досрочно.
+     *
+     * Награда НЕ выдаётся, даже если до конца оставалась минута: отозвали —
+     * значит поход не дослужил. Питомец освобождается и может пойти снова.
+     */
+    public function recall(User $user, int $id): array
+    {
+        return DB::transaction(function () use ($user, $id) {
+            $trip = DB::table('pet_expeditions')->lockForUpdate()->find($id);
+
+            if (! $trip || $trip->user_id !== $user->id) {
+                throw new RuntimeException('Экспедиция не найдена.');
+            }
+
+            if ($trip->claimed_at || $trip->recalled_at) {
+                throw new RuntimeException('Питомец уже вернулся.');
+            }
+
+            $now = now();
+
+            DB::table('pet_expeditions')->where('id', $id)->update([
+                'claimed_at' => $now,
+                'recalled_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+            return $this->present(DB::table('pet_expeditions')->find($id));
+        });
+    }
+
     /** Активные и невостребованные экспедиции игрока. */
     public function active(User $user): array
     {
@@ -175,6 +206,7 @@ class PetExpeditionService
             'ends_at' => Carbon::parse($trip->ends_at)->toIso8601String(),
             'ready' => $done && ! $trip->claimed_at,
             'claimed' => (bool) $trip->claimed_at,
+            'recalled' => (bool) ($trip->recalled_at ?? false),
             // Добыча — только когда питомец вернулся
             'reward' => $done ? json_decode($trip->reward, true) : null,
         ];

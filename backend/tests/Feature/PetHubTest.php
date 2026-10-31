@@ -62,6 +62,49 @@ class PetHubTest extends TestCase
         $this->actingAs($user)->postJson("/api/pets/expeditions/{$trip}/claim")->assertStatus(422);
     }
 
+    public function test_recall_expedition_returns_pet_without_reward(): void
+    {
+        $user = User::factory()->create(['apex_coins' => 0]);
+        $row = $this->pet($user);
+
+        $trip = $this->actingAs($user)->postJson("/api/pets/{$row->id}/expedition", ['zone' => 'meadow'])
+            ->assertCreated()
+            ->json('id');
+
+        // Минута в пути — но отозвали, значит награды нет
+        $this->travel(1)->minute();
+
+        $this->actingAs($user)->postJson("/api/pets/expeditions/{$trip}/recall")
+            ->assertOk()
+            ->assertJsonPath('recalled', true)
+            ->assertJsonPath('claimed', true);
+
+        $this->assertSame(0, (int) $user->fresh()->apex_coins, 'монеты не начислены');
+        $this->assertSame(0, (int) $row->fresh()->pet_xp, 'опыт не начислен');
+
+        // Питомец свободен и может снова уйти
+        $this->assertNull(\App\Domains\Players\Support\PetLocks::reason($row->id));
+
+        // Повторно ни вернуть, ни забрать нельзя
+        $this->actingAs($user)->postJson("/api/pets/expeditions/{$trip}/recall")->assertStatus(422);
+        $this->actingAs($user)->postJson("/api/pets/expeditions/{$trip}/claim")->assertStatus(422);
+    }
+
+    public function test_recall_requires_own_expedition(): void
+    {
+        $user = User::factory()->create(['apex_coins' => 0]);
+        $other = User::factory()->create();
+
+        $row = $this->pet($user);
+
+        $trip = $this->actingAs($user)->postJson("/api/pets/{$row->id}/expedition", ['zone' => 'meadow'])
+            ->assertCreated()
+            ->json('id');
+
+        // Чужой игрок не может вернуть чужого питомца
+        $this->actingAs($other)->postJson("/api/pets/expeditions/{$trip}/recall")->assertStatus(422);
+    }
+
     public function test_arena_battle_until_the_end_changes_rating(): void
     {
         $user = User::factory()->create(['apex_coins' => 0]);
