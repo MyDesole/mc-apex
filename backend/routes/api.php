@@ -441,6 +441,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', 'index');
         Route::post('/start', 'start')->middleware('throttle:20,1');
         Route::post('/buy-run', 'buyRun')->middleware('throttle:20,1');
+        Route::get('/craft', 'craftIndex')->middleware('throttle:30,1');
+        Route::post('/craft', 'craft')->middleware('throttle:30,1');
         Route::post('/{run}/advance', 'advance')->whereNumber('run')->middleware('throttle:120,1');
         Route::post('/{run}/move', 'move')->whereNumber('run')->middleware('throttle:120,1');
         Route::post('/{run}/retreat', 'retreat')->whereNumber('run')->middleware('throttle:20,1');

@@ -600,6 +600,75 @@ class DungeonTest extends TestCase
         }
     }
 
+    public function test_craft_spends_materials_and_grants_gear(): void
+    {
+        DB::table('dungeon_materials')->insert([
+            'user_id' => $this->user->id,
+            'material' => 'claw',
+            'quantity' => 3,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $result = $this->actingAs($this->user)
+            ->postJson('/api/dungeons/craft', ['material' => 'claw'])
+            ->assertCreated()
+            ->json();
+
+        // Предмет выдан и виден на складе
+        $this->assertNotNull($result['crafted']['inventory_id']);
+        $this->assertArrayHasKey($result['crafted']['slug'], Dungeons::GEAR);
+        $this->assertArrayHasKey('rarity_name', $result['crafted']);
+
+        // Три материала потрачены — склада больше нет
+        $this->assertArrayNotHasKey('claw', $result['materials']);
+
+        $this->assertDatabaseHas('user_inventory', [
+            'id' => $result['crafted']['inventory_id'],
+            'user_id' => $this->user->id,
+        ]);
+    }
+
+    public function test_craft_requires_three_materials(): void
+    {
+        DB::table('dungeon_materials')->insert([
+            'user_id' => $this->user->id,
+            'material' => 'claw',
+            'quantity' => 2,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($this->user)
+            ->postJson('/api/dungeons/craft', ['material' => 'claw'])
+            ->assertStatus(422);
+    }
+
+    public function test_craft_rejects_unknown_material(): void
+    {
+        $this->actingAs($this->user)
+            ->postJson('/api/dungeons/craft', ['material' => 'nope'])
+            ->assertStatus(422);
+    }
+
+    public function test_craft_index_returns_catalog(): void
+    {
+        $this->actingAs($this->user)
+            ->getJson('/api/dungeons/craft')
+            ->assertOk()
+            ->assertJsonPath('cost', 3)
+            ->assertJsonStructure(['materials', 'catalog' => ['claw', 'scale', 'magma', 'frost', 'void']]);
+    }
+
+    public function test_materials_match_dungeon_stages(): void
+    {
+        $this->assertSame('claw', Dungeons::materialForStage(1));
+        $this->assertSame('scale', Dungeons::materialForStage(2));
+        $this->assertSame('magma', Dungeons::materialForStage(3));
+        $this->assertSame('frost', Dungeons::materialForStage(4));
+        $this->assertSame('void', Dungeons::materialForStage(5));
+    }
+
     public function test_every_boss_has_its_own_sprite(): void
     {
         $sprites = [];

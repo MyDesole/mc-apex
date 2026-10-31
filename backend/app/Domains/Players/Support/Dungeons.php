@@ -270,6 +270,27 @@ final class Dungeons
         'gear-shard' => ['slot' => 'trinket', 'name' => 'Кристалл разлома', 'sprite' => 'gear-trinket-5', 'atk' => 18, 'def' => 0, 'hp' => 50, 'spd' => 10, 'stage' => 5, 'rarity' => 'legendary'],
     ];
 
+    /** Материалы для крафта: по одному на тир подземелья. */
+    public const MATERIALS = [
+        'claw' => ['name' => 'Коготь', 'stage' => 1, 'sprite' => 'mat-claw'],
+        'scale' => ['name' => 'Чешуя', 'stage' => 2, 'sprite' => 'mat-scale'],
+        'magma' => ['name' => 'Магма', 'stage' => 3, 'sprite' => 'mat-magma'],
+        'frost' => ['name' => 'Иней', 'stage' => 4, 'sprite' => 'mat-frost'],
+        'void' => ['name' => 'Пустота', 'stage' => 5, 'sprite' => 'mat-void'],
+    ];
+
+    /** Материал, который падает в подземелье этой ступени. */
+    public static function materialForStage(int $stage): ?string
+    {
+        foreach (self::MATERIALS as $key => $material) {
+            if ($material['stage'] === $stage) {
+                return $key;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * Редкость выпавшего предмета: множитель характеристик и подпись.
      *

@@ -42,6 +42,16 @@ export const dungeonApi = {
     },
 
     /** Вся экипировка игрока и на кого надета. */
+    /** Склад материалов для крафта. */
+    craftIndex() {
+        return api.get('/dungeons/craft')
+    },
+
+    /** Скрафтить предмет из трёх материалов. */
+    craft(material) {
+        return api.post('/dungeons/craft', { material })
+    },
+
     gear() {
         return api.get('/dungeons/gear')
     },

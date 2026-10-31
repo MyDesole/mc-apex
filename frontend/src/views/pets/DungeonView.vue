@@ -467,7 +467,40 @@ function bestSquad() {
     }
 }
 
-onMounted(load)
+/* ---------- Крафт из материалов ---------- */
+
+const craft = ref(null)
+const crafted = ref(null)
+const craftBusy = ref('')
+
+async function loadCraft() {
+    try {
+        craft.value = await dungeonApi.craftIndex()
+    } catch {
+        craft.value = null
+    }
+}
+
+const doCraft = async (material) => {
+    craftBusy.value = material
+    error.value = ''
+
+    try {
+        const result = await dungeonApi.craft(material)
+
+        craft.value = { ...craft.value, materials: result.materials }
+        crafted.value = result.crafted
+    } catch (e) {
+        error.value = e.message ?? 'Не удалось скрафтить.'
+    } finally {
+        craftBusy.value = ''
+    }
+}
+
+onMounted(() => {
+    load()
+    loadCraft()
+})
 </script>
 
 <template>
@@ -952,6 +985,31 @@ onMounted(load)
             <p v-if="!canStart" class="dgn-hint">Возьми минимум двух питомцев.</p>
             <p v-else-if="autoPicked" class="dgn-hint">
                 Отряд подобран по силе — она считается вместе с надетой экипировкой и связкой стихий.
+            </p>
+
+            <h3>Крафт экипировки</h3>
+            <p class="dgn-hint">Три материала — случайный предмет того же тира. Материалы падают с мобов и боссов.</p>
+
+            <div v-if="craft" class="dgn-craft">
+                <div v-for="(def, key) in craft.catalog" :key="key" class="dgn-craft__item">
+                    <PixelSprite :sprite="def.sprite" :size="28" />
+                    <span class="dgn-craft__meta">
+                        <b>{{ def.name }}</b>
+                        <small>есть {{ craft.materials[key] ?? 0 }} · нужно {{ craft.cost }}</small>
+                    </span>
+                    <button
+                        type="button"
+                        class="dgn-btn"
+                        :disabled="busy || craftBusy === key || (craft.materials[key] ?? 0) < craft.cost"
+                        @click="doCraft(key)"
+                    >
+                        Скрафтить
+                    </button>
+                </div>
+            </div>
+
+            <p v-if="crafted" class="dgn-craft__result">
+                Скрафчено: <b>{{ crafted.name }}</b> ({{ crafted.rarity_name }}) — во вкладке «Экипировка».
             </p>
 
             <h3>Связки стихий</h3>

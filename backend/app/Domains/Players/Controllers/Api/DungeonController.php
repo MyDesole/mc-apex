@@ -22,7 +22,34 @@ class DungeonController extends Controller
     public function __construct(
         private readonly DungeonService $dungeons,
         private readonly PetGearService $gear,
+        private readonly \App\Domains\Players\Services\DungeonCraftService $craft,
     ) {
+    }
+
+    /** Склад материалов и правила крафта. */
+    public function craftIndex(Request $request): JsonResponse
+    {
+        return response()->json([
+            'materials' => $this->craft->materials($request->user()),
+            'catalog' => \App\Domains\Players\Support\Dungeons::MATERIALS,
+            'cost' => \App\Domains\Players\Services\DungeonCraftService::COST,
+        ]);
+    }
+
+    /** Скрафтить предмет из трёх материалов. */
+    public function craft(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'material' => ['required', 'string', 'max:24'],
+        ]);
+
+        try {
+            $result = $this->craft->craft($request->user(), (string) $data['material']);
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json($result, 201);
     }
 
     /** Сводка: подземелья, отряд, активный поход, экипировка. */

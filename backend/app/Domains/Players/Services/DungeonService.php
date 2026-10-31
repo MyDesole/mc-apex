@@ -459,6 +459,22 @@ final class DungeonService
             $state['loot']['coins'] += $coins;
         }
 
+        // Материал для крафта: с босса всегда, с моба — с шансом
+        $material = Dungeons::materialForStage($stage);
+
+        if ($material && random_int(1, 100) <= ($isBoss ? 100 : 30)) {
+            $count = $isBoss ? 2 : 1;
+
+            DB::table('dungeon_materials')->upsert(
+                ['user_id' => $user->id, 'material' => $material, 'quantity' => $count, 'created_at' => now(), 'updated_at' => now()],
+                ['user_id', 'material'],
+                ['quantity' => DB::raw('quantity + ' . $count)],
+            );
+
+            $state['loot']['materials'][$material] = ($state['loot']['materials'][$material] ?? 0) + $count;
+            $state['log'][] = ['kind' => 'material', 'text' => 'Материал: ' . Dungeons::MATERIALS[$material]['name'] . '.', 'sprite' => Dungeons::MATERIALS[$material]['sprite']];
+        }
+
         $xp = $isBoss ? Dungeons::XP_PER_BOSS : Dungeons::XP_PER_MOB;
 
         foreach ($state['members'] as $member) {

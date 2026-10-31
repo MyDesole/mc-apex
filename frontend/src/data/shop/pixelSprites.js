@@ -13,6 +13,94 @@ export const PIXEL_SPRITES = {
 
     // --- Экипировка: оружие, доспех, талисман ---
 
+    // --- Материалы подземелий для крафта ---
+
+    'mat-claw': {
+        palette: { k: '#1f2430', w: '#e2e8f0' },
+        rows: [
+            '............',
+            '...kk.......',
+            '..kwwk......',
+            '..kwwkk.....',
+            '..kwwwkk....',
+            '..kwwwwkk...',
+            '...kwwwwk...',
+            '....kwwwk...',
+            '.....kkkk...',
+            '............',
+            '............',
+            '............',
+        ],
+    },
+    'mat-scale': {
+        palette: { k: '#0f2f34', g: '#5eead4' },
+        rows: [
+            '............',
+            '....kkkk....',
+            '...kggggk...',
+            '..kggggggk..',
+            '.kggggggggk.',
+            'kggggggggggk',
+            '.kggggggggk.',
+            '..kggggggk..',
+            '...kggggk...',
+            '....kkkk....',
+            '............',
+            '............',
+        ],
+    },
+    'mat-magma': {
+        palette: { k: '#1a0a06', r: '#f97316', R: '#fdba74' },
+        rows: [
+            '............',
+            '....kkkk....',
+            '...krrrrk...',
+            '..krrrrrrk..',
+            '..krRRRRrk..',
+            '.krRRRRRRrk.',
+            '.krRRRRRRrk.',
+            '..krrrrrrk..',
+            '...krrrrk...',
+            '....kkkk....',
+            '............',
+            '............',
+        ],
+    },
+    'mat-frost': {
+        palette: { i: '#7dd3fc', w: '#e6f4ff' },
+        rows: [
+            '............',
+            '....iwwi....',
+            '....iwwi....',
+            '..iiiiiiii..',
+            '..iwwwwwwi..',
+            '..iwwwwwwi..',
+            '..iiiiiiii..',
+            '....iwwi....',
+            '....iwwi....',
+            '............',
+            '............',
+            '............',
+        ],
+    },
+    'mat-void': {
+        palette: { k: '#0a0a12', v: '#6d28d9', w: '#f5f3ff' },
+        rows: [
+            '............',
+            '....kkkk....',
+            '...kvvvvk...',
+            '..kvvvvvvk..',
+            '..kvvwwvvk..',
+            '.kvvwwwwvvk.',
+            '.kvvwwwwvvk.',
+            '..kvvwwvvk..',
+            '..kvvvvvvk..',
+            '...kvvvvk...',
+            '....kkkk....',
+            '............',
+        ],
+    },
+
     // --- Экипировка по тирам: ступени 2–5 ---
 
     'gear-weapon-2': {

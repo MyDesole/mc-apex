@@ -2963,6 +2963,61 @@
 
 /* Связки на экране выбора */
 
+/* ---------- Крафт из материалов ---------- */
+
+.dgn-craft {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+
+  margin-bottom: 14px;
+}
+
+.dgn-craft__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 10px 12px;
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.dgn-craft__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+
+  flex: 1;
+  min-width: 0;
+}
+
+.dgn-craft__meta b { color: #fff; font-size: 13px; }
+
+.dgn-craft__meta small {
+  color: rgba(255, 255, 255, 0.45);
+
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dgn-craft__result {
+  margin: -4px 0 12px;
+  padding: 8px 12px;
+
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  border-radius: 10px;
+
+  background: rgba(34, 197, 94, 0.12);
+
+  color: #86efac;
+}
+
+.dgn-craft__result b { color: #fff; }
+
 .dgn-combos {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
