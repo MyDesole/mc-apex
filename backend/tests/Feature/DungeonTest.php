@@ -220,19 +220,26 @@ class DungeonTest extends TestCase
 
     public function test_combo_switches_when_the_foe_element_changes(): void
     {
-        // Вода + природа + тень: Глубина (тень), Роса (огонь), Тлен (зверь)
+        // Вода + природа + тень: Глубина (свет), Роса (огонь), Тлен (зверь)
         $run = $this->startTrio(['axolotl', 'frog', 'ghost']);
 
         $this->patchState($run['id'], function (array $state) {
-            $state['pending']['element'] = 'shadow';
+            $state['pending']['element'] = 'light';
 
             return $state;
         });
 
         $battle = $this->enter($run);
 
-        $this->assertSame('abyss', $battle['battle']['combo']['key'], 'против тени — Глубина');
-        $this->assertSame('shadow', $battle['battle']['combo']['counters']);
+        $this->assertSame('abyss', $battle['battle']['combo']['key'], 'против света — Глубина');
+        $this->assertSame('light', $battle['battle']['combo']['counters']);
+    }
+
+    public function test_light_element_exists_and_has_species(): void
+    {
+        $this->assertArrayHasKey('light', DungeonBattle::ELEMENTS);
+        $this->assertArrayHasKey('light', DungeonBattle::ABILITIES);
+        $this->assertSame('light', \App\Domains\Players\Services\PetArenaService::element('unicorn'));
     }
 
     public function test_all_pairs_have_a_counter(): void
@@ -240,12 +247,13 @@ class DungeonTest extends TestCase
         // Десять пар: у каждой стихии ровно две контры
         $counters = array_count_values(array_column(\App\Domains\Players\Support\DungeonBattle::COMBOS, 'counters'));
 
-        $this->assertCount(10, \App\Domains\Players\Support\DungeonBattle::COMBOS);
+        $this->assertCount(12, \App\Domains\Players\Support\DungeonBattle::COMBOS);
         $this->assertSame(2, $counters['fire']);
         $this->assertSame(2, $counters['water']);
         $this->assertSame(2, $counters['nature']);
         $this->assertSame(2, $counters['shadow']);
         $this->assertSame(2, $counters['beast']);
+        $this->assertSame(2, $counters['light']);
     }
 
     public function test_water_ultimate_heals_the_whole_squad(): void

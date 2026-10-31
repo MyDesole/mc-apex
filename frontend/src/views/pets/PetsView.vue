@@ -325,7 +325,7 @@ const battle = ref(null)
 const fighter = computed(() => freePets.value.find((p) => p.inventory_id === arenaPet.value) ?? null)
 
 // Кто кого бьёт сильнее — как на сервере
-const STRONG = { fire: 'nature', nature: 'water', water: 'fire', shadow: 'beast' }
+const STRONG = { fire: 'nature', nature: 'water', water: 'fire', shadow: 'beast', beast: 'light', light: 'shadow' }
 
 /** Примерный шанс: Эло по рейтингу плюс поправка за разницу уровней и стихии. */
 function odds(foe) {
@@ -711,7 +711,7 @@ onMounted(async () => {
               </button>
               <small class="pa-prize">Победа — монеты ×{{ hub.arena.win_multiplier }}</small>
               <div class="pa-wheel" title="Кто кого бьёт сильнее">
-                <span v-for="[a, b] in [['fire', 'nature'], ['nature', 'water'], ['water', 'fire'], ['shadow', 'beast']]" :key="a">
+                <span v-for="[a, b] in [['fire', 'nature'], ['nature', 'water'], ['water', 'fire'], ['shadow', 'beast'], ['beast', 'light'], ['light', 'shadow']]" :key="a">
                   <i :style="{ color: ELEMENTS[a].color }">{{ ELEMENTS[a].name }}</i> → <i :style="{ color: ELEMENTS[b].color }">{{ ELEMENTS[b].name }}</i>
                 </span>
               </div>

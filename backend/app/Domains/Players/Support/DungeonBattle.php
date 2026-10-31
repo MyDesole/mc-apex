@@ -45,6 +45,7 @@ final class DungeonBattle
         'nature' => ['name' => 'Природа', 'color' => '#4ade80'],
         'shadow' => ['name' => 'Тень', 'color' => '#a78bfa'],
         'beast' => ['name' => 'Зверь', 'color' => '#fbbf24'],
+        'light' => ['name' => 'Свет', 'color' => '#f8fafc'],
     ];
 
     /**
@@ -76,6 +77,10 @@ final class DungeonBattle
         'beast' => [
             'skill' => ['name' => 'Рывок', 'power' => 1.5, 'crit_bonus' => 20],
             'ultimate' => ['name' => 'Ярость стаи', 'power' => 1.2, 'team_atk' => 1.25, 'rounds' => 2],
+        ],
+        'light' => [
+            'skill' => ['name' => 'Вспышка', 'power' => 1.45, 'fear' => 30],
+            'ultimate' => ['name' => 'Рассвет', 'power' => 1.4, 'heal_team' => 0.1, 'cleanse' => true],
         ],
     ];
 
@@ -144,16 +149,30 @@ final class DungeonBattle
         'abyss' => [
             'name' => 'Глубина',
             'pair' => ['water', 'shadow'],
-            'counters' => 'shadow',
+            'counters' => 'light',
             'power' => 1.35,
-            'text' => 'Тёмная вода топит любую тень.',
+            'text' => 'Тёмная вода гасит свет.',
         ],
         'thicket' => [
             'name' => 'Чаща',
             'pair' => ['nature', 'beast'],
+            'counters' => 'light',
+            'power' => 1.35,
+            'text' => 'Густая чаща прячет свет.',
+        ],
+        'dusk' => [
+            'name' => 'Сумерки',
+            'pair' => ['shadow', 'light'],
             'counters' => 'beast',
             'power' => 1.35,
-            'text' => 'Чаща путает зверю ноги и сбивает его с хода.',
+            'text' => 'Сумерки ослепляют зверя.',
+        ],
+        'glow' => [
+            'name' => 'Сияние',
+            'pair' => ['beast', 'light'],
+            'counters' => 'shadow',
+            'power' => 1.35,
+            'text' => 'Зверь и свет разгоняют тень.',
         ],
     ];
 

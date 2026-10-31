@@ -41,7 +41,8 @@ class PetArenaService
         'water' => ['axolotl', 'penguin', 'octopus', 'jelly'],
         'nature' => ['frog', 'bee', 'shroom', 'bunny', 'slime'],
         'shadow' => ['ghost', 'owl', 'robot', 'crow'],
-        'beast' => ['cat', 'dog', 'fox', 'panda', 'capybara', 'unicorn'],
+        'beast' => ['cat', 'dog', 'fox', 'panda', 'capybara'],
+        'light' => ['unicorn'],
     ];
 
     /** Умения стихий: название, множитель урона, особенность. */

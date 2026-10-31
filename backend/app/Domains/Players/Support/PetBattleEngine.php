@@ -24,6 +24,7 @@ final class PetBattleEngine
         'nature' => ['name' => 'Шипы', 'power' => 1.3, 'thorns' => 0.4],
         'shadow' => ['name' => 'Тень', 'power' => 1.45, 'pierce' => true, 'fear' => 50],
         'beast' => ['name' => 'Рывок', 'power' => 1.5, 'crit' => 30, 'bleed' => true],
+        'light' => ['name' => 'Вспышка', 'power' => 1.45, 'fear' => 40],
     ];
 
     /** Ультимейты: открываются, когда ярость дошла до 100. */
@@ -33,6 +34,7 @@ final class PetBattleEngine
         'nature' => ['name' => 'Корни', 'power' => 1.6, 'about' => 'Урон и оглушение — соперник пропустит ход'],
         'shadow' => ['name' => 'Пожиратель душ', 'power' => 2.0, 'pierce' => true, 'drain' => 0.6, 'about' => 'Урон сквозь защиту, крадёт здоровье'],
         'beast' => ['name' => 'Ярость стаи', 'power' => 0.9, 'hits' => 3, 'about' => 'Три удара подряд, каждый может стать критом'],
+        'light' => ['name' => 'Рассвет', 'power' => 1.6, 'heal' => 0.15, 'about' => 'Урон и лечение: свет возвращает силы'],
     ];
 
     /** Арены: чья стихия сильнее (+20%) и особенность. */
@@ -43,6 +45,7 @@ final class PetBattleEngine
         'forest' => ['name' => 'Древний лес', 'element' => 'nature', 'about' => 'Шипы острее, а с кустов иногда падают ягоды'],
         'crypt' => ['name' => 'Склеп', 'element' => 'shadow', 'about' => 'Во тьме все критуют чаще'],
         'savanna' => ['name' => 'Саванна', 'element' => 'beast', 'about' => 'Серия из трёх атак бьёт ещё больнее'],
+        'temple' => ['name' => 'Храм света', 'element' => 'light', 'about' => 'Свет очищает: плохие статусы спадают быстрее'],
     ];
 
     /** Статусы: сколько раундов держатся. */
@@ -61,10 +64,11 @@ final class PetBattleEngine
         'nature' => ['name' => 'Терпеливый', 'skill' => 65, 'counter' => 25, 'defend' => 35],
         'shadow' => ['name' => 'Хитрый', 'skill' => 60, 'counter' => 35, 'defend' => 25],
         'beast' => ['name' => 'Безрассудный', 'skill' => 75, 'counter' => 10, 'defend' => 10],
+        'light' => ['name' => 'Справедливый', 'skill' => 70, 'counter' => 15, 'defend' => 30],
     ];
 
     /** Кто кого бьёт сильнее: огонь > природа > вода > огонь, тень > зверь. */
-    private const STRONG = ['fire' => 'nature', 'nature' => 'water', 'water' => 'fire', 'shadow' => 'beast'];
+    private const STRONG = ['fire' => 'nature', 'nature' => 'water', 'water' => 'fire', 'shadow' => 'beast', 'beast' => 'light', 'light' => 'shadow'];
 
     /** Плохие статусы, которые смывает Волна. */
     private const DEBUFFS = ['burn', 'bleed', 'fear', 'wet', 'stun'];
