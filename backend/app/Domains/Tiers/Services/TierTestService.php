@@ -175,6 +175,9 @@ class TierTestService
 
         $finished = $tierTest->fresh();
 
+        // Тестеру начисляется заработок за проведённый тест (идемпотентно)
+        app(\App\Domains\Testers\Services\TesterEarningsService::class)->accrue($finished);
+
         $finished->user?->notify(new \App\Domains\Tiers\Notifications\TierTestCompletedNotification($finished));
 
         return $finished;
@@ -266,6 +269,8 @@ class TierTestService
             'notes' => $reason,
         ]);
 
+        app(\App\Domains\Testers\Services\TesterScheduleService::class)->release($tierTest);
+
         return $tierTest->fresh();
     }
 
@@ -277,6 +282,9 @@ class TierTestService
             'status' => 'cancelled',
             'notes' => $reason,
         ]);
+
+        // Слот из календаря снова свободен, если время ещё не прошло
+        app(\App\Domains\Testers\Services\TesterScheduleService::class)->release($tierTest);
 
         return $tierTest->fresh();
     }

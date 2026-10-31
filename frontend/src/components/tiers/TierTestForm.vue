@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { tierTestsApi } from '@/services/tiers/tierTests.js'
+import { testerCabinetApi } from '@/services/testers/cabinet.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 import { tierForScore } from '@/composables/tiers/tierTestState.js'
 
@@ -20,6 +21,48 @@ const loading = ref(false)
 const error = ref('')
 const success = ref(false)
 
+/* Свободные слоты тестеров: игрок может записаться на конкретное время */
+const slotTesters = ref([])
+const slotsLoading = ref(false)
+const slotId = ref(null)
+const chosenSlot = ref(null)
+const slotWarning = ref('')
+
+async function loadSlots() {
+  slotsLoading.value = true
+
+  try {
+    slotTesters.value = (await testerCabinetApi.openSlots(14)).testers ?? []
+  } catch {
+    // Календарь может быть пустым или недоступным — форма работает и без него
+    slotTesters.value = []
+  } finally {
+    slotsLoading.value = false
+  }
+}
+
+function pickSlot(slot) {
+  if (slotId.value === slot.id) {
+    slotId.value = null
+    chosenSlot.value = null
+
+    return
+  }
+
+  slotId.value = slot.id
+  chosenSlot.value = slot
+}
+
+const slotLabel = (slot) => {
+  const date = new Date(slot.starts_at)
+
+  const day = date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })
+  const from = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+  const to = new Date(slot.ends_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+
+  return `${day} ${from}–${to}`
+}
+
 const form = ref({
   mode: 'pvp',
   expected_tier: null,
@@ -34,6 +77,10 @@ watch(() => props.modelValue, (open) => {
   if (open) {
     success.value = false
     error.value = ''
+    slotWarning.value = ''
+    slotId.value = null
+    chosenSlot.value = null
+    loadSlots()
     form.value = {
       mode: 'pvp',
       expected_tier: null,
@@ -84,11 +131,21 @@ async function submit() {
 
   try {
     const data = await tierTestsApi.create(form.value)
+    const created = data?.tier_test ?? null
+
+    // Выбрано время — бронируем слот. Не вышло (уже заняли) — не теряем заявку
+    if (created && slotId.value) {
+      try {
+        await testerCabinetApi.book(created.id, slotId.value)
+      } catch (e) {
+        slotWarning.value = e.message || 'Выбранное время уже заняли — тестер свяжется и предложит другое.'
+      }
+    }
 
     success.value = true
 
     // Отдаём созданную заявку: родитель обновит состояние сразу
-    emit('created', data?.tier_test ?? null)
+    emit('created', created)
   } catch (e) {
     error.value = e.message || 'Ошибка'
   } finally {
@@ -224,6 +281,37 @@ async function submit() {
           <small class="hint">Когда тебе удобно пройти тест</small>
         </div>
 
+        <div v-if="slotTesters.length" class="field">
+          <label>Свободное время тестеров</label>
+
+          <div class="slot-picker">
+            <div v-for="group in slotTesters" :key="group.tester.id" class="slot-picker__tester">
+              <span class="slot-picker__name">{{ group.tester.username }}</span>
+
+              <div class="slot-picker__chips">
+                <button
+                    v-for="slot in group.slots"
+                    :key="slot.id"
+                    type="button"
+                    class="slot-chip"
+                    :class="{ 'is-on': slotId === slot.id }"
+                    @click="pickSlot(slot)"
+                >
+                  {{ slotLabel(slot) }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <small class="hint">
+            Время бронируется за вами. Можно не выбирать — тогда тестер напишет сам.
+          </small>
+        </div>
+
+        <div v-if="slotsLoading" class="field">
+          <small class="hint">Загружаем свободное время…</small>
+        </div>
+
         <div class="field">
           <label>Комментарий (опционально)</label>
           <textarea v-model="form.notes" rows="3" maxlength="1000" placeholder="Что хочешь показать?" />
@@ -271,8 +359,13 @@ async function submit() {
         </div>
         <div class="info-row">
           <span class="info-label">Время:</span>
-          <span class="info-value">{{ form.preferred_time }}</span>
+          <span class="info-value">
+            {{ chosenSlot ? slotLabel(chosenSlot) : form.preferred_time }}
+            <template v-if="chosenSlot"> · забронировано</template>
+          </span>
         </div>
+
+        <p v-if="slotWarning" class="splash__warn">{{ slotWarning }}</p>
       </div>
 
       <button class="btn-ok" @click="close">Понятно</button>

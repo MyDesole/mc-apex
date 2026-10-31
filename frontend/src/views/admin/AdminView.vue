@@ -34,6 +34,7 @@ import AdminReferrals from '@/components/admin/AdminReferrals.vue'
 import AdminControl from '@/components/admin/AdminControl.vue'
 import AdminSupport from '@/components/admin/AdminSupport.vue'
 import AdminProject from '@/components/admin/AdminProject.vue'
+import AdminTesters from '@/components/admin/AdminTesters.vue'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -91,6 +92,7 @@ const SECTIONS = [
     items: [
       { key: 'tournaments', label: 'Турниры', icon: 'trophy', component: AdminTournaments },
       { key: 'clans', label: 'Кланы', icon: 'shield', component: AdminClans },
+      { key: 'testers', label: 'Тестеры и тесты', icon: 'target', component: AdminTesters, adminOnly: true },
     ],
   },
   {

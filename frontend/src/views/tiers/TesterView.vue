@@ -181,6 +181,10 @@ onMounted(() => {
             </p>
           </div>
 
+          <RouterLink to="/tester-dashboard" class="tester-head__cabinet">
+            Кабинет · календарь и заработок
+          </RouterLink>
+
           <div
               class="role-badge"
               :class="`role-badge--${role}`"

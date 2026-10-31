@@ -1,0 +1,544 @@
+/* =========================================================
+   АДМИНКА: ТЕСТЕРЫ И ТЕСТЫ
+   ========================================================= */
+
+.at {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  --at-accent: #a78bfa;
+  --at-accent-soft: rgba(167, 139, 250, 0.14);
+  --at-accent-line: rgba(167, 139, 250, 0.42);
+}
+
+.at-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.at-head h2 {
+  margin: 0 0 4px;
+
+  color: #fff;
+
+  font-family: var(--font-display);
+  font-size: 20px;
+}
+
+.at-head p {
+  margin: 0;
+
+  color: rgba(255, 255, 255, 0.45);
+
+  font-size: 12.5px;
+}
+
+.at-badge {
+  padding: 5px 12px;
+
+  border-radius: 999px;
+
+  background: rgba(251, 191, 36, 0.16);
+
+  color: #fde68a;
+
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.at-tabs {
+  display: flex;
+  gap: 6px;
+
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.at-tab {
+  padding: 8px 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.03);
+
+  color: rgba(255, 255, 255, 0.6);
+
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+}
+
+.at-tab.is-on {
+  border-color: var(--at-accent-line);
+
+  background: var(--at-accent-soft);
+
+  color: #fff;
+}
+
+.at-hint {
+  margin: 0;
+
+  color: rgba(255, 255, 255, 0.42);
+
+  font-size: 12.5px;
+}
+
+.at-h3 {
+  margin: 6px 0 0;
+
+  color: #fff;
+
+  font-family: var(--font-display);
+  font-size: 15px;
+}
+
+.at-alert {
+  margin: 0;
+  padding: 9px 12px;
+
+  border-radius: 10px;
+
+  font-size: 12.5px;
+}
+
+.at-alert--bad {
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  background: rgba(248, 113, 113, 0.12);
+  color: #fca5a5;
+}
+
+.at-alert--ok {
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.12);
+  color: #86efac;
+}
+
+/* ---------- Кнопки ---------- */
+
+.at-btn {
+  padding: 8px 13px;
+
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9px;
+
+  background: rgba(255, 255, 255, 0.05);
+
+  color: rgba(255, 255, 255, 0.82);
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.at-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); }
+.at-btn:disabled { opacity: 0.45; cursor: default; }
+
+.at-btn--main {
+  border-color: var(--at-accent-line);
+
+  background: var(--at-accent-soft);
+
+  color: #ddd6fe;
+}
+
+.at-btn--ghost {
+  border-color: transparent;
+
+  background: none;
+
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* ---------- Список тестеров ---------- */
+
+.at-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.at-tester {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+
+  padding: 12px 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.at-tester.is-blocked {
+  border-color: rgba(248, 113, 113, 0.3);
+
+  background: rgba(248, 113, 113, 0.06);
+}
+
+.at-tester__id {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+
+  min-width: 130px;
+}
+
+.at-tester__id strong { color: #fff; font-size: 14px; }
+.at-tester__id small { color: rgba(255, 255, 255, 0.4); font-size: 11px; }
+
+.at-tester__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  flex: 1;
+}
+
+.at-tester__stats span {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.at-tester__stats b { color: #fff; font-size: 13px; }
+.at-tester__stats small { color: rgba(255, 255, 255, 0.4); font-size: 10.5px; }
+
+.at-tester__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------- Метки ---------- */
+
+.at-tag {
+  padding: 3px 10px;
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.07);
+
+  color: rgba(255, 255, 255, 0.6);
+
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.at-tag--bad { background: rgba(248, 113, 113, 0.16); color: #fca5a5; }
+.at-tag--ok { background: rgba(34, 197, 94, 0.16); color: #86efac; }
+
+/* ---------- Выплаты ---------- */
+
+.at-payout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+
+  padding: 12px 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.at-payout.is-pending {
+  border-color: rgba(251, 191, 36, 0.35);
+
+  background: rgba(251, 191, 36, 0.07);
+}
+
+.at-payout__who {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+
+  min-width: 140px;
+}
+
+.at-payout__who strong { color: #fff; font-size: 14px; }
+.at-payout__who small { color: rgba(255, 255, 255, 0.4); font-size: 11px; }
+
+.at-payout__sum {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.at-payout__sum b { color: #fff; font-family: var(--font-display); font-size: 18px; }
+.at-payout__sum span { color: #c4b5fd; font-size: 12px; }
+
+.at-payout__comment {
+  flex-basis: 100%;
+
+  color: rgba(255, 255, 255, 0.4);
+
+  font-size: 11.5px;
+}
+
+.at-payout__actions {
+  display: flex;
+  gap: 6px;
+
+  margin-left: auto;
+}
+
+/* ---------- Экономика ---------- */
+
+.at-economy {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.at-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  color: rgba(255, 255, 255, 0.45);
+
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.at-field input,
+.at-mult input {
+  padding: 9px 11px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+
+  background: rgba(0, 0, 0, 0.35);
+
+  color: #fff;
+
+  font: inherit;
+  font-size: 13px;
+}
+
+.at-mult {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.at-mult__row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-areas: "tier input" "tier preview";
+  align-items: center;
+  gap: 2px 8px;
+
+  padding: 10px;
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.at-mult__row b {
+  grid-area: tier;
+
+  color: #ddd6fe;
+
+  font-family: var(--font-display);
+  font-size: 15px;
+}
+
+.at-mult__row input { grid-area: input; }
+
+.at-mult__row small {
+  grid-area: preview;
+
+  color: rgba(255, 255, 255, 0.4);
+
+  font-size: 10.5px;
+}
+
+/* ---------- Календарь на неделю ---------- */
+
+.at-week__nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.at-week__nav b {
+  color: #fff;
+
+  font-family: var(--font-display);
+  font-size: 14px;
+}
+
+.at-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+
+  overflow-x: auto;
+}
+
+.at-week__day {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  min-height: 120px;
+  padding: 8px;
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.at-week__day.is-today {
+  border-color: rgba(167, 139, 250, 0.45);
+
+  background: rgba(167, 139, 250, 0.08);
+}
+
+.at-week__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+
+  color: rgba(255, 255, 255, 0.4);
+
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.at-week__head b { color: #fff; font-size: 13px; }
+
+.at-week__day.is-today .at-week__head { color: #ddd6fe; }
+
+.at-week__empty {
+  color: rgba(255, 255, 255, 0.2);
+
+  font-size: 11px;
+  text-align: center;
+}
+
+.at-week__slot {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+
+  padding: 5px 7px;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.at-week__slot b { color: #fff; font-size: 11px; }
+.at-week__slot span { color: #ddd6fe; font-size: 10.5px; }
+.at-week__slot small { color: rgba(255, 255, 255, 0.45); font-size: 10px; }
+
+.at-week__slot.is-booked {
+  border-color: rgba(34, 197, 94, 0.4);
+
+  background: rgba(34, 197, 94, 0.14);
+}
+
+.at-week__slot.is-booked small { color: #86efac; }
+
+.at-week__slot.is-closed { opacity: 0.4; }
+
+/* ---------- Календарь ---------- */
+
+.at-calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.at-day h4 {
+  margin: 0 0 6px;
+
+  color: rgba(255, 255, 255, 0.5);
+
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.at-slot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+
+  margin-bottom: 6px;
+  padding: 9px 12px;
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.03);
+
+  font-size: 12.5px;
+}
+
+.at-slot b { color: #fff; font-size: 12.5px; }
+.at-slot span { color: #ddd6fe; }
+.at-slot small { color: rgba(255, 255, 255, 0.42); }
+
+.at-slot.is-booked {
+  border-color: rgba(34, 197, 94, 0.35);
+
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.at-slot.is-closed { opacity: 0.45; }
+
+/* ---------- Телефон ---------- */
+
+@media (max-width: 720px) {
+  .at-tester__stats { gap: 8px; }
+
+  .at-tester__actions { width: 100%; }
+
+  .at-tester__actions .at-btn { width: 100%; }
+
+  .at-payout__actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .at-payout__actions .at-btn { flex: 1; }
+}
+
+/* Календарь админа на телефоне: неделя прокручивается вбок */
+@media (max-width: 720px) {
+  .at-week {
+    grid-template-columns: repeat(7, 132px);
+  }
+
+  .at-week__nav {
+    justify-content: space-between;
+  }
+}

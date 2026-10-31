@@ -580,6 +580,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
     /*
     |----------------------------------------------------------------------
+    | РАСПИСАНИЕ ТЕСТЕРОВ (для записи игроком)
+    |----------------------------------------------------------------------
+    */
+    Route::get('/tester-slots', [\App\Domains\Testers\Controllers\Api\Player\TesterSlotController::class, 'index']);
+    Route::post('/tier-tests/{tierTest}/book', [\App\Domains\Testers\Controllers\Api\Player\TesterSlotController::class, 'book'])
+        ->whereNumber('tierTest');
+
+    /*
+    |----------------------------------------------------------------------
     | ДРУЗЬЯ
     |----------------------------------------------------------------------
     */
@@ -771,6 +780,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/tier-tests/{tierTest}/unclaim', [TesterTierTestController::class, 'unclaim'])->whereNumber('tierTest');
         Route::post('/tier-tests/{tierTest}/complete', [TesterTierTestController::class, 'complete'])->whereNumber('tierTest');
         Route::post('/tier-tests/{tierTest}/cancel', [TesterTierTestController::class, 'cancel'])->whereNumber('tierTest');
+
+        // Кабинет: сводка, календарь слотов и заработок
+        Route::get('/dashboard', [\App\Domains\Testers\Controllers\Api\Tester\DashboardController::class, 'index']);
+        Route::get('/slots', [\App\Domains\Testers\Controllers\Api\Tester\SlotController::class, 'index']);
+        Route::post('/slots', [\App\Domains\Testers\Controllers\Api\Tester\SlotController::class, 'store']);
+        Route::delete('/slots/{slot}', [\App\Domains\Testers\Controllers\Api\Tester\SlotController::class, 'destroy'])->whereNumber('slot');
+        Route::get('/payouts', [\App\Domains\Testers\Controllers\Api\Tester\PayoutController::class, 'index']);
+        Route::post('/payouts', [\App\Domains\Testers\Controllers\Api\Tester\PayoutController::class, 'store']);
     });
 
     /*
@@ -887,6 +904,20 @@ Route::middleware('auth:sanctum')->group(function () {
     |----------------------------------------------------------------------
     */
     Route::middleware('role:admin')->prefix('admin')->group(function () {
+
+        // --- ТЕСТЕРЫ: календарь, экономика, выплаты ---
+        Route::prefix('testers')->group(function () {
+            Route::get('/', [\App\Domains\Testers\Controllers\Api\Admin\TesterController::class, 'index']);
+            Route::get('/calendar', [\App\Domains\Testers\Controllers\Api\Admin\TesterController::class, 'calendar']);
+            Route::get('/tests', [\App\Domains\Testers\Controllers\Api\Admin\TesterController::class, 'tests']);
+            Route::get('/settings', [\App\Domains\Testers\Controllers\Api\Admin\TesterController::class, 'settings']);
+            Route::put('/settings', [\App\Domains\Testers\Controllers\Api\Admin\TesterController::class, 'updateSettings']);
+            Route::get('/payouts', [\App\Domains\Testers\Controllers\Api\Admin\TesterController::class, 'payouts']);
+            Route::post('/payouts/{payout}/pay', [\App\Domains\Testers\Controllers\Api\Admin\TesterController::class, 'pay'])->whereNumber('payout');
+            Route::post('/payouts/{payout}/reject', [\App\Domains\Testers\Controllers\Api\Admin\TesterController::class, 'reject'])->whereNumber('payout');
+            Route::post('/{user}/block', [\App\Domains\Testers\Controllers\Api\Admin\TesterController::class, 'block'])->whereNumber('user');
+            Route::post('/{user}/unblock', [\App\Domains\Testers\Controllers\Api\Admin\TesterController::class, 'unblock'])->whereNumber('user');
+        });
 
         // --- ЮЗЕРЫ ---
         // СНАЧАЛА статические!
