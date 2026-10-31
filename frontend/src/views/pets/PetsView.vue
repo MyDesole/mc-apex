@@ -35,6 +35,7 @@ const TABS = [
   ['expeditions', 'Экспедиции', 'globe'],
   ['arena', 'Арена', 'sword'],
   ['gear', 'Экипировка', 'shield'],
+  ['breeding', 'Скрещивание', 'sparkles'],
   ['dex', 'Питомцедекс', 'box'],
   ['top', 'Топ', 'trophy'],
 ]
@@ -296,6 +297,40 @@ async function recall(trip) {
     await load()
   } catch (e) {
     fail(e, 'Не удалось вернуть.')
+  } finally {
+    busy.value = null
+  }
+}
+
+/* ---------- Скрещивание ---------- */
+
+const breedParent1 = ref(null)
+const breedParent2 = ref(null)
+
+const breedReady = computed(
+    () => breedParent1.value && breedParent2.value && breedParent1.value !== breedParent2.value,
+)
+
+async function breedPets() {
+  if (!breedReady.value) return
+
+  busy.value = 'breed'
+
+  try {
+    const ok = await confirmDialog(
+        'Скрестить двух питомцев за 300 ApexCoin? Потомок унаследует вид и смешает черты.',
+        { title: 'Скрещивание', confirmText: 'Скрестить' },
+    )
+
+    if (!ok) return
+
+    await api.post('/pets/breeding', { parent1: breedParent1.value, parent2: breedParent2.value })
+    say('Появился новый питомец!')
+    breedParent1.value = null
+    breedParent2.value = null
+    await load()
+  } catch (e) {
+    fail(e, 'Не удалось скрестить.')
   } finally {
     busy.value = null
   }
@@ -664,6 +699,35 @@ onMounted(async () => {
             >Всех сюда ({{ sendable(zone) }}) · ₳ {{ sendable(zone) * fees.send }}</button>
           </article>
         </div>
+      </template>
+    </template>
+
+    <!-- ================= Скрещивание ================= -->
+    <template v-else-if="tab === 'breeding'">
+      <p v-if="freePets.length < 2" class="pv-empty">Нужно два свободных питомца — все заняты или их нет.</p>
+
+      <template v-else>
+        <div class="pa-block">
+          <span class="pa-label">Родитель 1</span>
+          <PetPicker v-model="breedParent1" :pets="freePets" />
+        </div>
+
+        <div class="pa-block">
+          <span class="pa-label">Родитель 2</span>
+          <PetPicker v-model="breedParent2" :pets="freePets" />
+        </div>
+
+        <p style="color: rgba(255,255,255,.45); font-size: 12px; margin: 10px 0;">
+          Вид потомка — случайный родитель, черты смешиваются. Стоит 300 ApexCoin,
+          кулдаун на родителя — сутки.
+        </p>
+
+        <button
+            type="button"
+            class="pv-btn pv-btn--go"
+            :disabled="busy === 'breed' || !breedReady"
+            @click="breedPets"
+        >Скрестить за 300 ₳</button>
       </template>
     </template>
 
