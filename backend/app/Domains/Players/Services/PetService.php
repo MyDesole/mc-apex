@@ -24,7 +24,18 @@ class PetService
     /** Действие => сколько опыта даёт. */
     public const ACTIONS = ['pet' => 1, 'feed' => 2, 'play' => 2];
 
-    public const MAX_LEVEL = 30;
+    public const MAX_LEVEL = 100;
+
+    /**
+     * Множитель опыта за действия, экспедиции, бои и подземелья:
+     * ×1 до 29 уровня, с 30-го ×2, с 40-го ×3 … ×9 на 100-м. Кривая уровней
+     * квадратичная, множитель гасит её рост, и сотый уровень достижим
+     * за месяцы активной игры, а не за годы.
+     */
+    public static function xpMultiplier(int $level): int
+    {
+        return max(1, intdiv($level, 10) - 1);
+    }
 
     private const HUNGRY_AFTER_HOURS = 24;
 
@@ -142,6 +153,12 @@ class PetService
         } catch (QueryException) {
             // Уникальный индекс: сегодня это уже делали
             throw ValidationException::withMessages(['action' => ['Сегодня ты уже это делал — приходи завтра.']]);
+        }
+
+        // Бонус за высокий уровень кладём в pet_xp: сам уход считается по строкам pet_interactions
+        $bonus = self::ACTIONS[$action] * (self::xpMultiplier($levelBefore) - 1);
+        if ($pet && $bonus > 0) {
+            DB::table('user_inventory')->where('id', $pet)->increment('pet_xp', $bonus);
         }
 
         $stats = $this->stats($owner, $actor, $pet ?: null);

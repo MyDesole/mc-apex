@@ -329,7 +329,9 @@ class PetArenaService
          */
         $gear = app(\App\Domains\Players\Services\PetGearService::class)->bonus($pet);
 
-        $hp = 60 + $level * 6 + $r * 8 + $gear['hp'];
+        $hp = (int) round((60 + $level * 6 + $r * 8 + $gear['hp']) * PetPerks::bodyBonus($level));
+        $atkBonus = PetPerks::attackBonus($level);
+        $defBonus = PetPerks::bodyBonus($level);
 
         return [
             'inventory_id' => $pet->id,
@@ -340,8 +342,8 @@ class PetArenaService
             'element' => $element,
             'hp' => $hp,
             'max' => $hp,
-            'atk' => (int) round(10 + $level * 1.2 + $r * 1.5 + $gear['atk']),
-            'def' => (int) round(5 + $level * 0.6 + $r + $gear['def']),
+            'atk' => (int) round((10 + $level * 1.2 + $r * 1.5 + $gear['atk']) * $atkBonus),
+            'def' => (int) round((5 + $level * 0.6 + $r + $gear['def']) * $defBonus),
             'spd' => (int) round(10 + $level * 0.4 + ($element === 'shadow' ? 2 : 0) + ($element === 'beast' ? 1 : 0) + $gear['spd']),
             'cd' => 0,
         ];
@@ -369,7 +371,7 @@ class PetArenaService
                 'pet_rating' => max(0, $myRating + $change),
                 'pet_wins' => $mine->pet_wins + ($won ? 1 : 0),
                 'pet_losses' => $mine->pet_losses + ($won ? 0 : 1),
-                'pet_xp' => $mine->pet_xp + ($won ? 4 : 1),
+                'pet_xp' => $mine->pet_xp + ($won ? 4 : 1) * PetService::xpMultiplier($level),
             ])->save();
         }
 
@@ -382,7 +384,7 @@ class PetArenaService
         }
 
         if ($won) {
-            $coins = (int) round((40 + $level * 3) * self::WIN_MULTIPLIER * (PetPerks::arenaBonus($level) ? 1.25 : 1));
+            $coins = (int) round((40 + min($level, PetPerks::COIN_SCALING_CAP) * 3) * self::WIN_MULTIPLIER * (PetPerks::arenaBonus($level) ? 1.25 : 1));
             CoinService::credit($user, $coins, CoinTransaction::SOURCE_OTHER, 'Победа на арене питомцев', "pet-battle:{$battleId}");
         }
 

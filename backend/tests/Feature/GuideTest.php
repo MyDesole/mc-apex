@@ -59,7 +59,7 @@ class GuideTest extends TestCase
         // Питомца ещё нет
         $this->actingAs($user)->postJson('/api/guide/steps/pet/complete')
             ->assertStatus(422)
-            ->assertJsonPath('message', 'Сначала открой сундук питомцев.');
+            ->assertJsonPath('message', 'Сначала заведи питомца на Общей ферме.');
 
         $item = ShopItem::create(['slug' => 'pet-fox', 'name' => 'Лисёнок', 'type' => 'profile_pet', 'effect_value' => 'fox', 'price' => 1000, 'is_active' => true, 'rarity' => 'rare']);
         $row = UserInventory::create(['user_id' => $user->id, 'shop_item_id' => $item->id, 'quantity' => 1]);

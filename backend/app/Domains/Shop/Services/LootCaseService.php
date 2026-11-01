@@ -2,6 +2,7 @@
 
 namespace App\Domains\Shop\Services;
 
+use App\Domains\Players\Services\PetArenaService;
 use App\Domains\Players\Support\PetTraits;
 use App\Domains\Shop\Exceptions\NotEnoughCoins;
 use App\Domains\Shop\Models\CaseOpening;
@@ -352,9 +353,13 @@ class LootCaseService
     /** Что может выпасть: общий набор косметики или свой у кейса (pool). */
     private function pool(?array $case = null): Collection
     {
+        // Из питомцев в сундуках выпадают только базовые («Зверь»): остальные — с ферм
         $all = $this->pool ??= ShopItem::active()
             ->whereIn('type', self::POOL_TYPES)
-            ->get();
+            ->get()
+            ->filter(fn (ShopItem $item) => $item->type !== ShopItem::TYPE_PROFILE_PET
+                || in_array($item->effect_value, PetArenaService::ELEMENTS['beast'], true))
+            ->values();
 
         return isset($case['pool']) ? $all->whereIn('type', $case['pool'])->values() : $all;
     }

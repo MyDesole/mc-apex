@@ -424,7 +424,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{row}/expedition', 'expedition')->whereNumber('row')->middleware('throttle:30,1');
         Route::post('/expeditions/{expedition}/claim', 'claimExpedition')->whereNumber('expedition')->middleware('throttle:30,1');
         Route::post('/expeditions/{expedition}/recall', 'recallExpedition')->whereNumber('expedition')->middleware('throttle:30,1');
-        Route::post('/breeding', 'breed')->middleware('throttle:20,1');
         Route::get('/{row}/opponents', 'opponents')->whereNumber('row')->middleware('throttle:30,1');
         Route::post('/{row}/battle', 'battle')->whereNumber('row')->middleware('throttle:20,1');
         Route::get('/battles/{battle}', 'showBattle')->whereNumber('battle');
@@ -432,6 +431,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/battles/{battle}/forfeit', 'forfeit')->whereNumber('battle')->middleware('throttle:20,1');
         Route::get('/dex', 'dex');
         Route::post('/dex/{milestone}/claim', 'claimDex')->middleware('throttle:20,1');
+    });
+
+    // Фермы питомцев: Общая (бронь и выкуп) и Личная (грядки, Кладовка, скрещивание)
+    Route::prefix('farm')->controller(\App\Domains\Players\Controllers\Api\PetFarmController::class)->group(function () {
+        Route::get('/', 'index');
+        Route::post('/{pet}/reserve', 'reserve')->whereNumber('pet')->middleware('throttle:30,1');
+        Route::post('/{pet}/buy', 'buy')->whereNumber('pet')->middleware('throttle:30,1');
+        Route::get('/personal', 'personal');
+        Route::post('/personal/unlock', 'unlock')->middleware('throttle:10,1');
+        Route::post('/personal/plant', 'plant')->middleware('throttle:30,1');
+        Route::post('/personal/plots/{plot}/harvest', 'harvest')->whereNumber('plot')->middleware('throttle:30,1');
+        Route::post('/personal/mating', 'mate')->middleware('throttle:20,1');
+        Route::post('/personal/mating/{mating}/claim', 'claimMating')->whereNumber('mating')->middleware('throttle:30,1');
+        Route::post('/personal/cross', 'cross')->middleware('throttle:20,1');
     });
 
     /*

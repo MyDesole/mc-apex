@@ -430,13 +430,13 @@ onMounted(load)
     </section>
 
     <!-- Питомцы не продаются — подсказываем, где их взять -->
-    <RouterLink to="/cases" class="shop-pets-hint">
+    <RouterLink to="/farm" class="shop-pets-hint">
       <PixelSprite sprite="paw" :size="22" />
       <span>
-        <strong>Питомцы — только из «Сундука питомцев»</strong>
+        <strong>Питомцы — только с ферм</strong>
         <small>Каждый уникален: свой номер, окрас, фон и аксессуар. Купить питомца в магазине нельзя.</small>
       </span>
-      <b>К сундукам →</b>
+      <b>На ферму →</b>
     </RouterLink>
 
     <!-- ===================== Каталог ===================== -->

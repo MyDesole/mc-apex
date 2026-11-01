@@ -478,7 +478,8 @@ final class DungeonService
         $xp = $isBoss ? Dungeons::XP_PER_BOSS : Dungeons::XP_PER_MOB;
 
         foreach ($state['members'] as $member) {
-            DB::table('user_inventory')->where('id', $member['inventory_id'])->increment('pet_xp', $xp);
+            DB::table('user_inventory')->where('id', $member['inventory_id'])
+                ->increment('pet_xp', $xp * PetService::xpMultiplier((int) ($member['level'] ?? 1)));
         }
 
         $gearChance = $isBoss ? 100 : (int) $drops['gear'];

@@ -53,19 +53,11 @@ final class LootCases
             'coins' => [800, 2000],
             'chances' => ['nothing' => 0, 'coins' => 10, 'common' => 0, 'rare' => 40, 'epic' => 35, 'legendary' => 15],
         ],
-        // Только питомцы: всегда питомец. Питомцы не продаются — это главный
-        // способ их получить, поэтому черты с обычными шансами, без удачи
-        'pets' => [
-            'name' => 'Сундук питомцев',
-            'description' => 'Всегда питомец — только здесь их и можно получить. Окрас, фон и аксессуар выпадают с обычными шансами.',
-            'price' => 10000,
-            'free_daily' => false,
-            'theme' => 'emerald',
-            'coins' => [0, 0],
-            'chances' => ['nothing' => 0, 'coins' => 0, 'common' => 45, 'rare' => 33, 'epic' => 17, 'legendary' => 5],
-            'pool' => ['profile_pet'],
-        ],
+        // «Сундук питомцев» убран: питомцев теперь берут на фермах (/farm)
     ];
+
+    /** Ключи убранных сундуков превращаются в ключи этих. */
+    public const RETIRED = ['pets' => 'royal'];
 
     public static function all(): array
     {

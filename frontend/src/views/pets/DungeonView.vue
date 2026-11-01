@@ -27,7 +27,7 @@ const moves = reactive({})
 /** Итог последнего похода: показывается окном, пока игрок не закроет. */
 const result = ref(null)
 
-const KEY_NAMES = { seeker: 'Сундук искателя', pets: 'Сундук питомцев' }
+const KEY_NAMES = { seeker: 'Сундук искателя', royal: 'Королевский сундук' }
 
 /** Как закончился поход — словами, а не статусом. */
 const verdict = computed(() => {

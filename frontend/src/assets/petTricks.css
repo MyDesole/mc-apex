@@ -28,6 +28,27 @@
 .pf-trick--firework .pf__body,
 .pet-trick--firework .pet__body { animation: trick-firework 1.6s ease-out !important; }
 
+.pf-trick--bounce .pf__body,
+.pet-trick--bounce .pet__body { animation: trick-bounce 1.2s ease-in-out !important; }
+
+.pf-trick--shadow .pf__body,
+.pet-trick--shadow .pet__body { animation: trick-shadow 1.4s ease-in-out !important; }
+
+.pf-trick--storm .pf__body,
+.pet-trick--storm .pet__body { animation: trick-storm 1.4s steps(2, jump-none) !important; }
+
+.pf-trick--aura .pf__body,
+.pet-trick--aura .pet__body { animation: trick-aura 1.8s ease-in-out !important; }
+
+.pf-trick--galaxy .pf__body,
+.pet-trick--galaxy .pet__body { animation: trick-galaxy 1.8s linear !important; }
+
+.pf-trick--meteor .pf__body,
+.pet-trick--meteor .pet__body { animation: trick-meteor 1.5s ease-in !important; }
+
+.pf-trick--crown .pf__body,
+.pet-trick--crown .pet__body { animation: trick-crown 2s ease-in-out !important; }
+
 @keyframes trick-spin {
   to { rotate: 360deg; }
 }
@@ -69,6 +90,51 @@
 @keyframes trick-rainbow {
   from { filter: hue-rotate(0deg) saturate(2) drop-shadow(0 0 6px rgba(255, 255, 255, 0.7)); }
   to { filter: hue-rotate(360deg) saturate(2) drop-shadow(0 0 6px rgba(255, 255, 255, 0.7)); }
+}
+
+@keyframes trick-bounce {
+  0%, 100% { translate: 0 0; scale: 1 1; }
+  15% { scale: 1.2 0.8; }
+  35% { translate: 0 -22px; scale: 0.9 1.15; }
+  55% { translate: 0 0; scale: 1.2 0.8; }
+  75% { translate: 0 -10px; scale: 1 1; }
+}
+
+@keyframes trick-shadow {
+  0%, 100% { opacity: 1; translate: 0 0; }
+  25% { opacity: 0.15; translate: 14px 0; }
+  50% { opacity: 1; translate: -14px 0; filter: brightness(0.4); }
+  75% { opacity: 0.2; translate: 0 0; }
+}
+
+@keyframes trick-storm {
+  0% { filter: none; }
+  25% { filter: brightness(2.2) drop-shadow(0 0 10px #93c5fd); translate: 3px 0; }
+  50% { filter: none; translate: -3px 0; }
+  75% { filter: brightness(2.4) drop-shadow(0 0 14px #fde047); translate: 2px -2px; }
+  100% { filter: none; translate: 0 0; }
+}
+
+@keyframes trick-aura {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(250, 204, 21, 0)); }
+  50% { filter: drop-shadow(0 0 10px #facc15) drop-shadow(0 0 22px #f59e0b); scale: 1.08; }
+}
+
+@keyframes trick-galaxy {
+  from { rotate: 0deg; filter: hue-rotate(0deg) drop-shadow(0 0 8px #a78bfa); }
+  to { rotate: 360deg; filter: hue-rotate(360deg) drop-shadow(0 0 8px #a78bfa); }
+}
+
+@keyframes trick-meteor {
+  0% { translate: -30px -40px; scale: 0.6; filter: drop-shadow(0 0 8px #fb923c); }
+  70% { translate: 0 4px; scale: 1.3; filter: brightness(1.8) drop-shadow(0 0 18px #f97316); }
+  100% { translate: 0 0; scale: 1; filter: none; }
+}
+
+@keyframes trick-crown {
+  0%, 100% { translate: 0 0; scale: 1; filter: none; }
+  30% { translate: 0 -16px; scale: 1.15; filter: drop-shadow(0 0 12px #fde047) brightness(1.4); }
+  60% { translate: 0 0; scale: 1.1; filter: drop-shadow(0 0 20px #facc15) brightness(1.6); }
 }
 
 @keyframes trick-firework {

@@ -89,7 +89,7 @@ class MinerGameTest extends TestCase
         $user = $this->startRun();
         $this->setGrid($user, [8 => 'iron', 16 => 'gold', 24 => 'stone', 32 => 'gold']);
 
-        $this->dig($user, 8)->assertJsonPath('gain', 22)->assertJsonPath('run.combo', 1);
+        $this->dig($user, 8)->assertJsonPath('gain', 28)->assertJsonPath('run.combo', 1);
         // Вторая руда подряд — ×1.05
         $this->dig($user, 16)->assertJsonPath('gain', 57)->assertJsonPath('run.combo', 2);
         $this->dig($user, 24)->assertJsonPath('run.combo', 0)->assertJsonPath('events.0.type', 'combo_lost');

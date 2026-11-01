@@ -251,7 +251,7 @@ function fmt(n) {
           </p>
           <div class="gc-intro__gift">
             <PixelSprite sprite="art_coin" :size="26" anim="spin" />
-            <span><b>{{ fmt(guide.state.total) }} ApexCoin</b> за первые шаги — хватит на сундук питомцев</span>
+            <span><b>{{ fmt(guide.state.total) }} ApexCoin</b> за первые шаги — хватит на первого питомца</span>
           </div>
           <div class="gc-intro__actions">
             <button type="button" class="gc-btn gc-btn--primary" :disabled="guide.busy" @click="begin">

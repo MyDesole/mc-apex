@@ -366,11 +366,11 @@ final class Dungeons
      * `boss_gear` — шанс с босса (босс даёт всегда), `key` — ключ кейса.
      */
     public const DROPS = [
-        1 => ['gear' => 14, 'key' => 4, 'key_slug' => 'seeker', 'key_pet' => 0.5, 'key_pet_slug' => 'pets'],
-        2 => ['gear' => 22, 'key' => 12, 'key_slug' => 'seeker', 'key_pet' => 2, 'key_pet_slug' => 'pets'],
-        3 => ['gear' => 30, 'key' => 25, 'key_slug' => 'seeker', 'key_pet' => 5, 'key_pet_slug' => 'pets'],
-        4 => ['gear' => 38, 'key' => 35, 'key_slug' => 'seeker', 'key_pet' => 8, 'key_pet_slug' => 'pets'],
-        5 => ['gear' => 46, 'key' => 45, 'key_slug' => 'seeker', 'key_pet' => 12, 'key_pet_slug' => 'pets'],
+        1 => ['gear' => 14, 'key' => 4, 'key_slug' => 'seeker', 'key_pet' => 0.15, 'key_pet_slug' => 'royal'],
+        2 => ['gear' => 22, 'key' => 12, 'key_slug' => 'seeker', 'key_pet' => 0.5, 'key_pet_slug' => 'royal'],
+        3 => ['gear' => 30, 'key' => 25, 'key_slug' => 'seeker', 'key_pet' => 1.25, 'key_pet_slug' => 'royal'],
+        4 => ['gear' => 38, 'key' => 35, 'key_slug' => 'seeker', 'key_pet' => 2, 'key_pet_slug' => 'royal'],
+        5 => ['gear' => 46, 'key' => 45, 'key_slug' => 'seeker', 'key_pet' => 3, 'key_pet_slug' => 'royal'],
     ];
 
     /** Босс чаще даёт лучшую вещь: шанс в процентах на предмет своей ступени. */

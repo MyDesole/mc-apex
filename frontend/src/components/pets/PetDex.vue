@@ -29,7 +29,7 @@ async function claim(m) {
   error.value = ''
   try {
     dex.value = await api.post(`/pets/dex/${m.key}/claim`)
-    notice.value = `Награда за «${m.title}» получена: ₳ ${m.coins.toLocaleString('ru-RU')}${m.keys?.pets ? ` и ${m.keys.pets} ключа от Сундука питомцев` : ''}.`
+    notice.value = `Награда за «${m.title}» получена: ₳ ${m.coins.toLocaleString('ru-RU')}${m.keys?.royal ? ` и ${m.keys.royal} ключа от Королевского сундука` : ''}.`
     auth.fetchMe()
   } catch (e) {
     error.value = e.message || 'Не получилось.'

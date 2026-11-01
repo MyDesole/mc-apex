@@ -29,6 +29,9 @@ export const STATUS_COLORS = {
     stun: '#facc15',
 }
 
+/** Как в PetService::MAX_LEVEL. */
+export const MAX_PET_LEVEL = 100
+
 /** Опыт, с которого начинается уровень: 0, 5, 15, 30… */
 export function levelXp(level) {
     return (5 * level * (level - 1)) / 2

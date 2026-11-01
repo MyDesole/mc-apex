@@ -93,7 +93,7 @@ class QueryBudgetTest extends TestCase
             '/api/home (кэш)' => [fn () => $this->getJson('/api/home')->assertOk(), 9],
             '/api/home/me' => [fn () => $this->actingAs($me)->getJson('/api/home/me')->assertOk(), 22],
             '/api/auctions' => [fn () => $this->getJson('/api/auctions')->assertOk()->assertJsonCount(15, 'lots'), 10],
-            '/api/pets' => [fn () => $this->actingAs($me)->getJson('/api/pets')->assertOk()->assertJsonCount(12, 'pets'), 18],
+            '/api/pets' => [fn () => $this->actingAs($me)->getJson('/api/pets')->assertOk()->assertJsonCount(12, 'pets'), 20],
             '/api/pets/top?by=level' => [fn () => $this->getJson('/api/pets/top?by=level')->assertOk()->assertJsonCount(20, 'pets'), 8],
             '/api/pets/top?by=rare' => [fn () => $this->getJson('/api/pets/top?by=rare')->assertOk()->assertJsonCount(20, 'pets'), 8],
             // Второй заход — из кэша

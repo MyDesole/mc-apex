@@ -33,6 +33,13 @@ class PetHubService
         'sparkle' => [22, 'Звездопад'],
         'rainbow' => [26, 'Радуга'],
         'firework' => [30, 'Фейерверк'],
+        'bounce' => [40, 'Пружинка'],
+        'shadow' => [50, 'Теневой шаг'],
+        'storm' => [60, 'Грозовой разряд'],
+        'aura' => [70, 'Золотая аура'],
+        'galaxy' => [80, 'Галактика'],
+        'meteor' => [90, 'Метеор'],
+        'crown' => [100, 'Корона ферм'],
     ];
 
     /** Награды питомцедекса: вехи => [что считаем, сколько нужно, монеты, ключи]. */
@@ -41,7 +48,7 @@ class PetHubService
         'species_6' => ['kind' => 'species', 'need' => 6, 'coins' => 2500, 'title' => '6 видов питомцев'],
         'species_10' => ['kind' => 'species', 'need' => 10, 'coins' => 5000, 'title' => '10 видов питомцев'],
         'species_15' => ['kind' => 'species', 'need' => 15, 'coins' => 10000, 'title' => '15 видов питомцев'],
-        'species_all' => ['kind' => 'species', 'need' => 'all', 'coins' => 25000, 'keys' => ['pets' => 3], 'title' => 'Все виды питомцев'],
+        'species_all' => ['kind' => 'species', 'need' => 'all', 'coins' => 25000, 'keys' => ['royal' => 3], 'title' => 'Все виды питомцев'],
         'model_10' => ['kind' => 'model', 'need' => 10, 'coins' => 2000, 'title' => '10 окрасов'],
         'model_all' => ['kind' => 'model', 'need' => 'all', 'coins' => 15000, 'title' => 'Все окрасы'],
         'backdrop_10' => ['kind' => 'backdrop', 'need' => 10, 'coins' => 2000, 'title' => '10 фонов'],

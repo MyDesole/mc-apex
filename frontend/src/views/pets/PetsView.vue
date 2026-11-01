@@ -23,7 +23,7 @@ import PixelSprite from '@/components/shop/PixelSprite.vue'
 import PetPicker from '@/components/pets/PetPicker.vue'
 import CountdownText from '@/components/core/CountdownText.vue'
 import { useNow } from '@/composables/core/useNow.js'
-import { ELEMENTS, PET_NAMES, levelXp } from '@/data/players/petArena.js'
+import { ELEMENTS, MAX_PET_LEVEL, PET_NAMES, levelXp } from '@/data/players/petArena.js'
 import { PET_RARITY, chanceLabel } from '@/data/players/petTraits.js'
 
 const auth = useAuthStore()
@@ -35,7 +35,6 @@ const TABS = [
   ['expeditions', 'Экспедиции', 'globe'],
   ['arena', 'Арена', 'sword'],
   ['gear', 'Экипировка', 'shield'],
-  ['breeding', 'Скрещивание', 'sparkles'],
   ['dex', 'Питомцедекс', 'box'],
   ['top', 'Топ', 'trophy'],
 ]
@@ -190,7 +189,7 @@ const readyIds = computed(() => new Set(readyKey.value ? readyKey.value.split(',
 const isReady = (trip) => readyIds.value.has(trip.id)
 
 function xpPct(p) {
-  if (p.level >= 30) return 100
+  if (p.level >= MAX_PET_LEVEL) return 100
   const from = levelXp(p.level)
   const to = levelXp(p.level + 1)
   return Math.round(((p.xp - from) / (to - from)) * 100)
@@ -297,40 +296,6 @@ async function recall(trip) {
     await load()
   } catch (e) {
     fail(e, 'Не удалось вернуть.')
-  } finally {
-    busy.value = null
-  }
-}
-
-/* ---------- Скрещивание ---------- */
-
-const breedParent1 = ref(null)
-const breedParent2 = ref(null)
-
-const breedReady = computed(
-    () => breedParent1.value && breedParent2.value && breedParent1.value !== breedParent2.value,
-)
-
-async function breedPets() {
-  if (!breedReady.value) return
-
-  busy.value = 'breed'
-
-  try {
-    const ok = await confirmDialog(
-        'Скрестить двух питомцев за 300 ApexCoin? Потомок унаследует вид и смешает черты.',
-        { title: 'Скрещивание', confirmText: 'Скрестить' },
-    )
-
-    if (!ok) return
-
-    await api.post('/pets/breeding', { parent1: breedParent1.value, parent2: breedParent2.value })
-    say('Появился новый питомец!')
-    breedParent1.value = null
-    breedParent2.value = null
-    await load()
-  } catch (e) {
-    fail(e, 'Не удалось скрестить.')
   } finally {
     busy.value = null
   }
@@ -456,7 +421,7 @@ onMounted(async () => {
     <!-- ================= Питомцы ================= -->
     <template v-else-if="tab === 'pets'">
       <p v-if="!pets.length" class="pv-empty">
-        Питомцев пока нет. Их выбивают в <RouterLink to="/cases">Сундуке питомцев</RouterLink>
+        Питомцев пока нет. Их растят на <RouterLink to="/farm">фермах</RouterLink>
         или покупают у других игроков на <RouterLink to="/auction">аукционе</RouterLink>.
       </p>
 
@@ -565,7 +530,7 @@ onMounted(async () => {
 
             <div class="pc__xp">
               <div><i :style="{ width: `${xpPct(p)}%` }"></i></div>
-              <small>{{ p.level >= 30 ? 'максимальный уровень' : `${p.xp} / ${levelXp(p.level + 1)} опыта` }}</small>
+              <small>{{ p.level >= MAX_PET_LEVEL ? 'максимальный уровень' : `${p.xp} / ${levelXp(p.level + 1)} опыта` }}</small>
             </div>
 
             <dl class="pc__stats">
@@ -681,7 +646,7 @@ onMounted(async () => {
               <li><span>Монеты</span><b>₳ {{ zoneCoins(zone, selectedPet) }}</b></li>
               <li><span>Опыт питомцу</span><b>+{{ zone.xp }}</b></li>
               <li><span>Ключ искателя</span><b>{{ chanceLabel(zone.key_chance + (selectedPet?.level >= 15 ? 5 : 0)) }}</b></li>
-              <li><span>Ключ питомцев</span><b>{{ chanceLabel(zone.pet_key_chance) }}</b></li>
+              <li><span>Ключ королевского</span><b>{{ chanceLabel(zone.royal_key_chance) }}</b></li>
             </ul>
             <button
                 type="button"
@@ -699,35 +664,6 @@ onMounted(async () => {
             >Всех сюда ({{ sendable(zone) }}) · ₳ {{ sendable(zone) * fees.send }}</button>
           </article>
         </div>
-      </template>
-    </template>
-
-    <!-- ================= Скрещивание ================= -->
-    <template v-else-if="tab === 'breeding'">
-      <p v-if="freePets.length < 2" class="pv-empty">Нужно два свободных питомца — все заняты или их нет.</p>
-
-      <template v-else>
-        <div class="pa-block">
-          <span class="pa-label">Родитель 1</span>
-          <PetPicker v-model="breedParent1" :pets="freePets" />
-        </div>
-
-        <div class="pa-block">
-          <span class="pa-label">Родитель 2</span>
-          <PetPicker v-model="breedParent2" :pets="freePets" />
-        </div>
-
-        <p style="color: rgba(255,255,255,.45); font-size: 12px; margin: 10px 0;">
-          Вид потомка — случайный родитель, черты смешиваются. Стоит 300 ApexCoin,
-          кулдаун на родителя — сутки.
-        </p>
-
-        <button
-            type="button"
-            class="pv-btn pv-btn--go"
-            :disabled="busy === 'breed' || !breedReady"
-            @click="breedPets"
-        >Скрестить за 300 ₳</button>
       </template>
     </template>
 
@@ -846,7 +782,7 @@ onMounted(async () => {
             <li><b>₳ {{ loot.reward.coins.toLocaleString('ru-RU') }}</b><small>{{ loot.reward.double ? 'двойная добыча!' : 'монеты' }}</small></li>
             <li><b>+{{ loot.reward.xp }}</b><small>опыта питомцу</small></li>
             <li v-if="loot.reward.keys?.seeker"><b>{{ loot.reward.keys.seeker }}</b><small>ключ искателя</small></li>
-            <li v-if="loot.reward.keys?.pets"><b>{{ loot.reward.keys.pets }}</b><small>ключ питомцев</small></li>
+            <li v-if="loot.reward.keys?.royal"><b>{{ loot.reward.keys.royal }}</b><small>ключ королевского сундука</small></li>
           </ul>
           <button type="button" class="pv-btn pv-btn--go" @click="loot = null">Отлично</button>
         </div>

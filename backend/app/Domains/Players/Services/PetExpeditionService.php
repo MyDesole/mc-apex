@@ -26,13 +26,13 @@ class PetExpeditionService
 {
     /**
      * Зона => название, часы, мин. уровень, монеты [от, до], опыт,
-     * шанс ключа «Сундука искателя» и «Сундука питомцев» в процентах.
+     * шанс ключа «Сундука искателя» и «Королевского сундука» в процентах.
      */
     public const ZONES = [
-        'meadow' => ['name' => 'Цветочный луг', 'hours' => 1, 'min_level' => 1, 'coins' => [120, 200], 'xp' => 3, 'key_chance' => 4, 'pet_key_chance' => 0.5],
-        'forest' => ['name' => 'Тёмный лес', 'hours' => 4, 'min_level' => 3, 'coins' => [550, 800], 'xp' => 8, 'key_chance' => 12, 'pet_key_chance' => 2],
-        'caves' => ['name' => 'Кристальные пещеры', 'hours' => 8, 'min_level' => 8, 'coins' => [1200, 1700], 'xp' => 15, 'key_chance' => 25, 'pet_key_chance' => 5],
-        'nether' => ['name' => 'Огненные земли', 'hours' => 12, 'min_level' => 15, 'coins' => [2000, 2800], 'xp' => 24, 'key_chance' => 40, 'pet_key_chance' => 10],
+        'meadow' => ['name' => 'Цветочный луг', 'hours' => 1, 'min_level' => 1, 'coins' => [120, 200], 'xp' => 3, 'key_chance' => 4, 'royal_key_chance' => 0.15],
+        'forest' => ['name' => 'Тёмный лес', 'hours' => 4, 'min_level' => 3, 'coins' => [550, 800], 'xp' => 8, 'key_chance' => 12, 'royal_key_chance' => 0.5],
+        'caves' => ['name' => 'Кристальные пещеры', 'hours' => 8, 'min_level' => 8, 'coins' => [1200, 1700], 'xp' => 15, 'key_chance' => 25, 'royal_key_chance' => 1.25],
+        'nether' => ['name' => 'Огненные земли', 'hours' => 12, 'min_level' => 15, 'coins' => [2000, 2800], 'xp' => 24, 'key_chance' => 40, 'royal_key_chance' => 2.5],
     ];
 
     /** Монеты растут на 2% за каждый уровень питомца. */
@@ -73,7 +73,7 @@ class PetExpeditionService
             'user_id' => $user->id,
             'inventory_id' => $row->id,
             'zone' => $zone,
-            'ends_at' => now()->addHours($config['hours']),
+            'ends_at' => now()->addSeconds((int) round($config['hours'] * 3600 * PetPerks::expeditionTimeFactor($level))),
             'reward' => json_encode($this->roll($config, $zone, $level)),
             'created_at' => now(),
             'updated_at' => now(),
@@ -162,7 +162,7 @@ class PetExpeditionService
     {
         [$min, $max] = $config['coins'];
         $coins = random_int($min, $max);
-        $coins = (int) round($coins * (1 + $level * self::LEVEL_SHARE) * (1 + PetPerks::expeditionCoinsBonus($level)));
+        $coins = (int) round($coins * (1 + min($level, PetPerks::COIN_SCALING_CAP) * self::LEVEL_SHARE) * (1 + PetPerks::expeditionCoinsBonus($level)));
 
         $double = $this->chance(PetPerks::doubleLootChance($level));
         if ($double) {
@@ -173,15 +173,15 @@ class PetExpeditionService
         if ($this->chance($config['key_chance'] + PetPerks::keyChanceBonus($level))) {
             $keys['seeker'] = $double ? 2 : 1;
         }
-        if ($this->chance($config['pet_key_chance'])) {
-            $keys['pets'] = 1;
+        if ($this->chance($config['royal_key_chance'])) {
+            $keys['royal'] = 1;
         }
 
         $stories = self::STORIES[$zone];
 
         return [
             'coins' => $coins,
-            'xp' => $config['xp'],
+            'xp' => $config['xp'] * PetService::xpMultiplier($level),
             'keys' => $keys,
             'double' => $double,
             'story' => $stories[array_rand($stories)],

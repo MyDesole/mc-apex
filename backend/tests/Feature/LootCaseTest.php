@@ -39,9 +39,9 @@ class LootCaseTest extends TestCase
     {
         $this->getJson('/api/cases')
             ->assertOk()
-            // Ежедневный, искателя, королевский и сундук питомцев
-            ->assertJsonCount(4, 'cases')
-            ->assertJsonPath('cases.3.slug', 'pets')
+            // Ежедневный, искателя и королевский: сундук питомцев убран, питомцев растят на фермах
+            ->assertJsonCount(3, 'cases')
+            ->assertJsonPath('cases.2.slug', 'royal')
             ->assertJsonPath('cases.0.slug', 'daily')
             ->assertJsonPath('cases.0.price', 0);
     }

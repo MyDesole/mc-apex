@@ -21,6 +21,12 @@ Schedule::call(fn () => app(\App\Domains\Shop\Services\PetAuctionService::class)
     ->name('pet-auctions:close')
     ->withoutOverlapping();
 
+// Общая ферма питомцев: спавн, снятие просроченных броней
+Schedule::call(fn () => app(\App\Domains\Players\Services\PetFarmService::class)->tick())
+    ->everyMinute()
+    ->name('pet-farm:tick')
+    ->withoutOverlapping();
+
 // Карта сайта для поисковиков — свежие новости и кланы
 Schedule::command('sitemap:generate')->dailyAt('04:10');
 

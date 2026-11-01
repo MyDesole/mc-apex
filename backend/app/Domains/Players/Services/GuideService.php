@@ -113,7 +113,7 @@ class GuideService
 
             if ($check !== 'seen' && ! $this->satisfied($user, $check)) {
                 throw new RuntimeException(match ($check) {
-                    'pet' => 'Сначала открой сундук питомцев.',
+                    'pet' => 'Сначала заведи питомца на Общей ферме.',
                     'expedition' => 'Сначала отправь питомца в экспедицию.',
                     'battle' => 'Сначала проведи бой на арене.',
                     'miner' => 'Сначала спустись в шахту и закончи забег.',

@@ -590,6 +590,13 @@ watch(mobileMenuOpen, (open) => {
                     <span>Мои питомцы</span>
                   </RouterLink>
 
+                  <RouterLink to="/farm" class="dropdown-item" @click="menuOpen = false">
+                    <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 21V11M12 11c0-3 2-5 5-5 0 3-2 5-5 5zM12 14c0-2.5-1.8-4-4.5-4 0 2.5 1.8 4 4.5 4zM4 21h16" />
+                    </svg>
+                    <span>Фермы питомцев</span>
+                  </RouterLink>
+
                   <RouterLink to="/auction" class="dropdown-item" @click="menuOpen = false">
                     <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M14 4l6 6M11 7l6 6M12.5 5.5l-6 6 6 6 6-6M7.5 12.5L3 17l4 4 4.5-4.5M3 21h9" />
