@@ -712,7 +712,7 @@ onMounted(async () => {
               <small class="pa-prize">Победа — монеты ×{{ hub.arena.win_multiplier }}</small>
               <div class="pa-wheel" title="Кто кого бьёт сильнее">
                 <span v-for="[a, b] in [['fire', 'nature'], ['nature', 'water'], ['water', 'fire'], ['shadow', 'beast'], ['beast', 'light'], ['light', 'shadow']]" :key="a">
-                  <i :style="{ color: ELEMENTS[a].color }">{{ ELEMENTS[a].name }}</i> → <i :style="{ color: ELEMENTS[b].color }">{{ ELEMENTS[b].name }}</i>
+                  <i :style="{ color: ELEMENTS[a]?.color }">{{ ELEMENTS[a]?.name }}</i> → <i :style="{ color: ELEMENTS[b]?.color }">{{ ELEMENTS[b]?.name }}</i>
                 </span>
               </div>
               <small class="pa-prize">Каждый понедельник топ-3 арены: ₳ 20 000 / 10 000 / 5 000</small>
