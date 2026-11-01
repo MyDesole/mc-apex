@@ -2967,7 +2967,7 @@
 
 .dgn-craft {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 8px;
 
   margin-bottom: 14px;
@@ -2984,40 +2984,93 @@
   border-radius: 12px;
 
   background: rgba(0, 0, 0, 0.22);
+
+  transition: border-color 0.14s ease, background 0.14s ease;
+}
+
+/* Доступен крафт — подсветить карточку */
+.dgn-craft__item.is-ready {
+  border-color: rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.07);
 }
 
 .dgn-craft__meta {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
 
   flex: 1;
   min-width: 0;
 }
 
-.dgn-craft__meta b { color: #fff; font-size: 13px; }
+.dgn-craft__meta b {
+  color: #fff;
+  font-size: 13px;
 
-.dgn-craft__meta small {
-  color: rgba(255, 255, 255, 0.45);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-  font-size: 11px;
+/* «есть N / нужно 3» — компактно, без переносов */
+.dgn-craft__count {
+  color: rgba(255, 255, 255, 0.55);
+
+  font-size: 12px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
-.dgn-craft__result {
-  margin: -4px 0 12px;
-  padding: 8px 12px;
-
-  border: 1px solid rgba(34, 197, 94, 0.4);
-  border-radius: 10px;
-
-  background: rgba(34, 197, 94, 0.12);
-
-  color: #86efac;
+.dgn-craft__count small {
+  color: rgba(255, 255, 255, 0.32);
+  font-weight: 600;
 }
 
-.dgn-craft__result b { color: #fff; }
+/* Кнопка: фиксированная ширина, не сжимается, не переносится */
+.dgn-craft__btn {
+  flex: 0 0 auto;
 
+  min-width: 100px;
+  min-height: 34px;
+  padding: 0 14px;
+
+  border: 1px solid rgba(34, 197, 94, 0.5);
+  border-radius: 10px;
+
+  background: rgba(34, 197, 94, 0.18);
+
+  color: #86efac;
+
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 800;
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition: background 0.14s ease, transform 0.14s ease, border-color 0.14s ease;
+}
+
+.dgn-craft__btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+
+  background: rgba(34, 197, 94, 0.3);
+  border-color: rgba(34, 197, 94, 0.7);
+}
+
+.dgn-craft__btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.dgn-craft__btn:disabled {
+  border-color: rgba(255, 255, 255, 0.1);
+
+  background: rgba(255, 255, 255, 0.04);
+
+  color: rgba(255, 255, 255, 0.3);
+
+  cursor: not-allowed;
+}
 .dgn-combos {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));

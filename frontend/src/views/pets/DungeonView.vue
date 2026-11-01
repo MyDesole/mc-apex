@@ -991,21 +991,28 @@ onMounted(() => {
             <p class="dgn-hint">Три материала — случайный предмет того же тира. Материалы падают с мобов и боссов.</p>
 
             <div v-if="craft" class="dgn-craft">
-                <div v-for="(def, key) in craft.catalog" :key="key" class="dgn-craft__item">
-                    <PixelSprite :sprite="def.sprite" :size="28" />
-                    <span class="dgn-craft__meta">
-                        <b>{{ def.name }}</b>
-                        <small>есть {{ craft.materials[key] ?? 0 }} · нужно {{ craft.cost }}</small>
-                    </span>
-                    <button
-                        type="button"
-                        class="dgn-btn"
-                        :disabled="busy || craftBusy === key || (craft.materials[key] ?? 0) < craft.cost"
-                        @click="doCraft(key)"
-                    >
-                        Скрафтить
-                    </button>
-                </div>
+              <div
+                  v-for="(def, key) in craft.catalog"
+                  :key="key"
+                  class="dgn-craft__item"
+                  :class="{ 'is-ready': (craft.materials[key] ?? 0) >= craft.cost }"
+              >
+                <PixelSprite :sprite="def.sprite" :size="28" />
+                <span class="dgn-craft__meta">
+        <b>{{ def.name }}</b>
+        <span class="dgn-craft__count">
+            {{ craft.materials[key] ?? 0 }}<small>/{{ craft.cost }}</small>
+        </span>
+    </span>
+                <button
+                    type="button"
+                    class="dgn-craft__btn"
+                    :disabled="busy || craftBusy === key || (craft.materials[key] ?? 0) < craft.cost"
+                    @click="doCraft(key)"
+                >
+                  {{ craftBusy === key ? '…' : 'Скрафтить' }}
+                </button>
+              </div>
             </div>
 
             <p v-if="crafted" class="dgn-craft__result">
