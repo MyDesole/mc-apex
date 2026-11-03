@@ -1,7 +1,7 @@
 /* Карта-мир: деревня на холмах. Постройки стоят на земле и собраны из CSS-блоков в пиксельном стиле. */
-.world { position: relative; max-width: 1240px; margin: 0 auto; padding: 0 0 40px; image-rendering: pixelated; }
+.world { position: fixed; z-index: 10; inset: 56px 0 0 0; overflow: hidden; image-rendering: pixelated; }
 .world__scene {
-  position: relative; height: 720px; overflow: clip; border: 4px solid #4a2a10; box-shadow: 0 0 0 4px #1b0f06;
+  position: relative; height: 100%; overflow: clip; border: 0; box-shadow: inset 0 4px 0 #1b0f06;
   background: linear-gradient(#6ec1ff 0, #bfe6ff 36%, #4f9a3c 36%); transition: filter 0.25s;
 }
 .world__scene.is-dim { filter: brightness(0.5); pointer-events: none; }
@@ -77,6 +77,10 @@
 .bld--mine .bld__roof { clip-path: polygon(0 100%, 18% 20%, 40% 0, 62% 14%, 84% 6%, 100% 100%); height: 44px; background: #5a5a63; }
 .bld--dungeon { --roof: #3b3340; --wall: #4d4552; --door: #08060a; --deco: #ff7a1a; }
 .bld--dungeon .bld__roof { clip-path: polygon(0 100%, 0 30%, 12% 30%, 12% 0, 30% 0, 30% 30%, 70% 30%, 70% 0, 88% 0, 88% 30%, 100% 30%, 100% 100%); }
+.bld--rift { --roof: #3a1d6b; --wall: #2a1650; --door: #a855f7; --deco: #c4b5fd; }
+.bld--rift .bld__roof { clip-path: polygon(0 100%, 10% 20%, 28% 60%, 50% 0, 72% 60%, 90% 20%, 100% 100%); height: 38px; }
+.bld--lavka { --roof: #b8860b; --wall: #7a4a1f; --door: #3a1a0a; --deco: #ffd45c; }
+.bld--lavka .bld__roof { background: repeating-linear-gradient(90deg, #b8860b 0 16px, #ffd45c 16px 32px); clip-path: polygon(0 100%, 6% 0, 94% 0, 100% 100%); height: 28px; }
 .bld--arena { --roof: #c9a66b; --wall: #d9bd85; --door: #3a1a0a; --deco: #e23b3b; }
 .bld--arena .bld__roof { clip-path: polygon(0 100%, 6% 30%, 94% 30%, 100% 100%); height: 34px; }
 .bld--camp { --roof: #2f8f5b; --wall: #3aa56a; --door: #1f4d33; --deco: #ffd45c; }
@@ -98,6 +102,57 @@
 .bld--hall .bld__roof { clip-path: polygon(0 100%, 0 40%, 25% 40%, 25% 0, 75% 0, 75% 40%, 100% 40%, 100% 100%); }
 .bld--store { --roof: #3b6e3b; --wall: #a8844a; --door: #4a2a10; --deco: #fff; }
 .bld--store .bld__roof { clip-path: polygon(0 100%, 4% 20%, 96% 20%, 100% 100%); height: 30px; }
+
+/* Декор: всё стоит основанием на точке x/y, под зданиями по глубине */
+.w-decor { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.w-decor > i { position: absolute; display: block; translate: -50% -100%; }
+.w-tree { width: 40px; height: 64px; scale: var(--s); transform-origin: 50% 100%; animation: w-sway 4s steps(2) infinite; }
+.w-tree::before { content: ""; position: absolute; left: 50%; bottom: 0; width: 10px; height: 22px; margin-left: -5px; background: #6b3f1b; box-shadow: inset -3px 0 0 #4a2a10; }
+.w-tree::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 46px; background: #2f7a2b; box-shadow: inset 6px 6px 0 #3f9a38, inset -6px -6px 0 #256322; clip-path: polygon(20% 100%, 0 70%, 8% 40%, 24% 20%, 40% 0, 60% 0, 76% 20%, 92% 40%, 100% 70%, 80% 100%); }
+.w-tree b { position: absolute; left: 50%; bottom: -3px; width: 36px; height: 8px; margin-left: -18px; background: rgba(0, 0, 0, 0.25); border-radius: 50%; z-index: -1; }
+@keyframes w-sway { 50% { rotate: 1.5deg; } }
+.w-bush { width: 30px; height: 18px; background: #3f9a38; box-shadow: inset 4px 4px 0 #56b84c, inset -4px -4px 0 #2b7527; clip-path: polygon(0 100%, 6% 40%, 30% 10%, 55% 0, 80% 20%, 100% 55%, 100% 100%); }
+.w-flower { width: 8px; height: 8px; background: #ffd45c; box-shadow: 0 0 0 2px #fff0; animation: w-bob 3s steps(2) infinite; }
+.w-flower--1 { background: #ff6b9a; }
+.w-flower--2 { background: #fff; }
+.w-flower--3 { background: #8fd3ff; }
+@keyframes w-bob { 50% { translate: -50% calc(-100% - 2px); } }
+.w-lamp { width: 6px; height: 40px; background: #3a2a1a; }
+.w-lamp::before { content: ""; position: absolute; left: -5px; top: -10px; width: 16px; height: 12px; background: #fff3b0; border: 3px solid #3a2a1a; }
+.is-night .w-lamp::before { box-shadow: 0 0 22px 12px rgba(255, 220, 120, 0.6); }
+/* Река внизу с мостиком; вода переливается */
+.w-river { position: absolute; left: 0; right: 0; bottom: 0; height: 30px; background: repeating-linear-gradient(90deg, #3d8bd9 0 24px, #5aa5ec 24px 48px); animation: w-flow 3s linear infinite; border-top: 4px solid #2b6bb0; }
+@keyframes w-flow { to { background-position-x: 48px; } }
+.w-bridge { position: absolute; left: 49%; top: -22px; width: 72px; height: 44px; background: repeating-linear-gradient(90deg, #a8672f 0 12px, #8a5222 12px 14px); border: 4px solid #4a2a10; }
+.w-fly { width: 10px; height: 8px; background: #ff9ad5; clip-path: polygon(0 20%, 40% 50%, 0 90%, 50% 70%, 100% 90%, 60% 50%, 100% 20%, 50% 40%); animation: w-flutter 6s ease-in-out infinite alternate; }
+@keyframes w-flutter { 25% { translate: 40px -30px; } 50% { translate: 90px 10px; } 75% { translate: 140px -24px; } 100% { translate: 200px 0; } }
+.w-bird { position: absolute; width: 16px; height: 6px; border-top: 3px solid #2a2a35; border-radius: 50% 50% 0 0; animation: w-fly-by 40s linear infinite; }
+@keyframes w-fly-by { from { translate: -10vw 0; } to { translate: 110vw 30px; } }
+/* Ночь, закат и звёзды */
+.w-star, .w-moon { display: none; }
+.w-dark { position: absolute; inset: 0; z-index: 4; pointer-events: none; background: transparent; transition: background 2s; }
+.is-dusk .w-dark { background: rgba(255, 120, 60, 0.16); }
+.is-night .w-dark { background: rgba(10, 16, 56, 0.5); }
+.is-night.world__scene { background: linear-gradient(#0b1030 0, #26306b 36%, #2f6a2a 36%); }
+.is-night .w-star { display: block; position: absolute; width: 3px; height: 3px; background: #fff; animation: w-twinkle 2.5s steps(2) infinite; }
+@keyframes w-twinkle { 50% { opacity: 0.2; } }
+.w-moon { position: absolute; top: 24px; right: 70px; width: 48px; height: 48px; background: #f3efd8; box-shadow: inset -12px 0 0 #cfc9a6, 0 0 0 10px rgba(243, 239, 216, 0.15); border-radius: 50%; }
+.is-night .w-moon { display: block; }
+.is-night .w-cloud { opacity: 0.25; }
+.is-night .bld__deco { box-shadow: 0 0 18px 10px rgba(255, 210, 100, 0.65); }
+/* Живые детали построек */
+.bld--forge .bld__art::before, .bld--mine .bld__art::before { content: ""; position: absolute; left: 70%; top: -8px; width: 12px; height: 12px; background: rgba(230, 230, 235, 0.8); animation: w-smoke 3s linear infinite; }
+@keyframes w-smoke { from { translate: 0 0; opacity: 0.9; } to { translate: 14px -46px; scale: 2.2; opacity: 0; } }
+.bld--rift .bld__art::before { content: ""; position: absolute; left: 50%; bottom: 60px; width: 22px; height: 220px; margin-left: -11px; background: linear-gradient(transparent, rgba(168, 85, 247, 0.65)); box-shadow: 0 0 24px 10px rgba(168, 85, 247, 0.4); animation: w-beam 1.6s steps(3) infinite; pointer-events: none; z-index: -1; }
+@keyframes w-beam { 50% { opacity: 0.55; width: 14px; margin-left: -7px; } }
+.bld--rift .bld__door { animation: w-portal 1.2s steps(2) infinite; }
+@keyframes w-portal { 50% { background: #d8b4fe; } }
+.bld--dungeon .bld__deco, .bld--forge .bld__deco { animation: w-flick 0.5s steps(2) infinite; }
+@keyframes w-flick { 50% { opacity: 0.55; } }
+.bld--lavka .bld__deco, .bld--market .bld__deco, .bld--hall .bld__deco { animation: w-glint 2.2s steps(2) infinite; }
+@keyframes w-glint { 50% { background: #fff; } }
+.bld--arena .bld__art::before { content: ""; position: absolute; left: 6px; top: -22px; width: 18px; height: 14px; background: #e23b3b; box-shadow: 56px 0 0 #e23b3b; animation: w-flag 0.8s steps(2) infinite; }
+@keyframes w-flag { 50% { height: 10px; } }
 
 /* Питомцы на дорожке */
 .w-herd { position: absolute; z-index: 4; left: 4%; right: 4%; top: 69%; height: 44px; margin-top: -10px; pointer-events: none; }
@@ -140,6 +195,9 @@
 .room--forge .room__wall i, .room--mine .room__wall i { width: 12px; height: 34px; background: #ff7a1a; box-shadow: 0 0 26px 8px rgba(255, 122, 26, 0.5); animation: room-flame 0.8s steps(2) infinite; }
 .room--dungeon { --wall-a: #3b3340; --wall-b: #2e2833; --floor-a: #26212b; --floor-b: #1d1922; --glow: #ff7a1a; }
 .room--dungeon .room__wall i { width: 12px; height: 34px; background: #ff7a1a; box-shadow: 0 0 26px 8px rgba(255, 122, 26, 0.5); animation: room-flame 0.8s steps(2) infinite; }
+.room--rift { --wall-a: #2a1650; --wall-b: #1d0f3a; --floor-a: #1a1030; --floor-b: #140b26; --glow: #a855f7; }
+.room--rift .room__wall i { width: 12px; height: 34px; background: #a855f7; box-shadow: 0 0 26px 8px rgba(168, 85, 247, 0.55); animation: room-flame 0.8s steps(2) infinite; }
+.room--lavka { --wall-a: #7a4a1f; --wall-b: #6a3f19; --floor-a: #c9a66b; --floor-b: #bd9a5e; --glow: #ffd45c; }
 .room--arena { --wall-a: #c9a66b; --wall-b: #b8955a; --floor-a: #e3c88b; --floor-b: #d9bd7a; --glow: #e23b3b; }
 .room--arena .room__wall { height: 92px; background: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.18) 0 22px, transparent 22px 44px), linear-gradient(rgba(0, 0, 0, 0.3), transparent); }
 .room--arena .room__wall i { width: 34px; height: 56px; background: var(--glow); clip-path: polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%); border: 0; box-shadow: none; }
@@ -151,7 +209,8 @@
 @keyframes room-flame { 50% { height: 40px; opacity: 0.85; } }
 
 @media (max-width: 760px) {
-  .world__scene { height: auto; padding: 70px 10px 50px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 26px 8px; background: linear-gradient(#6ec1ff 0, #bfe6ff 90px, #4f9a3c 90px); }
+  .world { inset: 0; overflow-y: auto; }
+  .world__scene { height: auto; min-height: 100%; padding: 70px 10px 50px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 26px 8px; background: linear-gradient(#6ec1ff 0, #bfe6ff 90px, #4f9a3c 90px); }
   .bld { position: relative; left: auto !important; top: auto !important; translate: none; margin: 0 auto; }
   .w-hills, .w-path, .w-herd { display: none; }
   .w-legend { position: static; grid-column: 1 / -1; }

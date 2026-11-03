@@ -54,7 +54,7 @@ class DungeonCraftService
     {
         $def = Dungeons::MATERIALS[$material] ?? null;
 
-        if (! $def || ! empty($def['core'])) {
+        if (! $def || ! empty($def['core']) || ! empty($def['bound'])) {
             throw new RuntimeException('Такого материала нет.');
         }
 

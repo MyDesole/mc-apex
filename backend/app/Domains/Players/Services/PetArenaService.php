@@ -315,6 +315,12 @@ class PetArenaService
 
     // ---- Бой ----
 
+    /** Характеристики бойца для других режимов (рейд): те же, что на арене. */
+    public function fighterFor(UserInventory $pet, int $level): array
+    {
+        return $this->fighter($pet, $level);
+    }
+
     private function fighter(UserInventory $pet, int $level): array
     {
         $species = $pet->item?->effect_value;

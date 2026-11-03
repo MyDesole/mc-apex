@@ -25,6 +25,8 @@ const MuseumScene = defineAsyncComponent(() => import('@/game/MuseumScene.vue'))
 const HallScene = defineAsyncComponent(() => import('@/game/HallScene.vue'))
 const DungeonView = defineAsyncComponent(() => import('@/views/pets/DungeonView.vue'))
 const MineScene = defineAsyncComponent(() => import('@/game/MineScene.vue'))
+const RaidScene = defineAsyncComponent(() => import('@/game/RaidScene.vue'))
+const LavkaScene = defineAsyncComponent(() => import('@/game/LavkaScene.vue'))
 const MarketScene = defineAsyncComponent(() => import('@/game/MarketScene.vue'))
 const AuctionView = defineAsyncComponent(() => import('@/views/shop/AuctionView.vue'))
 const PetBag = defineAsyncComponent(() => import('@/components/pets/PetBag.vue'))
@@ -34,20 +36,35 @@ const PetBag = defineAsyncComponent(() => import('@/components/pets/PetBag.vue')
  * only — какая вкладка механики живёт внутри (остальные скрыты).
  */
 const PLACES = [
-  { id: 'gear', name: 'Кузница', kind: 'forge', x: 10, y: 60, view: ForgeScene, hint: 'Снаряжение питомцев' },
-  { id: 'farm', name: 'Общая ферма', kind: 'barn', x: 26, y: 60, view: FarmView, props: { only: 'common' }, hint: 'Бронь и выкуп питомцев', badge: 'farm' },
-  { id: 'miner', name: 'Шахта', kind: 'mine', x: 42, y: 60, view: MineScene, hint: 'Копай руду, зарабатывай ApexCoin' },
-  { id: 'dungeon', name: 'Подземелья', kind: 'dungeon', x: 58, y: 60, view: DungeonView, hint: 'Отряд, боссы и Рубли', badge: 'dungeon' },
-  { id: 'museum', name: 'Питомцедекс', kind: 'museum', x: 74, y: 60, view: MuseumScene, hint: 'Коллекция видов и окрасов' },
-  { id: 'hall', name: 'Доска почёта', kind: 'hall', x: 90, y: 60, view: HallScene, hint: 'Лучшие питомцы сервера' },
-  { id: 'pets', name: 'Дом питомцев', kind: 'house', x: 7, y: 92, view: HouseScene, hint: 'Уход, уровни, перки и трюки' },
-  { id: 'personal', name: 'Личная ферма', kind: 'gate', x: 21, y: 92, view: FarmView, props: { only: 'personal' }, hint: 'Грядки, Кладовка и горн', badge: 'personal' },
-  { id: 'bag', name: 'Склад питомцев', kind: 'store', x: 35, y: 92, view: PetBag, hint: 'Инвентарь питомцев: снаряжение, материалы, ключи' },
-  { id: 'expeditions', name: 'Экспедиции', kind: 'camp', x: 49, y: 92, view: ExpeditionScene, hint: 'Поход за монетами и ключами', badge: 'expeditions' },
-  { id: 'arena', name: 'Арена', kind: 'arena', x: 63, y: 92, view: ArenaScene, hint: 'Пошаговые бои питомцев' },
-  { id: 'auction', name: 'Аукцион', kind: 'stall', x: 77, y: 92, view: AuctionView, hint: 'Торги питомцами' },
-  { id: 'market', name: 'Рынок', kind: 'market', x: 91, y: 92, view: MarketScene, hint: 'Продать и купить материалы и снаряжение' },
+  { id: 'gear', name: 'Кузница', kind: 'forge', x: 7, y: 60, view: ForgeScene, hint: 'Снаряжение питомцев' },
+  { id: 'farm', name: 'Общая ферма', kind: 'barn', x: 21, y: 60, view: FarmView, props: { only: 'common' }, hint: 'Бронь и выкуп питомцев', badge: 'farm' },
+  { id: 'miner', name: 'Шахта', kind: 'mine', x: 35, y: 60, view: MineScene, hint: 'Копай руду, зарабатывай ApexCoin' },
+  { id: 'dungeon', name: 'Подземелья', kind: 'dungeon', x: 49, y: 60, view: DungeonView, hint: 'Отряд, боссы и Рубли', badge: 'dungeon' },
+  { id: 'raid', name: 'Разлом', kind: 'rift', x: 63, y: 60, view: RaidScene, hint: 'Рейд на группу в 18:00 и 22:00' },
+  { id: 'museum', name: 'Питомцедекс', kind: 'museum', x: 77, y: 60, view: MuseumScene, hint: 'Коллекция видов и окрасов' },
+  { id: 'hall', name: 'Доска почёта', kind: 'hall', x: 91, y: 60, view: HallScene, hint: 'Лучшие питомцы сервера' },
+  { id: 'pets', name: 'Дом питомцев', kind: 'house', x: 6, y: 92, view: HouseScene, hint: 'Уход, уровни, перки и трюки' },
+  { id: 'personal', name: 'Личная ферма', kind: 'gate', x: 19, y: 92, view: FarmView, props: { only: 'personal' }, hint: 'Грядки, Кладовка и горн', badge: 'personal' },
+  { id: 'bag', name: 'Склад питомцев', kind: 'store', x: 32, y: 92, view: PetBag, hint: 'Инвентарь питомцев: снаряжение, материалы, ключи' },
+  { id: 'expeditions', name: 'Экспедиции', kind: 'camp', x: 45, y: 92, view: ExpeditionScene, hint: 'Поход за монетами и ключами', badge: 'expeditions' },
+  { id: 'arena', name: 'Арена', kind: 'arena', x: 58, y: 92, view: ArenaScene, hint: 'Пошаговые бои питомцев' },
+  { id: 'auction', name: 'Аукцион', kind: 'stall', x: 71, y: 92, view: AuctionView, hint: 'Торги питомцами' },
+  { id: 'market', name: 'Рынок', kind: 'market', x: 83, y: 92, view: MarketScene, hint: 'Продать и купить материалы и снаряжение' },
+  { id: 'lavka', name: 'Лавка', kind: 'lavka', x: 95, y: 92, view: LavkaScene, hint: 'Привилегии за Рубли, вещи за Осколки' },
 ]
+
+/** Декор: деревья, кусты, цветы. Координаты — проценты сцены, стоит основанием на точке. */
+const TREES = [[2, 47], [11, 45], [20, 43], [31, 46], [42, 44], [57, 45], [69, 43], [82, 46], [96, 44], [2, 79], [98, 80]]
+const BUSHES = [[14, 61], [28, 60], [42, 61], [56, 61], [70, 60], [84, 61], [12.5, 93], [25.5, 94], [38.5, 93], [51.5, 94], [64.5, 93], [77.5, 94], [89, 93]]
+const FLOWERS = Array.from({ length: 36 }, (_, i) => [(i * 29.7 + 7) % 98 + 1, 66 + ((i * 13) % 5) * 0.4 + (i % 2 ? 8 : 0), i % 4])
+const LAMPS = [[7, 72], [21, 72], [35, 72], [49, 72], [63, 72], [77, 72], [91, 72]]
+const BIRDS = [[12, 14, 0], [48, 9, 7], [75, 18, 14]]
+const BUTTERFLIES = [[18, 66], [44, 80], [70, 64], [88, 82]]
+
+const hour = ref(new Date().getHours())
+const night = computed(() => hour.value >= 21 || hour.value < 6)
+const dusk = computed(() => (hour.value >= 19 && hour.value < 21) || (hour.value >= 6 && hour.value < 8))
+let clock = null
 
 const world = ref(null)
 const error = ref('')
@@ -89,14 +106,17 @@ function leave() {
 const badge = (place) => (place.badge ? (world.value?.badges?.[place.badge] ?? 0) : 0)
 const locked = (place) => place.id === 'personal' && world.value && !world.value.personal_unlocked
 
-watch(open, (place) => { document.documentElement.style.overflow = place ? 'hidden' : '' }, { immediate: true })
+// Мир занимает весь экран: прокрутку страницы убираем, пока он открыт
+document.documentElement.style.overflow = 'hidden'
 
 onMounted(() => {
   load()
   timer = setInterval(load, 60000)
+  clock = setInterval(() => { hour.value = new Date().getHours() }, 60000)
 })
 
 onBeforeUnmount(() => {
+  clearInterval(clock)
   document.documentElement.style.overflow = ''
   clearInterval(timer)
   clearTimeout(enterTimer)
@@ -105,14 +125,27 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="world">
-    <div class="world__scene" :class="{ 'is-dim': open, 'is-entering': entering }">
+    <div class="world__scene" :class="{ 'is-dim': open, 'is-entering': entering, 'is-night': night, 'is-dusk': dusk }">
       <!-- Небо и холмы -->
       <div class="w-sky" aria-hidden="true">
         <i class="w-cloud w-cloud--a" /><i class="w-cloud w-cloud--b" /><i class="w-cloud w-cloud--c" />
-        <i class="w-sun" />
+        <i :class="night ? 'w-moon' : 'w-sun'" />
+        <i v-for="n in 26" :key="`s${n}`" class="w-star" :style="{ left: (n * 37) % 100 + '%', top: (n * 53) % 34 + '%', animationDelay: (n % 5) * -0.7 + 's' }" />
+        <i v-for="[x, y, d] in BIRDS" :key="`b${x}`" class="w-bird" :style="{ left: x + '%', top: y + '%', animationDelay: -d + 's' }" />
       </div>
       <div class="w-hills" aria-hidden="true"><i /><i /><i /></div>
       <div class="w-ground" aria-hidden="true"><i class="w-path w-path--a" /><i class="w-path w-path--b" /></div>
+
+      <!-- Декор: растёт и живёт сам по себе -->
+      <div class="w-decor" aria-hidden="true">
+        <i v-for="[x, y, k] in FLOWERS" :key="`f${x}`" class="w-flower" :class="`w-flower--${k}`" :style="{ left: x + '%', top: y + '%' }" />
+        <i v-for="[x, y] in BUSHES" :key="`h${x}${y}`" class="w-bush" :style="{ left: x + '%', top: y + '%' }" />
+        <i v-for="[x, y] in TREES" :key="`t${x}${y}`" class="w-tree" :style="{ left: x + '%', top: y + '%', '--s': 0.85 + ((x * 7) % 5) / 10 }"><b /></i>
+        <i v-for="[x, y] in LAMPS" :key="`l${x}`" class="w-lamp" :style="{ left: x + '%', top: y + '%' }" />
+        <i v-for="[x, y] in BUTTERFLIES" :key="`p${x}`" class="w-fly" :style="{ left: x + '%', top: y + '%', animationDelay: -x / 10 + 's' }" />
+        <div class="w-river"><i class="w-bridge" /></div>
+      </div>
+      <div class="w-dark" aria-hidden="true" />
 
       <!-- HUD -->
       <header class="w-hud">

@@ -21,11 +21,18 @@ class RubleService
     public const SOURCE_FARM = 'farm';
     public const SOURCE_SPEEDUP = 'speedup';
 
-    /** Больше этого из игры за сутки не набрать (ускорения не в счёт). */
+    public const SOURCE_RUBLE_DUNGEON = 'ruble_dungeon';
+    public const SOURCE_RAID = 'raid';
+    public const SOURCE_PRIVILEGE = 'privilege';
+
+    /** Больше этого из игры за сутки не набрать (ускорения и Рублёвые копи не в счёт). */
     public const DAILY_EARN_CAP = 60;
 
+    /** Рублёвые копи — главный источник, у него свой дневной предел. */
+    public const RUBLE_DUNGEON_CAP = 150;
+
     /** Награда за босса по ступени подземелья. */
-    public const BOSS_REWARD = [1 => 1, 2 => 2, 3 => 3, 4 => 5, 5 => 8, 6 => 10, 7 => 13, 8 => 17];
+    public const BOSS_REWARD = [1 => 1, 2 => 2, 3 => 3, 4 => 5, 5 => 8, 6 => 10, 7 => 13, 8 => 17, 9 => 22];
 
     /** Первое прохождение подземелья: множитель к награде босса. */
     public const FIRST_CLEAR_MULTIPLIER = 5;
@@ -52,13 +59,17 @@ class RubleService
     /**
      * Начислить, соблюдая суточный предел. Возвращает, сколько реально выдано.
      */
-    public static function earn(User $user, int $amount, string $source, string $description, ?string $key = null): int
+    public static function earn(User $user, int $amount, string $source, string $description, ?string $key = null, ?int $cap = null): int
     {
         if ($amount <= 0) {
             return 0;
         }
 
-        return DB::transaction(function () use ($user, $amount, $source, $description, $key) {
+        // Свой предел для источника (Рублёвые копи) считается только по нему
+        $scoped = $cap !== null;
+        $cap ??= self::DAILY_EARN_CAP;
+
+        return DB::transaction(function () use ($user, $amount, $source, $description, $key, $cap, $scoped) {
             $row = DB::table('users')->where('id', $user->id)->lockForUpdate()->first(['id', 'rubles']);
 
             if ($key && DB::table('ruble_transactions')->where('idempotency_key', $key)->exists()) {
@@ -68,10 +79,11 @@ class RubleService
             $today = (int) DB::table('ruble_transactions')
                 ->where('user_id', $user->id)
                 ->where('amount', '>', 0)
+                ->when($scoped, fn ($q) => $q->where('source', $source), fn ($q) => $q->where('source', '!=', self::SOURCE_RUBLE_DUNGEON))
                 ->where('created_at', '>=', now()->startOfDay())
                 ->sum('amount');
 
-            $granted = min($amount, max(0, self::DAILY_EARN_CAP - $today));
+            $granted = min($amount, max(0, $cap - $today));
 
             if ($granted <= 0) {
                 return 0;
@@ -84,20 +96,20 @@ class RubleService
     }
 
     /** Списать; не хватает — исключение с понятным текстом. */
-    public static function spend(User $user, int $amount, string $description, ?string $key = null): void
+    public static function spend(User $user, int $amount, string $description, ?string $key = null, string $source = self::SOURCE_SPEEDUP): void
     {
         if ($amount <= 0) {
             return;
         }
 
-        DB::transaction(function () use ($user, $amount, $description, $key) {
+        DB::transaction(function () use ($user, $amount, $description, $key, $source) {
             $row = DB::table('users')->where('id', $user->id)->lockForUpdate()->first(['id', 'rubles']);
 
             if ((int) $row->rubles < $amount) {
                 throw new RuntimeException('Не хватает Рублей: нужно ' . $amount . ', есть ' . (int) $row->rubles . '.');
             }
 
-            self::write($user, (int) $row->rubles, -$amount, self::SOURCE_SPEEDUP, $description, $key);
+            self::write($user, (int) $row->rubles, -$amount, $source, $description, $key);
         });
     }
 

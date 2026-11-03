@@ -145,6 +145,7 @@ final class DungeonService
             'next_run_price' => $this->nextRunPrice($user),
             'squad_min' => Dungeons::SQUAD_MIN,
             'squad_max' => Dungeons::SQUAD_MAX,
+            'pass_count' => (int) DB::table('dungeon_materials')->where('user_id', $user->id)->where('material', 'ruble_pass')->value('quantity'),
             'dungeons' => array_map(fn (array $d) => $d + ['available' => $this->canEnter($d, $squad)], Dungeons::all()),
             'features' => Dungeons::TRAITS,
             'reference' => $this->battle->reference(),
@@ -158,7 +159,8 @@ final class DungeonService
 
     private function canEnter(array $dungeon, array $squad): bool
     {
-        $ready = array_filter($squad, fn (array $p) => $p['busy'] === null && $p['level'] >= $dungeon['min_level']);
+        $ready = array_filter($squad, fn (array $p) => $p['busy'] === null && $p['level'] >= $dungeon['min_level']
+            && Dungeons::rarityRank($p['traits']['rarity'] ?? null) >= Dungeons::rarityRank($dungeon['min_rarity'] ?? null));
 
         return count($ready) >= Dungeons::SQUAD_MIN;
     }
@@ -206,6 +208,10 @@ final class DungeonService
             if ($member['busy']) {
                 throw new RuntimeException("«{$member['name']}» занят: {$member['busy']}");
             }
+
+            if (isset($dungeon['min_rarity']) && Dungeons::rarityRank($member['traits']['rarity'] ?? null) < Dungeons::rarityRank($dungeon['min_rarity'])) {
+                throw new RuntimeException("«{$member['name']}» не пройдёт: сюда пускают питомцев редкости «" . (\App\Domains\Players\Support\PetTraits::RARITY_LABELS[$dungeon['min_rarity']] ?? $dungeon['min_rarity']) . "» и выше.");
+            }
         }
 
         $state = [
@@ -219,16 +225,31 @@ final class DungeonService
             'loot' => ['coins' => 0, 'gear' => [], 'items' => [], 'keys' => []],
         ];
 
-        $id = DB::table('dungeon_runs')->insertGetId([
-            'user_id' => $user->id,
-            'dungeon' => $dungeonKey,
-            'status' => 'active',
-            'squad' => json_encode($squadIds),
-            'state' => json_encode($state),
-            'coins' => 0,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $id = DB::transaction(function () use ($user, $dungeon, $dungeonKey, $squadIds, $state) {
+            // Вход по пропуску: списываем под замком, чтобы один пропуск не открыл два похода
+            if (! empty($dungeon['requires'])) {
+                $pass = DB::table('dungeon_materials')->where('user_id', $user->id)->where('material', $dungeon['requires'])->lockForUpdate()->first();
+
+                if (! $pass || (int) $pass->quantity < 1) {
+                    throw new RuntimeException('Нужен «' . (Dungeons::MATERIALS[$dungeon['requires']]['name'] ?? 'пропуск') . '»: его выдаёт «Испытание Владыки».');
+                }
+
+                (int) $pass->quantity > 1
+                    ? DB::table('dungeon_materials')->where('id', $pass->id)->update(['quantity' => (int) $pass->quantity - 1, 'updated_at' => now()])
+                    : DB::table('dungeon_materials')->where('id', $pass->id)->delete();
+            }
+
+            return DB::table('dungeon_runs')->insertGetId([
+                'user_id' => $user->id,
+                'dungeon' => $dungeonKey,
+                'status' => 'active',
+                'squad' => json_encode($squadIds),
+                'state' => json_encode($state),
+                'coins' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        });
 
         return $this->present(DB::table('dungeon_runs')->find($id));
     }
@@ -329,7 +350,8 @@ final class DungeonService
         $floors = (int) $dungeon['floors'];
         $cleared = $nextFloor > $floors;
 
-        if ($isBoss) {
+        // В Рублёвых копях Рубли идут как основная добыча, обычной награды за босса нет
+        if ($isBoss && ($dungeon['currency'] ?? null) !== 'rubles') {
             $state = $this->grantRubles($user, $run, $dungeon, $floor, $cleared, $state);
         }
 
@@ -339,6 +361,16 @@ final class DungeonService
         if ($cleared) {
             $state['pending'] = null;
             $state['log'][] = ['kind' => 'clear', 'text' => 'Все этажи пройдены. Подземелье зачищено.'];
+
+            if (! empty($dungeon['grants'])) {
+                DB::table('dungeon_materials')->upsert(
+                    ['user_id' => $user->id, 'material' => $dungeon['grants'], 'quantity' => 1, 'created_at' => now(), 'updated_at' => now()],
+                    ['user_id', 'material'],
+                    ['quantity' => DB::raw('quantity + 1')],
+                );
+                $state['loot']['materials'][$dungeon['grants']] = 1;
+                $state['log'][] = ['kind' => 'material', 'text' => 'Награда испытания: ' . Dungeons::MATERIALS[$dungeon['grants']]['name'] . '.', 'sprite' => Dungeons::MATERIALS[$dungeon['grants']]['sprite']];
+            }
 
             return $this->save($run->id, 'cleared', $state);
         }
@@ -488,7 +520,15 @@ final class DungeonService
 
         $key = "dungeon:{$run->id}:{$floor}:{$state['encounter']}";
 
-        if ($coins > 0) {
+        if (($dungeon['currency'] ?? null) === 'rubles') {
+            // Рублёвые копи: вместо ApexCoin падают Рубли, у них свой дневной предел
+            $rubles = ($isBoss ? Dungeons::RUBLE_BOSS : Dungeons::RUBLE_MOB) * $floor;
+            $gained = RubleService::earn($user, $rubles, RubleService::SOURCE_RUBLE_DUNGEON, 'Рублёвые копи: добыча', $key . ':rub', RubleService::RUBLE_DUNGEON_CAP);
+
+            if ($gained > 0) {
+                $state['loot']['rubles'] = ($state['loot']['rubles'] ?? 0) + $gained;
+            }
+        } elseif ($coins > 0) {
             CoinService::credit($user, $coins, CoinTransaction::SOURCE_OTHER, 'Подземелье: добыча', $key);
             $state['loot']['coins'] += $coins;
         }

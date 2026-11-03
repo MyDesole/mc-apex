@@ -16,6 +16,7 @@ class PetLocks
 
     public const STORAGE = 'Питомец в Кладовке на спаривании — дождись возвращения.';
     public const DUNGEON = 'Питомец в подземелье — сначала закончи поход.';
+    public const RAID = 'Питомец в рейде «Разлом» — дождись конца боя.';
 
     /** Причина занятости или null, если питомец свободен. */
     public static function reason(int $inventoryId): ?string
@@ -63,6 +64,17 @@ class PetLocks
             foreach ((array) json_decode((string) $squad, true) as $id) {
                 if (in_array((int) $id, $inventoryIds, true)) {
                     $busy[(int) $id] = self::DUNGEON;
+                }
+            }
+        }
+
+        // Рейд: отряд в группе, пока идёт набор или бой
+        $raidUnits = DB::table('raid_members as m')->join('raids as r', 'r.id', '=', 'm.raid_id')
+            ->whereIn('r.status', ['lobby', 'active'])->whereNull('m.left_at')->whereIn('m.user_id', $owners)->pluck('m.units');
+        foreach ($raidUnits as $units) {
+            foreach ((array) json_decode((string) $units, true) as $unit) {
+                if (in_array((int) ($unit['id'] ?? 0), $inventoryIds, true)) {
+                    $busy[(int) $unit['id']] = self::RAID;
                 }
             }
         }

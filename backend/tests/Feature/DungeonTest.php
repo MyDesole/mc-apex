@@ -91,7 +91,7 @@ class DungeonTest extends TestCase
         $data = $this->actingAs($this->user)
             ->getJson('/api/dungeons')
             ->assertOk()
-            ->assertJsonCount(8, 'dungeons')
+            ->assertJsonCount(12, 'dungeons')
             ->assertJsonCount(2, 'dungeons.0.bosses')
             ->assertJsonStructure(['dungeons' => [['key', 'name', 'emblem', 'tone', 'elements', 'bosses', 'rooms', 'available']]])
             ->assertJsonPath('runs_left', Dungeons::DAILY_RUNS)
@@ -569,9 +569,10 @@ class DungeonTest extends TestCase
     public function test_every_dungeon_has_twelve_mobs_with_real_sprites(): void
     {
         // Спрайты живут во фронтенде — сверяем, что ключи не выдуманы
-        $sprites = (string) file_get_contents(base_path('../frontend/src/data/shop/pixelSprites.js'));
+        $sprites = (string) file_get_contents(base_path('../frontend/src/data/shop/pixelSprites.js'))
+            .(string) file_get_contents(base_path('../frontend/src/data/shop/dungeonSprites.js'));
 
-        $this->assertCount(8, Dungeons::DUNGEONS, 'восемь подземелий');
+        $this->assertCount(12, Dungeons::DUNGEONS, 'двенадцать подземелий');
 
         foreach (Dungeons::DUNGEONS as $key => $dungeon) {
             $this->assertCount(12, Dungeons::MOBS[$key], "у «{$dungeon['name']}» должно быть 12 мобов");

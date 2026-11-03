@@ -456,6 +456,24 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/dex/{milestone}/claim', 'claimDex')->middleware('throttle:20,1');
     });
 
+    // Рейд «Разлом»: группы по 3 игрока, раунды по 30 секунд
+    Route::prefix('raids')->controller(\App\Domains\Players\Controllers\Api\RaidController::class)->group(function () {
+        Route::get('/', 'index');
+        Route::post('/', 'create')->middleware('throttle:20,1');
+        Route::get('/{raid}', 'show')->whereNumber('raid');
+        Route::post('/{raid}/join', 'join')->whereNumber('raid')->middleware('throttle:20,1');
+        Route::post('/{raid}/leave', 'leave')->whereNumber('raid')->middleware('throttle:20,1');
+        Route::post('/{raid}/start', 'start')->whereNumber('raid')->middleware('throttle:20,1');
+        Route::post('/{raid}/moves', 'moves')->whereNumber('raid')->middleware('throttle:120,1');
+    });
+
+    // Лавка: привилегии сервера за Рубли и уникальные вещи за Осколки Разлома
+    Route::prefix('lavka')->controller(\App\Domains\Players\Controllers\Api\RaidController::class)->group(function () {
+        Route::get('/', 'lavka');
+        Route::post('/privileges/{key}', 'buyPrivilege')->middleware('throttle:10,1');
+        Route::post('/shards/{key}', 'buyShards')->middleware('throttle:20,1');
+    });
+
     // Рынок игроков: материалы и снаряжение подземелий
     Route::prefix('market')->controller(\App\Domains\Players\Controllers\Api\MarketController::class)->group(function () {
         Route::get('/', 'index');

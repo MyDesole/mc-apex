@@ -33,6 +33,12 @@ Schedule::call(fn () => app(\App\Domains\Players\Services\MarketService::class)-
     ->name('market:expire')
     ->withoutOverlapping();
 
+// Рейд «Разлом»: закрыть просроченные раунды и неначатые группы
+Schedule::call(fn () => app(\App\Domains\Players\Services\RaidService::class)->tick())
+    ->everyMinute()
+    ->name('raid:tick')
+    ->withoutOverlapping();
+
 // Карта сайта для поисковиков — свежие новости и кланы
 Schedule::command('sitemap:generate')->dailyAt('04:10');
 

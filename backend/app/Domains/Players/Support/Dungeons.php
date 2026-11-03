@@ -105,7 +105,70 @@ final class Dungeons
             'per_floor' => 2,
             'stage' => 8,
         ],
+        // Подземелья с допуском по редкости: слабого питомца не пустят, сколько бы он ни стоял
+        'crystal' => [
+            'name' => 'Хрустальные залы',
+            'about' => 'Залы из живого хрусталя. Входят только эпические питомцы и выше: простым здесь делать нечего.',
+            'emblem' => 'mob-abyss-5',
+            'tone' => 'frost',
+            'min_level' => 45,
+            'min_rarity' => 'epic',
+            'floors' => 3,
+            'per_floor' => 2,
+            'stage' => 7,
+        ],
+        'pantheon' => [
+            'name' => 'Пантеон забытых',
+            'about' => 'Храм богов, о которых никто не помнит. Пропускает только легендарных питомцев и мифических.',
+            'emblem' => 'mob-throne-11',
+            'tone' => 'ember',
+            'min_level' => 70,
+            'min_rarity' => 'legendary',
+            'floors' => 4,
+            'per_floor' => 2,
+            'stage' => 8,
+        ],
+        // Цепочка допуска: Испытание → пропуск → Рублёвые копи
+        'trial' => [
+            'name' => 'Испытание Владыки',
+            'about' => 'Предданж для питомцев 100 уровня: проверка экипировки и умения. Зачистка даёт пропуск в Рублёвые копи.',
+            'emblem' => 'mob-throne-1',
+            'tone' => 'void',
+            'min_level' => 100,
+            'min_rarity' => 'epic',
+            'floors' => 4,
+            'per_floor' => 2,
+            'stage' => 9,
+            'grants' => 'ruble_pass',
+        ],
+        'rubledeep' => [
+            'name' => 'Рублёвые копи',
+            'about' => 'Здесь вместо ApexCoin падают Рубли. Вход по пропуску, который выдаёт Испытание Владыки; один пропуск — один поход.',
+            'emblem' => 'mob-lair-9',
+            'tone' => 'ember',
+            'min_level' => 100,
+            'min_rarity' => 'epic',
+            'floors' => 3,
+            'per_floor' => 2,
+            'stage' => 9,
+            'requires' => 'ruble_pass',
+            'currency' => 'rubles',
+        ],
     ];
+
+    /** Редкости по возрастанию: для допуска в подземелья. */
+    public const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary', 'mythic'];
+
+    /** Рублёвые копи: Рубли за моба и за босса, умножаются на номер этажа. */
+    public const RUBLE_MOB = 1;
+    public const RUBLE_BOSS = 6;
+
+    public static function rarityRank(?string $rarity): int
+    {
+        $index = array_search($rarity ?? 'common', self::RARITY_ORDER, true);
+
+        return $index === false ? 0 : (int) $index;
+    }
 
     /**
      * особенности: ключ => название, объяснение для игрока и как это меняет бой.
@@ -259,6 +322,62 @@ final class Dungeons
             ['name' => 'Эхо владыки', 'element' => 'shadow', 'sprite' => 'mob-throne-11', 'trait' => 'void', 'hp' => 2650, 'atk' => 336, 'def' => 96],
             ['name' => 'Осколок трона', 'element' => 'nature', 'sprite' => 'mob-throne-12', 'trait' => 'wall', 'hp' => 3600, 'atk' => 236, 'def' => 156],
         ],
+        'crystal' => [
+            ['name' => 'Хрустальный страж', 'element' => 'water', 'sprite' => 'mob-abyss-5', 'trait' => 'stone', 'hp' => 1900, 'atk' => 172, 'def' => 88],
+            ['name' => 'Осколочный паук', 'element' => 'shadow', 'sprite' => 'mob-abyss-6', 'trait' => 'venom', 'hp' => 1700, 'atk' => 196, 'def' => 76],
+            ['name' => 'Ледяная гарпия', 'element' => 'water', 'sprite' => 'mob-abyss-11', 'trait' => 'screech', 'hp' => 1650, 'atk' => 204, 'def' => 72],
+            ['name' => 'Призма-страж', 'element' => 'nature', 'sprite' => 'mob-throne-12', 'trait' => 'wall', 'hp' => 2300, 'atk' => 160, 'def' => 108],
+            ['name' => 'Звенящий скат', 'element' => 'water', 'sprite' => 'mob-abyss-12', 'trait' => 'frost', 'hp' => 1800, 'atk' => 188, 'def' => 82],
+            ['name' => 'Кристальный пёс', 'element' => 'beast', 'sprite' => 'mob-throne-9', 'trait' => 'charge', 'hp' => 1950, 'atk' => 192, 'def' => 84],
+            ['name' => 'Зеркальный двойник', 'element' => 'shadow', 'sprite' => 'mob-abyss-4', 'trait' => 'curse', 'hp' => 2000, 'atk' => 180, 'def' => 90],
+            ['name' => 'Грань-жнец', 'element' => 'shadow', 'sprite' => 'mob-abyss-2', 'trait' => 'hammer', 'hp' => 1750, 'atk' => 210, 'def' => 74],
+            ['name' => 'Светящийся слизень', 'element' => 'nature', 'sprite' => 'mob-lair-11', 'trait' => 'sticky', 'hp' => 2400, 'atk' => 156, 'def' => 104],
+            ['name' => 'Хрустальная тень', 'element' => 'shadow', 'sprite' => 'mob-abyss-3', 'trait' => 'gorge', 'hp' => 1850, 'atk' => 186, 'def' => 80],
+            ['name' => 'Стеклянный рыцарь', 'element' => 'water', 'sprite' => 'mob-throne-5', 'trait' => 'bones', 'hp' => 2100, 'atk' => 176, 'def' => 96],
+            ['name' => 'Разбитый глаз', 'element' => 'shadow', 'sprite' => 'mob-abyss-6', 'trait' => 'void', 'hp' => 1780, 'atk' => 200, 'def' => 78],
+        ],
+        'pantheon' => [
+            ['name' => 'Жрец забытого бога', 'element' => 'light', 'sprite' => 'mob-lair-8', 'trait' => 'smoke', 'hp' => 2900, 'atk' => 290, 'def' => 118],
+            ['name' => 'Каменный идол', 'element' => 'nature', 'sprite' => 'mob-throne-12', 'trait' => 'stone', 'hp' => 3600, 'atk' => 250, 'def' => 150],
+            ['name' => 'Золотая жрица', 'element' => 'light', 'sprite' => 'mob-lair-5', 'trait' => 'screech', 'hp' => 2800, 'atk' => 310, 'def' => 112],
+            ['name' => 'Страж алтаря', 'element' => 'shadow', 'sprite' => 'mob-throne-1', 'trait' => 'wall', 'hp' => 3400, 'atk' => 262, 'def' => 140],
+            ['name' => 'Призрачный певчий', 'element' => 'shadow', 'sprite' => 'mob-throne-3', 'trait' => 'curse', 'hp' => 2700, 'atk' => 320, 'def' => 108],
+            ['name' => 'Бронзовый бык', 'element' => 'beast', 'sprite' => 'mob-lair-7', 'trait' => 'charge', 'hp' => 3300, 'atk' => 280, 'def' => 128],
+            ['name' => 'Оракул без глаз', 'element' => 'shadow', 'sprite' => 'mob-throne-4', 'trait' => 'void', 'hp' => 3000, 'atk' => 300, 'def' => 120],
+            ['name' => 'Пепельный жрец', 'element' => 'fire', 'sprite' => 'mob-lair-6', 'trait' => 'sparks', 'hp' => 3100, 'atk' => 290, 'def' => 124],
+            ['name' => 'Мраморный лев', 'element' => 'beast', 'sprite' => 'mob-lair-3', 'trait' => 'pack', 'hp' => 3350, 'atk' => 270, 'def' => 134],
+            ['name' => 'Тень бога', 'element' => 'shadow', 'sprite' => 'mob-throne-6', 'trait' => 'gorge', 'hp' => 3150, 'atk' => 296, 'def' => 122],
+            ['name' => 'Храмовый палач', 'element' => 'shadow', 'sprite' => 'mob-throne-2', 'trait' => 'hammer', 'hp' => 2950, 'atk' => 318, 'def' => 116],
+            ['name' => 'Ожившая статуя', 'element' => 'nature', 'sprite' => 'mob-lair-4', 'trait' => 'stone', 'hp' => 3500, 'atk' => 258, 'def' => 146],
+        ],
+        'trial' => [
+            ['name' => 'Чёрный страж', 'element' => 'shadow', 'sprite' => 'mob-throne-1', 'trait' => 'wall', 'hp' => 5200, 'atk' => 400, 'def' => 210],
+            ['name' => 'Клинок Владыки', 'element' => 'shadow', 'sprite' => 'mob-throne-2', 'trait' => 'hammer', 'hp' => 4400, 'atk' => 450, 'def' => 176],
+            ['name' => 'Шёпот испытания', 'element' => 'shadow', 'sprite' => 'mob-throne-3', 'trait' => 'curse', 'hp' => 4300, 'atk' => 440, 'def' => 170],
+            ['name' => 'Безликий судья', 'element' => 'shadow', 'sprite' => 'mob-throne-4', 'trait' => 'void', 'hp' => 4700, 'atk' => 420, 'def' => 190],
+            ['name' => 'Осколочный титан', 'element' => 'nature', 'sprite' => 'mob-throne-5', 'trait' => 'stone', 'hp' => 5600, 'atk' => 380, 'def' => 224],
+            ['name' => 'Пожиратель надежд', 'element' => 'shadow', 'sprite' => 'mob-throne-6', 'trait' => 'gorge', 'hp' => 4900, 'atk' => 430, 'def' => 184],
+            ['name' => 'Ледяной экзекутор', 'element' => 'water', 'sprite' => 'mob-throne-7', 'trait' => 'frost', 'hp' => 4600, 'atk' => 436, 'def' => 180],
+            ['name' => 'Казначей испытаний', 'element' => 'fire', 'sprite' => 'mob-throne-8', 'trait' => 'sparks', 'hp' => 4500, 'atk' => 446, 'def' => 174],
+            ['name' => 'Цепной пёс', 'element' => 'beast', 'sprite' => 'mob-throne-9', 'trait' => 'charge', 'hp' => 4650, 'atk' => 440, 'def' => 178],
+            ['name' => 'Мёртвый архивариус', 'element' => 'shadow', 'sprite' => 'mob-throne-10', 'trait' => 'bones', 'hp' => 5100, 'atk' => 410, 'def' => 200],
+            ['name' => 'Эхо Владыки', 'element' => 'shadow', 'sprite' => 'mob-throne-11', 'trait' => 'void', 'hp' => 4800, 'atk' => 448, 'def' => 182],
+            ['name' => 'Каменная плита', 'element' => 'nature', 'sprite' => 'mob-throne-12', 'trait' => 'wall', 'hp' => 5800, 'atk' => 372, 'def' => 230],
+        ],
+        'rubledeep' => [
+            ['name' => 'Золотая гончая', 'element' => 'beast', 'sprite' => 'mob-lair-7', 'trait' => 'charge', 'hp' => 5000, 'atk' => 430, 'def' => 196],
+            ['name' => 'Монетный жук', 'element' => 'nature', 'sprite' => 'mob-lair-9', 'trait' => 'gnaw', 'hp' => 4700, 'atk' => 450, 'def' => 184],
+            ['name' => 'Страж сейфа', 'element' => 'shadow', 'sprite' => 'mob-lair-2', 'trait' => 'wall', 'hp' => 5900, 'atk' => 400, 'def' => 228],
+            ['name' => 'Жрец прибыли', 'element' => 'fire', 'sprite' => 'mob-lair-8', 'trait' => 'smoke', 'hp' => 4800, 'atk' => 462, 'def' => 186],
+            ['name' => 'Слиток-голем', 'element' => 'nature', 'sprite' => 'mob-lair-4', 'trait' => 'stone', 'hp' => 6000, 'atk' => 392, 'def' => 232],
+            ['name' => 'Банковский паук', 'element' => 'shadow', 'sprite' => 'mob-lair-3', 'trait' => 'venom', 'hp' => 4850, 'atk' => 458, 'def' => 188],
+            ['name' => 'Налоговый призрак', 'element' => 'shadow', 'sprite' => 'mob-throne-3', 'trait' => 'curse', 'hp' => 4600, 'atk' => 470, 'def' => 180],
+            ['name' => 'Кассир-бес', 'element' => 'fire', 'sprite' => 'mob-throne-8', 'trait' => 'sparks', 'hp' => 4750, 'atk' => 466, 'def' => 184],
+            ['name' => 'Хранитель ключей', 'element' => 'shadow', 'sprite' => 'mob-throne-10', 'trait' => 'bones', 'hp' => 5300, 'atk' => 420, 'def' => 208],
+            ['name' => 'Золотой слизень', 'element' => 'fire', 'sprite' => 'mob-lair-11', 'trait' => 'sticky', 'hp' => 5700, 'atk' => 405, 'def' => 222],
+            ['name' => 'Драконий счетовод', 'element' => 'fire', 'sprite' => 'mob-lair-10', 'trait' => 'curse', 'hp' => 4900, 'atk' => 456, 'def' => 190],
+            ['name' => 'Чешуйчатый охранник', 'element' => 'nature', 'sprite' => 'mob-lair-12', 'trait' => 'hammer', 'hp' => 5500, 'atk' => 412, 'def' => 216],
+        ],
     ];
 
     /**
@@ -315,6 +434,28 @@ final class Dungeons
             ['name' => 'Палач мира', 'element' => 'beast', 'sprite' => 'boss-worldhangman', 'trait' => 'hammer', 'hp' => 17800, 'atk' => 560, 'def' => 224],
             ['name' => 'Тот, кто ждёт у трона', 'element' => 'shadow', 'sprite' => 'boss-throneguard', 'trait' => 'void', 'hp' => 19600, 'atk' => 600, 'def' => 238],
             ['name' => 'Владыка', 'element' => 'shadow', 'sprite' => 'boss-sovereign', 'trait' => 'void', 'hp' => 22000, 'atk' => 650, 'def' => 255],
+        ],
+        'crystal' => [
+            ['name' => 'Хрустальный голем', 'element' => 'water', 'sprite' => 'boss-crystalgolem', 'trait' => 'stone', 'hp' => 9000, 'atk' => 360, 'def' => 150],
+            ['name' => 'Призма', 'element' => 'light', 'sprite' => 'boss-prism', 'trait' => 'curse', 'hp' => 10500, 'atk' => 390, 'def' => 160],
+            ['name' => 'Жеода-пожирательница', 'element' => 'nature', 'sprite' => 'boss-geode', 'trait' => 'gorge', 'hp' => 12500, 'atk' => 420, 'def' => 175],
+        ],
+        'pantheon' => [
+            ['name' => 'Судья солнца', 'element' => 'light', 'sprite' => 'boss-sunjudge', 'trait' => 'hammer', 'hp' => 15000, 'atk' => 520, 'def' => 210],
+            ['name' => 'Ткачиха луны', 'element' => 'shadow', 'sprite' => 'boss-moonweaver', 'trait' => 'curse', 'hp' => 17000, 'atk' => 550, 'def' => 220],
+            ['name' => 'Отец бурь', 'element' => 'water', 'sprite' => 'boss-stormfather', 'trait' => 'sparks', 'hp' => 19500, 'atk' => 590, 'def' => 232],
+            ['name' => 'Пряха судьбы', 'element' => 'shadow', 'sprite' => 'boss-fate', 'trait' => 'void', 'hp' => 22000, 'atk' => 640, 'def' => 245],
+        ],
+        'trial' => [
+            ['name' => 'Авангард Владыки', 'element' => 'shadow', 'sprite' => 'boss-vanguard', 'trait' => 'hammer', 'hp' => 28000, 'atk' => 760, 'def' => 270],
+            ['name' => 'Зовущий кости', 'element' => 'shadow', 'sprite' => 'boss-bonecaller', 'trait' => 'bones', 'hp' => 31000, 'atk' => 800, 'def' => 285],
+            ['name' => 'Два клинка', 'element' => 'shadow', 'sprite' => 'boss-twinblades', 'trait' => 'pack', 'hp' => 34000, 'atk' => 860, 'def' => 300],
+            ['name' => 'Король испытания', 'element' => 'light', 'sprite' => 'boss-trialking', 'trait' => 'void', 'hp' => 40000, 'atk' => 940, 'def' => 330],
+        ],
+        'rubledeep' => [
+            ['name' => 'Монетный змей', 'element' => 'fire', 'sprite' => 'boss-coinwyrm', 'trait' => 'gorge', 'hp' => 32000, 'atk' => 820, 'def' => 290],
+            ['name' => 'Демон хранилища', 'element' => 'fire', 'sprite' => 'boss-vaultdemon', 'trait' => 'hammer', 'hp' => 37000, 'atk' => 900, 'def' => 310],
+            ['name' => 'Казначей бездны', 'element' => 'shadow', 'sprite' => 'boss-treasurer', 'trait' => 'curse', 'hp' => 44000, 'atk' => 1000, 'def' => 340],
         ],
     ];
 
@@ -408,6 +549,13 @@ final class Dungeons
         'core_void' => ['name' => 'Око разлома', 'stage' => 5, 'core' => true, 'dungeon' => 'void', 'sprite' => 'mat-core-void'],
         'core_abyss' => ['name' => 'Слеза бездны', 'stage' => 6, 'core' => true, 'dungeon' => 'abyss', 'sprite' => 'mat-core-abyss'],
         'core_lair' => ['name' => 'Зуб древнего дракона', 'stage' => 7, 'core' => true, 'dungeon' => 'lair', 'sprite' => 'mat-core-lair'],
+        'sovereign' => ['name' => 'Сердце владыки', 'stage' => 9, 'sprite' => 'mat-sovereign'],
+        // Пропуск в Рублёвые копи: привязан к аккаунту, не продаётся и не крафтится
+        'ruble_pass' => ['name' => 'Пропуск в Рублёвые копи', 'stage' => 9, 'bound' => true, 'sprite' => 'mat-pass'],
+        'core_crystal' => ['name' => 'Грань-сердце', 'stage' => 7, 'core' => true, 'dungeon' => 'crystal', 'sprite' => 'mat-core-crystal'],
+        'core_pantheon' => ['name' => 'Лик забытого бога', 'stage' => 8, 'core' => true, 'dungeon' => 'pantheon', 'sprite' => 'mat-core-pantheon'],
+        'core_trial' => ['name' => 'Знак испытания', 'stage' => 9, 'core' => true, 'dungeon' => 'trial', 'sprite' => 'mat-core-trial'],
+        'core_rubledeep' => ['name' => 'Золотой слиток', 'stage' => 9, 'core' => true, 'dungeon' => 'rubledeep', 'sprite' => 'mat-core-rubledeep'],
         'core_throne' => ['name' => 'Печать владыки', 'stage' => 8, 'core' => true, 'dungeon' => 'throne', 'sprite' => 'mat-core-throne'],
     ];
 
@@ -421,7 +569,7 @@ final class Dungeons
     public static function materialForStage(int $stage): ?string
     {
         foreach (self::MATERIALS as $key => $material) {
-            if (! empty($material['core'])) {
+            if (! empty($material['core']) || ! empty($material['bound'])) {
                 continue;
             }
 
@@ -464,6 +612,7 @@ final class Dungeons
         6 => ['common' => 5, 'rare' => 30, 'epic' => 42, 'legendary' => 23],
         7 => ['common' => 3, 'rare' => 25, 'epic' => 44, 'legendary' => 28],
         8 => ['rare' => 20, 'epic' => 45, 'legendary' => 35],
+        9 => ['epic' => 40, 'legendary' => 60],
     ];
 
     /** Слоты экипировки: на питомца надевается по одному предмету в каждый. */
@@ -491,16 +640,16 @@ final class Dungeons
     public const REST_SHARE = 0.15;
 
     /** Монеты за моба: база × этаж. */
-    public const COINS_PER_MOB = [1 => 30, 2 => 70, 3 => 130, 4 => 200, 5 => 300, 6 => 380, 7 => 470, 8 => 560];
+    public const COINS_PER_MOB = [1 => 30, 2 => 70, 3 => 130, 4 => 200, 5 => 300, 6 => 380, 7 => 470, 8 => 560, 9 => 650];
 
     /** Монеты за босса: база × номер босса. */
-    public const COINS_PER_BOSS = [1 => 200, 2 => 450, 3 => 800, 4 => 1200, 5 => 1800, 6 => 2300, 7 => 2900, 8 => 3500];
+    public const COINS_PER_BOSS = [1 => 200, 2 => 450, 3 => 800, 4 => 1200, 5 => 1800, 6 => 2300, 7 => 2900, 8 => 3500, 9 => 4200];
 
     /**
      * Штраф за поражение по ступени. Отступление бесплатно — за него
      * ничего не списываем, теряется только попытка.
      */
-    public const WIPE_PENALTY = [1 => 80, 2 => 200, 3 => 450, 4 => 800, 5 => 1400, 6 => 1800, 7 => 2300, 8 => 2900];
+    public const WIPE_PENALTY = [1 => 80, 2 => 200, 3 => 450, 4 => 800, 5 => 1400, 6 => 1800, 7 => 2300, 8 => 2900, 9 => 3600];
 
     /**
      * Опыт питомцам: за моба и за босса. Дальше его умножает уровень
@@ -522,6 +671,7 @@ final class Dungeons
         6 => ['gear' => 32, 'key' => 25, 'key_slug' => 'seeker', 'key_pet' => 2, 'key_pet_slug' => 'royal'],
         7 => ['gear' => 34, 'key' => 28, 'key_slug' => 'seeker', 'key_pet' => 2.2, 'key_pet_slug' => 'royal'],
         8 => ['gear' => 36, 'key' => 30, 'key_slug' => 'seeker', 'key_pet' => 2.5, 'key_pet_slug' => 'royal'],
+        9 => ['gear' => 38, 'key' => 32, 'key_slug' => 'seeker', 'key_pet' => 3, 'key_pet_slug' => 'royal'],
     ];
 
     /** Шанс ядра с босса, в процентах. */

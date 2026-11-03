@@ -70,6 +70,10 @@ class MarketService
             throw new RuntimeException('Такого материала нет.');
         }
 
+        if (! empty(Dungeons::MATERIALS[$material]['bound'])) {
+            throw new RuntimeException('Этот предмет привязан к аккаунту и не продаётся.');
+        }
+
         if ($qty < 1 || $qty > self::MAX_QTY) {
             throw new RuntimeException('Количество — от 1 до ' . self::MAX_QTY . '.');
         }
