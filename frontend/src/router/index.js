@@ -54,6 +54,11 @@ const router = createRouter({
     },
     { path: '/register', name: 'register', component: RegisterView, meta: { title: 'Регистрация', guest: true } },
     { path: '/profile', name: 'profile', component: ProfileView, meta: { title: 'Мой профиль', auth: true } },
+    // Короткая ссылка для плагина на сервере: сразу окно привязки ника
+    {
+      path: '/link-minecraft',
+      redirect: (to) => ({ path: '/profile', query: to.query.nick ? { nick: to.query.nick } : {} }),
+    },
     { path: '/players', name: 'players', component: PlayersView, meta: { title: 'Игроки', auth: true } },
     { path: '/players/:id', name: 'player', component: PlayerView, meta: { title: 'Профиль игрока', auth: true } },
     // Каноничная красивая ссылка на профиль: /user/Ник (или /user/3)

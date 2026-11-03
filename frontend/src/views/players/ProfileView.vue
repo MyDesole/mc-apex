@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import PlayerCard from '@/components/players/PlayerCard.vue'
 import TierTestHistory from '@/components/tiers/TierTestHistory.vue'
@@ -9,6 +10,7 @@ import PlayerSeasons from '@/components/players/profile/PlayerSeasons.vue'
 import PlayerRatingBreakdown from '@/components/players/profile/PlayerRatingBreakdown.vue'
 import RankBadge from '@/components/players/RankBadge.vue'
 import ProfileCustomizeModal from '@/components/players/ProfileCustomizeModal.vue'
+import MinecraftLinkModal from '@/components/minecraft/MinecraftLinkModal.vue'
 import TierTestForm from '@/components/tiers/TierTestForm.vue'
 import BridgeTechniqueForm from '@/components/bridge/BridgeTechniqueForm.vue'
 import BridgeTechniqueHistory from '@/components/bridge/BridgeTechniqueHistory.vue'
@@ -232,10 +234,36 @@ async function cancelActiveTest() {
    INIT
 ========================================================= */
 
+/* ---------- Привязка ника по ссылке из плагина ---------- */
+
+const route = useRoute()
+const router = useRouter()
+
+const linkNick = ref(null)
+
+function openLinkFromQuery() {
+  const nick = route.query.nick
+
+  if (!nick || typeof nick !== 'string') {
+    return
+  }
+
+  linkNick.value = nick
+
+  // Убираем параметр из адреса: перезагрузка страницы не должна
+  // открывать окно снова
+  const query = { ...route.query }
+  delete query.nick
+  router.replace({ path: route.path, query })
+}
+
 onMounted(async () => {
   if (!auth.initialized) {
     await auth.fetchMe()
   }
+
+  // Пришли по ссылке из плагина на сервере — сразу показываем окно привязки
+  openLinkFromQuery()
 
   await loadRecommendations()
   await loadActiveTest()
@@ -614,6 +642,13 @@ onMounted(async () => {
         Загрузка профиля
       </small>
     </div>
+
+    <MinecraftLinkModal
+        v-if="linkNick"
+        :nick="linkNick"
+        @close="linkNick = null"
+        @claimed="linkNick = null"
+    />
   </main>
 </template>
 
