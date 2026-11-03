@@ -1,0 +1,15 @@
+name: ApexClanWars
+version: 1.0.0
+main: ru.mcapex.clanwars.ApexClanWars
+author: Apex
+description: "Клановые войны mc-apex.ru - готовность лидеров, выбор дуэлей или BedWars, итог на сайт"
+website: https://mc-apex.ru
+api-version: '1.8'
+depend: [Alley]
+softdepend: [BedWars1058]
+
+commands:
+  cw:
+    description: Клановая война (для лидера и офицера клана)
+    usage: "/cw [ready | cancel]"
+    aliases: [clanwar, kv]

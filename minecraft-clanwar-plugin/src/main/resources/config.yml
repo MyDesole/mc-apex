@@ -1,0 +1,13 @@
+api:
+  url: "https://mc-apex.ru"
+  server-key: ""
+
+war:
+  # Арена BedWars1058 для КВ (2 команды, без лимита игроков)
+  bedwars-arena: "bw_cw"
+  # Пауза между дуэлями, секунд
+  between-games-seconds: 6
+  # Максимум раундов на режим
+  max-rounds: 7
+  # Какие киты Alley можно выбрать. Пусто - все включённые
+  allowed-kits: []
