@@ -1,0 +1,18 @@
+api:
+  url: "https://mc-apex.ru"
+  server-key: ""
+
+tiers:
+  refresh-seconds: 60
+  tab: true
+  chat: true
+
+test:
+  # Сколько секунд испытуемый может принять приглашение
+  invite-timeout-seconds: 120
+  # Пауза между дуэлями
+  between-games-seconds: 6
+  # Максимум дуэлей на каждый режим
+  max-rounds: 7
+  # Какие киты Alley можно выбрать. Пусто - все включённые
+  allowed-kits: []
