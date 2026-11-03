@@ -50,7 +50,7 @@ class MinecraftServerController extends Controller
 
         $query = TierTest::query()
             ->whereIn('status', ['pending', 'claimed', 'in_progress'])
-            ->with(['user:id,name,minecraft_username', 'tester:id,name,minecraft_username']);
+            ->with(['user:id,minecraft_username', 'tester:id,minecraft_username']);
 
         if (! empty($data['tester'])) {
             $nick = (string) $data['tester'];
@@ -69,9 +69,9 @@ class MinecraftServerController extends Controller
         return response()->json([
             'tests' => $rows->map(fn (TierTest $test) => [
                 'id' => $test->id,
-                'nickname' => $test->user?->minecraft_username ?? $test->user?->name,
-                'account' => $test->user?->name,
-                'tester' => $test->tester?->name,
+                'nickname' => $test->user?->minecraft_username,
+                'account' => $test->user?->minecraft_username,
+                'tester' => $test->tester?->minecraft_username,
                 'mode' => $test->mode,
                 'expected_tier' => $test->expected_tier,
                 'status' => $test->status,
@@ -128,12 +128,12 @@ class MinecraftServerController extends Controller
 
         $rows = User::query()
             ->whereIn('minecraft_username', $nicks)
-            ->get(['name', 'minecraft_username', 'tier']);
+            ->get(['minecraft_username', 'tier']);
 
         return response()->json([
             'tiers' => $rows->map(fn (User $user) => [
                 'nick' => $user->minecraft_username,
-                'account' => $user->name,
+                'account' => $user->minecraft_username,
                 'tier' => $user->tier,
             ])->all(),
         ]);
