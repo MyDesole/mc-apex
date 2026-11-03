@@ -112,6 +112,25 @@ class MinecraftServerController extends Controller
         ]);
     }
 
+    /** Скин игрока для сервера: ссылка на PNG и модель рук. */
+    public function skin(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'nick' => ['required', 'string', 'max:32'],
+        ]);
+
+        $user = User::query()->where('minecraft_username', $data['nick'])->first();
+
+        if (! $user) {
+            return response()->json(['url' => null, 'model' => null]);
+        }
+
+        return response()->json([
+            'url' => url('/api/players/' . $user->id . '/skin'),
+            'model' => $user->custom_skin_model ?: 'classic',
+        ]);
+    }
+
     /** Тиры по никам — для чата и таблисты. */
     public function tiers(Request $request): JsonResponse
     {
