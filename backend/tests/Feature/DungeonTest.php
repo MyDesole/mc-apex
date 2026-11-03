@@ -91,7 +91,7 @@ class DungeonTest extends TestCase
         $data = $this->actingAs($this->user)
             ->getJson('/api/dungeons')
             ->assertOk()
-            ->assertJsonCount(5, 'dungeons')
+            ->assertJsonCount(8, 'dungeons')
             ->assertJsonCount(2, 'dungeons.0.bosses')
             ->assertJsonStructure(['dungeons' => [['key', 'name', 'emblem', 'tone', 'elements', 'bosses', 'rooms', 'available']]])
             ->assertJsonPath('runs_left', Dungeons::DAILY_RUNS)
@@ -571,7 +571,7 @@ class DungeonTest extends TestCase
         // Спрайты живут во фронтенде — сверяем, что ключи не выдуманы
         $sprites = (string) file_get_contents(base_path('../frontend/src/data/shop/pixelSprites.js'));
 
-        $this->assertCount(5, Dungeons::DUNGEONS, 'пять подземелий');
+        $this->assertCount(8, Dungeons::DUNGEONS, 'восемь подземелий');
 
         foreach (Dungeons::DUNGEONS as $key => $dungeon) {
             $this->assertCount(12, Dungeons::MOBS[$key], "у «{$dungeon['name']}» должно быть 12 мобов");
@@ -588,7 +588,7 @@ class DungeonTest extends TestCase
     public function test_dungeon_requirements_fit_max_pet_level(): void
     {
         /*
-         * Максимальный уровень питомца — PetService::MAX_LEVEL (30).
+         * Максимальный уровень питомца — PetService::MAX_LEVEL (100).
          * Требование выше него делает подземелье недостижимым.
          */
         foreach (Dungeons::DUNGEONS as $key => $dungeon) {

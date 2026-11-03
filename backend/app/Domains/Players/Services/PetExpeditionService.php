@@ -101,7 +101,11 @@ class PetExpeditionService
             DB::table('pet_expeditions')->where('id', $id)->update(['claimed_at' => now(), 'updated_at' => now()]);
 
             // Питомца могли продать по пути? Нельзя — он занят. Но строку могли удалить
-            DB::table('user_inventory')->where('id', $trip->inventory_id)->increment('pet_xp', $reward['xp']);
+            $reward['xp'] = PetService::grantXp(
+                (int) $trip->inventory_id,
+                (int) $reward['xp'],
+                PetService::levels([$trip->inventory_id])[$trip->inventory_id] ?? 1,
+            );
 
             if ($reward['coins'] > 0) {
                 CoinService::credit($user, $reward['coins'], CoinTransaction::SOURCE_OTHER, 'Экспедиция питомца: ' . self::ZONES[$trip->zone]['name'], "pet-expedition:{$id}");

@@ -25,7 +25,7 @@ class RubleService
     public const DAILY_EARN_CAP = 60;
 
     /** Награда за босса по ступени подземелья. */
-    public const BOSS_REWARD = [1 => 1, 2 => 2, 3 => 3, 4 => 5, 5 => 8];
+    public const BOSS_REWARD = [1 => 1, 2 => 2, 3 => 3, 4 => 5, 5 => 8, 6 => 10, 7 => 13, 8 => 17];
 
     /** Первое прохождение подземелья: множитель к награде босса. */
     public const FIRST_CLEAR_MULTIPLIER = 5;

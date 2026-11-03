@@ -39,8 +39,11 @@ const TABS = [
   ['top', 'Топ', 'trophy'],
 ]
 
+/** Внутри здания карты-мира (WorldView) открыта одна вкладка, остальные скрыты. */
+const props = defineProps({ only: { type: String, default: '' } })
+
 const tab = computed({
-  get: () => (TABS.some(([id]) => id === route.query.tab) ? route.query.tab : 'pets'),
+  get: () => props.only || (TABS.some(([id]) => id === route.query.tab) ? route.query.tab : 'pets'),
   set: (value) => router.replace({ query: { ...route.query, tab: value } }),
 })
 
@@ -386,7 +389,7 @@ onMounted(async () => {
 
 <template>
   <div class="pv">
-    <header class="pv-head">
+    <header v-if="!only" class="pv-head">
       <div>
         <span class="pv-head__kicker"><AppIcon icon="heart" :size="14" /> Питомцы</span>
         <h1>Мои питомцы</h1>
@@ -399,7 +402,7 @@ onMounted(async () => {
       </dl>
     </header>
 
-    <nav class="pv-tabs">
+    <nav v-if="!only" class="pv-tabs">
       <button v-for="[id, label, icon] in TABS" :key="id" type="button" :class="{ 'is-on': tab === id }" @click="tab = id">
         <AppIcon :icon="icon" :size="14" /> {{ label }}
         <i v-if="id === 'expeditions' && readyIds.size" class="pv-dot"></i>
@@ -669,7 +672,12 @@ onMounted(async () => {
 
     <!-- ================= Арена ================= -->
     <template v-else-if="tab === 'arena'">
-      <PetBattle v-if="battle" :battle="battle" @update="battle = $event" @close="closeBattle" />
+      <div v-if="battle" class="arena-stage">
+        <!-- Трибуны с публикой над ареной и песок под ногами бойцов -->
+        <div class="arena-stage__stands" aria-hidden="true"><i /><i /><i /></div>
+        <PetBattle :battle="battle" @update="battle = $event" @close="closeBattle" />
+        <div class="arena-stage__sand" aria-hidden="true" />
+      </div>
 
       <template v-else>
         <p v-if="!freePets.length" class="pv-empty">Свободных питомцев нет — все в походе или на торгах.</p>

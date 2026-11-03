@@ -28,8 +28,11 @@ const SCENES = {
   personal: 'Личная ферма',
 }
 
+/** Внутри здания карты-мира (WorldView) показана одна ферма без указателя на другую. */
+const props = defineProps({ only: { type: String, default: '' } })
+
 const scene = computed({
-  get: () => (route.query.tab === 'personal' ? 'personal' : 'common'),
+  get: () => props.only || (route.query.tab === 'personal' ? 'personal' : 'common'),
   set: (value) => router.replace({ query: { ...route.query, tab: value } }),
 })
 
@@ -392,7 +395,7 @@ onMounted(() => Promise.all([loadCommon(), loadPersonal()]))
         </p>
       </template>
 
-      <button type="button" class="signpost" @click="scene = 'personal'">
+      <button v-if="!only" type="button" class="signpost" @click="scene = 'personal'">
         <span>Личная ферма</span><i aria-hidden="true">→</i>
       </button>
     </section>
@@ -530,7 +533,7 @@ onMounted(() => Promise.all([loadCommon(), loadPersonal()]))
         </div>
       </template>
 
-      <button type="button" class="signpost signpost--back" @click="scene = 'common'">
+      <button v-if="!only" type="button" class="signpost signpost--back" @click="scene = 'common'">
         <i aria-hidden="true">←</i><span>Общая ферма</span>
       </button>
     </section>

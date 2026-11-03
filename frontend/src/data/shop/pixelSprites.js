@@ -1686,6 +1686,41 @@ export const PIXEL_SPRITES = {
     },
 }
 
+/**
+ * Боссы глубоких подземелий (Бездонные чертоги, Логово дракона, Чертог
+ * владыки): костяк боссов разлома, но своя палитра и своя «корона» —
+ * у каждого босса отдельный спрайт.
+ */
+const bossVariant = (base, palette, crown) => {
+    const source = PIXEL_SPRITES[base]
+    const rows = [...source.rows]
+    if (crown) rows[0] = crown
+
+    return { palette: { ...source.palette, ...palette }, rows }
+}
+
+Object.assign(PIXEL_SPRITES, {
+    // Бездонные чертоги: холодные синие и чёрные
+    'boss-gatekeeper': bossVariant('boss-voidwarden', { v: '#16324f', V: '#2b5d8f', e: '#7dd3fc' }, '.k.kkkkkk.k.'),
+    'boss-lightdevourer': bossVariant('boss-abyss', { v: '#101a2e', e: '#fde047', r: '#f59e0b' }, 'k..kkkkkk..k'),
+    'boss-silence': bossVariant('boss-waiter', { v: '#0f2a36', e: '#5eead4', a: '#99f6e4' }, '.kkkkkkkkkk.'),
+    'boss-leviathan': bossVariant('boss-worldeater', { v: '#15352f', w: '#e7e5e4', e: '#34d399' }, '..k.kkkk.k..'),
+    'boss-bottom': bossVariant('boss-abyss', { v: '#050509', e: '#38bdf8', w: '#cbd5e1', r: '#1d4ed8' }, 'k.k.kkkk.k.k'),
+    // Логово дракона: красные, золотые и угольные
+    'boss-wyrmling': bossVariant('boss-voidwarden', { v: '#7c2d12', V: '#c2410c', e: '#fde047' }, '.k.kkkkkk.k.'),
+    'boss-goldkeeper': bossVariant('boss-waiter', { v: '#713f12', e: '#fef08a', a: '#facc15' }, 'k..kkkkkk..k'),
+    'boss-firemother': bossVariant('boss-abyss', { v: '#7f1d1d', e: '#fb923c', r: '#fde047' }, '.kkkkkkkkkk.'),
+    'boss-lavaserpent': bossVariant('boss-worldeater', { v: '#451a03', w: '#fdba74', e: '#ef4444' }, '..k.kkkk.k..'),
+    'boss-elderdragon': bossVariant('boss-voidwarden', { v: '#3f0d0d', V: '#991b1b', e: '#fbbf24', w: '#fef3c7' }, 'k.k.kkkk.k.k'),
+    // Чертог владыки: пурпур, серебро и тьма
+    'boss-firstknight': bossVariant('boss-waiter', { v: '#27272a', e: '#e4e4e7', a: '#a1a1aa' }, '.k.kkkkkk.k.'),
+    'boss-sealkeeper': bossVariant('boss-voidwarden', { v: '#3b0764', V: '#7e22ce', e: '#f0abfc' }, 'k..kkkkkk..k'),
+    'boss-shadowqueen': bossVariant('boss-abyss', { v: '#2e1065', e: '#e879f9', r: '#a21caf' }, '.kkkkkkkkkk.'),
+    'boss-worldhangman': bossVariant('boss-worldeater', { v: '#1c1917', w: '#d6d3d1', e: '#dc2626' }, '..k.kkkk.k..'),
+    'boss-throneguard': bossVariant('boss-waiter', { v: '#312e81', e: '#a5b4fc', a: '#6366f1' }, 'k.k.kkkk.k.k'),
+    'boss-sovereign': bossVariant('boss-voidwarden', { v: '#020617', V: '#4c1d95', e: '#fbbf24', w: '#fef9c3' }, 'k.kkkkkkkk.k'),
+})
+
 const cache = new Map()
 const svgCache = new Map()
 

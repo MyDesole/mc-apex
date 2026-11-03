@@ -583,32 +583,11 @@ watch(mobileMenuOpen, (open) => {
                     <span v-if="dailyCaseAvailable" class="dropdown-free">Бесплатно</span>
                   </RouterLink>
 
-                  <RouterLink to="/pets" class="dropdown-item" @click="menuOpen = false">
-                    <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M5 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM9.5 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM14.5 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM19 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM12 21c-3.5 0-6-2-6-4.5S9 11 12 11s6 3 6 5.5-2.5 4.5-6 4.5z" />
-                    </svg>
-                    <span>Мои питомцы</span>
-                  </RouterLink>
-
                   <RouterLink to="/world" class="dropdown-item" @click="menuOpen = false">
                     <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M3 20l5-9 4 6 3-4 6 7zM16 6a2 2 0 1 0 0-.1" />
                     </svg>
                     <span>Мир APEX</span>
-                  </RouterLink>
-
-                  <RouterLink to="/farm" class="dropdown-item" @click="menuOpen = false">
-                    <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M12 21V11M12 11c0-3 2-5 5-5 0 3-2 5-5 5zM12 14c0-2.5-1.8-4-4.5-4 0 2.5 1.8 4 4.5 4zM4 21h16" />
-                    </svg>
-                    <span>Фермы питомцев</span>
-                  </RouterLink>
-
-                  <RouterLink to="/auction" class="dropdown-item" @click="menuOpen = false">
-                    <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M14 4l6 6M11 7l6 6M12.5 5.5l-6 6 6 6 6-6M7.5 12.5L3 17l4 4 4.5-4.5M3 21h9" />
-                    </svg>
-                    <span>Аукцион питомцев</span>
                   </RouterLink>
 
                   <RouterLink to="/miner" class="dropdown-item" @click="menuOpen = false">

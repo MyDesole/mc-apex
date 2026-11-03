@@ -51,6 +51,8 @@ class WorldService
                 'expeditions' => (int) ($expeditions->ready ?? 0),
                 'dungeon' => DB::table('dungeon_runs')->where('user_id', $user->id)->where('status', 'active')->count(),
             ],
+            // Ключи сундуков лежат в сумке питомцев
+            'keys' => DB::table('loot_case_keys')->where('user_id', $user->id)->where('count', '>', 0)->pluck('count', 'case_slug')->map(fn ($n) => (int) $n)->all(),
             'personal_unlocked' => $personal,
             'expeditions_active' => (int) ($expeditions->total ?? 0),
         ];

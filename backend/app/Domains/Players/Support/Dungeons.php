@@ -68,11 +68,42 @@ final class Dungeons
             'about' => 'Трещина между мирами. Здесь нет ни дня, ни ночи — только голод.',
             'emblem' => 'mob-voideye',
             'tone' => 'void',
-            // Максимальный уровень питомца — 30, выше ставить нельзя
             'min_level' => 28,
             'floors' => 4,
             'per_floor' => 2,
             'stage' => 5,
+        ],
+        // Подземелья для уровней выше 30: снаряжение берётся из пустотных ступеней,
+        // зато растут редкость добычи, Рубли и сила врагов
+        'abyss' => [
+            'name' => 'Бездонные чертоги',
+            'about' => 'Лестница вниз, которая не заканчивается. Чем глубже, тем тише — и тем хуже.',
+            'emblem' => 'mob-voideye',
+            'tone' => 'deep',
+            'min_level' => 40,
+            'floors' => 5,
+            'per_floor' => 2,
+            'stage' => 6,
+        ],
+        'lair' => [
+            'name' => 'Логово дракона',
+            'about' => 'Гора золота, в которой кто-то дышит. Огонь здесь не страшилка, а климат.',
+            'emblem' => 'mob-imp',
+            'tone' => 'ember',
+            'min_level' => 55,
+            'floors' => 5,
+            'per_floor' => 2,
+            'stage' => 7,
+        ],
+        'throne' => [
+            'name' => 'Чертог владыки',
+            'about' => 'Последний зал под самым дном мира. Трон занят, и хозяин не любит гостей.',
+            'emblem' => 'mob-reaper',
+            'tone' => 'void',
+            'min_level' => 75,
+            'floors' => 6,
+            'per_floor' => 2,
+            'stage' => 8,
         ],
     ];
 
@@ -186,6 +217,48 @@ final class Dungeons
             ['name' => 'Пожиратель снов', 'element' => 'nature', 'sprite' => 'mob-devourer', 'trait' => 'gorge', 'hp' => 920, 'atk' => 86, 'def' => 40],
             ['name' => 'Искажённый страж', 'element' => 'water', 'sprite' => 'mob-guard', 'trait' => 'wall', 'hp' => 940, 'atk' => 82, 'def' => 46],
         ],
+        'abyss' => [
+            ['name' => 'Глубинный сторож', 'element' => 'water', 'sprite' => 'mob-guard', 'trait' => 'wall', 'hp' => 1500, 'atk' => 126, 'def' => 66],
+            ['name' => 'Тихий жнец', 'element' => 'shadow', 'sprite' => 'mob-reaper', 'trait' => 'hammer', 'hp' => 1250, 'atk' => 156, 'def' => 46],
+            ['name' => 'Ползущая тьма', 'element' => 'shadow', 'sprite' => 'mob-shade', 'trait' => 'gorge', 'hp' => 1400, 'atk' => 134, 'def' => 54],
+            ['name' => 'Эхо-двойник', 'element' => 'water', 'sprite' => 'mob-drowned', 'trait' => 'frost', 'hp' => 1300, 'atk' => 142, 'def' => 50],
+            ['name' => 'Кристальный паразит', 'element' => 'nature', 'sprite' => 'mob-shardgolem', 'trait' => 'stone', 'hp' => 1600, 'atk' => 118, 'def' => 70],
+            ['name' => 'Глазастый рой', 'element' => 'shadow', 'sprite' => 'mob-voideye', 'trait' => 'void', 'hp' => 1180, 'atk' => 160, 'def' => 44],
+            ['name' => 'Бесформенный', 'element' => 'shadow', 'sprite' => 'mob-faceless', 'trait' => 'curse', 'hp' => 1280, 'atk' => 150, 'def' => 48],
+            ['name' => 'Костяной пожиратель', 'element' => 'beast', 'sprite' => 'mob-devourer', 'trait' => 'gorge', 'hp' => 1450, 'atk' => 130, 'def' => 58],
+            ['name' => 'Слепой стражник', 'element' => 'shadow', 'sprite' => 'mob-skeleton', 'trait' => 'bones', 'hp' => 1320, 'atk' => 144, 'def' => 52],
+            ['name' => 'Глубинная пиявка', 'element' => 'water', 'sprite' => 'mob-slime', 'trait' => 'sticky', 'hp' => 1560, 'atk' => 122, 'def' => 62],
+            ['name' => 'Эхо-крыло', 'element' => 'shadow', 'sprite' => 'mob-bat', 'trait' => 'screech', 'hp' => 1150, 'atk' => 164, 'def' => 42],
+            ['name' => 'Тёмный скат', 'element' => 'water', 'sprite' => 'mob-wraith', 'trait' => 'smoke', 'hp' => 1260, 'atk' => 148, 'def' => 49],
+        ],
+        'lair' => [
+            ['name' => 'Драконий выводок', 'element' => 'fire', 'sprite' => 'mob-imp', 'trait' => 'sparks', 'hp' => 1900, 'atk' => 190, 'def' => 80],
+            ['name' => 'Угольный страж сокровищ', 'element' => 'fire', 'sprite' => 'mob-guard', 'trait' => 'wall', 'hp' => 2300, 'atk' => 160, 'def' => 104],
+            ['name' => 'Пепельный змей', 'element' => 'fire', 'sprite' => 'mob-devourer', 'trait' => 'gorge', 'hp' => 2050, 'atk' => 176, 'def' => 90],
+            ['name' => 'Золотой голем', 'element' => 'nature', 'sprite' => 'mob-golem', 'trait' => 'stone', 'hp' => 2400, 'atk' => 154, 'def' => 110],
+            ['name' => 'Огненная гарпия', 'element' => 'fire', 'sprite' => 'mob-bat', 'trait' => 'screech', 'hp' => 1700, 'atk' => 208, 'def' => 70],
+            ['name' => 'Кочегар логова', 'element' => 'shadow', 'sprite' => 'mob-skeleton', 'trait' => 'bones', 'hp' => 1850, 'atk' => 196, 'def' => 78],
+            ['name' => 'Лавовый пёс', 'element' => 'beast', 'sprite' => 'mob-ashhound', 'trait' => 'charge', 'hp' => 1800, 'atk' => 204, 'def' => 74],
+            ['name' => 'Жрец пламени', 'element' => 'fire', 'sprite' => 'mob-forgespirit', 'trait' => 'smoke', 'hp' => 1750, 'atk' => 212, 'def' => 72],
+            ['name' => 'Золотая крыса', 'element' => 'beast', 'sprite' => 'mob-rat', 'trait' => 'gnaw', 'hp' => 1650, 'atk' => 200, 'def' => 76],
+            ['name' => 'Драконий культист', 'element' => 'shadow', 'sprite' => 'mob-icewitch', 'trait' => 'curse', 'hp' => 1800, 'atk' => 192, 'def' => 80],
+            ['name' => 'Лавовый слизень', 'element' => 'fire', 'sprite' => 'mob-slime', 'trait' => 'sticky', 'hp' => 2200, 'atk' => 164, 'def' => 98],
+            ['name' => 'Чешуйчатый воин', 'element' => 'nature', 'sprite' => 'mob-guard', 'trait' => 'hammer', 'hp' => 2100, 'atk' => 180, 'def' => 92],
+        ],
+        'throne' => [
+            ['name' => 'Страж трона', 'element' => 'shadow', 'sprite' => 'mob-guard', 'trait' => 'wall', 'hp' => 3300, 'atk' => 250, 'def' => 140],
+            ['name' => 'Палач владыки', 'element' => 'shadow', 'sprite' => 'mob-reaper', 'trait' => 'hammer', 'hp' => 2800, 'atk' => 320, 'def' => 104],
+            ['name' => 'Придворный шёпот', 'element' => 'shadow', 'sprite' => 'mob-wraith', 'trait' => 'curse', 'hp' => 2700, 'atk' => 330, 'def' => 98],
+            ['name' => 'Безликий советник', 'element' => 'shadow', 'sprite' => 'mob-faceless', 'trait' => 'void', 'hp' => 3000, 'atk' => 290, 'def' => 116],
+            ['name' => 'Осколочный рыцарь', 'element' => 'nature', 'sprite' => 'mob-shardgolem', 'trait' => 'stone', 'hp' => 3500, 'atk' => 240, 'def' => 150],
+            ['name' => 'Тень-пожиратель', 'element' => 'shadow', 'sprite' => 'mob-shade', 'trait' => 'gorge', 'hp' => 3100, 'atk' => 280, 'def' => 120],
+            ['name' => 'Ледяной палач', 'element' => 'water', 'sprite' => 'mob-icewitch', 'trait' => 'frost', 'hp' => 2900, 'atk' => 300, 'def' => 110],
+            ['name' => 'Бес-казначей', 'element' => 'fire', 'sprite' => 'mob-imp', 'trait' => 'sparks', 'hp' => 2750, 'atk' => 318, 'def' => 100],
+            ['name' => 'Тронный пёс', 'element' => 'beast', 'sprite' => 'mob-ashhound', 'trait' => 'charge', 'hp' => 2850, 'atk' => 306, 'def' => 108],
+            ['name' => 'Мёртвый хранитель', 'element' => 'shadow', 'sprite' => 'mob-skeleton', 'trait' => 'bones', 'hp' => 3200, 'atk' => 270, 'def' => 128],
+            ['name' => 'Эхо владыки', 'element' => 'shadow', 'sprite' => 'mob-voideye', 'trait' => 'void', 'hp' => 2650, 'atk' => 336, 'def' => 96],
+            ['name' => 'Осколок трона', 'element' => 'nature', 'sprite' => 'mob-golem', 'trait' => 'wall', 'hp' => 3600, 'atk' => 236, 'def' => 156],
+        ],
     ];
 
     /**
@@ -220,6 +293,28 @@ final class Dungeons
             ['name' => 'Пожиратель миров', 'element' => 'beast', 'sprite' => 'boss-worldeater', 'trait' => 'pack', 'hp' => 3400, 'atk' => 186, 'def' => 80],
             ['name' => 'Бездна говорящая', 'element' => 'shadow', 'sprite' => 'boss-abyss', 'trait' => 'curse', 'hp' => 3800, 'atk' => 200, 'def' => 86],
             ['name' => 'Тот, кто ждёт', 'element' => 'shadow', 'sprite' => 'boss-waiter', 'trait' => 'void', 'hp' => 4300, 'atk' => 220, 'def' => 94],
+        ],
+        'abyss' => [
+            ['name' => 'Привратник бездны', 'element' => 'shadow', 'sprite' => 'boss-gatekeeper', 'trait' => 'void', 'hp' => 5200, 'atk' => 250, 'def' => 104],
+            ['name' => 'Глотатель света', 'element' => 'shadow', 'sprite' => 'boss-lightdevourer', 'trait' => 'curse', 'hp' => 5800, 'atk' => 268, 'def' => 112],
+            ['name' => 'Хозяин тишины', 'element' => 'water', 'sprite' => 'boss-silence', 'trait' => 'mire', 'hp' => 6400, 'atk' => 284, 'def' => 120],
+            ['name' => 'Костяной левиафан', 'element' => 'beast', 'sprite' => 'boss-leviathan', 'trait' => 'pack', 'hp' => 7000, 'atk' => 300, 'def' => 128],
+            ['name' => 'Дно', 'element' => 'shadow', 'sprite' => 'boss-bottom', 'trait' => 'void', 'hp' => 7800, 'atk' => 330, 'def' => 138],
+        ],
+        'lair' => [
+            ['name' => 'Дракончик-страж', 'element' => 'fire', 'sprite' => 'boss-wyrmling', 'trait' => 'hammer', 'hp' => 8400, 'atk' => 340, 'def' => 140],
+            ['name' => 'Хранитель золота', 'element' => 'nature', 'sprite' => 'boss-goldkeeper', 'trait' => 'pack', 'hp' => 9200, 'atk' => 360, 'def' => 150],
+            ['name' => 'Огненная мать', 'element' => 'fire', 'sprite' => 'boss-firemother', 'trait' => 'hammer', 'hp' => 10000, 'atk' => 384, 'def' => 160],
+            ['name' => 'Лавовый змей', 'element' => 'fire', 'sprite' => 'boss-lavaserpent', 'trait' => 'curse', 'hp' => 11000, 'atk' => 410, 'def' => 170],
+            ['name' => 'Древний дракон', 'element' => 'fire', 'sprite' => 'boss-elderdragon', 'trait' => 'hammer', 'hp' => 12400, 'atk' => 450, 'def' => 184],
+        ],
+        'throne' => [
+            ['name' => 'Первый рыцарь', 'element' => 'shadow', 'sprite' => 'boss-firstknight', 'trait' => 'frost', 'hp' => 13500, 'atk' => 470, 'def' => 190],
+            ['name' => 'Хранитель печати', 'element' => 'shadow', 'sprite' => 'boss-sealkeeper', 'trait' => 'void', 'hp' => 14800, 'atk' => 500, 'def' => 200],
+            ['name' => 'Королева теней', 'element' => 'water', 'sprite' => 'boss-shadowqueen', 'trait' => 'curse', 'hp' => 16200, 'atk' => 530, 'def' => 212],
+            ['name' => 'Палач мира', 'element' => 'beast', 'sprite' => 'boss-worldhangman', 'trait' => 'hammer', 'hp' => 17800, 'atk' => 560, 'def' => 224],
+            ['name' => 'Тот, кто ждёт у трона', 'element' => 'shadow', 'sprite' => 'boss-throneguard', 'trait' => 'void', 'hp' => 19600, 'atk' => 600, 'def' => 238],
+            ['name' => 'Владыка', 'element' => 'shadow', 'sprite' => 'boss-sovereign', 'trait' => 'void', 'hp' => 22000, 'atk' => 650, 'def' => 255],
         ],
     ];
 
@@ -282,6 +377,9 @@ final class Dungeons
     /** Материал, который падает в подземелье этой ступени. */
     public static function materialForStage(int $stage): ?string
     {
+        // Выше пятой ступени падает пустотный материал, отдельных нет
+        $stage = min($stage, 5);
+
         foreach (self::MATERIALS as $key => $material) {
             if ($material['stage'] === $stage) {
                 return $key;
@@ -319,6 +417,9 @@ final class Dungeons
         3 => ['common' => 25, 'rare' => 45, 'epic' => 25, 'legendary' => 5],
         4 => ['common' => 15, 'rare' => 40, 'epic' => 35, 'legendary' => 10],
         5 => ['common' => 10, 'rare' => 30, 'epic' => 40, 'legendary' => 20],
+        6 => ['common' => 5, 'rare' => 30, 'epic' => 42, 'legendary' => 23],
+        7 => ['common' => 3, 'rare' => 25, 'epic' => 44, 'legendary' => 28],
+        8 => ['rare' => 20, 'epic' => 45, 'legendary' => 35],
     ];
 
     /** Слоты экипировки: на питомца надевается по одному предмету в каждый. */
@@ -339,38 +440,44 @@ final class Dungeons
      * за день — на STEP дороже. Цена растёт, поэтому «докупать до
      * бесконечности» невыгодно, но можно.
      */
-    public const EXTRA_RUN_BASE = 800;
-    public const EXTRA_RUN_STEP = 400;
+    public const EXTRA_RUN_BASE = 2500;
+    public const EXTRA_RUN_STEP = 1200;
 
     /** Отдых между этажами: доля от максимума здоровья отряда. */
     public const REST_SHARE = 0.15;
 
     /** Монеты за моба: база × этаж. */
-    public const COINS_PER_MOB = [1 => 60, 2 => 140, 3 => 260, 4 => 420, 5 => 640];
+    public const COINS_PER_MOB = [1 => 30, 2 => 70, 3 => 130, 4 => 200, 5 => 300, 6 => 380, 7 => 470, 8 => 560];
 
     /** Монеты за босса: база × номер босса. */
-    public const COINS_PER_BOSS = [1 => 400, 2 => 900, 3 => 1600, 4 => 2600, 5 => 4000];
+    public const COINS_PER_BOSS = [1 => 200, 2 => 450, 3 => 800, 4 => 1200, 5 => 1800, 6 => 2300, 7 => 2900, 8 => 3500];
 
     /**
      * Штраф за поражение по ступени. Отступление бесплатно — за него
      * ничего не списываем, теряется только попытка.
      */
-    public const WIPE_PENALTY = [1 => 80, 2 => 200, 3 => 450, 4 => 800, 5 => 1400];
+    public const WIPE_PENALTY = [1 => 80, 2 => 200, 3 => 450, 4 => 800, 5 => 1400, 6 => 1800, 7 => 2300, 8 => 2900];
 
-    /** Опыт питомцам: за моба и за босса. */
-    public const XP_PER_MOB = 4;
-    public const XP_PER_BOSS = 20;
+    /**
+     * Опыт питомцам: за моба и за босса. Дальше его умножает уровень
+     * питомца и режет суточный предел (PetService::dailyXpCap).
+     */
+    public const XP_PER_MOB = 3;
+    public const XP_PER_BOSS = 12;
 
     /**
      * Шансы добычи в процентах. `gear` — шанс предмета экипировки,
      * `boss_gear` — шанс с босса (босс даёт всегда), `key` — ключ кейса.
      */
     public const DROPS = [
-        1 => ['gear' => 14, 'key' => 4, 'key_slug' => 'seeker', 'key_pet' => 0.15, 'key_pet_slug' => 'royal'],
-        2 => ['gear' => 22, 'key' => 12, 'key_slug' => 'seeker', 'key_pet' => 0.5, 'key_pet_slug' => 'royal'],
-        3 => ['gear' => 30, 'key' => 25, 'key_slug' => 'seeker', 'key_pet' => 1.25, 'key_pet_slug' => 'royal'],
-        4 => ['gear' => 38, 'key' => 35, 'key_slug' => 'seeker', 'key_pet' => 2, 'key_pet_slug' => 'royal'],
-        5 => ['gear' => 46, 'key' => 45, 'key_slug' => 'seeker', 'key_pet' => 3, 'key_pet_slug' => 'royal'],
+        1 => ['gear' => 10, 'key' => 2, 'key_slug' => 'seeker', 'key_pet' => 0.1, 'key_pet_slug' => 'royal'],
+        2 => ['gear' => 15, 'key' => 6, 'key_slug' => 'seeker', 'key_pet' => 0.3, 'key_pet_slug' => 'royal'],
+        3 => ['gear' => 20, 'key' => 12, 'key_slug' => 'seeker', 'key_pet' => 0.7, 'key_pet_slug' => 'royal'],
+        4 => ['gear' => 25, 'key' => 18, 'key_slug' => 'seeker', 'key_pet' => 1.2, 'key_pet_slug' => 'royal'],
+        5 => ['gear' => 30, 'key' => 22, 'key_slug' => 'seeker', 'key_pet' => 1.8, 'key_pet_slug' => 'royal'],
+        6 => ['gear' => 32, 'key' => 25, 'key_slug' => 'seeker', 'key_pet' => 2, 'key_pet_slug' => 'royal'],
+        7 => ['gear' => 34, 'key' => 28, 'key_slug' => 'seeker', 'key_pet' => 2.2, 'key_pet_slug' => 'royal'],
+        8 => ['gear' => 36, 'key' => 30, 'key_slug' => 'seeker', 'key_pet' => 2.5, 'key_pet_slug' => 'royal'],
     ];
 
     /** Босс чаще даёт лучшую вещь: шанс в процентах на предмет своей ступени. */
@@ -480,6 +587,8 @@ final class Dungeons
      */
     public static function gearForStage(int $stage): array
     {
+        // Своей экипировки у ступеней 6–8 нет: берут предметы пустотных подземелий
+        $stage = min($stage, 5);
         $from = max(1, $stage - 1);
 
         return array_filter(

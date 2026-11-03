@@ -371,8 +371,9 @@ class PetArenaService
                 'pet_rating' => max(0, $myRating + $change),
                 'pet_wins' => $mine->pet_wins + ($won ? 1 : 0),
                 'pet_losses' => $mine->pet_losses + ($won ? 0 : 1),
-                'pet_xp' => $mine->pet_xp + ($won ? 4 : 1) * PetService::xpMultiplier($level),
             ])->save();
+
+            PetService::grantXp($mine->id, ($won ? 4 : 1) * PetService::xpMultiplier($level), $level);
         }
 
         if ($foe) {
