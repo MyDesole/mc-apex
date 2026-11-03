@@ -39,6 +39,9 @@ class ChangelogRoadmapTest extends TestCase
 
     public function test_drafts_and_future_posts_are_hidden(): void
     {
+        // Записи, добавленные миграциями, тест не считает
+        ChangelogEntry::query()->delete();
+
         ChangelogEntry::create(['title' => 'Черновик', 'slug' => 'draft', 'category' => 'fix', 'body' => 'x', 'is_published' => false]);
         ChangelogEntry::create(['title' => 'Будущее', 'slug' => 'future', 'category' => 'fix', 'body' => 'x', 'published_at' => now()->addDay()]);
 
