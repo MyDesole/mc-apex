@@ -287,7 +287,7 @@ class MinerGameTest extends TestCase
         $user = User::factory()->create(['apex_coins' => 0]);
         DB::table('miner_profiles')->insert([
             'user_id' => $user->id,
-            'quests' => json_encode(['date' => today()->toDateString(), 'items' => [
+            'quests' => json_encode(['date' => \App\Support\GameDay::date(), 'items' => [
                 ['id' => 'diamonds', 'progress' => 0, 'claimed' => false],
                 ['id' => 'runs', 'progress' => 0, 'claimed' => false],
                 ['id' => 'trade', 'progress' => 0, 'claimed' => false],

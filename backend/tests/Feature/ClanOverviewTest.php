@@ -56,10 +56,10 @@ class ClanOverviewTest extends TestCase
         $member = $this->member($clan);
 
         foreach ([3, 2, 1] as $daysAgo) {
-            ClanCheckin::create(['clan_id' => $clan->id, 'user_id' => $member->id, 'day' => now()->subDays($daysAgo)->toDateString()]);
+            ClanCheckin::create(['clan_id' => $clan->id, 'user_id' => $member->id, 'day' => \App\Support\GameDay::local()->subDays($daysAgo)->toDateString()]);
         }
         // Разрыв: позапрошлая неделя не продлевает серию
-        ClanCheckin::create(['clan_id' => $clan->id, 'user_id' => $member->id, 'day' => now()->subDays(10)->toDateString()]);
+        ClanCheckin::create(['clan_id' => $clan->id, 'user_id' => $member->id, 'day' => \App\Support\GameDay::local()->subDays(10)->toDateString()]);
 
         // Сегодня ещё не отмечался — серия из трёх дней не сгорела
         $this->actingAs($member)->getJson('/api/my-clan/overview')

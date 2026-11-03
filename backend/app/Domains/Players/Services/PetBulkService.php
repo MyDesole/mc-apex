@@ -2,6 +2,7 @@
 
 namespace App\Domains\Players\Services;
 
+use App\Support\GameDay;
 use App\Domains\Players\Support\PetLocks;
 use App\Domains\Shop\Exceptions\NotEnoughCoins;
 use App\Domains\Shop\Models\ShopItem;
@@ -173,7 +174,7 @@ class PetBulkService
             ->whereIn('inventory_id', $pets->pluck('id')->all() ?: [0])
             ->where('actor_id', $user->id)
             ->where('action', 'feed')
-            ->where('day', today()->toDateString())
+            ->where('day', GameDay::date())
             ->pluck('inventory_id')
             ->map(fn ($id) => (int) $id)
             ->all();

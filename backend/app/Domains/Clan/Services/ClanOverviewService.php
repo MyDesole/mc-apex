@@ -2,6 +2,7 @@
 
 namespace App\Domains\Clan\Services;
 
+use App\Support\GameDay;
 use App\Domains\Clan\Models\Clan;
 use App\Domains\Clan\Models\ClanCheckin;
 use App\Domains\Clan\Models\ClanEvent;
@@ -30,7 +31,7 @@ class ClanOverviewService
     {
         $clan = $membership->clan()->first();
         $user = $membership->user;
-        $today = now()->toDateString();
+        $today = GameDay::date();
         $membersCount = $clan->members()->count();
 
         $todayCheckins = ClanCheckin::query()
@@ -64,7 +65,7 @@ class ClanOverviewService
      */
     public function checkIn(User $user, Clan $clan): array
     {
-        $today = now()->toDateString();
+        $today = GameDay::date();
 
         if (ClanCheckin::where('user_id', $user->id)->where('day', $today)->exists()) {
             throw new RuntimeException('Сегодня вы уже отмечались.');
@@ -132,7 +133,7 @@ class ClanOverviewService
             'role' => $membership->role,
             'level' => (int) ($clan->level ?: 1),
             'checked_in' => ClanCheckin::where('user_id', $membership->user_id)
-                ->where('day', now()->toDateString())
+                ->where('day', GameDay::date())
                 ->exists(),
             'wars_active' => $this->activeWarsQuery($clan)->count(),
             'applications' => $membership->can('applications') ? $clan->applications()->count() : 0,
@@ -155,7 +156,7 @@ class ClanOverviewService
             ->map(fn ($day) => Carbon::parse($day)->toDateString())
             ->all();
 
-        $cursor = now()->startOfDay();
+        $cursor = GameDay::local();
 
         // Сегодня ещё не отметился — серия не сгорела, считаем со вчера
         if (($days[0] ?? null) !== $cursor->toDateString()) {

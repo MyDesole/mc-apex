@@ -2,6 +2,7 @@
 
 namespace App\Domains\Games\Services;
 
+use App\Support\GameDay;
 use App\Domains\Games\Support\MinerWorld;
 use App\Domains\Moderation\Notifications\ModerationNotification;
 use App\Domains\Shop\Services\LootCaseService;
@@ -372,7 +373,7 @@ class MinerProgress
     /** Задания на сегодня из профиля; в новый день — новая тройка. */
     private function todayQuests(int $userId, object $profile): array
     {
-        $date = today()->toDateString();
+        $date = GameDay::date();
         $saved = json_decode($profile->quests ?? 'null', true);
 
         if (($saved['date'] ?? null) === $date) {

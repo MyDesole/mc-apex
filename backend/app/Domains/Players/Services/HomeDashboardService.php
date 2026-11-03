@@ -2,6 +2,7 @@
 
 namespace App\Domains\Players\Services;
 
+use App\Support\GameDay;
 use App\Domains\Clan\Models\ClanCheckin;
 use App\Domains\Games\Services\MinerService;
 use App\Domains\Players\Support\PetTraits;
@@ -29,7 +30,7 @@ class HomeDashboardService
 
     public function for(User $user): array
     {
-        $tomorrow = now()->addDay()->startOfDay()->toIso8601String();
+        $tomorrow = GameDay::start()->addDay()->toIso8601String();
 
         return [
             'coins' => (int) $user->apex_coins,
@@ -58,7 +59,7 @@ class HomeDashboardService
         $done = DB::table('pet_interactions')
             ->where('owner_id', $user->id)
             ->where('actor_id', $user->id)
-            ->where('day', today()->toDateString())
+            ->where('day', GameDay::date())
             ->whereIn('inventory_id', $ids ?: [0])
             ->get(['inventory_id', 'action'])
             ->groupBy('inventory_id');
@@ -86,7 +87,7 @@ class HomeDashboardService
             'name' => $clan->name,
             'tag' => $clan->tag,
             'color' => $clan->banner_color,
-            'checked_in' => ClanCheckin::where('user_id', $user->id)->where('day', today()->toDateString())->exists(),
+            'checked_in' => ClanCheckin::where('user_id', $user->id)->where('day', GameDay::date())->exists(),
         ];
     }
 

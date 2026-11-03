@@ -2,6 +2,7 @@
 
 namespace App\Domains\Players\Services;
 
+use App\Support\GameDay;
 use App\Domains\Players\Support\PetFarmTiers;
 use App\Domains\Players\Support\PetLocks;
 use App\Domains\Players\Support\PetPerks;
@@ -101,7 +102,7 @@ class PetBreedingService
             }
 
             $today = DB::table('pet_breedings')->where('user_id', $user->id)->where('kind', 'mating')
-                ->where('created_at', '>=', now()->startOfDay())->count();
+                ->where('created_at', '>=', GameDay::start())->count();
             if ($today >= self::MATING_PER_DAY) {
                 throw new RuntimeException('Сегодня уже было ' . self::MATING_PER_DAY . ' спаривания — продолжай завтра.');
             }
@@ -238,7 +239,7 @@ class PetBreedingService
             }
 
             $today = DB::table('pet_breedings')->where('user_id', $user->id)->where('kind', 'cross')
-                ->where('created_at', '>=', now()->startOfDay())->count();
+                ->where('created_at', '>=', GameDay::start())->count();
             if ($today >= self::CROSS_PER_DAY) {
                 throw new RuntimeException('Сегодня уже было ' . self::CROSS_PER_DAY . ' скрещиваний — продолжай завтра.');
             }

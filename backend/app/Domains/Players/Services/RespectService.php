@@ -2,6 +2,7 @@
 
 namespace App\Domains\Players\Services;
 
+use App\Support\GameDay;
 use App\Domains\Users\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -53,7 +54,7 @@ class RespectService
                 ? $this->active()
                     ->where('owner_id', $owner->id)
                     ->where('user_id', $viewer->id)
-                    ->where('day', today()->toDateString())
+                    ->where('day', GameDay::date())
                     ->exists()
                 : false,
             // Забрал сегодня — дать снова можно только завтра
@@ -61,7 +62,7 @@ class RespectService
                 ? DB::table('profile_respects')
                     ->where('owner_id', $owner->id)
                     ->where('user_id', $viewer->id)
-                    ->where('day', today()->toDateString())
+                    ->where('day', GameDay::date())
                     ->whereNotNull('revoked_at')
                     ->exists()
                 : false,
@@ -80,7 +81,7 @@ class RespectService
             DB::table('profile_respects')->insert([
                 'owner_id' => $owner->id,
                 'user_id' => $actor->id,
-                'day' => today()->toDateString(),
+                'day' => GameDay::date(),
                 'created_at' => now(),
             ]);
         } catch (QueryException) {
@@ -96,7 +97,7 @@ class RespectService
         $updated = DB::table('profile_respects')
             ->where('owner_id', $owner->id)
             ->where('user_id', $actor->id)
-            ->where('day', today()->toDateString())
+            ->where('day', GameDay::date())
             ->whereNull('revoked_at')
             ->update(['revoked_at' => now()]);
 
@@ -118,7 +119,7 @@ class RespectService
             [[
                 'owner_id' => $owner->id,
                 'visitor_id' => $visitor->id,
-                'day' => today()->toDateString(),
+                'day' => GameDay::date(),
                 'last_at' => now(),
             ]],
             ['owner_id', 'visitor_id', 'day'],

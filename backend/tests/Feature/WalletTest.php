@@ -259,7 +259,7 @@ class WalletTest extends TestCase
             'source' => 'daily_bonus',
             'amount' => $amount,
             'balance_after' => $amount,
-            'idempotency_key' => 'daily_bonus:' . $user->id . ':' . today()->toDateString(),
+            'idempotency_key' => 'daily_bonus:' . $user->id . ':' . \App\Support\GameDay::date(),
         ]);
 
         $second = $this->actingAs($user)->postJson('/api/wallet/daily-bonus')->assertStatus(422);

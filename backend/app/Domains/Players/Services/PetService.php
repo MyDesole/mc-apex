@@ -2,6 +2,7 @@
 
 namespace App\Domains\Players\Services;
 
+use App\Support\GameDay;
 use App\Domains\Players\Support\PetTraits;
 use App\Domains\Shop\Models\ShopItem;
 use App\Domains\Shop\Models\UserInventory;
@@ -97,7 +98,7 @@ class PetService
         $doneToday = $viewer
             ? $scope()
                 ->where('actor_id', $viewer->id)
-                ->where('day', today()->toDateString())
+                ->where('day', GameDay::date())
                 ->pluck('action')
                 ->all()
             : [];
@@ -163,7 +164,7 @@ class PetService
                 'inventory_id' => $pet,
                 'actor_id' => $actor->id,
                 'action' => $action,
-                'day' => today()->toDateString(),
+                'day' => GameDay::date(),
                 'created_at' => now(),
             ]);
         } catch (QueryException) {

@@ -40,7 +40,7 @@ class QueryBudgetTest extends TestCase
                 $row->forceFill(['pet_xp' => $i * 10 + $n, 'pet_wins' => $n, 'pet_rating' => 1000 + $i, 'equipped_at' => now()])->save();
                 DB::table('pet_interactions')->insert([
                     'owner_id' => $user->id, 'actor_id' => $user->id, 'inventory_id' => $row->id,
-                    'action' => 'feed', 'day' => today()->toDateString(), 'created_at' => now(),
+                    'action' => 'feed', 'day' => \App\Support\GameDay::date(), 'created_at' => now(),
                 ]);
 
                 // Второй питомец каждого игрока (кроме меня) — на аукционе

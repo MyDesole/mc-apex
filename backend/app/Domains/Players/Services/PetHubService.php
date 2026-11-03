@@ -2,6 +2,7 @@
 
 namespace App\Domains\Players\Services;
 
+use App\Support\GameDay;
 use App\Domains\Players\Support\PetLocks;
 use App\Domains\Players\Support\PetNames;
 use App\Domains\Players\Support\PetPerks;
@@ -73,7 +74,7 @@ class PetHubService
         // Уход: что хозяин уже сделал сегодня и когда питомца кормили
         $ids = $rows->pluck('id')->all();
         $done = DB::table('pet_interactions')->whereIn('inventory_id', $ids ?: [0])
-            ->where('actor_id', $user->id)->where('day', today()->toDateString())
+            ->where('actor_id', $user->id)->where('day', GameDay::date())
             ->get(['inventory_id', 'action'])->groupBy('inventory_id');
         $fed = DB::table('pet_interactions')->whereIn('inventory_id', $ids ?: [0])->where('action', 'feed')
             ->groupBy('inventory_id')->selectRaw('inventory_id, max(created_at) as at')->pluck('at', 'inventory_id');

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Wallet\Services;
 
+use App\Support\GameDay;
 use App\Domains\Wallet\Models\CoinTransaction;
 use App\Domains\Users\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -291,7 +292,7 @@ class CoinService
     {
         return (int) CoinTransaction::where('user_id', $user->id)
             ->where('source', CoinTransaction::SOURCE_GIFT_OUT)
-            ->whereDate('created_at', today())
+            ->where('created_at', '>=', GameDay::start())
             ->sum(DB::raw('abs(amount)'));
     }
 
@@ -305,7 +306,7 @@ class CoinService
 
         return ! CoinTransaction::where('user_id', $user->id)
             ->where('source', CoinTransaction::SOURCE_DAILY_BONUS)
-            ->whereDate('created_at', today())
+            ->where('created_at', '>=', GameDay::start())
             ->exists();
     }
 
@@ -325,7 +326,7 @@ class CoinService
             $amount,
             CoinTransaction::SOURCE_DAILY_BONUS,
             'Ежедневный бонус за вход',
-            'daily_bonus:' . $user->id . ':' . today()->toDateString()
+            'daily_bonus:' . $user->id . ':' . GameDay::date()
         );
     }
 

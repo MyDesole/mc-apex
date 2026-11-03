@@ -2,6 +2,7 @@
 
 namespace App\Domains\Players\Services;
 
+use App\Support\GameDay;
 use App\Domains\Players\Support\PetFarmTiers;
 use App\Domains\Players\Support\PetTraits;
 use App\Domains\Shop\Models\ShopItem;
@@ -142,7 +143,7 @@ class PersonalFarmService
                 throw new RuntimeException('Все грядки заняты — забери выросших питомцев.');
             }
 
-            $today = DB::table('farm_plots')->where('user_id', $user->id)->where('created_at', '>=', now()->startOfDay())->count();
+            $today = DB::table('farm_plots')->where('user_id', $user->id)->where('created_at', '>=', GameDay::start())->count();
             if ($today >= self::PLANTS_PER_DAY) {
                 throw new RuntimeException('Сегодня уже посажено ' . self::PLANTS_PER_DAY . ' семян — продолжай завтра.');
             }

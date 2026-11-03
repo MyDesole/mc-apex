@@ -2,6 +2,7 @@
 
 namespace App\Domains\Moderation\Controllers;
 
+use App\Support\GameDay;
 use App\Domains\Clan\Models\ClanWar;
 use App\Domains\Forum\Models\ForumReply;
 use App\Domains\Forum\Models\ForumTopic;
@@ -229,7 +230,7 @@ class DashboardController extends Controller
     {
         return [
             'total' => User::count(),
-            'new_today' => User::where('created_at', '>=', now()->startOfDay())->count(),
+            'new_today' => User::where('created_at', '>=', GameDay::start())->count(),
             'new_week' => User::where('created_at', '>=', now()->subDays(7))->count(),
             'online' => User::where('last_seen_at', '>=', now()->subMinutes(self::ONLINE_MINUTES))->count(),
             'active_week' => User::where('last_seen_at', '>=', now()->subDays(7))->count(),

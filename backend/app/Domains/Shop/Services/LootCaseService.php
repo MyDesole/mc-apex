@@ -2,6 +2,7 @@
 
 namespace App\Domains\Shop\Services;
 
+use App\Support\GameDay;
 use App\Domains\Players\Services\PetArenaService;
 use App\Domains\Players\Support\PetTraits;
 use App\Domains\Shop\Exceptions\NotEnoughCoins;
@@ -65,7 +66,7 @@ class LootCaseService
                 'chances' => $case['chances'],
                 'available' => $user ? $this->freeAvailable($user, $case) : false,
                 'next_free_at' => $user && $case['free_daily'] && ! $this->freeAvailable($user, $case)
-                    ? now()->addDay()->startOfDay()->toIso8601String()
+                    ? GameDay::start()->addDay()->toIso8601String()
                     : null,
                 'pity_left' => $user && ! $case['free_daily'] ? $this->pityLeft($user, $case['slug']) : null,
                 // Ключи — бесплатные открытия этого кейса (награды, подарки)
@@ -208,7 +209,7 @@ class LootCaseService
             'case' => [
                 'slug' => $case['slug'],
                 'available' => $this->freeAvailable($user, $case),
-                'next_free_at' => $case['free_daily'] ? now()->addDay()->startOfDay()->toIso8601String() : null,
+                'next_free_at' => $case['free_daily'] ? GameDay::start()->addDay()->toIso8601String() : null,
                 'pity_left' => $case['free_daily'] ? null : $this->pityLeft($user, $case['slug']),
                 'keys' => $case['free_daily'] ? 0 : $this->keys($user, $case['slug']),
             ],
@@ -305,7 +306,7 @@ class LootCaseService
 
         return ! CaseOpening::where('user_id', $user->id)
             ->where('case_slug', $case['slug'])
-            ->where('created_at', '>=', now()->startOfDay())
+            ->where('created_at', '>=', GameDay::start())
             ->exists();
     }
 

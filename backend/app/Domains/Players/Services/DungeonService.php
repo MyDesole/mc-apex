@@ -2,6 +2,7 @@
 
 namespace App\Domains\Players\Services;
 
+use App\Support\GameDay;
 use App\Domains\Players\Support\DungeonBattle;
 use App\Domains\Players\Support\Dungeons;
 use App\Domains\Players\Support\PetLocks;
@@ -47,7 +48,7 @@ final class DungeonService
     {
         return DB::table('dungeon_runs')
             ->where('user_id', $user->id)
-            ->where('created_at', '>=', today())
+            ->where('created_at', '>=', GameDay::start())
             ->count();
     }
 
@@ -56,7 +57,7 @@ final class DungeonService
     {
         return (int) DB::table('dungeon_extra_runs')
             ->where('user_id', $user->id)
-            ->where('day', today()->toDateString())
+            ->where('day', GameDay::date())
             ->value('bought');
     }
 
@@ -85,7 +86,7 @@ final class DungeonService
             CoinService::debit($user, $price, CoinTransaction::SOURCE_OTHER, 'Подземелье: дополнительный поход');
 
             DB::table('dungeon_extra_runs')->upsert(
-                [['user_id' => $user->id, 'day' => today()->toDateString(), 'bought' => 1, 'created_at' => now(), 'updated_at' => now()]],
+                [['user_id' => $user->id, 'day' => GameDay::date(), 'bought' => 1, 'created_at' => now(), 'updated_at' => now()]],
                 ['user_id', 'day'],
                 ['bought' => DB::raw('bought + 1'), 'updated_at' => now()],
             );
@@ -115,7 +116,7 @@ final class DungeonService
         $lastFinished = DB::table('dungeon_runs')
             ->where('user_id', $user->id)
             ->whereIn('status', ['cleared', 'wiped', 'retreat'])
-            ->where('updated_at', '>=', today())
+            ->where('updated_at', '>=', GameDay::start())
             ->orderByDesc('updated_at')
             ->first();
 

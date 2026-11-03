@@ -2,6 +2,7 @@
 
 namespace App\Domains\Players\Services;
 
+use App\Support\GameDay;
 use App\Domains\Moderation\Notifications\ModerationNotification;
 use App\Domains\Players\Support\PetBattleEngine;
 use App\Domains\Players\Support\PetLocks;
@@ -65,7 +66,7 @@ class PetArenaService
     public function fightsLeft(User $user): int
     {
         $limit = self::DAILY_FIGHTS + ($this->bestLevel($user) >= 20 ? 1 : 0) + $this->extraBought($user);
-        $used = DB::table('pet_battles')->where('user_id', $user->id)->where('created_at', '>=', today())->count();
+        $used = DB::table('pet_battles')->where('user_id', $user->id)->where('created_at', '>=', GameDay::start())->count();
 
         return max(0, $limit - $used);
     }
@@ -75,7 +76,7 @@ class PetArenaService
     {
         return (int) DB::table('pet_arena_extra_fights')
             ->where('user_id', $user->id)
-            ->where('day', today()->toDateString())
+            ->where('day', GameDay::date())
             ->value('bought');
     }
 
@@ -98,7 +99,7 @@ class PetArenaService
             CoinService::debit($user, $price, CoinTransaction::SOURCE_OTHER, 'Арена питомцев: дополнительный бой');
 
             DB::table('pet_arena_extra_fights')->upsert(
-                [['user_id' => $user->id, 'day' => today()->toDateString(), 'bought' => 1, 'created_at' => now(), 'updated_at' => now()]],
+                [['user_id' => $user->id, 'day' => GameDay::date(), 'bought' => 1, 'created_at' => now(), 'updated_at' => now()]],
                 ['user_id', 'day'],
                 ['bought' => DB::raw('bought + 1'), 'updated_at' => now()],
             );

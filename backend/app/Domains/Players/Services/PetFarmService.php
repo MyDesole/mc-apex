@@ -2,6 +2,7 @@
 
 namespace App\Domains\Players\Services;
 
+use App\Support\GameDay;
 use App\Domains\Players\Support\PetFarmTiers;
 use App\Domains\Players\Support\PetTraits;
 use App\Domains\Shop\Models\ShopItem;
@@ -250,7 +251,7 @@ class PetFarmService
 
     private function boughtToday(User $user): int
     {
-        return DB::table('farm_pets')->where('sold_to', $user->id)->where('sold_at', '>=', now()->startOfDay())->count();
+        return DB::table('farm_pets')->where('sold_to', $user->id)->where('sold_at', '>=', GameDay::start())->count();
     }
 
     private function lock(int $id): object

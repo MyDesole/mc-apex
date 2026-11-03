@@ -2,6 +2,7 @@
 
 namespace App\Domains\Tiers\Services;
 
+use App\Support\GameDay;
 use App\Domains\Players\Models\PlayerAspectBedwars;
 use App\Domains\Players\Models\PlayerAspectPvp;
 use App\Domains\Tiers\Resources\TierTestResource;
@@ -303,7 +304,7 @@ class TierTestService
             'pending_total' => TierTest::where('status', 'pending')->count(),
             'today' => TierTest::where('tester_id', $tester->id)
                 ->where('status', 'completed')
-                ->whereDate('completed_at', today())
+                ->where('completed_at', '>=', GameDay::start())
                 ->count(),
         ];
     }
