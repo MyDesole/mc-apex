@@ -763,3 +763,22 @@ users ──┬─< conversation_participants >── conversations ──< mess
 - Периодической проверки, что заявленный ник всё ещё принадлежит игроку.
 - E2E-шифрования, редактирования истории, мягкого удаления сообщений, восстановления удалённых.
 - Задачи очистки файлов вложений с диска (строки удаляются каскадом, файлы остаются) и зарегистрированного расписания для `BridgeVideoService::pruneStale()`.
+
+
+### 17.20. Игровой сервер: тир-тесты, BedWars, клановые войны
+
+Эндпоинты под `minecraft.server` (заголовок `X-Minecraft-Server-Key`):
+
+| Метод и путь | Назначение |
+|---|---|
+| `GET /api/minecraft/tier-tests?tester=ник` | заявки тестера (`pending`, `claimed`, `in_progress`); без `tester` - все |
+| `POST /api/minecraft/tier-tests/{id}/invite` | `tester`, `kits[]`, `rounds`; свободную заявку закрепляет за тестером (`claim`), чужую в работе не трогает (422) |
+| `POST /api/minecraft/tier-tests/{id}/finish` | `subject_wins`, `tester_wins`, `draws`, `games[]`; счёт дуэлей дописывается в `notes`, статус не меняется - тир тестер ставит по аспектам на сайте |
+| `GET /api/minecraft/clan-wars?leader=ник` | принятые (`accepted`) войны клана, где ник - лидер или офицер: составы кланов, `my_side` |
+| `POST /api/minecraft/clan-wars/{war}/result` | `challenger_score`, `opponent_score`, `mode`, `games[]`; вызывает `ClanWarService::complete` от лица лидера вызвавшего клана (победа/ничья, статистика кланов) |
+
+Плагины (исходники в `minecraft-*`, в git добавлены принудительно, jar не хранятся):
+
+- `ApexTierTests` 2.0 (`minecraft-tiertest-plugin`): `/tiertest` - меню заявок, выбор режимов Alley и числа раундов на режим, кликабельное приглашение испытуемому (`/tiertest join`), дуэли тестер против испытуемого через Alley, отчёт на сайт. `/tier kits install` создаёт режимы NoDebuff, Classic, Gapple. Тир в чате и таблисте.
+- `ApexClanWars` (`minecraft-clanwar-plugin`): `/cw` - лидер или офицер открывает войну, кнопка готовности у обоих кланов, вызвавший клан выбирает дуэли (режимы и раунды) или BedWars, принявший подтверждает, бои идут по очереди между бойцами кланов онлайн, итог уходит в `ClanWar`. Арена КВ (`bw_cw`) закрыта для всех, кроме участников войны.
+- BedWars: сторонний плагин BedWars1058 23.12.1 в режиме `SHARED`, арены 2 команды (`bw_frost`), 4 команды (`bw_aquarium`) и КВ (`bw_cw`, 50 игроков в команде) лежат в `minecraft-bedwars-setup`.
