@@ -1,0 +1,137 @@
+.duels-page {
+  width: min(960px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 38px 0 70px;
+  color: var(--text);
+}
+
+.duels-head h1 {
+  margin: 0 0 6px;
+  font-size: 28px;
+}
+
+.duels-online {
+  margin: 0;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.duels-tabs,
+.duels-kits,
+.duels-pager {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0;
+}
+
+.duels-tabs button,
+.duels-kits button,
+.duels-pager button {
+  padding: 8px 14px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.duels-tabs button.active,
+.duels-kits button.active {
+  border-color: var(--accent-light, #a78bfa);
+  color: var(--accent-light, #a78bfa);
+}
+
+.duels-kits button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.duels-kits span,
+.duels-summary span {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.duels-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+}
+
+.duels-summary > div {
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  border-radius: 10px;
+}
+
+.duels-summary b {
+  font-size: 22px;
+}
+
+.duels-list,
+.duels-clans,
+.duels-online-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.duels-list li,
+.duels-clans li,
+.duels-online-list li {
+  display: grid;
+  grid-template-columns: 110px 100px 1fr 60px 110px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-left: 3px solid transparent;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.duels-clans li,
+.duels-online-list li {
+  grid-template-columns: 1fr auto;
+}
+
+.duels-list li.won {
+  border-left-color: #4ade80;
+}
+
+.duels-list li.lost {
+  border-left-color: #f87171;
+}
+
+.duels-result {
+  font-weight: 800;
+}
+
+.duels-date,
+.duels-time {
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.duels-empty,
+.duels-error {
+  opacity: 0.7;
+}
+
+.duels-error {
+  color: #f87171;
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .duels-list li {
+    grid-template-columns: 1fr 1fr;
+  }
+}

@@ -3,6 +3,7 @@
 namespace App\Domains\Shop\Services;
 
 use App\Domains\Clan\Models\Clan;
+use App\Domains\Minecraft\Services\MinecraftGrantService;
 use App\Domains\Players\Support\PetTraits;
 use App\Domains\Clan\Models\ClanInventory;
 use App\Domains\Clan\Services\ClanTreasuryService;
@@ -557,6 +558,11 @@ class ShopService
             throw new RuntimeException('Недостаточно ApexCoin. Не хватает ' . ($price - (int) $user->apex_coins) . '.');
         }
 
+        // Право в лобби выдаётся на сервере по нику — проверяем до списания монет
+        if ($item->type === ShopItem::TYPE_LOBBY_PERK) {
+            app(MinecraftGrantService::class)->assertCanReceive($user, $item);
+        }
+
         $tierTest = null;
 
         // Приоритет: заявку можно указать сразу, но это не обязательно —
@@ -644,6 +650,10 @@ class ShopService
                         ['reference_type' => ShopItem::class, 'reference_id' => $item->id]
                     );
                 }
+            }
+
+            if ($item->type === ShopItem::TYPE_LOBBY_PERK) {
+                app(MinecraftGrantService::class)->queue($user, $item);
             }
 
             if ($tierTest) {

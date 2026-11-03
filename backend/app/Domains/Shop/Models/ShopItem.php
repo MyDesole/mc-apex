@@ -54,6 +54,12 @@ class ShopItem extends Model
     public const TYPE_PET_GEAR = 'pet_gear';
 
     /**
+     * Право в лобби Minecraft-сервера (полёт, префикс): покупка ставит
+     * команды LuckPerms из metadata.commands в очередь выдач сервера.
+     */
+    public const TYPE_LOBBY_PERK = 'lobby_perk';
+
+    /**
      * Типы, которые при надевании пишутся в поле профиля пользователя.
      */
     public const EQUIPPABLE = [

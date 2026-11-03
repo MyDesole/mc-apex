@@ -38,6 +38,7 @@ export const TYPE_LABELS = {
     coin_bundle: 'Набор монет',
     clan_highlight: 'Подсветка клана',
     clan_highlight_style: 'Оформление подсветки',
+    lobby_perk: 'Право в лобби сервера',
 }
 
 export const SOURCE_LABELS = {

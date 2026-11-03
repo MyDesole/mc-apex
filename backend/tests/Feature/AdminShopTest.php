@@ -177,6 +177,9 @@ class AdminShopTest extends TestCase
     {
         $admin = $this->admin();
 
+        // Товары лобби приходят из миграции; тест считает только свои
+        ShopItem::query()->delete();
+
         ShopItem::create(['slug' => 'active-frame', 'name' => 'Активная рамка', 'type' => 'avatar_frame', 'price' => 10, 'is_active' => true]);
         ShopItem::create(['slug' => 'inactive-frame', 'name' => 'Выключенная рамка', 'type' => 'avatar_frame', 'price' => 10, 'is_active' => false]);
         ShopItem::create(['slug' => 'active-badge', 'name' => 'Активный бейдж', 'type' => 'badge', 'price' => 10, 'is_active' => true]);

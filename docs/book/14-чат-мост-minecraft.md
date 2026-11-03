@@ -782,3 +782,50 @@ users ──┬─< conversation_participants >── conversations ──< mess
 - `ApexTierTests` 2.0 (`minecraft-tiertest-plugin`): `/tiertest` - меню заявок, выбор режимов Alley и числа раундов на режим, кликабельное приглашение испытуемому (`/tiertest join`), дуэли тестер против испытуемого через Alley, отчёт на сайт. `/tier kits install` создаёт режимы NoDebuff, Classic, Gapple. Тир в чате и таблисте.
 - `ApexClanWars` (`minecraft-clanwar-plugin`): `/cw` - лидер или офицер открывает войну, кнопка готовности у обоих кланов, вызвавший клан выбирает дуэли (режимы и раунды) или BedWars, принявший подтверждает, бои идут по очереди между бойцами кланов онлайн, итог уходит в `ClanWar`. Арена КВ (`bw_cw`) закрыта для всех, кроме участников войны.
 - BedWars: сторонний плагин BedWars1058 23.12.1 в режиме `SHARED`, арены 2 команды (`bw_frost`), 4 команды (`bw_aquarium`) и КВ (`bw_cw`, 50 игроков в команде) лежат в `minecraft-bedwars-setup`.
+
+- `ApexTierTests` 2.1 добавляет класс `Integrations` (см. 17.21): итоги дуэлей, список онлайна, очередь выдач сайта и полёт в лобби.
+
+### 17.21. Интеграции сервера с сайтом: дуэли, лобби-магазин, онлайн
+
+Код: `backend/app/Domains/Minecraft/` (`MinecraftIntegrationController`, `MinecraftStatsController`, `MinecraftDuelService`, `MinecraftGrantService`, модели `MinecraftDuel` и `MinecraftGrant`), миграции `2026_11_15_100000_create_minecraft_duels_and_grants` и `2026_11_15_100100_seed_lobby_perks`, фронтенд `frontend/src/views/minecraft/DuelsView.vue` (маршрут `/duels/:id?`).
+
+**Эндпоинты под `minecraft.server`:**
+
+| Метод и путь | Назначение |
+|---|---|
+| `POST /api/minecraft/duels` | итог дуэли: `match_key`, `kit`, `winner`, `loser` (разные), `duration_seconds` (0-86400), `ranked`. Повтор того же `match_key` ничего не дублирует (`firstOrCreate`). Ники сопоставляются с аккаунтами без учёта регистра; не привязанные ники сохраняются как имена |
+| `GET /api/minecraft/grants` | до 20 ожидающих выдач: `id`, `player`, `commands[]` |
+| `POST /api/minecraft/grants/{id}/ack` | `ok`, `error`. Успех - статус `done`; неудача увеличивает `attempts`, на 5-й (`MinecraftGrantService::MAX_ATTEMPTS`) статус `failed` |
+| `POST /api/minecraft/presence` | `players[]` (до 500 ников) - кто на сервере; хранится в кэше `minecraft:online` 120 секунд |
+
+**Публичные эндпоинты (throttle 60/мин):**
+
+| Метод и путь | Ответ |
+|---|---|
+| `GET /api/players/{user}/duels?kit=&page=` | `player` (с флагом `online`), `stats` (итог и по режимам: матчи, победы, поражения, винрейт, секунды; в `total` ещё `streak` - положительная серия побед или отрицательная серия поражений по последним 50 матчам), `duels[]` (по 20 на страницу), `meta` |
+| `GET /api/minecraft/clan-duels` | топ-20 кланов по победам их участников: победы, поражения, винрейт |
+| `GET /api/minecraft/online` | число ников на сервере и игроки сайта среди них |
+
+Клановая статистика считается из `minecraft_duels` через `clan_members` (сейчашний состав клана), отдельной таблицы нет.
+
+**Таблицы.** `minecraft_duels` (`match_key` unique, `kit`, `winner_name`, `loser_name`, `winner_user_id`, `loser_user_id` с `nullOnDelete`, `duration_seconds`, `ranked`, `played_at`; индексы по киту, именам и парам игрок + дата). `minecraft_grants` (`user_id`, `shop_item_id`, `minecraft_username`, `commands` json, `status` pending/done/failed, `attempts`, `error`, `delivered_at`).
+
+**Лобби-магазин.** Тип предмета `ShopItem::TYPE_LOBBY_PERK` (`lobby_perk`), вкладка «Лобби сервера». Команды лежат в `metadata.commands` с подстановкой `{player}`. `ShopService::purchase` до списания монет вызывает `MinecraftGrantService::assertCanReceive` (нужен привязанный ник, иначе 422 и монеты целы), после списания в той же транзакции кладёт выдачу в очередь. Принимаются только команды, начинающиеся с `lp `, ник проверяется по `^[A-Za-z0-9_]{3,16}$`. Предмет покупается один раз (не `is_repeatable`).
+
+Товары из миграции:
+
+| slug | Название | Цена, ApexCoin | Команда |
+|---|---|---|---|
+| `lobby-fly` | Полёт в лобби | 1500 | `permission set apex.lobby.fly true` |
+| `lobby-prefix-star` | Префикс ★ | 600 | `meta setprefix 100 &e★&r ` |
+| `lobby-prefix-apex` | Префикс [APEX] | 1200 | `meta setprefix 100 &5[APEX]&r ` |
+| `lobby-prefix-legend` | Префикс [Легенда] | 3000 | `meta setprefix 100 &6[Легенда]&r ` |
+
+**Плагин (`Integrations`, раз в секунду в основном потоке):**
+
+- дуэли: слежение за матчами Alley (`DefaultMatch`, 2 участника по 1 игроку); когда матч исчез из `MatchService.getMatches()` и у него был `getWinner()`, итог уходит на сайт асинхронно; при ошибке отправка повторяется каждые 30 секунд с тем же `match_key`. Матчи без победителя в историю не попадают;
+- онлайн: раз в 30 секунд `POST /presence`;
+- выдачи: раз в 15 секунд `GET /grants`, команды выполняются от консоли в основном потоке, затем `ack`;
+- полёт: игрок с правом `apex.lobby.fly` может летать только в состоянии Alley `LOBBY`; в матче, ожидании и других состояниях полёт выключается. Креатив и наблюдатель не трогаются.
+
+**Чего нет.** Префикс виден в чате только если чат-плагин читает мета LuckPerms; `ApexTierTests` их не подставляет. Командные матчи и FFA в историю не попадают. Фронтенд на вкладку профиля игрока ссылок не добавляет: страница открывается по `/duels` и `/duels/{id}`.

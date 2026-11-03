@@ -221,7 +221,21 @@ Route::middleware('minecraft.server')->prefix('minecraft')->group(function () {
 
     Route::post('/admin/lookup', [MinecraftServerController::class, 'lookup']);
     Route::post('/admin/unlink', [MinecraftServerController::class, 'unlink']);
+
+    // Итоги дуэлей Alley, очередь выдач лобби-покупок и список онлайна
+    Route::post('/duels', [\App\Domains\Minecraft\Controllers\Api\MinecraftIntegrationController::class, 'storeDuel']);
+    Route::get('/grants', [\App\Domains\Minecraft\Controllers\Api\MinecraftIntegrationController::class, 'grants']);
+    Route::post('/grants/{grant}/ack', [\App\Domains\Minecraft\Controllers\Api\MinecraftIntegrationController::class, 'ackGrant'])->whereNumber('grant');
+    Route::post('/presence', [\App\Domains\Minecraft\Controllers\Api\MinecraftIntegrationController::class, 'presence']);
 });
+
+// Данные сервера для сайта: дуэли игрока, топ кланов по дуэлям, кто в игре
+Route::get('/players/{user}/duels', [\App\Domains\Minecraft\Controllers\Api\MinecraftStatsController::class, 'playerDuels'])
+    ->middleware('throttle:60,1');
+Route::get('/minecraft/clan-duels', [\App\Domains\Minecraft\Controllers\Api\MinecraftStatsController::class, 'clanBoard'])
+    ->middleware('throttle:60,1');
+Route::get('/minecraft/online', [\App\Domains\Minecraft\Controllers\Api\MinecraftStatsController::class, 'online'])
+    ->middleware('throttle:60,1');
 
 /*
  * Видео бридж-заявки. Лежит в закрытом хранилище, поэтому доступ только по

@@ -63,6 +63,8 @@ const router = createRouter({
     { path: '/players/:id', name: 'player', component: PlayerView, meta: { title: 'Профиль игрока', auth: true } },
     // Каноничная красивая ссылка на профиль: /user/Ник (или /user/3)
     { path: '/user/:id', name: 'user', component: PlayerView, meta: { title: 'Профиль игрока', auth: true } },
+    // История дуэлей с Minecraft-сервера: своя и чужая
+    { path: '/duels/:id?', name: 'duels', component: () => import('@/views/minecraft/DuelsView.vue'), meta: { title: 'Дуэли', auth: true } },
     { path: '/achievements', name: 'achievements', component: () => import('@/views/achievements/AchievementsView.vue'), meta: { title: 'Ачивки', auth: true } },
     // Сравнение двух игроков: /compare?a=Ник&b=Ник
     { path: '/compare', name: 'compare', component: () => import('@/views/players/CompareView.vue'), meta: { title: 'Сравнение игроков', auth: true } },
