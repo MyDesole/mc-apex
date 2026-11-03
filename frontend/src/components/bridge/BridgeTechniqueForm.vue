@@ -41,7 +41,10 @@ const catalog = ref([])
  */
 const available = computed(() =>
     catalog.value.filter(
-        row => !row.submission || row.submission.status === 'rejected',
+        row => !row.submission
+            || row.submission.status === 'rejected'
+            // Пересдача: подтверждённый вид можно переснять, пока её не ждёт тестер
+            || (row.submission.is_confirmed && !row.submission.retake_pending),
     ),
 )
 
@@ -289,7 +292,7 @@ watch(
                       @click="selectTechnique(row.technique.id)"
                   >
                     <span>
-                      {{ row.technique.label }}
+                      {{ row.technique.label }}{{ row.submission?.is_confirmed ? ' (пересдача)' : '' }}
                     </span>
 
                     <svg

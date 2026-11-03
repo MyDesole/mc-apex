@@ -531,7 +531,7 @@ fwrite($socket, "\x01\x00");
 
 **Каталог.** `bridge_techniques` (`key` unique, `label`, `description`, `sort_order`, `is_active`) и `bridge_technique_variants` (`technique_id`, `key`, `label`, `is_special`, `sort_order`, `is_active`, `unique(technique_id,key)`). Каталог живёт в базе, а не в коде: виды добавляются куратором без выкладки. `key` генерируется из названия через `Str::slug($label,'_')` с суффиксом при коллизии.
 
-**Заявка.** `user_bridge_techniques`: один вид — одна запись на игрока (`unique(user_id, technique_id)`), повторная подача перезаписывает её. Статусы: `declared` → `confirmed` | `rejected`. Оценки тестера: `stability`, `speed`, `difficulty` (0–100 каждая), `score` («владение видом», 0–10), `review_notes`, `reviewed_by`, `reviewed_at`, `variants` (json).
+**Заявка.** `user_bridge_techniques`: один вид — одна запись на игрока (`unique(user_id, technique_id)`), повторная подача перезаписывает её. Статусы: `declared` → `confirmed` | `rejected`. Оценки тестера: `stability`, `speed`, `difficulty` (0–100 каждая), `score` («владение видом», 0–10), `review_notes`, `reviewed_by`, `reviewed_at`, `variants` (json). Пересдача: подтверждённый вид можно подать снова с новым видео — статус остаётся `confirmed`, флаг `retake_pending` = true, прежняя оценка действует до решения тестера (подтверждение ставит новые оценки, отклонение оставляет старые). Пока пересдача ждёт проверки, вторую подать нельзя.
 
 ```php
 // backend/app/Domains/Bridge/Services/BridgeService.php, фрагмент declare()

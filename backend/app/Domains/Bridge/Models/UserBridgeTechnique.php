@@ -29,10 +29,11 @@ class UserBridgeTechnique extends Model
     protected $fillable = [
         'user_id', 'technique_id', 'status', 'video_url', 'video_path', 'variants',
         'stability', 'speed', 'difficulty', 'score',
-        'review_notes', 'reviewed_by', 'reviewed_at',
+        'review_notes', 'reviewed_by', 'reviewed_at', 'retake_pending',
     ];
 
     protected $casts = [
+        'retake_pending' => 'boolean',
         'stability' => 'integer',
         'speed' => 'integer',
         'difficulty' => 'integer',

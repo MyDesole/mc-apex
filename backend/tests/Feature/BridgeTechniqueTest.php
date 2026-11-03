@@ -258,7 +258,7 @@ class BridgeTechniqueTest extends TestCase
         $this->assertSame('https://youtu.be/new', $again->video_url);
     }
 
-    public function test_confirmed_technique_cannot_be_declared_again(): void
+    public function test_confirmed_technique_can_be_retaken_and_keeps_score_until_review(): void
     {
         $player = User::factory()->create();
         $tester = User::factory()->create(['role' => 'bridge_tester']);
@@ -269,9 +269,46 @@ class BridgeTechniqueTest extends TestCase
             'stability' => 50, 'speed' => 70, 'difficulty' => 70, 'score' => 8,
         ]);
 
-        $this->expectException(\Illuminate\Http\Exceptions\HttpResponseException::class);
+        $retake = $this->service()->declare($player, $technique->id, 'https://youtu.be/again');
 
-        $this->service()->declare($player, $technique->id, 'https://youtu.be/again');
+        $this->assertSame('confirmed', $retake->status);
+        $this->assertTrue($retake->retake_pending);
+        $this->assertSame(190, $retake->total);
+        $this->assertCount(1, $this->service()->pending());
+
+        // Пока пересдача ждёт проверки, вторую подать нельзя
+        try {
+            $this->service()->declare($player, $technique->id, 'https://youtu.be/third');
+            $this->fail('Вторая пересдача должна отклоняться');
+        } catch (\Illuminate\Http\Exceptions\HttpResponseException) {
+        }
+
+        $done = $this->service()->confirm($retake, $tester, [
+            'stability' => 90, 'speed' => 90, 'difficulty' => 90, 'score' => 10,
+        ]);
+
+        $this->assertFalse($done->retake_pending);
+        $this->assertSame(270, $done->total);
+        $this->assertCount(0, $this->service()->pending());
+    }
+
+    public function test_rejected_retake_keeps_previous_confirmation(): void
+    {
+        $player = User::factory()->create();
+        $tester = User::factory()->create(['role' => 'bridge_tester']);
+        $technique = $this->technique();
+
+        $submission = $this->service()->declare($player, $technique->id, 'https://youtu.be/abc');
+        $this->service()->confirm($submission, $tester, [
+            'stability' => 50, 'speed' => 70, 'difficulty' => 70, 'score' => 8,
+        ]);
+
+        $retake = $this->service()->declare($player, $technique->id, 'https://youtu.be/again');
+        $result = $this->service()->reject($retake, $tester, 'Видео обрезано');
+
+        $this->assertSame('confirmed', $result->status);
+        $this->assertFalse($result->retake_pending);
+        $this->assertSame(190, $result->total);
     }
 
     public function test_review_requires_scores_when_confirming(): void

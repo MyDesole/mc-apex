@@ -113,10 +113,8 @@ class BridgeService
             ->where('technique_id', $technique->id)
             ->first();
 
-        if ($existing && $existing->isConfirmed()) {
-            $this->abortUnprocessable(
-                'Этот вид уже подтверждён тестером. Повторная подача не нужна.'
-            );
+        if ($existing && $existing->isConfirmed() && $existing->retake_pending) {
+            $this->abortUnprocessable('Пересдача этого вида уже на проверке.');
         }
 
         // Видео, загруженное частями: берём путь из завершённой загрузки
@@ -137,6 +135,20 @@ class BridgeService
             }
 
             $videoPath = $upload->path;
+        }
+
+        // Пересдача подтверждённого вида: прежняя оценка и подвиды действуют,
+        // пока тестер не проверит новое видео
+        if ($existing && $existing->isConfirmed()) {
+            $existing->update([
+                'video_url' => $videoPath ? null : $videoUrl,
+                'video_path' => $videoPath,
+                'retake_pending' => true,
+            ]);
+
+            $this->notifyReviewers($existing);
+
+            return $existing->fresh();
         }
 
         $submission = UserBridgeTechnique::updateOrCreate(
@@ -200,7 +212,9 @@ class BridgeService
     public function pending(): Collection
     {
         return UserBridgeTechnique::query()
-            ->where('status', UserBridgeTechnique::STATUS_DECLARED)
+            ->where(fn ($q) => $q
+                ->where('status', UserBridgeTechnique::STATUS_DECLARED)
+                ->orWhere('retake_pending', true))
             ->with([
                 'user:id,username,avatar,tier,tier_score,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,name_icon',
                 'user.bridgeRank',
@@ -229,6 +243,7 @@ class BridgeService
             'review_notes' => $data['notes'] ?? null,
             'reviewed_by' => $reviewer->id,
             'reviewed_at' => now(),
+            'retake_pending' => false,
         ];
 
         // Тестер подтверждает свой набор подвидов, если прислал его
@@ -255,6 +270,21 @@ class BridgeService
     public function reject(UserBridgeTechnique $submission, User $reviewer, ?string $notes): UserBridgeTechnique
     {
         $this->assertAwaitingReview($submission);
+
+        // Отклонена пересдача: прежняя оценка остаётся, новое видео убираем
+        if ($submission->retake_pending) {
+            $submission->update([
+                'retake_pending' => false,
+                'review_notes' => $notes,
+                'reviewed_by' => $reviewer->id,
+                'reviewed_at' => now(),
+            ]);
+
+            app(BridgeVideoService::class)->deleteFor($submission);
+            $this->notify($submission->fresh(), false);
+
+            return $submission->fresh();
+        }
 
         $submission->update([
             'status' => UserBridgeTechnique::STATUS_REJECTED,
@@ -341,7 +371,7 @@ class BridgeService
 
     private function assertAwaitingReview(UserBridgeTechnique $submission): void
     {
-        if ($submission->status !== UserBridgeTechnique::STATUS_DECLARED) {
+        if ($submission->status !== UserBridgeTechnique::STATUS_DECLARED && ! $submission->retake_pending) {
             $this->abortUnprocessable('Эта заявка уже проверена.');
         }
     }

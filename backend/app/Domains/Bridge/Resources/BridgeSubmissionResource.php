@@ -24,6 +24,7 @@ class BridgeSubmissionResource extends JsonResource
             'id' => $row->id,
             'status' => $row->status,
             'is_confirmed' => $row->isConfirmed(),
+            'retake_pending' => (bool) $row->retake_pending,
 
             /*
              * Видео лежит в закрытом хранилище, поэтому отдаём подписанную
