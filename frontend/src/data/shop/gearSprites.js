@@ -1,6 +1,6 @@
 /**
- * Иконки экипировки: 22 нарисованные формы × 14 материалов = 308 уникальных
- * спрайтов. Ключ — `gi-<форма>-<материал>`. Форма рисуется левой половиной
+ * Иконки экипировки: 28 нарисованных форм × 14 материалов = 392 уникальных
+ * спрайта. Ключ — `gi-<форма>-<материал>`. Форма рисуется левой половиной
  * 16×16 (правая зеркалится), материал задаёт цвета: b/B/d — основной, свет и
  * тень металла; g/G — камень; h — рукоять и кожа; H — оправа.
  */
@@ -45,7 +45,20 @@ export const GEAR_SHAPES = {
         '..kkkkkh', '......kh', '......kh', '......kh', '......kh', '......kh', '.....kHh', '......kk',
     ],
 
+    trident: [
+        '..k....k', '.kBk..kB', '.kBk..kB', '.kBk..kB', '.kBkkkkb', '..kBBbbb', '....kkkb', '......kh',
+        '......kh', '......kh', '......kh', '......kh', '......kh', '......kh', '.....kHh', '......kk',
+    ],
+
     // ---------- Доспехи ----------
+    boots: [
+        '........', '........', '..kkkkk.', '..kHHHk.', '..kBbbk.', '..kBbbk.', '..kBbbk.', '..kBbbk.',
+        '..kBbbk.', '.kBbbbbk', '.kBbbbbk', 'kBBbbddk', 'kHHHHHHk', 'kkkkkkk.', '........', '........',
+    ],
+    gauntlets: [
+        '........', '.kk.kk..', '.kBkBBk.', 'kBBBBBbk', 'kBbbbbbk', 'kBbbbbbk', '.kkbbbbk', '..kHHHHk',
+        '..kBbbbk', '..kBbbbk', '..kHHHHk', '..kBbbbk', '..kddddk', '..kkkkkk', '........', '........',
+    ],
     chest: [
         '........', '..kkkk..', '.kBBbbk.', 'kBBbbbbb', 'kBbbbbbb', 'kkbbbbgG', '.kbbbbbg', '.kdbbbbb',
         '.kHHHHHH', '.kdbbbbb', '.kddbbbb', '..kddbbb', '..kkddbb', '...kkkdd', '......kk', '........',
@@ -68,6 +81,18 @@ export const GEAR_SHAPES = {
     ],
 
     // ---------- Талисманы ----------
+    skull: [
+        '........', '........', '........', '...kkkkk', '..kBBBBB', '.kBBBBBB', '.kBBBBBB', '.kBkgBBB',
+        '.kBkkBBB', '.kdBBBBB', '..kdBBkk', '..kBkBkB', '...kBkBk', '....kkkk', '........', '........',
+    ],
+    lantern: [
+        '........', '......kk', '.....k..', '.....k..', '....kkHH', '...kHHHH', '..kkkkkk', '..kBGGgg',
+        '..kBGggg', '..kBGggg', '..kBGGgg', '..kkkkkk', '...kHHHH', '....kkkk', '........', '........',
+    ],
+    medal: [
+        '........', '........', '....kkkk', '..kkHHHH', '.kHHBBBB', '.kHBbbbb', 'kHBbbggg', 'kHBbgGGG',
+        'kHBbgGGG', 'kHBbbggg', '.kHBbbbb', '.kHdbbbb', '..kkHHHH', '....kkkk', '........', '........',
+    ],
     ring: [
         '........', '........', '......kk', '.....kGg', '.....kgg', '......kk', '....kkHH', '...kHHBb',
         '..kHB...', '..kHb...', '..kHb...', '..kHd...', '...kHdd.', '....kHdd', '.....kkk', '........',

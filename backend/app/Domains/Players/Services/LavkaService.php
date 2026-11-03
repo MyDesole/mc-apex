@@ -145,7 +145,7 @@ class LavkaService
 
     private function grantGear(User $user): void
     {
-        $pool = collect(Dungeons::GEAR)->filter(fn ($g) => $g['stage'] === 8)->keys()->all();
+        $pool = collect(Dungeons::GEAR)->filter(fn ($g) => empty($g['relic']) && $g['stage'] === 8)->keys()->all();
         app(PetGearService::class)->grant($user, $pool[array_rand($pool)], 'legendary');
     }
 

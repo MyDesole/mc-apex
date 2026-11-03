@@ -450,7 +450,7 @@ class RaidService
 
     private function reward(int $raidId): void
     {
-        $gear = collect(Dungeons::GEAR)->filter(fn ($g) => $g['stage'] === 8)->keys()->all();
+        $gear = collect(Dungeons::GEAR)->filter(fn ($g) => empty($g['relic']) && $g['stage'] === 8)->keys()->all();
 
         foreach (DB::table('raid_members')->where('raid_id', $raidId)->whereNull('left_at')->whereNull('rewarded_at')->get() as $member) {
             $user = User::find($member->user_id);

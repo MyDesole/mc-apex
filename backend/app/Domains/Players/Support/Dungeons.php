@@ -738,7 +738,131 @@ final class Dungeons
         'gear-y9-vial-sun' => ['slot' => 'trinket', 'name' => 'Эликсир возрождения', 'sprite' => 'gi-vial-sun', 'atk' => 14, 'def' => 0, 'hp' => 296, 'spd' => 14, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['regen', 4]],
         'gear-y9-ring-blood' => ['slot' => 'trinket', 'name' => 'Кольцо клятвы', 'sprite' => 'gi-ring-blood', 'atk' => 47, 'def' => 0, 'hp' => 148, 'spd' => 18, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['crit', 13]],
         'gear-y9-amulet-shadow' => ['slot' => 'trinket', 'name' => 'Амулет безмолвия', 'sprite' => 'gi-amulet-shadow', 'atk' => 18, 'def' => 33, 'hp' => 204, 'spd' => 13, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['bulwark', 11]],
+
+        // Ступень 1: находки третьей волны
+        'gear-z1-trident-iron' => ['slot' => 'weapon', 'name' => 'Вилы могильщика', 'sprite' => 'gi-trident-iron', 'atk' => 4, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 1, 'rarity' => 'common', 'perk' => ['stun', 8]],
+        'gear-z1-trident-bone' => ['slot' => 'weapon', 'name' => 'Костяной трезубец', 'sprite' => 'gi-trident-bone', 'atk' => 4, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 1, 'rarity' => 'common', 'perk' => ['stun', 8]],
+        'gear-z1-hammer-bone' => ['slot' => 'weapon', 'name' => 'Берцовая дубина', 'sprite' => 'gi-hammer-bone', 'atk' => 5, 'def' => 0, 'hp' => 0, 'spd' => -1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['pierce', 18]],
+        'gear-z1-boots-bone' => ['slot' => 'armor', 'name' => 'Костяные сапоги', 'sprite' => 'gi-boots-bone', 'atk' => 0, 'def' => 2, 'hp' => 7, 'spd' => 2, 'stage' => 1, 'rarity' => 'common', 'perk' => ['dodge', 7]],
+        'gear-z1-gauntlets-iron' => ['slot' => 'armor', 'name' => 'Ржавые перчатки', 'sprite' => 'gi-gauntlets-iron', 'atk' => 0, 'def' => 2, 'hp' => 7, 'spd' => 0, 'stage' => 1, 'rarity' => 'common', 'perk' => ['rage', 12]],
+        'gear-z1-boots-iron' => ['slot' => 'armor', 'name' => 'Стоптанные башмаки', 'sprite' => 'gi-boots-iron', 'atk' => 0, 'def' => 2, 'hp' => 7, 'spd' => 2, 'stage' => 1, 'rarity' => 'common', 'perk' => ['dodge', 7]],
+        'gear-z1-skull-bone' => ['slot' => 'trinket', 'name' => 'Череп крысиного короля', 'sprite' => 'gi-skull-bone', 'atk' => 2, 'def' => 0, 'hp' => 4, 'spd' => 1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['vamp', 8]],
+        'gear-z1-lantern-bronze' => ['slot' => 'trinket', 'name' => 'Тусклый фонарь', 'sprite' => 'gi-lantern-bronze', 'atk' => 0, 'def' => 0, 'hp' => 9, 'spd' => 1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['regen', 2]],
+        'gear-z1-medal-bronze' => ['slot' => 'trinket', 'name' => 'Значок стражника', 'sprite' => 'gi-medal-bronze', 'atk' => 1, 'def' => 0, 'hp' => 6, 'spd' => 1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['bulwark', 6]],
+
+        // Ступень 2: находки третьей волны
+        'gear-z2-trident-sea' => ['slot' => 'weapon', 'name' => 'Трезубец рыбака', 'sprite' => 'gi-trident-sea', 'atk' => 9, 'def' => 0, 'hp' => 1, 'spd' => 0, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['stun', 9]],
+        'gear-z2-trident-bronze' => ['slot' => 'weapon', 'name' => 'Багор', 'sprite' => 'gi-trident-bronze', 'atk' => 9, 'def' => 0, 'hp' => 1, 'spd' => 0, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['stun', 9]],
+        'gear-z2-hammer-sea' => ['slot' => 'weapon', 'name' => 'Мокрая кувалда', 'sprite' => 'gi-hammer-sea', 'atk' => 10, 'def' => 1, 'hp' => 0, 'spd' => -1, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['pierce', 20]],
+        'gear-z2-boots-sea' => ['slot' => 'armor', 'name' => 'Ласты водолаза', 'sprite' => 'gi-boots-sea', 'atk' => 0, 'def' => 4, 'hp' => 16, 'spd' => 2, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['dodge', 8]],
+        'gear-z2-gauntlets-bronze' => ['slot' => 'armor', 'name' => 'Перчатки шахтёра', 'sprite' => 'gi-gauntlets-bronze', 'atk' => 0, 'def' => 5, 'hp' => 16, 'spd' => 0, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['rage', 13]],
+        'gear-z2-boots-bronze' => ['slot' => 'armor', 'name' => 'Сапоги шахтёра', 'sprite' => 'gi-boots-bronze', 'atk' => 0, 'def' => 4, 'hp' => 16, 'spd' => 2, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['dodge', 8]],
+        'gear-z2-skull-sea' => ['slot' => 'trinket', 'name' => 'Череп утопленника', 'sprite' => 'gi-skull-sea', 'atk' => 3, 'def' => 1, 'hp' => 10, 'spd' => 2, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['vamp', 9]],
+        'gear-z2-lantern-sea' => ['slot' => 'trinket', 'name' => 'Подводный фонарь', 'sprite' => 'gi-lantern-sea', 'atk' => 1, 'def' => 1, 'hp' => 21, 'spd' => 2, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['regen', 2]],
+        'gear-z2-medal-sea' => ['slot' => 'trinket', 'name' => 'Медаль за спасение', 'sprite' => 'gi-medal-sea', 'atk' => 2, 'def' => 2, 'hp' => 14, 'spd' => 2, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['bulwark', 7]],
+
+        // Ступень 3: находки третьей волны
+        'gear-z3-trident-fire' => ['slot' => 'weapon', 'name' => 'Вилы кочегара', 'sprite' => 'gi-trident-fire', 'atk' => 17, 'def' => 0, 'hp' => 2, 'spd' => 0, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['stun', 10]],
+        'gear-z3-trident-steel' => ['slot' => 'weapon', 'name' => 'Стальная вилка', 'sprite' => 'gi-trident-steel', 'atk' => 17, 'def' => 0, 'hp' => 2, 'spd' => 0, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['stun', 10]],
+        'gear-z3-axe-steel' => ['slot' => 'weapon', 'name' => 'Секира кузнеца', 'sprite' => 'gi-axe-steel', 'atk' => 19, 'def' => 0, 'hp' => 0, 'spd' => -1, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['vamp', 10]],
+        'gear-z3-boots-fire' => ['slot' => 'armor', 'name' => 'Сапоги кочегара', 'sprite' => 'gi-boots-fire', 'atk' => 0, 'def' => 7, 'hp' => 28, 'spd' => 2, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['dodge', 8]],
+        'gear-z3-gauntlets-fire' => ['slot' => 'armor', 'name' => 'Перчатки горна', 'sprite' => 'gi-gauntlets-fire', 'atk' => 0, 'def' => 10, 'hp' => 28, 'spd' => 0, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['rage', 14]],
+        'gear-z3-gauntlets-steel' => ['slot' => 'armor', 'name' => 'Рукавицы мастера', 'sprite' => 'gi-gauntlets-steel', 'atk' => 0, 'def' => 10, 'hp' => 28, 'spd' => 0, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['rage', 14]],
+        'gear-z3-skull-fire' => ['slot' => 'trinket', 'name' => 'Пылающий череп', 'sprite' => 'gi-skull-fire', 'atk' => 8, 'def' => 1, 'hp' => 15, 'spd' => 2, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['vamp', 10]],
+        'gear-z3-lantern-fire' => ['slot' => 'trinket', 'name' => 'Фонарь огненной шахты', 'sprite' => 'gi-lantern-fire', 'atk' => 2, 'def' => 2, 'hp' => 33, 'spd' => 3, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['regen', 2]],
+        'gear-z3-medal-fire' => ['slot' => 'trinket', 'name' => 'Медаль мастера', 'sprite' => 'gi-medal-fire', 'atk' => 5, 'def' => 4, 'hp' => 22, 'spd' => 3, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['bulwark', 7]],
+
+        // Ступень 4: находки третьей волны
+        'gear-z4-trident-ice' => ['slot' => 'weapon', 'name' => 'Ледяной трезубец', 'sprite' => 'gi-trident-ice', 'atk' => 33, 'def' => 0, 'hp' => 3, 'spd' => 0, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['stun', 10]],
+        'gear-z4-mace-ice' => ['slot' => 'weapon', 'name' => 'Булава мороза', 'sprite' => 'gi-mace-ice', 'atk' => 35, 'def' => 0, 'hp' => 10, 'spd' => -1, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['thorns', 13]],
+        'gear-z4-spear-steel' => ['slot' => 'weapon', 'name' => 'Копьё севера', 'sprite' => 'gi-spear-steel', 'atk' => 31, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['pierce', 23]],
+        'gear-z4-boots-ice' => ['slot' => 'armor', 'name' => 'Сапоги изо льда', 'sprite' => 'gi-boots-ice', 'atk' => 0, 'def' => 13, 'hp' => 54, 'spd' => 3, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['dodge', 9]],
+        'gear-z4-gauntlets-ice' => ['slot' => 'armor', 'name' => 'Перчатки стужи', 'sprite' => 'gi-gauntlets-ice', 'atk' => 0, 'def' => 18, 'hp' => 54, 'spd' => 0, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['rage', 16]],
+        'gear-z4-helm-steel' => ['slot' => 'armor', 'name' => 'Шлем стража льдов', 'sprite' => 'gi-helm-steel', 'atk' => 0, 'def' => 19, 'hp' => 81, 'spd' => 0, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['phoenix', 26]],
+        'gear-z4-skull-ice' => ['slot' => 'trinket', 'name' => 'Замёрзший череп', 'sprite' => 'gi-skull-ice', 'atk' => 14, 'def' => 2, 'hp' => 31, 'spd' => 4, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['vamp', 10]],
+        'gear-z4-lantern-ice' => ['slot' => 'trinket', 'name' => 'Фонарь вечной зимы', 'sprite' => 'gi-lantern-ice', 'atk' => 4, 'def' => 3, 'hp' => 66, 'spd' => 5, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['regen', 3]],
+        'gear-z4-medal-ice' => ['slot' => 'trinket', 'name' => 'Ледяная медаль', 'sprite' => 'gi-medal-ice', 'atk' => 9, 'def' => 7, 'hp' => 44, 'spd' => 4, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['bulwark', 8]],
+
+        // Ступень 5: находки третьей волны
+        'gear-z5-trident-void' => ['slot' => 'weapon', 'name' => 'Трезубец пустоты', 'sprite' => 'gi-trident-void', 'atk' => 55, 'def' => 0, 'hp' => 5, 'spd' => 0, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['stun', 11]],
+        'gear-z5-mace-void' => ['slot' => 'weapon', 'name' => 'Булава небытия', 'sprite' => 'gi-mace-void', 'atk' => 58, 'def' => 0, 'hp' => 16, 'spd' => -1, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['thorns', 14]],
+        'gear-z5-hammer-shadow' => ['slot' => 'weapon', 'name' => 'Молот тени', 'sprite' => 'gi-hammer-shadow', 'atk' => 62, 'def' => 5, 'hp' => 0, 'spd' => -2, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['pierce', 25]],
+        'gear-z5-boots-void' => ['slot' => 'armor', 'name' => 'Сапоги идущего в пустоту', 'sprite' => 'gi-boots-void', 'atk' => 0, 'def' => 22, 'hp' => 96, 'spd' => 3, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['dodge', 10]],
+        'gear-z5-gauntlets-shadow' => ['slot' => 'armor', 'name' => 'Перчатки безликого', 'sprite' => 'gi-gauntlets-shadow', 'atk' => 0, 'def' => 30, 'hp' => 96, 'spd' => 0, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['rage', 17]],
+        'gear-z5-helm-void' => ['slot' => 'armor', 'name' => 'Шлем пустоты', 'sprite' => 'gi-helm-void', 'atk' => 0, 'def' => 32, 'hp' => 144, 'spd' => 0, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['phoenix', 28]],
+        'gear-z5-skull-void' => ['slot' => 'trinket', 'name' => 'Череп бездны', 'sprite' => 'gi-skull-void', 'atk' => 24, 'def' => 3, 'hp' => 56, 'spd' => 6, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['vamp', 11]],
+        'gear-z5-lantern-void' => ['slot' => 'trinket', 'name' => 'Фонарь пустоты', 'sprite' => 'gi-lantern-void', 'atk' => 8, 'def' => 5, 'hp' => 120, 'spd' => 8, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['regen', 3]],
+        'gear-z5-medal-shadow' => ['slot' => 'trinket', 'name' => 'Медаль забвения', 'sprite' => 'gi-medal-shadow', 'atk' => 16, 'def' => 12, 'hp' => 80, 'spd' => 7, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['bulwark', 8]],
+
+        // Ступень 6: находки третьей волны
+        'gear-z6-trident-sea' => ['slot' => 'weapon', 'name' => 'Трезубец глубин', 'sprite' => 'gi-trident-sea', 'atk' => 70, 'def' => 0, 'hp' => 7, 'spd' => 0, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['stun', 12]],
+        'gear-z6-mace-sea' => ['slot' => 'weapon', 'name' => 'Булава прилива', 'sprite' => 'gi-mace-sea', 'atk' => 75, 'def' => 0, 'hp' => 21, 'spd' => -1, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['thorns', 15]],
+        'gear-z6-staff-shadow' => ['slot' => 'weapon', 'name' => 'Посох тёмных вод', 'sprite' => 'gi-staff-shadow', 'atk' => 57, 'def' => 0, 'hp' => 41, 'spd' => 0, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['regen', 3]],
+        'gear-z6-boots-sea' => ['slot' => 'armor', 'name' => 'Сапоги морского дна', 'sprite' => 'gi-boots-sea', 'atk' => 0, 'def' => 28, 'hp' => 120, 'spd' => 4, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['dodge', 10]],
+        'gear-z6-gauntlets-sea' => ['slot' => 'armor', 'name' => 'Перчатки рыбака глубин', 'sprite' => 'gi-gauntlets-sea', 'atk' => 0, 'def' => 38, 'hp' => 120, 'spd' => 0, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['rage', 18]],
+        'gear-z6-shield-shadow' => ['slot' => 'armor', 'name' => 'Щит тёмной воды', 'sprite' => 'gi-shield-shadow', 'atk' => 0, 'def' => 60, 'hp' => 170, 'spd' => -2, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['thorns', 15]],
+        'gear-z6-skull-sea' => ['slot' => 'trinket', 'name' => 'Череп левиафана', 'sprite' => 'gi-skull-sea', 'atk' => 30, 'def' => 4, 'hp' => 70, 'spd' => 8, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['vamp', 12]],
+        'gear-z6-lantern-shadow' => ['slot' => 'trinket', 'name' => 'Фонарь на дне', 'sprite' => 'gi-lantern-shadow', 'atk' => 10, 'def' => 6, 'hp' => 150, 'spd' => 10, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['regen', 3]],
+        'gear-z6-medal-sea' => ['slot' => 'trinket', 'name' => 'Медаль глубин', 'sprite' => 'gi-medal-sea', 'atk' => 20, 'def' => 14, 'hp' => 100, 'spd' => 9, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['bulwark', 9]],
+
+        // Ступень 7: находки третьей волны
+        'gear-z7-trident-fire' => ['slot' => 'weapon', 'name' => 'Вилы дракона', 'sprite' => 'gi-trident-fire', 'atk' => 88, 'def' => 0, 'hp' => 9, 'spd' => 0, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['stun', 13]],
+        'gear-z7-trident-gold' => ['slot' => 'weapon', 'name' => 'Золотой трезубец', 'sprite' => 'gi-trident-gold', 'atk' => 88, 'def' => 0, 'hp' => 9, 'spd' => 0, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['stun', 13]],
+        'gear-z7-axe-gold' => ['slot' => 'weapon', 'name' => 'Секира сокровищ', 'sprite' => 'gi-axe-gold', 'atk' => 96, 'def' => 0, 'hp' => 0, 'spd' => -3, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['vamp', 13]],
+        'gear-z7-boots-fire' => ['slot' => 'armor', 'name' => 'Сапоги из чешуи', 'sprite' => 'gi-boots-fire', 'atk' => 0, 'def' => 34, 'hp' => 150, 'spd' => 4, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['dodge', 11]],
+        'gear-z7-gauntlets-gold' => ['slot' => 'armor', 'name' => 'Золотые рукавицы', 'sprite' => 'gi-gauntlets-gold', 'atk' => 0, 'def' => 46, 'hp' => 150, 'spd' => 0, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['rage', 19]],
+        'gear-z7-helm-crystal' => ['slot' => 'armor', 'name' => 'Кристальный шлем', 'sprite' => 'gi-helm-crystal', 'atk' => 0, 'def' => 50, 'hp' => 225, 'spd' => 0, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['phoenix', 32]],
+        'gear-z7-skull-fire' => ['slot' => 'trinket', 'name' => 'Череп дракона', 'sprite' => 'gi-skull-fire', 'atk' => 38, 'def' => 4, 'hp' => 88, 'spd' => 10, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['vamp', 13]],
+        'gear-z7-lantern-gold' => ['slot' => 'trinket', 'name' => 'Фонарь клада', 'sprite' => 'gi-lantern-gold', 'atk' => 12, 'def' => 8, 'hp' => 188, 'spd' => 12, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['regen', 3]],
+        'gear-z7-medal-gold' => ['slot' => 'trinket', 'name' => 'Золотая медаль', 'sprite' => 'gi-medal-gold', 'atk' => 25, 'def' => 18, 'hp' => 125, 'spd' => 11, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['bulwark', 10]],
+
+        // Ступень 8: находки третьей волны
+        'gear-z8-trident-blood' => ['slot' => 'weapon', 'name' => 'Кровавый трезубец', 'sprite' => 'gi-trident-blood', 'atk' => 107, 'def' => 0, 'hp' => 10, 'spd' => 0, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['stun', 14]],
+        'gear-z8-trident-sun' => ['slot' => 'weapon', 'name' => 'Солнечный трезубец', 'sprite' => 'gi-trident-sun', 'atk' => 107, 'def' => 0, 'hp' => 10, 'spd' => 0, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['stun', 14]],
+        'gear-z8-staff-blood' => ['slot' => 'weapon', 'name' => 'Посох палача', 'sprite' => 'gi-staff-blood', 'atk' => 86, 'def' => 0, 'hp' => 63, 'spd' => 0, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['regen', 3]],
+        'gear-z8-boots-blood' => ['slot' => 'armor', 'name' => 'Сапоги палача', 'sprite' => 'gi-boots-blood', 'atk' => 0, 'def' => 42, 'hp' => 186, 'spd' => 5, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['dodge', 12]],
+        'gear-z8-gauntlets-sun' => ['slot' => 'armor', 'name' => 'Перчатки жреца', 'sprite' => 'gi-gauntlets-sun', 'atk' => 0, 'def' => 57, 'hp' => 186, 'spd' => 0, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['rage', 20]],
+        'gear-z8-helm-sun' => ['slot' => 'armor', 'name' => 'Шлем света', 'sprite' => 'gi-helm-sun', 'atk' => 0, 'def' => 61, 'hp' => 279, 'spd' => 0, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['phoenix', 34]],
+        'gear-z8-skull-blood' => ['slot' => 'trinket', 'name' => 'Череп казнённого', 'sprite' => 'gi-skull-blood', 'atk' => 45, 'def' => 5, 'hp' => 108, 'spd' => 12, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['vamp', 14]],
+        'gear-z8-lantern-sun' => ['slot' => 'trinket', 'name' => 'Фонарь пантеона', 'sprite' => 'gi-lantern-sun', 'atk' => 15, 'def' => 9, 'hp' => 232, 'spd' => 15, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['regen', 3]],
+        'gear-z8-medal-blood' => ['slot' => 'trinket', 'name' => 'Знак палача', 'sprite' => 'gi-medal-blood', 'atk' => 30, 'def' => 22, 'hp' => 155, 'spd' => 14, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['bulwark', 10]],
+
+        // Ступень 9: находки третьей волны
+        'gear-z9-trident-gold' => ['slot' => 'weapon', 'name' => 'Трезубец чемпиона', 'sprite' => 'gi-trident-gold', 'atk' => 128, 'def' => 0, 'hp' => 12, 'spd' => 0, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['stun', 14]],
+        'gear-z9-trident-void' => ['slot' => 'weapon', 'name' => 'Трезубец конца', 'sprite' => 'gi-trident-void', 'atk' => 128, 'def' => 0, 'hp' => 12, 'spd' => 0, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['stun', 14]],
+        'gear-z9-staff-void' => ['slot' => 'weapon', 'name' => 'Посох пустоты чемпиона', 'sprite' => 'gi-staff-void', 'atk' => 102, 'def' => 0, 'hp' => 75, 'spd' => 0, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['regen', 4]],
+        'gear-z9-mace-gold' => ['slot' => 'weapon', 'name' => 'Булава победителя', 'sprite' => 'gi-mace-gold', 'atk' => 135, 'def' => 0, 'hp' => 38, 'spd' => -2, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['thorns', 18]],
+        'gear-z9-spear-blood' => ['slot' => 'weapon', 'name' => 'Копьё мстителя', 'sprite' => 'gi-spear-blood', 'atk' => 120, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['pierce', 32]],
+        'gear-z9-boots-gold' => ['slot' => 'armor', 'name' => 'Сапоги чемпиона', 'sprite' => 'gi-boots-gold', 'atk' => 0, 'def' => 51, 'hp' => 222, 'spd' => 5, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['dodge', 13]],
+        'gear-z9-gauntlets-gold' => ['slot' => 'armor', 'name' => 'Золотые перчатки победителя', 'sprite' => 'gi-gauntlets-gold', 'atk' => 0, 'def' => 69, 'hp' => 222, 'spd' => 0, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['rage', 22]],
+        'gear-z9-gauntlets-blood' => ['slot' => 'armor', 'name' => 'Перчатки мстителя', 'sprite' => 'gi-gauntlets-blood', 'atk' => 0, 'def' => 69, 'hp' => 222, 'spd' => 0, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['rage', 22]],
+        'gear-z9-helm-void' => ['slot' => 'armor', 'name' => 'Шлем конца', 'sprite' => 'gi-helm-void', 'atk' => 0, 'def' => 74, 'hp' => 333, 'spd' => 0, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['phoenix', 36]],
+        'gear-z9-shield-shadow' => ['slot' => 'armor', 'name' => 'Щит безмолвия', 'sprite' => 'gi-shield-shadow', 'atk' => 0, 'def' => 110, 'hp' => 314, 'spd' => -2, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['thorns', 18]],
+        'gear-z9-skull-gold' => ['slot' => 'trinket', 'name' => 'Череп чемпиона', 'sprite' => 'gi-skull-gold', 'atk' => 54, 'def' => 7, 'hp' => 130, 'spd' => 14, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['vamp', 14]],
+        'gear-z9-lantern-sun' => ['slot' => 'trinket', 'name' => 'Фонарь рассвета', 'sprite' => 'gi-lantern-sun', 'atk' => 18, 'def' => 11, 'hp' => 278, 'spd' => 18, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['regen', 4]],
+        'gear-z9-medal-gold' => ['slot' => 'trinket', 'name' => 'Медаль чемпиона', 'sprite' => 'gi-medal-gold', 'atk' => 36, 'def' => 26, 'hp' => 185, 'spd' => 16, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['bulwark', 11]],
+        'gear-z9-skull-shadow' => ['slot' => 'trinket', 'name' => 'Череп забытого', 'sprite' => 'gi-skull-shadow', 'atk' => 54, 'def' => 7, 'hp' => 130, 'spd' => 14, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['vamp', 14]],
+        'gear-z9-medal-void' => ['slot' => 'trinket', 'name' => 'Медаль конца', 'sprite' => 'gi-medal-void', 'atk' => 36, 'def' => 26, 'hp' => 185, 'spd' => 16, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['bulwark', 11]],
+
+        // Реликвии: падают только с боссов (шанс RELIC_CHANCE), два свойства сразу
+        'gear-r1-dagger-bone' => ['slot' => 'weapon', 'name' => 'Зуб первого мертвеца', 'sprite' => 'gi-dagger-bone', 'atk' => 5, 'def' => 0, 'hp' => 0, 'spd' => 1, 'stage' => 1, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['vamp', 10], 'perk2' => ['thorns', 13]],
+        'gear-r2-trident-sea' => ['slot' => 'weapon', 'name' => 'Трезубец Утонувшего Короля', 'sprite' => 'gi-trident-sea', 'atk' => 11, 'def' => 0, 'hp' => 1, 'spd' => 0, 'stage' => 2, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['pierce', 26], 'perk2' => ['vamp', 11]],
+        'gear-r3-hammer-fire' => ['slot' => 'weapon', 'name' => 'Молот Первой Наковальни', 'sprite' => 'gi-hammer-fire', 'atk' => 24, 'def' => 2, 'hp' => 0, 'spd' => -1, 'stage' => 3, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['stun', 12], 'perk2' => ['execute', 39]],
+        'gear-r4-crown-ice' => ['slot' => 'trinket', 'name' => 'Корона Вечной Зимы', 'sprite' => 'gi-crown-ice', 'atk' => 8, 'def' => 10, 'hp' => 68, 'spd' => 5, 'stage' => 4, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['bulwark', 10], 'perk2' => ['regen', 3]],
+        'gear-r5-eye-void' => ['slot' => 'trinket', 'name' => 'Око Вечной Тьмы', 'sprite' => 'gi-eye-void', 'atk' => 26, 'def' => 0, 'hp' => 48, 'spd' => 11, 'stage' => 5, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['crit', 13], 'perk2' => ['opener', 64]],
+        'gear-r6-lantern-sea' => ['slot' => 'trinket', 'name' => 'Фонарь Последнего Корабля', 'sprite' => 'gi-lantern-sea', 'atk' => 12, 'def' => 7, 'hp' => 180, 'spd' => 10, 'stage' => 6, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['dodge', 14], 'perk2' => ['regen', 4]],
+        'gear-r7-boots-gold' => ['slot' => 'armor', 'name' => 'Сапоги Хранителя Клада', 'sprite' => 'gi-boots-gold', 'atk' => 0, 'def' => 41, 'hp' => 180, 'spd' => 4, 'stage' => 7, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['dodge', 15], 'perk2' => ['rage', 25]],
+        'gear-r7-book-crystal' => ['slot' => 'trinket', 'name' => 'Книга Преломлений', 'sprite' => 'gi-book-crystal', 'atk' => 38, 'def' => 11, 'hp' => 120, 'spd' => 11, 'stage' => 7, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['crit', 15], 'perk2' => ['stun', 17]],
+        'gear-r8-greatsword-sun' => ['slot' => 'weapon', 'name' => 'Клинок Пантеона', 'sprite' => 'gi-greatsword-sun', 'atk' => 149, 'def' => 0, 'hp' => 0, 'spd' => -4, 'stage' => 8, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['execute', 55], 'perk2' => ['vamp', 18]],
+        'gear-r8-skull-blood' => ['slot' => 'trinket', 'name' => 'Череп Последнего Палача', 'sprite' => 'gi-skull-blood', 'atk' => 54, 'def' => 6, 'hp' => 130, 'spd' => 12, 'stage' => 8, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['phoenix', 44], 'perk2' => ['thorns', 22]],
+        'gear-r9-crown-gold' => ['slot' => 'trinket', 'name' => 'Корона Чемпиона', 'sprite' => 'gi-crown-gold', 'atk' => 35, 'def' => 35, 'hp' => 288, 'spd' => 18, 'stage' => 9, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['phoenix', 47], 'perk2' => ['crit', 16]],
+        'gear-r9-gauntlets-void' => ['slot' => 'armor', 'name' => 'Перчатки Конца Времён', 'sprite' => 'gi-gauntlets-void', 'atk' => 0, 'def' => 83, 'hp' => 266, 'spd' => 0, 'stage' => 9, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['stun', 19], 'perk2' => ['pierce', 42]],
+        'gear-r9-medal-sun' => ['slot' => 'trinket', 'name' => 'Медаль Бессмертного', 'sprite' => 'gi-medal-sun', 'atk' => 43, 'def' => 31, 'hp' => 222, 'spd' => 16, 'stage' => 9, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['bulwark', 14], 'perk2' => ['phoenix', 47]],
+        'gear-r9-sword-shadow' => ['slot' => 'weapon', 'name' => 'Клинок Забытого Героя', 'sprite' => 'gi-sword-shadow', 'atk' => 150, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 9, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['crit', 16], 'perk2' => ['vamp', 19]],
     ];
+
+    /** Шанс (в %), что с босса вместо обычной вещи выпадет реликвия его ступени. */
+    public const RELIC_CHANCE = 6;
 
     /** Особые свойства вещей: действуют в бою подземелья. {v} — значение предмета. */
     public const PERKS = [
@@ -752,6 +876,8 @@ final class Dungeons
         'bulwark' => ['name' => 'Бастион', 'text' => 'Снижает получаемый урон на {v}%'],
         'dodge' => ['name' => 'Уклонение', 'text' => '{v}% шанс избежать удара'],
         'phoenix' => ['name' => 'Феникс', 'text' => 'Раз за бой воскресает с {v}% здоровья'],
+        'stun' => ['name' => 'Оглушение', 'text' => '{v}% шанс оглушить врага ударом'],
+        'rage' => ['name' => 'Ярость', 'text' => '+{v} ярости за каждый удар'],
     ];
 
     /** Бонус комплекта: надеты 2 вещи — все характеристики вещей выше, 3 вещи — ещё и свойство. */
@@ -1028,7 +1154,7 @@ final class Dungeons
 
         return array_filter(
             self::GEAR,
-            fn (array $gear) => $gear['stage'] >= $from && $gear['stage'] <= $stage,
+            fn (array $gear) => empty($gear['relic']) && $gear['stage'] >= $from && $gear['stage'] <= $stage,
         );
     }
 
@@ -1099,6 +1225,14 @@ final class Dungeons
     /** Случайный предмет экипировки для подземелья. */
     public static function rollGear(int $stage, bool $boss = false): string
     {
+        if ($boss && random_int(1, 100) <= self::RELIC_CHANCE) {
+            $relics = array_keys(array_filter(self::GEAR, fn (array $gear) => ! empty($gear['relic']) && $gear['stage'] === $stage));
+
+            if ($relics) {
+                return $relics[array_rand($relics)];
+            }
+        }
+
         $pool = self::gearForStage($stage);
 
         if ($boss && random_int(1, 100) <= self::BOSS_UPGRADE_CHANCE) {
@@ -1159,8 +1293,10 @@ final class Dungeons
         $perks = [];
 
         foreach ($slugs as $slug) {
-            if ($perk = self::GEAR[$slug]['perk'] ?? null) {
-                $perks[$perk[0]] = ($perks[$perk[0]] ?? 0) + $perk[1];
+            foreach (['perk', 'perk2'] as $field) {
+                if ($perk = self::GEAR[$slug][$field] ?? null) {
+                    $perks[$perk[0]] = ($perks[$perk[0]] ?? 0) + $perk[1];
+                }
             }
         }
 

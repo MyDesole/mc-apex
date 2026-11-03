@@ -30,12 +30,14 @@ class GearPerkTest extends TestCase
 
     public function test_catalog_is_big_and_consistent(): void
     {
-        $this->assertGreaterThanOrEqual(200, count(Dungeons::GEAR));
+        $this->assertGreaterThanOrEqual(300, count(Dungeons::GEAR));
 
         foreach (Dungeons::GEAR as $slug => $gear) {
-            if (isset($gear['perk'])) {
-                $this->assertArrayHasKey($gear['perk'][0], Dungeons::PERKS, $slug);
-                $this->assertGreaterThan(0, $gear['perk'][1], $slug);
+            foreach (['perk', 'perk2'] as $field) {
+                if (isset($gear[$field])) {
+                    $this->assertArrayHasKey($gear[$field][0], Dungeons::PERKS, $slug);
+                    $this->assertGreaterThan(0, $gear[$field][1], $slug);
+                }
             }
 
             if (isset($gear['set'])) {
@@ -48,6 +50,38 @@ class GearPerkTest extends TestCase
             $this->assertSame(['weapon', 'armor', 'trinket'], array_map(fn ($s) => Dungeons::GEAR[$s]['slot'], $set['pieces']), $key);
             $this->assertArrayHasKey($set['perk'][0], Dungeons::PERKS, $key);
         }
+    }
+
+    public function test_relics_have_two_perks_and_never_drop_from_normal_pools(): void
+    {
+        $relics = array_filter(Dungeons::GEAR, fn ($g) => ! empty($g['relic']));
+
+        $this->assertGreaterThanOrEqual(12, count($relics));
+
+        foreach ($relics as $slug => $relic) {
+            $this->assertArrayHasKey('perk2', $relic, $slug);
+            $this->assertNotSame($relic['perk'][0], $relic['perk2'][0], $slug);
+        }
+
+        // Реликвия есть у каждой ступени, а обычный дроп и крафт их не берут
+        foreach (range(1, 9) as $stage) {
+            $this->assertNotEmpty(array_filter($relics, fn ($r) => $r['stage'] === $stage), "реликвия ступени {$stage}");
+            $this->assertEmpty(array_filter(Dungeons::gearForStage($stage), fn ($g) => ! empty($g['relic'])));
+        }
+
+        // Босс с гарантированной реликвией
+        $this->assertTrue(Dungeons::RELIC_CHANCE > 0 && Dungeons::RELIC_CHANCE <= 15);
+    }
+
+    public function test_rage_perk_adds_rage_per_hit(): void
+    {
+        $battle = new DungeonBattle();
+        $state = $battle->begin([$this->member([])], $this->enemy(10_000_000, 1));
+        $state['units'][0]['perks'] = ['rage' => 20];
+
+        $state = $battle->resolveRound($state, [1 => 'attack']);
+
+        $this->assertGreaterThanOrEqual(28, $state['units'][0]['rage']);
     }
 
     public function test_set_bonus_grows_with_pieces(): void

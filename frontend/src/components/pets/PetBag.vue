@@ -67,7 +67,7 @@ onMounted(load)
             :key="item.inventory_id"
             type="button"
             class="cell"
-            :class="{ 'is-worn': item.worn_by }"
+            :class="{ 'is-worn': item.worn_by, 'is-relic': item.relic }"
             :style="{ '--rar': COLORS[item.rarity] }"
             @mouseenter="hover = item"
             @mouseleave="hover = null"
@@ -99,7 +99,8 @@ onMounted(load)
     <p class="bag__tip">
       <template v-if="hover">
         <b :style="{ color: COLORS[hover.rarity] }">{{ hover.name }}</b> · {{ hover.rarity_name }}<template v-if="!hover.sell"> · {{ statsText(hover) }}</template>
-        <template v-if="hover.perk"><br><span class="bag__perk">✦ {{ hover.perk.name }}: {{ hover.perk.text }}</span></template>
+        <template v-if="hover.relic"> · <b class="bag__relic">Реликвия</b></template>
+        <template v-for="p in hover.perks ?? []" :key="p.key"><br><span class="bag__perk">✦ {{ p.name }}: {{ p.text }}</span></template>
         <template v-if="hover.set"><br><span class="bag__set">Комплект «{{ hover.set.name }}»: 2 вещи +8% к статам, 3 вещи +20% и «{{ hover.set.perk_text }}»</span></template>
         <template v-if="hover.sell || !hover.worn_by"><br>Нажми, чтобы продать на рынке</template>
       </template>
@@ -124,6 +125,9 @@ onMounted(load)
 .cell__perk { right: 3px; color: #ffd45c; }
 .cell__set { left: 3px; color: #7dd3fc; }
 .bag__perk { color: #ffd45c; }
+.bag__relic { color: #f0abfc; }
+.cell.is-relic { animation: bag-relic 1.6s steps(2) infinite; }
+@keyframes bag-relic { 50% { box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.5), 0 0 12px 2px rgba(240, 171, 252, 0.7); } }
 .bag__set { color: #7dd3fc; }
 .cell__qty { position: absolute; right: 2px; bottom: 0; font-size: 12px; font-style: normal; font-weight: 800; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000; }
 /* Подсказка всегда видна внизу, чтобы не прыгала вёрстка */

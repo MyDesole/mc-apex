@@ -61,7 +61,7 @@ class DungeonCraftService
         return DB::transaction(function () use ($user, $material, $def) {
             $this->spend($user, [$material => self::COST]);
 
-            $pool = array_keys(array_filter(Dungeons::GEAR, fn (array $gear) => $gear['stage'] === $def['stage']));
+            $pool = array_keys(array_filter(Dungeons::GEAR, fn (array $gear) => empty($gear['relic']) && $gear['stage'] === $def['stage']));
             $slug = $pool[array_rand($pool)];
 
             return $this->result($user, $slug, Dungeons::rollRarity($def['stage'], false));
@@ -86,7 +86,7 @@ class DungeonCraftService
         return DB::transaction(function () use ($user, $core, $slot, $def, $stageMaterial) {
             $this->spend($user, [$core => self::CORE_COST, $stageMaterial => self::CORE_MATERIALS]);
 
-            $pool = array_keys(array_filter(Dungeons::GEAR, fn (array $gear) => $gear['stage'] === $def['stage'] && $gear['slot'] === $slot));
+            $pool = array_keys(array_filter(Dungeons::GEAR, fn (array $gear) => empty($gear['relic']) && $gear['stage'] === $def['stage'] && $gear['slot'] === $slot));
             $slug = $pool[array_rand($pool)];
 
             $rarity = Dungeons::rollRarity($def['stage'], true);
@@ -128,7 +128,7 @@ class DungeonCraftService
 
             UserInventory::whereIn('id', [$firstId, $secondId])->delete();
 
-            $pool = array_keys(array_filter(Dungeons::GEAR, fn (array $gear) => $gear['stage'] === $stage && $gear['slot'] === $a['slot']));
+            $pool = array_keys(array_filter(Dungeons::GEAR, fn (array $gear) => empty($gear['relic']) && $gear['stage'] === $stage && $gear['slot'] === $a['slot']));
             $slug = $pool[array_rand($pool)];
 
             return $this->result($user, $slug, $next);

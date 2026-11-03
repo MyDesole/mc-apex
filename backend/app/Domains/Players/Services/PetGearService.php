@@ -218,15 +218,23 @@ final class PetGearService
         $own = (array) ($row->gear_stats ?? []);
         $rarity = (string) ($own['rarity'] ?? $row->item->rarity ?? 'common');
         $def = Dungeons::GEAR[$row->item->slug] ?? [];
-        $perk = $def['perk'] ?? null;
         $set = isset($def['set']) ? (Dungeons::SETS[$def['set']] ?? null) : null;
 
+        $perks = [];
+        foreach (['perk', 'perk2'] as $field) {
+            if ($perk = $def[$field] ?? null) {
+                $perks[] = [
+                    'key' => $perk[0],
+                    'name' => Dungeons::PERKS[$perk[0]]['name'],
+                    'text' => Dungeons::perkText($perk[0], $perk[1]),
+                ];
+            }
+        }
+
         return [
-            'perk' => $perk ? [
-                'key' => $perk[0],
-                'name' => Dungeons::PERKS[$perk[0]]['name'],
-                'text' => Dungeons::perkText($perk[0], $perk[1]),
-            ] : null,
+            'perk' => $perks[0] ?? null,
+            'perks' => $perks,
+            'relic' => ! empty($def['relic']),
             'set' => $set ? [
                 'key' => $def['set'],
                 'name' => $set['name'],

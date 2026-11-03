@@ -460,6 +460,12 @@ final class DungeonBattle
             $unit['hp'] = min($unit['max'], $unit['hp'] + $drain);
         }
 
+        $unit['rage'] = min(self::RAGE_MAX, $unit['rage'] + (int) ($unit['perks']['rage'] ?? 0));
+
+        if (($unit['perks']['stun'] ?? 0) > 0 && $state['foe']['hp'] > 0 && random_int(1, 100) <= min(35, (int) $unit['perks']['stun'])) {
+            $state['foe']['statuses']['stun'] = self::STATUSES['stun']['rounds'];
+        }
+
         $text = $move === 'attack'
             ? "{$unit['name']} атакует {$state['foe']['name']} — {$hit['damage']}"
             : "{$unit['name']}: «{$label}» по {$state['foe']['name']} — {$hit['damage']}";
