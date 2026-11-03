@@ -705,10 +705,10 @@ class DungeonTest extends TestCase
     {
         $sprites = (string) file_get_contents(base_path('../frontend/src/data/shop/pixelSprites.js'));
 
-        // 5 ступеней × 3 слота × 2 варианта
-        $this->assertCount(30, Dungeons::GEAR);
+        // 8 ступеней × 3 слота × 2 варианта
+        $this->assertCount(48, Dungeons::GEAR);
 
-        foreach ([1, 2, 3, 4, 5] as $stage) {
+        foreach ([1, 2, 3, 4, 5, 6, 7, 8] as $stage) {
             $pool = Dungeons::gearForStage($stage);
 
             foreach (Dungeons::SLOTS as $slot) {

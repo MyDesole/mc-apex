@@ -80,6 +80,9 @@ class PetXpCapTest extends TestCase
             $this->assertArrayHasKey($dungeon['stage'], Dungeons::WIPE_PENALTY);
             $this->assertArrayHasKey($dungeon['stage'], Dungeons::DROP_RARITY);
             $this->assertNotEmpty(Dungeons::gearForStage($dungeon['stage']));
+            // Своё снаряжение и свой материал у каждой ступени
+            $own = array_filter(Dungeons::GEAR, fn (array $g) => $g['stage'] === $dungeon['stage']);
+            $this->assertCount(6, $own, $key);
             $this->assertNotNull(Dungeons::materialForStage($dungeon['stage']));
         }
     }

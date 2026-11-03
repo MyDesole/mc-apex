@@ -1721,6 +1721,24 @@ Object.assign(PIXEL_SPRITES, {
     'boss-sovereign': bossVariant('boss-voidwarden', { v: '#020617', V: '#4c1d95', e: '#fbbf24', w: '#fef9c3' }, 'k.kkkkkkkk.k'),
 })
 
+/** Предметы глубоких подземелий: тот же силуэт, что на пятой ступени, но своя палитра. */
+const recolor = (base, palette) => ({ palette: { ...PIXEL_SPRITES[base].palette, ...palette }, rows: PIXEL_SPRITES[base].rows })
+
+Object.assign(PIXEL_SPRITES, {
+    'gear-weapon-6': recolor('gear-weapon-5', { v: '#7dd3fc', V: '#0369a1' }),
+    'gear-armor-6': recolor('gear-armor-5', { v: '#0c4a6e', V: '#0284c7', e: '#7dd3fc', w: '#e0f2fe' }),
+    'gear-trinket-6': recolor('gear-trinket-5', { v: '#0284c7', V: '#7dd3fc', w: '#e0f2fe' }),
+    'gear-weapon-7': recolor('gear-weapon-5', { v: '#fdba74', V: '#c2410c' }),
+    'gear-armor-7': recolor('gear-armor-5', { v: '#7c2d12', V: '#ea580c', e: '#fde047', w: '#fef3c7' }),
+    'gear-trinket-7': recolor('gear-trinket-5', { v: '#d97706', V: '#fcd34d', w: '#fef3c7' }),
+    'gear-weapon-8': recolor('gear-weapon-5', { v: '#f0abfc', V: '#a21caf' }),
+    'gear-armor-8': recolor('gear-armor-5', { v: '#4a044e', V: '#a21caf', e: '#f0abfc', w: '#fae8ff' }),
+    'gear-trinket-8': recolor('gear-trinket-5', { v: '#a21caf', V: '#f0abfc', w: '#fae8ff' }),
+    'mat-abyss': recolor('mat-void', { v: '#0284c7', w: '#e0f2fe' }),
+    'mat-dragon': recolor('mat-void', { v: '#d97706', w: '#fef3c7' }),
+    'mat-crown': recolor('mat-void', { v: '#c026d3', w: '#fae8ff' }),
+})
+
 const cache = new Map()
 const svgCache = new Map()
 

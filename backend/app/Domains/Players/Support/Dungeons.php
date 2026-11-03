@@ -363,6 +363,30 @@ final class Dungeons
         'gear-stormeye' => ['slot' => 'trinket', 'name' => 'Глаз вьюги', 'sprite' => 'gear-trinket-4', 'atk' => 10, 'def' => 0, 'hp' => 20, 'spd' => 6, 'stage' => 4, 'rarity' => 'legendary'],
         'gear-voideye' => ['slot' => 'trinket', 'name' => 'Око пустоты', 'sprite' => 'gear-trinket-5', 'atk' => 14, 'def' => 10, 'hp' => 80, 'spd' => 8, 'stage' => 5, 'rarity' => 'legendary'],
         'gear-shard' => ['slot' => 'trinket', 'name' => 'Кристалл разлома', 'sprite' => 'gear-trinket-5', 'atk' => 18, 'def' => 0, 'hp' => 50, 'spd' => 10, 'stage' => 5, 'rarity' => 'legendary'],
+
+        // Ступень 6 — Бездонные чертоги
+        'gear-abyssblade' => ['slot' => 'weapon', 'name' => 'Клинок глубин', 'sprite' => 'gear-weapon-6', 'atk' => 64, 'def' => 0, 'hp' => 0, 'spd' => 2, 'stage' => 6, 'rarity' => 'legendary'],
+        'gear-silentscythe' => ['slot' => 'weapon', 'name' => 'Коса тишины', 'sprite' => 'gear-weapon-6', 'atk' => 74, 'def' => 0, 'hp' => 50, 'spd' => -3, 'stage' => 6, 'rarity' => 'legendary'],
+        'gear-abyssplate' => ['slot' => 'armor', 'name' => 'Доспех глубин', 'sprite' => 'gear-armor-6', 'atk' => 0, 'def' => 50, 'hp' => 200, 'spd' => -2, 'stage' => 6, 'rarity' => 'legendary'],
+        'gear-echocloak' => ['slot' => 'armor', 'name' => 'Плащ эха', 'sprite' => 'gear-armor-6', 'atk' => 0, 'def' => 38, 'hp' => 150, 'spd' => 5, 'stage' => 6, 'rarity' => 'legendary'],
+        'gear-bottomlantern' => ['slot' => 'trinket', 'name' => 'Фонарь дна', 'sprite' => 'gear-trinket-6', 'atk' => 18, 'def' => 12, 'hp' => 100, 'spd' => 10, 'stage' => 6, 'rarity' => 'legendary'],
+        'gear-blackpearl' => ['slot' => 'trinket', 'name' => 'Чёрная жемчужина', 'sprite' => 'gear-trinket-6', 'atk' => 23, 'def' => 0, 'hp' => 64, 'spd' => 12, 'stage' => 6, 'rarity' => 'legendary'],
+
+        // Ступень 7 — Логово дракона
+        'gear-dragonfang' => ['slot' => 'weapon', 'name' => 'Клык дракона', 'sprite' => 'gear-weapon-7', 'atk' => 80, 'def' => 0, 'hp' => 0, 'spd' => 2, 'stage' => 7, 'rarity' => 'legendary'],
+        'gear-embermaul' => ['slot' => 'weapon', 'name' => 'Молот углей', 'sprite' => 'gear-weapon-7', 'atk' => 92, 'def' => 0, 'hp' => 60, 'spd' => -4, 'stage' => 7, 'rarity' => 'legendary'],
+        'gear-scalemail' => ['slot' => 'armor', 'name' => 'Чешуйчатая броня', 'sprite' => 'gear-armor-7', 'atk' => 0, 'def' => 62, 'hp' => 250, 'spd' => -3, 'stage' => 7, 'rarity' => 'legendary'],
+        'gear-flamecloak' => ['slot' => 'armor', 'name' => 'Плащ пламени', 'sprite' => 'gear-armor-7', 'atk' => 0, 'def' => 46, 'hp' => 190, 'spd' => 6, 'stage' => 7, 'rarity' => 'legendary'],
+        'gear-goldheart' => ['slot' => 'trinket', 'name' => 'Золотое сердце', 'sprite' => 'gear-trinket-7', 'atk' => 22, 'def' => 15, 'hp' => 125, 'spd' => 12, 'stage' => 7, 'rarity' => 'legendary'],
+        'gear-dragoneye' => ['slot' => 'trinket', 'name' => 'Око дракона', 'sprite' => 'gear-trinket-7', 'atk' => 28, 'def' => 0, 'hp' => 80, 'spd' => 14, 'stage' => 7, 'rarity' => 'legendary'],
+
+        // Ступень 8 — Чертог владыки
+        'gear-sovereignblade' => ['slot' => 'weapon', 'name' => 'Меч владыки', 'sprite' => 'gear-weapon-8', 'atk' => 98, 'def' => 0, 'hp' => 0, 'spd' => 3, 'stage' => 8, 'rarity' => 'legendary'],
+        'gear-executioner' => ['slot' => 'weapon', 'name' => 'Секира палача', 'sprite' => 'gear-weapon-8', 'atk' => 112, 'def' => 0, 'hp' => 80, 'spd' => -5, 'stage' => 8, 'rarity' => 'legendary'],
+        'gear-thronearmor' => ['slot' => 'armor', 'name' => 'Тронный доспех', 'sprite' => 'gear-armor-8', 'atk' => 0, 'def' => 76, 'hp' => 310, 'spd' => -4, 'stage' => 8, 'rarity' => 'legendary'],
+        'gear-shadowmantle' => ['slot' => 'armor', 'name' => 'Мантия теней', 'sprite' => 'gear-armor-8', 'atk' => 0, 'def' => 56, 'hp' => 235, 'spd' => 8, 'stage' => 8, 'rarity' => 'legendary'],
+        'gear-voidcrown' => ['slot' => 'trinket', 'name' => 'Корона пустоты', 'sprite' => 'gear-trinket-8', 'atk' => 27, 'def' => 18, 'hp' => 155, 'spd' => 15, 'stage' => 8, 'rarity' => 'legendary'],
+        'gear-sealstone' => ['slot' => 'trinket', 'name' => 'Камень печати', 'sprite' => 'gear-trinket-8', 'atk' => 34, 'def' => 0, 'hp' => 100, 'spd' => 17, 'stage' => 8, 'rarity' => 'legendary'],
     ];
 
     /** Материалы для крафта: по одному на тир подземелья. */
@@ -372,14 +396,14 @@ final class Dungeons
         'magma' => ['name' => 'Магма', 'stage' => 3, 'sprite' => 'mat-magma'],
         'frost' => ['name' => 'Иней', 'stage' => 4, 'sprite' => 'mat-frost'],
         'void' => ['name' => 'Пустота', 'stage' => 5, 'sprite' => 'mat-void'],
+        'abyss' => ['name' => 'Осколок бездны', 'stage' => 6, 'sprite' => 'mat-abyss'],
+        'dragon' => ['name' => 'Золото дракона', 'stage' => 7, 'sprite' => 'mat-dragon'],
+        'crown' => ['name' => 'Осколок короны', 'stage' => 8, 'sprite' => 'mat-crown'],
     ];
 
     /** Материал, который падает в подземелье этой ступени. */
     public static function materialForStage(int $stage): ?string
     {
-        // Выше пятой ступени падает пустотный материал, отдельных нет
-        $stage = min($stage, 5);
-
         foreach (self::MATERIALS as $key => $material) {
             if ($material['stage'] === $stage) {
                 return $key;
@@ -587,8 +611,6 @@ final class Dungeons
      */
     public static function gearForStage(int $stage): array
     {
-        // Своей экипировки у ступеней 6–8 нет: берут предметы пустотных подземелий
-        $stage = min($stage, 5);
         $from = max(1, $stage - 1);
 
         return array_filter(

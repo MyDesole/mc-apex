@@ -188,14 +188,17 @@ const foeShare = computed(() => {
  * пропорции у любого экрана, поэтому тропа не разъезжается.
  */
 const MAP_NODES = {
-    catacombs: { x: 18, y: 48 },
-    sunken: { x: 50, y: 24 },
-    forge: { x: 82, y: 50 },
-    crypt: { x: 116, y: 22 },
-    void: { x: 146, y: 46 },
+    catacombs: { x: 14, y: 50 },
+    sunken: { x: 37, y: 22 },
+    forge: { x: 60, y: 50 },
+    crypt: { x: 83, y: 22 },
+    void: { x: 106, y: 50 },
+    abyss: { x: 129, y: 22 },
+    lair: { x: 152, y: 50 },
+    throne: { x: 175, y: 22 },
 }
 
-const MAP_W = 160
+const MAP_W = 190
 const MAP_H = 70
 
 /** Положение узла в процентах контейнера. */
@@ -505,34 +508,14 @@ onMounted(() => {
 
 <template>
     <div class="dgn">
-        <header class="dgn-head">
-            <div>
-                <RouterLink to="/pets" class="dgn-back"><span aria-hidden="true">←</span> Мои питомцы</RouterLink>
-                <span class="dgn-kicker">Подземелья</span>
-                <h1>Поход отрядом</h1>
-                <p class="dgn-sub">
-                    Пошаговый бой: каждый раунд — приём каждому питомцу. Стихия решает,
-                    чем питомец полезен отряду, а связка стихий бьёт врага сильнее.
-                </p>
-            </div>
-
-            <div v-if="data" class="dgn-stats">
-                <span class="dgn-stat">
-                    <b>{{ data.runs_left }}</b>
-                    <small>походов сегодня{{ data.extra_bought ? ' · +' + data.extra_bought : '' }}</small>
-                </span>
-                <span class="dgn-stat"><b>{{ data.squad_min }}–{{ data.squad_max }}</b><small>в отряде</small></span>
-                <span class="dgn-stat"><b>{{ Object.keys(ref_.combos ?? {}).length }}</b><small>связок</small></span>
-                <button
-                    class="dgn-buy"
-                    :class="{ 'is-hot': data.runs_left === 0 }"
-                    type="button"
-                    :disabled="busy"
-                    @click="buyRun"
-                >
-                    <AppIcon icon="rocket" :size="13" /> Ещё поход · ₳ {{ data.next_run_price }}
-                </button>
-            </div>
+        <!-- Игровая панель вместо заголовка страницы -->
+        <header v-if="data" class="dg-hud">
+            <span class="dg-title">Подземелья</span>
+            <span class="dg-chip"><b>{{ data.runs_left }}</b> походов{{ data.extra_bought ? ' +' + data.extra_bought : '' }}</span>
+            <span class="dg-chip">отряд <b>{{ data.squad_min }}–{{ data.squad_max }}</b></span>
+            <button class="dg-buy" :class="{ 'is-hot': data.runs_left === 0 }" type="button" :disabled="busy" @click="buyRun">
+                Ещё поход · ₳ {{ data.next_run_price }}
+            </button>
         </header>
 
         <p v-if="error" class="dgn-error">{{ error }}</p>
@@ -807,15 +790,16 @@ onMounted(() => {
             </div>
         </section>
 
-        <!-- ================= ВЫБОР ПОХОДА ================= -->
-        <section v-else-if="data" class="dgn-pick">
-            <h2>Куда идём</h2>
-            <p class="dgn-pick__sub">
-                Выбери подземелье — отряд соберёшь ниже. Кольцо показывает выбранное.
-            </p>
-            <!-- Карта мира -->
-            <div class="dgn-map">
-                <svg class="dgn-map__trail" :viewBox="`0 0 ${MAP_W} ${MAP_H}`" preserveAspectRatio="none" aria-hidden="true">
+        <!-- ================= ВЫБОР ПОХОДА: гора подземелий, лагерь ================= -->
+        <section v-else-if="data" class="dg-pick">
+            <!-- Гора: входы в подземелья на тропе -->
+            <div class="dg-world">
+                <div class="dg-sky" aria-hidden="true">
+                    <i v-for="n in 16" :key="n" class="dg-star" :style="{ left: ((n * 37) % 97) + '%', top: ((n * 23) % 52) + '%', animationDelay: (n % 5) * -0.6 + 's' }" />
+                </div>
+                <div class="dg-mountains" aria-hidden="true"><i /><i /><i /><i /></div>
+                <div class="dg-ground" aria-hidden="true" />
+                <svg class="dg-trail" :viewBox="`0 0 ${MAP_W} ${MAP_H}`" preserveAspectRatio="none" aria-hidden="true">
                     <polyline :points="mapTrail" />
                 </svg>
 
@@ -823,215 +807,136 @@ onMounted(() => {
                     v-for="(dungeon, index) in dungeons"
                     :key="dungeon.key"
                     type="button"
-                    class="dgn-node"
-                    :class="[
-                        `dgn-tone-${dungeon.tone}`,
-                        {
-                            'is-on': dungeon.key === selected,
-                            'is-locked': !dungeon.available,
-                        },
-                    ]"
+                    class="dg-gate"
+                    :class="[`dgn-tone-${dungeon.tone}`, { 'is-on': dungeon.key === selected, 'is-locked': !dungeon.available }]"
                     :style="nodeStyle(dungeon, index)"
+                    :title="dungeon.about"
                     @click="selected = dungeon.key"
                 >
-                    <span class="dgn-node__medal">
-                        <PixelSprite :sprite="dungeon.emblem" :size="44" />
+                    <i v-if="dungeon.key === selected" class="dg-gate__arrow" aria-hidden="true" />
+                    <span class="dg-gate__arch" aria-hidden="true">
+                        <i class="dg-torch dg-torch--l" /><i class="dg-torch dg-torch--r" />
+                        <span class="dg-gate__door"><PixelSprite :sprite="dungeon.emblem" :size="38" /></span>
+                        <i v-if="!dungeon.available" class="dg-gate__chain" />
                     </span>
-                    <span class="dgn-node__name">{{ dungeon.name }}</span>
-                    <span class="dgn-node__lvl">{{ dungeon.min_level }} ур.</span>
-                    <span v-if="!dungeon.available" class="dgn-node__lock">закрыто</span>
+                    <span class="dg-gate__plank">
+                        <b>{{ dungeon.name }}</b>
+                        <small>{{ dungeon.available ? `от ${dungeon.min_level} ур.` : `закрыто · ${dungeon.min_level} ур.` }}</small>
+                    </span>
                 </button>
             </div>
 
-            <!-- Выбранное подземелье -->
-            <div
-                v-if="selectedDungeon"
-                class="dgn-gate dgn-gate--info"
-                :class="[`dgn-tone-${selectedDungeon.tone}`, { 'is-locked': !selectedDungeon.available }]"
-            >
-                <span class="dgn-gate__arch">
-                    <PixelSprite :sprite="selectedDungeon.emblem" :size="54" anim="bounce" />
-                </span>
-
-                <span class="dgn-gate__main">
-                    <span class="dgn-gate__top">
-                        <strong>{{ selectedDungeon.name }}</strong>
-                        <span class="dgn-gate__rank" :title="`Сложность ${selectedDungeon.stage} из 5`">
-                            <i v-for="n in 5" :key="n" :class="{ 'is-on': n <= selectedDungeon.stage }"></i>
-                        </span>
+            <!-- Доска выбранного подземелья -->
+            <div v-if="selectedDungeon" class="dg-board" :class="`dgn-tone-${selectedDungeon.tone}`">
+                <div class="dg-board__title">
+                    <strong>{{ selectedDungeon.name }}</strong>
+                    <span class="dg-skulls" :title="`Сложность ${selectedDungeon.stage} из 8`">
+                        <i v-for="n in 8" :key="n" :class="{ 'is-on': n <= selectedDungeon.stage }" />
                     </span>
-
-                    <small class="dgn-gate__about">{{ selectedDungeon.about }}</small>
-
-                    <span class="dgn-gate__beads">
-                        <i
-                            v-for="(bead, i) in gateBeads(selectedDungeon)"
-                            :key="i"
-                            :class="{ 'is-boss': bead.boss }"
-                        ></i>
+                </div>
+                <p>{{ selectedDungeon.about }}</p>
+                <div class="dg-board__row">
+                    <span class="dg-board__beads" :title="`${selectedDungeon.floors} этажей, ${selectedDungeon.rooms} залов`">
+                        <i v-for="(bead, i) in gateBeads(selectedDungeon)" :key="i" :class="{ 'is-boss': bead.boss }" />
                     </span>
-
-                    <span class="dgn-gate__bottom">
-                        <span class="dgn-gate__lvl" :class="{ 'is-locked': !selectedDungeon.available }">
-                            от {{ selectedDungeon.min_level }} ур.
-                        </span>
-
-                        <span
-                            class="dgn-gate__bosses"
-                            :title="selectedDungeon.bosses.map((boss) => boss.name).join(' · ')"
-                        >
-                            <span v-for="boss in selectedDungeon.bosses.slice(0, 3)" :key="boss.name" class="dgn-gate__boss">
-                                <PixelSprite :sprite="boss.sprite" :size="18" />
-                            </span>
-                            <span v-if="selectedDungeon.bosses.length > 3" class="dgn-gate__more">
-                                +{{ selectedDungeon.bosses.length - 3 }}
-                            </span>
-                        </span>
-
-                        <button
-                            type="button"
-                            class="dgn-gate__go"
-                            :class="{ 'is-locked': !selectedDungeon.available }"
-                            :disabled="!selectedDungeon.available || busy"
-                            @click="enter"
-                        >
-                            {{ selectedDungeon.available ? 'Войти' : 'Закрыто' }}
-                        </button>
+                    <span class="dg-board__bosses" :title="selectedDungeon.bosses.map((boss) => boss.name).join(' · ')">
+                        <PixelSprite v-for="boss in selectedDungeon.bosses" :key="boss.name" :sprite="boss.sprite" :size="22" />
                     </span>
-                </span>
-            </div>
-
-            <div class="dgn-squad-head">
-                <h3>Отряд <small>{{ squad.length }} / 3</small></h3>
-                <button
-                    type="button"
-                    class="dgn-best"
-                    :disabled="readyPets.length < 2"
-                    title="Подобрать связку против стихий этого подземелья"
-                    @click="bestSquad"
-                >
-                    <AppIcon icon="sparkles" :size="13" /> Подобрать отряд
-                </button>
-            </div>
-
-            <div class="dgn-slots">
-                <div v-for="i in 3" :key="i" class="dgn-slot" :class="{ 'is-filled': squad[i - 1] }">
-                    <template v-if="squad[i - 1]">
-                        <PetFigure
-                            v-for="pet in pets.filter((p) => p.inventory_id === squad[i - 1])"
-                            :key="pet.inventory_id"
-                            :species="pet.species"
-                            :traits="pet.traits"
-                            :size="38"
-                        />
-                        <span class="dgn-slot__name">{{ pets.find((p) => p.inventory_id === squad[i - 1])?.name }}</span>
-                        <span class="dgn-slot__meta">
-                            {{ elementName(pets.find((p) => p.inventory_id === squad[i - 1])?.element) }}
-                            · ур. {{ pets.find((p) => p.inventory_id === squad[i - 1])?.level }}
-                        </span>
-                        <button type="button" class="dgn-slot__drop" @click="toggle(squad[i - 1])">×</button>
-                    </template>
-                    <template v-else>
-                        <span class="dgn-slot__plus">+</span>
-                        <span class="dgn-slot__meta">свободно</span>
-                    </template>
+                    <span class="dg-board__lvl" :class="{ 'is-locked': !selectedDungeon.available }">от {{ selectedDungeon.min_level }} ур.</span>
                 </div>
             </div>
 
-            <h3>Кого взять <small>питомцы от {{ activeDungeon?.min_level ?? 1 }} уровня</small></h3>
+            <!-- Лагерь: отряд у костра и хотбар питомцев -->
+            <div class="dg-camp">
+                <div class="dg-camp__top">
+                    <h3>Лагерь <small>{{ squad.length }} / 3</small></h3>
+                    <button type="button" class="dg-best" :disabled="readyPets.length < 2" title="Подобрать связку против стихий этого подземелья" @click="bestSquad">
+                        Подобрать отряд
+                    </button>
+                </div>
 
-            <div v-if="readyPets.length" class="dgn-roster">
-                <button
-                    v-for="pet in readyPets"
-                    :key="pet.inventory_id"
-                    type="button"
-                    class="dgn-roster__pet"
-                    :class="{ 'is-on': squad.includes(pet.inventory_id) }"
-                    :style="{ '--rar': PET_RARITY[pet.traits?.rarity]?.color || '#a8a3b8', '--el': elementColor(pet.element) }"
-                    @click="toggle(pet.inventory_id)"
-                >
-                    <PetFigure :species="pet.species" :traits="pet.traits" :size="36" :backdrop="false" />
-                    <strong>{{ pet.name }}</strong>
-                    <small>{{ elementName(pet.element) }} · ур. {{ pet.level }}</small>
-                    <span class="dgn-roster__power">
-                        сила {{ pet.power }}
-                        <template v-if="gearCount(pet)"> · {{ gearCount(pet) }}/3</template>
-                    </span>
-                    <span class="dgn-roster__skill">{{ abilityOf(pet.element)?.ultimate?.name }}</span>
+                <div class="dg-camp__scene">
+                    <div v-for="i in 3" :key="i" class="dg-seat" :class="{ 'is-filled': squad[i - 1] }">
+                        <template v-if="squad[i - 1]">
+                            <PetFigure
+                                v-for="pet in pets.filter((p) => p.inventory_id === squad[i - 1])"
+                                :key="pet.inventory_id"
+                                :species="pet.species"
+                                :traits="pet.traits"
+                                :size="46"
+                            />
+                            <span class="dg-seat__name">{{ pets.find((p) => p.inventory_id === squad[i - 1])?.name }}</span>
+                            <button type="button" class="dg-seat__drop" aria-label="Убрать из отряда" @click="toggle(squad[i - 1])">×</button>
+                        </template>
+                        <span v-else class="dg-seat__empty">+</span>
+                        <i class="dg-seat__log" aria-hidden="true" />
+                    </div>
+                    <i class="dg-fire" aria-hidden="true"><b /><b /><b /></i>
+                </div>
+
+                <p v-if="!readyPets.length" class="dg-camp__hint">
+                    Нет подходящих питомцев: нужны свободные от {{ activeDungeon?.min_level ?? 1 }} уровня.
+                </p>
+
+                <div v-else class="dg-hotbar">
+                    <button
+                        v-for="pet in readyPets"
+                        :key="pet.inventory_id"
+                        type="button"
+                        class="dg-slot"
+                        :class="{ 'is-on': squad.includes(pet.inventory_id) }"
+                        :style="{ '--rar': PET_RARITY[pet.traits?.rarity]?.color || '#a8a3b8', '--el': elementColor(pet.element) }"
+                        :title="`${pet.name} · ${elementName(pet.element)} · сила ${pet.power} · ${abilityOf(pet.element)?.ultimate?.name ?? ''}`"
+                        @click="toggle(pet.inventory_id)"
+                    >
+                        <PetFigure :species="pet.species" :traits="pet.traits" :size="34" :backdrop="false" />
+                        <i class="dg-slot__lvl">{{ pet.level }}</i>
+                        <i class="dg-slot__el" />
+                    </button>
+                </div>
+
+                <button v-if="data.runs_left === 0" class="dg-enter" :disabled="busy" @click="buyRun">
+                    Походы кончились · ещё за {{ data.next_run_price }} ₳
                 </button>
-            </div>
-
-            <p v-else class="dgn-hint">
-                Нет подходящих питомцев. Нужны свободные питомцы от {{ activeDungeon?.min_level ?? 1 }} уровня.
-            </p>
-
-            <button
-                v-if="data.runs_left === 0"
-                class="dgn-btn dgn-btn--main dgn-enter"
-                :disabled="busy"
-                @click="buyRun"
-            >
-                Походы кончились — купить ещё за {{ data.next_run_price }} ₳
-            </button>
-
-            <button
-                v-else
-                class="dgn-btn dgn-btn--main dgn-enter"
-                :disabled="busy || !canStart"
-                @click="enter"
-            >
-                Войти в подземелье
-            </button>
-            <p v-if="!canStart" class="dgn-hint">Возьми минимум двух питомцев.</p>
-            <p v-else-if="autoPicked" class="dgn-hint">
-                Отряд подобран по силе — она считается вместе с надетой экипировкой и связкой стихий.
-            </p>
-
-            <h3>Крафт экипировки</h3>
-            <p class="dgn-hint">Три материала — случайный предмет того же тира. Материалы падают с мобов и боссов.</p>
-
-            <div v-if="craft" class="dgn-craft">
-              <div
-                  v-for="(def, key) in craft.catalog"
-                  :key="key"
-                  class="dgn-craft__item"
-                  :class="{ 'is-ready': (craft.materials[key] ?? 0) >= craft.cost }"
-              >
-                <PixelSprite :sprite="def.sprite" :size="28" />
-                <span class="dgn-craft__meta">
-        <b>{{ def.name }}</b>
-        <span class="dgn-craft__count">
-            {{ craft.materials[key] ?? 0 }}<small>/{{ craft.cost }}</small>
-        </span>
-    </span>
-                <button
-                    type="button"
-                    class="dgn-craft__btn"
-                    :disabled="busy || craftBusy === key || (craft.materials[key] ?? 0) < craft.cost"
-                    @click="doCraft(key)"
-                >
-                  {{ craftBusy === key ? '…' : 'Скрафтить' }}
+                <button v-else class="dg-enter" :disabled="busy || !canStart || !selectedDungeon?.available" @click="enter">
+                    Спуститься в подземелье
                 </button>
-              </div>
+                <p v-if="!canStart" class="dg-camp__hint">Возьми минимум двух питомцев.</p>
+                <p v-else-if="autoPicked" class="dg-camp__hint">Отряд подобран по силе — с экипировкой и связкой стихий.</p>
             </div>
 
-            <p v-if="crafted" class="dgn-craft__result">
-                Скрафчено: <b>{{ crafted.name }}</b> ({{ crafted.rarity_name }}) — во вкладке «Экипировка».
-            </p>
+            <!-- Верстак и связки — в сундуках, а не простынёй текста -->
+            <details class="dg-fold">
+                <summary>Верстак экипировки</summary>
+                <p class="dg-fold__hint">Три материала — случайный предмет того же тира. Материалы падают с мобов и боссов.</p>
+                <div v-if="craft" class="dg-craft">
+                    <div v-for="(def, key) in craft.catalog" :key="key" class="dg-craft__item" :class="{ 'is-ready': (craft.materials[key] ?? 0) >= craft.cost }">
+                        <PixelSprite :sprite="def.sprite" :size="28" />
+                        <b>{{ def.name }}</b>
+                        <small>{{ craft.materials[key] ?? 0 }} / {{ craft.cost }}</small>
+                        <button type="button" :disabled="busy || craftBusy === key || (craft.materials[key] ?? 0) < craft.cost" @click="doCraft(key)">
+                            {{ craftBusy === key ? '…' : 'Скрафтить' }}
+                        </button>
+                    </div>
+                </div>
+                <p v-if="crafted" class="dg-fold__hint">Скрафчено: <b>{{ crafted.name }}</b> ({{ crafted.rarity_name }}) — смотри в Складе питомцев.</p>
+            </details>
 
-            <h3>Связки стихий</h3>
-            <div class="dgn-combos">
-                <article v-for="(combo, key) in ref_.combos" :key="key" class="dgn-combo-card">
-                    <strong>{{ combo.name }}</strong>
-                    <span class="dgn-combo-card__pair">
-                        <span :style="{ color: elementColor(combo.pair[0]) }">{{ elementName(combo.pair[0]) }}</span>
-                        +
-                        <span :style="{ color: elementColor(combo.pair[1]) }">{{ elementName(combo.pair[1]) }}</span>
-                    </span>
-                    <span class="dgn-combo-card__text">{{ combo.text }}</span>
-                    <span class="dgn-combo-card__hot">+35% против {{ elementName(combo.counters) }}</span>
-                </article>
-            </div>
+            <details class="dg-fold">
+                <summary>Связки стихий</summary>
+                <div class="dg-combos">
+                    <article v-for="(combo, key) in ref_.combos" :key="key">
+                        <strong>{{ combo.name }}</strong>
+                        <span>
+                            <span :style="{ color: elementColor(combo.pair[0]) }">{{ elementName(combo.pair[0]) }}</span>
+                            +
+                            <span :style="{ color: elementColor(combo.pair[1]) }">{{ elementName(combo.pair[1]) }}</span>
+                        </span>
+                        <small>{{ combo.text }}</small>
+                        <em>+35% против {{ elementName(combo.counters) }}</em>
+                    </article>
+                </div>
+            </details>
         </section>
 
     </div>
@@ -1039,4 +944,5 @@ onMounted(() => {
 
 <style scoped>
 @import "./DungeonView.css";
+@import "./DungeonPick.css";
 </style>
