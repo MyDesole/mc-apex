@@ -215,6 +215,8 @@ Route::middleware('minecraft.server')->prefix('minecraft')->group(function () {
     Route::post('/tier-tests/{test}/invite', [MinecraftServerController::class, 'tierTestInvite'])->whereNumber('test');
     Route::post('/tier-tests/{test}/finish', [MinecraftServerController::class, 'tierTestFinish'])->whereNumber('test');
     Route::get('/tiers', [MinecraftServerController::class, 'tiers']);
+    Route::get('/clan-wars', [\App\Domains\Minecraft\Controllers\Api\MinecraftClanWarController::class, 'index']);
+    Route::post('/clan-wars/{war}/result', [\App\Domains\Minecraft\Controllers\Api\MinecraftClanWarController::class, 'result'])->whereNumber('war');
     Route::get('/skin', [MinecraftServerController::class, 'skin']);
 
     Route::post('/admin/lookup', [MinecraftServerController::class, 'lookup']);
