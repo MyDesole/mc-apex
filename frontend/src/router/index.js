@@ -80,6 +80,7 @@ const router = createRouter({
     { path: '/shop', name: 'shop', component: ShopView, meta: { title: 'Магазин' } },
     { path: '/inventory', name: 'inventory', component: InventoryView, meta: { title: 'Инвентарь', auth: true } },
     { path: '/cases', name: 'cases', component: CasesView, meta: { title: 'Кейсы' } },
+    { path: '/world', name: 'world', component: () => import('@/views/pets/WorldView.vue'), meta: { title: 'Мир APEX', auth: true } },
     { path: '/farm', name: 'farm', component: () => import('@/views/pets/FarmView.vue'), meta: { title: 'Фермы питомцев', auth: true } },
     { path: '/pets', name: 'pets', component: () => import('@/views/pets/PetsView.vue'), meta: { title: 'Мои питомцы', auth: true } },
     {

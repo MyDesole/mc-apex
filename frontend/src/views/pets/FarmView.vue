@@ -228,6 +228,24 @@ async function mate() {
   }, 'Не удалось отправить.')
 }
 
+/** Цена ускорения — как на сервере: Рубли за каждый начатый час ожидания. */
+const speedCost = (iso) => Math.max(1, Math.ceil((new Date(iso).getTime() - now.value) / 3600000)) * (personal.value?.speedup_per_hour ?? 2)
+
+async function speedUp(kind, id, iso) {
+  const cost = speedCost(iso)
+  const ok = await confirmDialog(
+      `Ускорить за ${cost} Рублей? Ждать больше не придётся.`,
+      { title: 'Ускорение', confirmText: 'Ускорить' },
+  )
+  if (!ok) return
+  await act(`s${kind}${id}`, async () => {
+    const path = kind === 'plot' ? `/farm/personal/plots/${id}/speedup` : `/farm/personal/mating/${id}/speedup`
+    const result = await api.post(path)
+    notice.value = `Ускорено: −${result.spent} ₽.`
+    await loadPersonal()
+  }, 'Не удалось ускорить.')
+}
+
 async function claimMating(pair) {
   await act(`c${pair.id}`, async () => {
     const result = await api.post(`/farm/personal/mating/${pair.id}/claim`)
@@ -279,6 +297,7 @@ onMounted(() => Promise.all([loadCommon(), loadPersonal()]))
 
       <div class="farm__hud">
         <span class="hud-chip"><AppIcon name="coin" :size="14" />{{ fmt(scene === 'common' ? (farm?.balance ?? 0) : (personal?.balance ?? 0)) }}</span>
+        <span v-if="scene === 'personal' && personal?.unlocked" class="hud-chip hud-chip--ruble" title="Рубли: награда подземелий и ферм, тратятся на ускорения">₽ {{ fmt(personal.rubles) }}</span>
         <template v-if="scene === 'common' && farm">
           <span class="hud-chip">Брони {{ farm.reservations }}/{{ farm.max_reservations }}</span>
           <span class="hud-chip">Покупок {{ farm.buys_left }}/{{ farm.buys_per_day }}</span>
@@ -405,7 +424,12 @@ onMounted(() => Promise.all([loadCommon(), loadPersonal()]))
                 <div v-for="n in personal.limits.max_in_storage" :key="n" class="barn__door"
                      :class="{ 'is-busy': personal.storage[n - 1], 'is-ready': personal.storage[n - 1]?.ready }">
                   <template v-if="personal.storage[n - 1]">
-                    <small v-if="!personal.storage[n - 1].ready"><CountdownText :to="personal.storage[n - 1].ends_at" /></small>
+                    <template v-if="!personal.storage[n - 1].ready">
+                      <small><CountdownText :to="personal.storage[n - 1].ends_at" /></small>
+                      <button type="button" class="game-btn game-btn--sm game-btn--ruble"
+                              :disabled="busy === `smating${personal.storage[n - 1].id}`"
+                              @click="speedUp('mating', personal.storage[n - 1].id, personal.storage[n - 1].ends_at)">Ускорить ₽{{ speedCost(personal.storage[n - 1].ends_at) }}</button>
+                    </template>
                     <button v-else type="button" class="game-btn game-btn--go game-btn--sm"
                             :disabled="busy === `c${personal.storage[n - 1].id}`" @click="claimMating(personal.storage[n - 1])">Забрать</button>
                   </template>
@@ -431,6 +455,9 @@ onMounted(() => Promise.all([loadCommon(), loadPersonal()]))
                 <b>{{ plot.name.replace('Питомец ', '').replace(/[«»]/g, '') }}</b>
                 <small v-if="!plot.ready"><CountdownText :to="plot.ready_at" /></small>
                 <small v-else>Забрать</small>
+                <span v-if="!plot.ready" class="plot__speed" role="button" tabindex="0"
+                      @click.stop="speedUp('plot', plot.id, plot.ready_at)"
+                      @keydown.enter.stop="speedUp('plot', plot.id, plot.ready_at)">Ускорить ₽{{ speedCost(plot.ready_at) }}</span>
               </span>
             </button>
             <button v-for="n in emptyPlots" :key="`e${n}`" type="button" class="plot plot--empty" @click="seedPanel = !seedPanel">

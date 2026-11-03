@@ -29,6 +29,10 @@
   display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 13px; font-weight: 700; color: #fff; text-decoration: none;
   background: rgba(20, 12, 6, 0.78); border: 3px solid var(--wood-dark);
 }
+.hud-chip--ruble { color: #ffd45c; }
+.game-btn--ruble { background: #8a6a10; border-color: #4a3808; margin-top: 2px; }
+.plot__speed { margin-top: 2px; padding: 1px 6px; font-size: 11px; font-weight: 800; color: #ffd45c; cursor: pointer; background: #4a3808; border: 2px solid #8a6a10; }
+.plot__speed:hover { filter: brightness(1.25); }
 .hud-chip--link:hover { background: var(--wood); }
 
 .farm__msg { position: relative; z-index: 2; margin: 0 16px 8px; padding: 8px 12px; font-size: 14px; background: rgba(20, 60, 20, 0.85); border: 3px solid #2f6b2f; }

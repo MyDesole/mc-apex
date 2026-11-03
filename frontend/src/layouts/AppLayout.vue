@@ -590,6 +590,13 @@ watch(mobileMenuOpen, (open) => {
                     <span>Мои питомцы</span>
                   </RouterLink>
 
+                  <RouterLink to="/world" class="dropdown-item" @click="menuOpen = false">
+                    <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 20l5-9 4 6 3-4 6 7zM16 6a2 2 0 1 0 0-.1" />
+                    </svg>
+                    <span>Мир APEX</span>
+                  </RouterLink>
+
                   <RouterLink to="/farm" class="dropdown-item" @click="menuOpen = false">
                     <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M12 21V11M12 11c0-3 2-5 5-5 0 3-2 5-5 5zM12 14c0-2.5-1.8-4-4.5-4 0 2.5 1.8 4 4.5 4zM4 21h16" />
