@@ -3,6 +3,8 @@
 namespace App\Domains\Minecraft\Controllers\Api;
 
 use App\Domains\Minecraft\Services\MinecraftLinkService;
+use App\Domains\Tiers\Models\TierTest;
+use App\Domains\Users\Models\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,6 +34,109 @@ class MinecraftServerController extends Controller
         ]);
 
         return response()->json($this->links->resolveNickname($data['nickname']));
+    }
+
+    /* ---------------- Тир-тесты для плагина ---------------- */
+
+    /**
+     * Заявки тестера. Результат тестер выставляет на сайте, плагин только
+     * показывает, кого и в каком режиме тестировать.
+     */
+    public function tierTests(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'tester' => ['nullable', 'string', 'max:32'],
+        ]);
+
+        $query = TierTest::query()
+            ->whereIn('status', ['pending', 'claimed', 'in_progress'])
+            ->with(['user:id,name,minecraft_username', 'tester:id,name,minecraft_username']);
+
+        if (! empty($data['tester'])) {
+            $nick = (string) $data['tester'];
+
+            $query->whereHas('tester', function ($q) use ($nick) {
+                $q->where('minecraft_username', $nick)->orWhere('name', $nick);
+            });
+        }
+
+        $rows = $query
+            ->orderByDesc('is_priority')
+            ->orderBy('created_at')
+            ->limit(50)
+            ->get();
+
+        return response()->json([
+            'tests' => $rows->map(fn (TierTest $test) => [
+                'id' => $test->id,
+                'nickname' => $test->user?->minecraft_username ?? $test->user?->name,
+                'account' => $test->user?->name,
+                'tester' => $test->tester?->name,
+                'mode' => $test->mode,
+                'expected_tier' => $test->expected_tier,
+                'status' => $test->status,
+                'priority' => (bool) $test->is_priority,
+                'scheduled_at' => $test->scheduled_at?->toIso8601String(),
+                'created_at' => $test->created_at?->toIso8601String(),
+            ])->all(),
+        ]);
+    }
+
+    /** Плагин сообщает, что тестер пригласил испытуемого на дуэль. */
+    public function tierTestInvite(int $id): JsonResponse
+    {
+        $test = TierTest::find($id);
+
+        if (! $test) {
+            return response()->json(['message' => 'Тест не найден.'], 404);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'test' => ['id' => $test->id, 'status' => $test->status],
+        ]);
+    }
+
+    /** Тест закончен на сервере. Результат тестер ставит на сайте. */
+    public function tierTestFinish(int $id): JsonResponse
+    {
+        $test = TierTest::find($id);
+
+        if (! $test) {
+            return response()->json(['message' => 'Тест не найден.'], 404);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'test' => ['id' => $test->id, 'status' => $test->status],
+        ]);
+    }
+
+    /** Тиры по никам — для чата и таблисты. */
+    public function tiers(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'nicks' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $nicks = collect(explode(',', (string) $data['nicks']))
+            ->map(fn (string $nick) => trim($nick))
+            ->filter()
+            ->unique()
+            ->take(100)
+            ->values();
+
+        $rows = User::query()
+            ->whereIn('minecraft_username', $nicks)
+            ->get(['name', 'minecraft_username', 'tier']);
+
+        return response()->json([
+            'tiers' => $rows->map(fn (User $user) => [
+                'nick' => $user->minecraft_username,
+                'account' => $user->name,
+                'tier' => $user->tier,
+            ])->all(),
+        ]);
     }
 
     /** Вход по нику и паролю сайта. */

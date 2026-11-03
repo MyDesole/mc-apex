@@ -210,6 +210,12 @@ Route::middleware('minecraft.server')->prefix('minecraft')->group(function () {
     Route::post('/profile', [MinecraftServerController::class, 'profile']);
 
     // Инструменты админа: на какой аккаунт заявлен ник и как его освободить
+    // Плагин тир-тестов: меню тестера и тиры для чата/таблисты
+    Route::get('/tier-tests', [MinecraftServerController::class, 'tierTests']);
+    Route::post('/tier-tests/{test}/invite', [MinecraftServerController::class, 'tierTestInvite'])->whereNumber('test');
+    Route::post('/tier-tests/{test}/finish', [MinecraftServerController::class, 'tierTestFinish'])->whereNumber('test');
+    Route::get('/tiers', [MinecraftServerController::class, 'tiers']);
+
     Route::post('/admin/lookup', [MinecraftServerController::class, 'lookup']);
     Route::post('/admin/unlink', [MinecraftServerController::class, 'unlink']);
 });
