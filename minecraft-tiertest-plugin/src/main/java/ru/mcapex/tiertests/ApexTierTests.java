@@ -118,8 +118,10 @@ public class ApexTierTests extends JavaPlugin implements Listener {
             } else if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
                 readConfig();
                 sender.sendMessage("§aApexTierTests: настройки перечитаны.");
+            } else if (args.length > 1 && args[0].equalsIgnoreCase("kits") && args[1].equalsIgnoreCase("install")) {
+                KitInstaller.install(sender);
             } else {
-                sender.sendMessage("§7/tier reload");
+                sender.sendMessage("§7/tier reload, /tier kits install");
             }
             return true;
         }
