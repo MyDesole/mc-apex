@@ -399,12 +399,32 @@ final class Dungeons
         'abyss' => ['name' => 'Осколок бездны', 'stage' => 6, 'sprite' => 'mat-abyss'],
         'dragon' => ['name' => 'Золото дракона', 'stage' => 7, 'sprite' => 'mat-dragon'],
         'crown' => ['name' => 'Осколок короны', 'stage' => 8, 'sprite' => 'mat-crown'],
+
+        // Ядра боссов: падают только с боссов своего подземелья и нужны для редких рецептов
+        'core_catacombs' => ['name' => 'Крысиная корона', 'stage' => 1, 'core' => true, 'dungeon' => 'catacombs', 'sprite' => 'mat-core-catacombs'],
+        'core_sunken' => ['name' => 'Жемчуг старейшины', 'stage' => 2, 'core' => true, 'dungeon' => 'sunken', 'sprite' => 'mat-core-sunken'],
+        'core_forge' => ['name' => 'Сердце горна', 'stage' => 3, 'core' => true, 'dungeon' => 'forge', 'sprite' => 'mat-core-forge'],
+        'core_crypt' => ['name' => 'Ледяное сердце', 'stage' => 4, 'core' => true, 'dungeon' => 'crypt', 'sprite' => 'mat-core-crypt'],
+        'core_void' => ['name' => 'Око разлома', 'stage' => 5, 'core' => true, 'dungeon' => 'void', 'sprite' => 'mat-core-void'],
+        'core_abyss' => ['name' => 'Слеза бездны', 'stage' => 6, 'core' => true, 'dungeon' => 'abyss', 'sprite' => 'mat-core-abyss'],
+        'core_lair' => ['name' => 'Зуб древнего дракона', 'stage' => 7, 'core' => true, 'dungeon' => 'lair', 'sprite' => 'mat-core-lair'],
+        'core_throne' => ['name' => 'Печать владыки', 'stage' => 8, 'core' => true, 'dungeon' => 'throne', 'sprite' => 'mat-core-throne'],
     ];
+
+    /** Ядро босса этого подземелья. */
+    public static function coreFor(string $dungeon): ?string
+    {
+        return 'core_' . $dungeon;
+    }
 
     /** Материал, который падает в подземелье этой ступени. */
     public static function materialForStage(int $stage): ?string
     {
         foreach (self::MATERIALS as $key => $material) {
+            if (! empty($material['core'])) {
+                continue;
+            }
+
             if ($material['stage'] === $stage) {
                 return $key;
             }
@@ -503,6 +523,9 @@ final class Dungeons
         7 => ['gear' => 34, 'key' => 28, 'key_slug' => 'seeker', 'key_pet' => 2.2, 'key_pet_slug' => 'royal'],
         8 => ['gear' => 36, 'key' => 30, 'key_slug' => 'seeker', 'key_pet' => 2.5, 'key_pet_slug' => 'royal'],
     ];
+
+    /** Шанс ядра с босса, в процентах. */
+    public const CORE_CHANCE = 35;
 
     /** Босс чаще даёт лучшую вещь: шанс в процентах на предмет своей ступени. */
     public const BOSS_UPGRADE_CHANCE = 25;

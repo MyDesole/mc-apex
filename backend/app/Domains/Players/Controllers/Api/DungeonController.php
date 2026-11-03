@@ -33,7 +33,43 @@ class DungeonController extends Controller
             'materials' => $this->craft->materials($request->user()),
             'catalog' => \App\Domains\Players\Support\Dungeons::MATERIALS,
             'cost' => \App\Domains\Players\Services\DungeonCraftService::COST,
+            'recipes' => $this->craft->recipes(),
         ]);
+    }
+
+    /** Ковка на ядре босса: выбранный слот, редкость не ниже эпической. */
+    public function forge(Request $request): JsonResponse
+    {
+        $data = $request->validate(['core' => ['required', 'string', 'max:32'], 'slot' => ['required', 'string', 'max:12']]);
+
+        return $this->craftRun(fn () => $this->craft->forge($request->user(), $data['core'], $data['slot']));
+    }
+
+    /** Усиление: два одинаковых предмета и монеты. */
+    public function upgrade(Request $request): JsonResponse
+    {
+        $data = $request->validate(['first' => ['required', 'integer', 'min:1'], 'second' => ['required', 'integer', 'min:1']]);
+
+        return $this->craftRun(fn () => $this->craft->upgrade($request->user(), (int) $data['first'], (int) $data['second']));
+    }
+
+    /** Переплавка предмета в материалы. */
+    public function dismantle(Request $request): JsonResponse
+    {
+        $data = $request->validate(['item' => ['required', 'integer', 'min:1']]);
+
+        return $this->craftRun(fn () => $this->craft->dismantle($request->user(), (int) $data['item']));
+    }
+
+    private function craftRun(callable $operation): JsonResponse
+    {
+        try {
+            return response()->json($operation(), 201);
+        } catch (\App\Domains\Shop\Exceptions\NotEnoughCoins $e) {
+            return response()->json(['message' => $e->getMessage(), 'missing' => $e->missing], 422);
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
     }
 
     /** Скрафтить предмет из трёх материалов. */

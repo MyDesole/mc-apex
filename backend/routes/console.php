@@ -27,6 +27,12 @@ Schedule::call(fn () => app(\App\Domains\Players\Services\PetFarmService::class)
     ->name('pet-farm:tick')
     ->withoutOverlapping();
 
+// Рынок игроков: просроченные лоты возвращаются продавцам
+Schedule::call(fn () => app(\App\Domains\Players\Services\MarketService::class)->expireDue())
+    ->everyFiveMinutes()
+    ->name('market:expire')
+    ->withoutOverlapping();
+
 // Карта сайта для поисковиков — свежие новости и кланы
 Schedule::command('sitemap:generate')->dailyAt('04:10');
 

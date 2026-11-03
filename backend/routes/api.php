@@ -456,6 +456,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/dex/{milestone}/claim', 'claimDex')->middleware('throttle:20,1');
     });
 
+    // Рынок игроков: материалы и снаряжение подземелий
+    Route::prefix('market')->controller(\App\Domains\Players\Controllers\Api\MarketController::class)->group(function () {
+        Route::get('/', 'index');
+        Route::post('/sell-material', 'sellMaterial')->middleware('throttle:30,1');
+        Route::post('/sell-gear', 'sellGear')->middleware('throttle:30,1');
+        Route::post('/{listing}/buy', 'buy')->whereNumber('listing')->middleware('throttle:30,1');
+        Route::post('/{listing}/cancel', 'cancel')->whereNumber('listing')->middleware('throttle:30,1');
+    });
+
     // Карта-мир: единая сцена со всеми игровыми механиками
     Route::get('/world', [\App\Domains\Players\Controllers\Api\WorldController::class, 'show']);
 
@@ -485,6 +494,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/buy-run', 'buyRun')->middleware('throttle:20,1');
         Route::get('/craft', 'craftIndex')->middleware('throttle:30,1');
         Route::post('/craft', 'craft')->middleware('throttle:30,1');
+        Route::post('/craft/forge', 'forge')->middleware('throttle:30,1');
+        Route::post('/craft/upgrade', 'upgrade')->middleware('throttle:30,1');
+        Route::post('/craft/dismantle', 'dismantle')->middleware('throttle:30,1');
         Route::post('/{run}/advance', 'advance')->whereNumber('run')->middleware('throttle:120,1');
         Route::post('/{run}/move', 'move')->whereNumber('run')->middleware('throttle:120,1');
         Route::post('/{run}/retreat', 'retreat')->whereNumber('run')->middleware('throttle:20,1');

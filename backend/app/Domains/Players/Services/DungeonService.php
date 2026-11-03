@@ -509,6 +509,20 @@ final class DungeonService
             $state['log'][] = ['kind' => 'material', 'text' => 'Материал: ' . Dungeons::MATERIALS[$material]['name'] . '.', 'sprite' => Dungeons::MATERIALS[$material]['sprite']];
         }
 
+        // Ядро босса: редкий дроп для особых рецептов кузницы
+        $core = Dungeons::coreFor((string) $run->dungeon);
+
+        if ($isBoss && isset(Dungeons::MATERIALS[$core]) && random_int(1, 100) <= Dungeons::CORE_CHANCE) {
+            DB::table('dungeon_materials')->upsert(
+                ['user_id' => $user->id, 'material' => $core, 'quantity' => 1, 'created_at' => now(), 'updated_at' => now()],
+                ['user_id', 'material'],
+                ['quantity' => DB::raw('quantity + 1')],
+            );
+
+            $state['loot']['materials'][$core] = ($state['loot']['materials'][$core] ?? 0) + 1;
+            $state['log'][] = ['kind' => 'material', 'text' => 'Ядро босса: ' . Dungeons::MATERIALS[$core]['name'] . '!', 'sprite' => Dungeons::MATERIALS[$core]['sprite']];
+        }
+
         $xp = $isBoss ? Dungeons::XP_PER_BOSS : Dungeons::XP_PER_MOB;
 
         foreach ($state['members'] as $member) {

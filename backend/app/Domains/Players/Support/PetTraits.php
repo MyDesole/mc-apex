@@ -183,9 +183,12 @@ class PetTraits
         }
 
         // Общая редкость — по произведению шансов черт: чем меньше, тем реже
-        $result['rarity'] = self::rarityTier(self::comboChance(array_map(fn ($k) => $result[$k]['id'], [
+        $combo = self::comboChance(array_map(fn ($k) => $result[$k]['id'], [
             'model' => 'model', 'backdrop' => 'backdrop', 'accessory' => 'accessory',
-        ])));
+        ]));
+        $result['rarity'] = self::rarityTier($combo);
+        // «1 из N»: во сколько раз экземпляр реже среднего
+        $result['one_in'] = $combo > 0 ? (int) round(1 / $combo) : null;
 
         return $result;
     }
