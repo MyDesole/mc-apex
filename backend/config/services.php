@@ -33,6 +33,18 @@ return [
     |
     */
 
+    /*
+     * Игровой сервер (apevpvp.pro): доступ по ключу с прода.
+     * Пути и адрес — здесь, а не в env() внутри сервиса: после
+     * config:cache env() вне конфигов возвращает null.
+     */
+    'game_server' => [
+        'host' => env('GAME_SERVER_HOST', '168.113.181.145'),
+        'user' => env('GAME_SERVER_USER', 'root'),
+        'key' => env('GAME_SERVER_KEY', storage_path('app/server/id_ed25519')),
+        'dir' => env('GAME_SERVER_DIR', '/opt/minecraft/server'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

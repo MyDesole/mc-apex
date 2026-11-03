@@ -34,6 +34,7 @@ import AdminReferrals from '@/components/admin/AdminReferrals.vue'
 import AdminControl from '@/components/admin/AdminControl.vue'
 import AdminSupport from '@/components/admin/AdminSupport.vue'
 import AdminProject from '@/components/admin/AdminProject.vue'
+import AdminServer from '@/components/admin/AdminServer.vue'
 import AdminTesters from '@/components/admin/AdminTesters.vue'
 
 const auth = useAuthStore()
@@ -59,6 +60,18 @@ const SECTIONS = [
       { key: 'dashboard', label: 'Дашборд', icon: 'chart', component: AdminDashboard },
       { key: 'control', label: 'Пульт', icon: 'bolt', component: AdminControl, adminOnly: true },
       { key: 'project', label: 'Чейнджлог и роадмап', icon: 'rocket', component: AdminProject, adminOnly: true },
+    ],
+  },
+  {
+    title: 'Сервер',
+    items: [
+      {
+        key: 'server',
+        label: 'Игровой сервер',
+        icon: 'globe',
+        component: AdminServer,
+        roles: ['admin', 'site_admin'],
+      },
     ],
   },
   {
@@ -110,9 +123,19 @@ const SECTIONS = [
   },
 ]
 
+const canSee = (item) => {
+  // Раздел с явным списком ролей виден только им
+  if (item.roles) return item.roles.includes(role.value)
+
+  // Администратору сайта — только разделы с явными ролями
+  if (role.value === 'site_admin') return false
+
+  return isAdmin.value || !item.adminOnly
+}
+
 const sections = computed(() =>
     SECTIONS
-        .map((section) => ({ ...section, items: section.items.filter((item) => isAdmin.value || !item.adminOnly) }))
+        .map((section) => ({ ...section, items: section.items.filter(canSee) }))
         .filter((section) => section.items.length),
 )
 
@@ -120,7 +143,7 @@ const items = computed(() => sections.value.flatMap((section) => section.items))
 
 // Раздел живёт в адресе (?tab=reports): ссылкой можно поделиться, F5 его не сбрасывает
 const tab = computed({
-  get: () => (items.value.some((i) => i.key === route.query.tab) ? route.query.tab : 'dashboard'),
+  get: () => (items.value.some((i) => i.key === route.query.tab) ? route.query.tab : (items.value[0]?.key ?? 'dashboard')),
   set: (key) => router.replace({ query: { ...route.query, tab: key } }),
 })
 

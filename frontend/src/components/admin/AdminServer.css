@@ -1,0 +1,361 @@
+/* =========================================================
+   ПАНЕЛЬ ИГРОВОГО СЕРВЕРА
+   ========================================================= */
+
+.srv {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.srv-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.srv-head h2 {
+  margin: 0 0 4px;
+
+  color: #fff;
+
+  font-family: var(--font-display);
+  font-size: 20px;
+}
+
+.srv-head p {
+  margin: 0;
+
+  color: rgba(255, 255, 255, 0.45);
+
+  font-size: 12.5px;
+}
+
+.srv-head__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ---------- Кнопки и поля ---------- */
+
+.srv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 8px 13px;
+
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9px;
+
+  background: rgba(255, 255, 255, 0.05);
+
+  color: rgba(255, 255, 255, 0.82);
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.srv-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); }
+.srv-btn:disabled { opacity: 0.4; cursor: default; }
+
+.srv-btn--main {
+  border-color: rgba(74, 222, 128, 0.45);
+  background: rgba(34, 197, 94, 0.16);
+  color: #86efac;
+}
+
+.srv-btn--main:hover:not(:disabled) { background: rgba(34, 197, 94, 0.28); }
+
+.srv-btn--warn {
+  border-color: rgba(251, 191, 36, 0.45);
+  background: rgba(251, 191, 36, 0.14);
+  color: #fde68a;
+}
+
+.srv-btn--bad {
+  border-color: rgba(248, 113, 113, 0.4);
+  background: rgba(248, 113, 113, 0.12);
+  color: #fca5a5;
+}
+
+.srv-btn--sm { padding: 6px 10px; font-size: 11px; }
+.srv-btn.is-on { border-color: rgba(74, 222, 128, 0.5); color: #86efac; }
+
+.srv-input {
+  padding: 8px 11px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+
+  background: rgba(0, 0, 0, 0.35);
+
+  color: #fff;
+
+  font: inherit;
+  font-size: 12.5px;
+}
+
+.srv-input--sm { font-size: 11.5px; padding: 6px 9px; }
+
+/* ---------- Карточки статуса ---------- */
+
+.srv-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.srv-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  padding: 12px 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.srv-card > span:first-child {
+  color: rgba(255, 255, 255, 0.42);
+
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.srv-card b {
+  color: #fff;
+
+  font-family: var(--font-display);
+  font-size: 18px;
+}
+
+.srv-card small { color: rgba(255, 255, 255, 0.4); font-size: 11px; }
+
+.srv-card.is-ok { border-color: rgba(34, 197, 94, 0.45); background: rgba(34, 197, 94, 0.08); }
+.srv-card.is-ok b { color: #86efac; }
+.srv-card.is-bad { border-color: rgba(248, 113, 113, 0.4); background: rgba(248, 113, 113, 0.07); }
+.srv-card.is-bad b { color: #fca5a5; }
+
+.srv-bar {
+  display: block;
+
+  height: 6px;
+  margin-top: 4px;
+
+  border-radius: 999px;
+
+  background: rgba(0, 0, 0, 0.45);
+
+  overflow: hidden;
+}
+
+.srv-bar i {
+  display: block;
+
+  height: 100%;
+
+  background: #5bd6ff;
+}
+
+.srv-bar i.is-full { background: #f87171; }
+
+/* ---------- Блоки ---------- */
+
+.srv-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  padding: 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.srv-block__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.srv-block__head h3 {
+  margin: 0;
+
+  color: #fff;
+
+  font-family: var(--font-display);
+  font-size: 15px;
+}
+
+.srv-block__tools {
+  display: flex;
+  gap: 6px;
+}
+
+.srv-hint {
+  margin: 0;
+
+  color: rgba(255, 255, 255, 0.42);
+
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.srv-alert {
+  margin: 0;
+  padding: 9px 12px;
+
+  border-radius: 10px;
+
+  font-size: 12.5px;
+}
+
+.srv-alert--bad {
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  background: rgba(248, 113, 113, 0.12);
+  color: #fca5a5;
+}
+
+.srv-alert--ok {
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.12);
+  color: #86efac;
+}
+
+/* ---------- Консоль ---------- */
+
+.srv-console {
+  max-height: 340px;
+  margin: 0;
+  padding: 10px 12px;
+
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+
+  background: #07060a;
+
+  color: #a8e5c0;
+
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+
+  white-space: pre-wrap;
+  word-break: break-word;
+
+  overflow: auto;
+}
+
+.srv-cmd {
+  display: flex;
+  gap: 8px;
+}
+
+.srv-cmd .srv-input { flex: 1; }
+
+.srv-upload {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.srv-upload .srv-input { flex: 1; min-width: 180px; }
+
+.srv-code {
+  width: 100%;
+
+  padding: 10px 12px;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+
+  background: #07060a;
+
+  color: #e8dcc0;
+
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+
+  resize: vertical;
+}
+
+/* ---------- Плагины ---------- */
+
+.srv-plugins {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 6px;
+
+  margin: 0;
+  padding: 0;
+
+  list-style: none;
+}
+
+.srv-plugins li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+
+  padding: 7px 10px;
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 9px;
+
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.srv-plugins b {
+  overflow: hidden;
+
+  color: #fff;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.srv-plugins small {
+  flex-shrink: 0;
+
+  color: rgba(255, 255, 255, 0.4);
+
+  font-size: 11px;
+}
+
+.srv-count {
+  color: rgba(255, 255, 255, 0.4);
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ---------- Телефон ---------- */
+
+@media (max-width: 720px) {
+  .srv-head__actions { width: 100%; }
+  .srv-head__actions .srv-btn { flex: 1; justify-content: center; }
+  .srv-cmd { flex-wrap: wrap; }
+  .srv-cmd .srv-btn { width: 100%; justify-content: center; }
+}

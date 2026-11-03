@@ -920,6 +920,25 @@ Route::middleware('auth:sanctum')->group(function () {
     | АДМИНКА — ТОЛЬКО АДМИН (role: admin)
     |----------------------------------------------------------------------
     */
+    /*
+    |----------------------------------------------------------------------
+    | ИГРОВОЙ СЕРВЕР (role: site_admin, admin)
+    |----------------------------------------------------------------------
+    */
+    Route::middleware('role:site_admin,admin')->prefix('admin/server')->group(function () {
+        Route::get('/status', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'status']);
+        Route::get('/console', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'console']);
+        Route::get('/players', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'players']);
+        Route::get('/plugins', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'plugins']);
+        Route::get('/start-command', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'startCommand']);
+        Route::put('/start-command', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'saveStartCommand']);
+        Route::post('/command', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'command'])->middleware('throttle:30,1');
+        Route::post('/upload', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'upload'])->middleware('throttle:10,1');
+        Route::post('/{action}', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'power'])
+            ->whereIn('action', ['start', 'stop', 'restart'])
+            ->middleware('throttle:10,1');
+    });
+
     Route::middleware('role:admin')->prefix('admin')->group(function () {
 
         // --- ТЕСТЕРЫ: календарь, экономика, выплаты ---

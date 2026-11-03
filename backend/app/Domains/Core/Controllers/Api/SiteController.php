@@ -18,6 +18,7 @@ class SiteController extends Controller
     /** Роли команды и подписи к ним, в порядке показа. */
     private const TEAM_ROLES = [
         'admin' => 'Администратор',
+        'site_admin' => 'Администратор сайта',
         'moderator' => 'Модератор',
         'tester' => 'Тестер',
         'bridge_curator' => 'Куратор бриджа',
