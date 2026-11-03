@@ -44,6 +44,61 @@ class GameServerPanelTest extends TestCase
                 ];
             }
 
+            public function files(): array
+            {
+                return [
+                    ['path' => 'server.properties', 'size' => '4 KB', 'group' => 'root'],
+                    ['path' => 'bukkit.yml', 'size' => '4 KB', 'group' => 'root'],
+                    ['path' => 'plugins/Alley/settings.yml', 'size' => '4 KB', 'group' => 'plugins'],
+                ];
+            }
+
+            public function readFile(string $path): string
+            {
+                return "view-distance=5\nmotd=APEX";
+            }
+
+            public function saveFile(string $path, string $content): void
+            {
+                $this->calls[] = 'save-file:' . $path;
+            }
+
+            public function archives(): array
+            {
+                return [['name' => 'server-full.zip', 'size' => '52M', 'created' => '2026-11-03 11:00']];
+            }
+
+            public function backups(): array
+            {
+                return [['name' => 'server-20261103-111957.tar.gz', 'size' => '72M', 'created' => '2026-11-03 11:19']];
+            }
+
+            public function uploadArchive(\Illuminate\Http\UploadedFile $file): array
+            {
+                $this->calls[] = 'upload-archive';
+
+                return ['name' => 'pack.zip', 'size' => 1024];
+            }
+
+            public function applyArchive(string $name): array
+            {
+                $this->calls[] = 'apply:' . $name;
+
+                return ['applied' => true, 'backup' => 'server-20261103-120000.tar.gz', 'output' => 'applied'];
+            }
+
+            public function deleteArchive(string $name): void
+            {
+                $this->calls[] = 'delete-archive:' . $name;
+            }
+
+            public function restoreBackup(string $name): string
+            {
+                $this->calls[] = 'restore:' . $name;
+
+                return 'restored';
+            }
+
             public function players(): array
             {
                 return ['online' => 3, 'max' => 20];
@@ -177,6 +232,140 @@ class GameServerPanelTest extends TestCase
         $this->actingAs($this->user('site_admin'))
             ->postJson('/api/admin/server/upload', ['target' => 'config'])
             ->assertStatus(422);
+    }
+
+    /* ==================== Конфиги ==================== */
+
+    public function test_site_admin_sees_config_files(): void
+    {
+        $this->fakeServer();
+
+        $this->actingAs($this->user('site_admin'))
+            ->getJson('/api/admin/server/files')
+            ->assertOk()
+            ->assertJsonCount(3, 'files')
+            ->assertJsonPath('files.0.path', 'server.properties')
+            ->assertJsonPath('files.2.group', 'plugins');
+    }
+
+    public function test_site_admin_reads_and_saves_config(): void
+    {
+        $fake = $this->fakeServer();
+        $admin = $this->user('site_admin');
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/server/file?path=server.properties')
+            ->assertOk()
+            ->assertJsonPath('path', 'server.properties')
+            ->assertJsonPath('content', fn ($c) => str_contains($c, 'view-distance'));
+
+        $this->actingAs($admin)
+            ->putJson('/api/admin/server/file', [
+                'path' => 'plugins/Alley/settings.yml',
+                'content' => 'plugin:\n  auto-update: false',
+            ])
+            ->assertOk();
+
+        $this->assertContains('save-file:plugins/Alley/settings.yml', $fake->calls);
+    }
+
+    public function test_config_path_traversal_is_rejected(): void
+    {
+        // Проверяем сам сервис: до ssh дело не доходит
+        $service = app(GameServerService::class);
+
+        foreach (['../../etc/passwd', '/etc/passwd', 'plugins/../../secret.yml'] as $bad) {
+            try {
+                $service->readFile($bad);
+                $this->fail('путь не заблокирован: ' . $bad);
+            } catch (RuntimeException) {
+                $this->assertTrue(true);
+            }
+        }
+    }
+
+    public function test_config_extension_is_rejected(): void
+    {
+        $this->expectException(RuntimeException::class);
+
+        app(GameServerService::class)->readFile('plugins/Secret.jar');
+    }
+
+    /* ==================== Архивы ==================== */
+
+    public function test_site_admin_sees_archives_and_backups(): void
+    {
+        $this->fakeServer();
+
+        $this->actingAs($this->user('site_admin'))
+            ->getJson('/api/admin/server/archives')
+            ->assertOk()
+            ->assertJsonPath('archives.0.name', 'server-full.zip')
+            ->assertJsonPath('backups.0.name', 'server-20261103-111957.tar.gz');
+    }
+
+    public function test_site_admin_applies_archive(): void
+    {
+        $fake = $this->fakeServer();
+
+        $this->actingAs($this->user('site_admin'))
+            ->postJson('/api/admin/server/archives/server-full.zip/apply')
+            ->assertOk()
+            ->assertJsonPath('result.applied', true)
+            ->assertJsonPath('result.backup', 'server-20261103-120000.tar.gz');
+
+        $this->assertContains('apply:server-full.zip', $fake->calls);
+    }
+
+    public function test_site_admin_uploads_archive(): void
+    {
+        $fake = $this->fakeServer();
+
+        $this->actingAs($this->user('site_admin'))
+            ->post('/api/admin/server/archives', [
+                'file' => \Illuminate\Http\UploadedFile::fake()->create('pack.zip', 2048),
+            ])
+            ->assertOk()
+            ->assertJsonPath('archive.name', 'pack.zip');
+
+        $this->assertContains('upload-archive', $fake->calls);
+    }
+
+    public function test_archive_name_must_be_zip(): void
+    {
+        // Имя проверяет сервис, до scp не доходим
+        $this->expectException(RuntimeException::class);
+
+        app(GameServerService::class)->uploadArchive(
+            \Illuminate\Http\UploadedFile::fake()->create('evil.txt', 10),
+        );
+    }
+
+    public function test_archive_apply_rejects_foreign_role(): void
+    {
+        $this->fakeServer();
+
+        $this->actingAs($this->user('moderator'))
+            ->postJson('/api/admin/server/archives/server-full.zip/apply')
+            ->assertForbidden();
+    }
+
+    public function test_site_admin_deletes_archive_and_restores_backup(): void
+    {
+        $fake = $this->fakeServer();
+        $admin = $this->user('site_admin');
+
+        $this->actingAs($admin)
+            ->deleteJson('/api/admin/server/archives/old.zip')
+            ->assertOk();
+
+        $this->assertContains('delete-archive:old.zip', $fake->calls);
+
+        $this->actingAs($admin)
+            ->postJson('/api/admin/server/backups/server-20261103-111957.tar.gz/restore')
+            ->assertOk();
+
+        $this->assertContains('restore:server-20261103-111957.tar.gz', $fake->calls);
     }
 
     public function test_site_admin_can_restart_and_send_command(): void

@@ -144,6 +144,223 @@ class GameServerService
         return $plugins;
     }
 
+    /* ==================== Конфиги ==================== */
+
+    /** Расширения, которые разрешено редактировать. */
+    public const CONFIG_EXT = ['properties', 'yml', 'yaml', 'json', 'txt', 'conf'];
+
+    /**
+     * Список редактируемых конфигов: корень сервера и plugins/*//*.
+     *
+     * @return array<int, array{path: string, size: string, group: string}>
+     */
+    public function files(): array
+    {
+        $result = $this->ssh('bash ' . self::PANEL . ' files', 25);
+
+        if ($result['code'] !== 0) {
+            throw new RuntimeException('Сервер не ответил: ' . trim($result['err'] ?: $result['out']));
+        }
+
+        $files = [];
+
+        foreach (explode("\n", trim($result['out'])) as $line) {
+            if (! str_contains($line, "\t")) {
+                continue;
+            }
+
+            [$path, $size] = explode("\t", $line, 2);
+            $path = trim($path);
+
+            $files[] = [
+                'path' => $path,
+                'size' => trim($size),
+                'group' => str_starts_with($path, 'plugins/') ? 'plugins' : 'root',
+            ];
+        }
+
+        return $files;
+    }
+
+    /** Прочитать конфиг. */
+    public function readFile(string $path): string
+    {
+        $this->assertConfigPath($path);
+
+        $result = $this->ssh('bash ' . self::PANEL . ' read ' . escapeshellarg($path), 20);
+
+        if ($result['code'] !== 0) {
+            throw new RuntimeException('Не удалось прочитать: ' . trim($result['out'] ?: $result['err']));
+        }
+
+        return $result['out'];
+    }
+
+    /** Записать конфиг. */
+    public function saveFile(string $path, string $content): void
+    {
+        $this->assertConfigPath($path);
+
+        if (strlen($content) > 512000) {
+            throw new RuntimeException('Файл больше 500 КБ — так не сохранить.');
+        }
+
+        $result = $this->ssh('bash ' . self::PANEL . ' write ' . escapeshellarg($path), 30, $content);
+
+        if ($result['code'] !== 0) {
+            throw new RuntimeException('Не удалось сохранить: ' . trim($result['out'] ?: $result['err']));
+        }
+    }
+
+    /** Путь конфига: только внутри сервера, без .., с известным расширением. */
+    private function assertConfigPath(string $path): void
+    {
+        if ($path === '' || strlen($path) > 200) {
+            throw new RuntimeException('Некорректный путь.');
+        }
+
+        if (str_contains($path, '..') || str_starts_with($path, '/') || str_contains($path, "\\")) {
+            throw new RuntimeException('Некорректный путь.');
+        }
+
+        if (! preg_match('#^[A-Za-z0-9_./-]+$#', $path)) {
+            throw new RuntimeException('В пути недопустимые символы.');
+        }
+
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        if (! in_array($ext, self::CONFIG_EXT, true)) {
+            throw new RuntimeException('Такой файл не редактируется (.' . $ext . ').');
+        }
+    }
+
+    /* ==================== Архивы сервера ==================== */
+
+    /** @return array<int, array{name: string, size: string, created: string}> */
+    public function archives(): array
+    {
+        return $this->table($this->ssh('bash ' . self::PANEL . ' archives', 20), ['name', 'size', 'created']);
+    }
+
+    /** @return array<int, array{name: string, size: string, created: string}> */
+    public function backups(): array
+    {
+        return $this->table($this->ssh('bash ' . self::PANEL . ' backups', 20), ['name', 'size', 'created']);
+    }
+
+    private function table(array $result, array $columns): array
+    {
+        if ($result['code'] !== 0) {
+            throw new RuntimeException('Сервер не ответил: ' . trim($result['err'] ?: $result['out']));
+        }
+
+        $rows = [];
+
+        foreach (explode("\n", trim($result['out'])) as $line) {
+            if (! str_contains($line, "\t")) {
+                continue;
+            }
+
+            $cells = explode("\t", $line);
+            $row = [];
+
+            foreach ($columns as $index => $column) {
+                $row[$column] = trim($cells[$index] ?? '');
+            }
+
+            $rows[] = $row;
+        }
+
+        return $rows;
+    }
+
+    /** Залить zip в папку обновлений на сервере. */
+    public function uploadArchive(UploadedFile $file): array
+    {
+        $name = $this->safeArchiveName($file->getClientOriginalName());
+
+        $result = $this->exec([
+            'scp', '-i', $this->key(),
+            '-o', 'BatchMode=yes',
+            '-o', 'StrictHostKeyChecking=no',
+            '-o', 'UserKnownHostsFile=/dev/null',
+            '-o', 'ConnectTimeout=10',
+            (string) $file->getRealPath(),
+            $this->user() . '@' . $this->host() . ':/opt/minecraft/updates/' . $name,
+        ], 600);
+
+        if ($result['code'] !== 0) {
+            throw new RuntimeException('Загрузка не удалась: ' . trim($result['err'] ?: $result['out']));
+        }
+
+        return ['name' => $name, 'size' => (int) $file->getSize()];
+    }
+
+    /**
+     * Применить архив: стоп → бэкап → распаковка поверх → старт.
+     *
+     * @return array{applied: bool, backup: ?string, output: string}
+     */
+    public function applyArchive(string $name): array
+    {
+        $name = $this->safeArchiveName($name);
+
+        $result = $this->ssh('bash ' . self::PANEL . ' apply-zip ' . escapeshellarg($name), 600);
+        $out = trim($result['out'] . "\n" . $result['err']);
+
+        if ($result['code'] !== 0 || ! str_contains($out, 'applied')) {
+            throw new RuntimeException('Применение не удалось: ' . ($out !== '' ? $out : 'нет ответа'));
+        }
+
+        $backup = null;
+
+        if (preg_match('/backup=(server-[0-9-]+\.tar\.gz)/', $out, $m)) {
+            $backup = $m[1];
+        }
+
+        return ['applied' => true, 'backup' => $backup, 'output' => $out];
+    }
+
+    public function deleteArchive(string $name): void
+    {
+        $name = $this->safeArchiveName($name);
+
+        $result = $this->ssh('bash ' . self::PANEL . ' rm-archive ' . escapeshellarg($name), 20);
+
+        if ($result['code'] !== 0) {
+            throw new RuntimeException('Не удалось удалить: ' . trim($result['out'] ?: $result['err']));
+        }
+    }
+
+    /** Восстановить каталог из бэкапа (тоже со стопом и стартом). */
+    public function restoreBackup(string $name): string
+    {
+        if (! preg_match('/^server-[0-9-]+\.tar\.gz$/', $name)) {
+            throw new RuntimeException('Некорректное имя бэкапа.');
+        }
+
+        $result = $this->ssh('bash ' . self::PANEL . ' restore ' . escapeshellarg($name), 600);
+        $out = trim($result['out'] . "\n" . $result['err']);
+
+        if ($result['code'] !== 0 || ! str_contains($out, 'restored')) {
+            throw new RuntimeException('Восстановление не удалось: ' . ($out !== '' ? $out : 'нет ответа'));
+        }
+
+        return $out;
+    }
+
+    /** Имя архива: только простое имя, обязательно .zip. */
+    private function safeArchiveName(string $name): string
+    {
+        $name = basename(str_replace('\\', '/', $name));
+
+        if (! preg_match('/^[A-Za-z0-9._-]{1,120}\.zip$/i', $name)) {
+            throw new RuntimeException('Имя архива должно быть вида name.zip (латиница, цифры, точка, дефис).');
+        }
+
+        return $name;
+    }
+
     public function console(int $lines = 150): string
     {
         $lines = max(20, min(500, $lines));

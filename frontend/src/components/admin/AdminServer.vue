@@ -19,6 +19,17 @@ const notice = ref('')
 
 const exactPlayers = ref(null)
 const plugins = ref([])
+
+/* ---------- Конфиги ---------- */
+const configFiles = ref([])
+const configPath = ref('')
+const configText = ref('')
+const configDirty = ref(false)
+
+/* ---------- Архивы ---------- */
+const archives = ref([])
+const backups = ref([])
+const archiveFile = ref(null)
 const live = ref(false)
 const lines = ref(150)
 
@@ -60,6 +71,110 @@ async function loadPlugins() {
     plugins.value = []
   }
 }
+
+/* ---------- Конфиги ---------- */
+
+async function loadConfigs() {
+  try {
+    configFiles.value = (await gameServerApi.files()).files ?? []
+  } catch (e) {
+    configFiles.value = []
+    error.value = e.message ?? 'Не удалось получить список конфигов'
+  }
+}
+
+async function openConfig(path) {
+  if (configDirty.value) {
+    const ok = await confirmDialog('Несохранённые правки пропадут. Открыть другой файл?', {
+      title: 'Конфиг',
+      confirmText: 'Открыть',
+    })
+
+    if (!ok) return
+  }
+
+  busy.value = 'cfg-read'
+
+  try {
+    configPath.value = path
+    configText.value = (await gameServerApi.readFile(path)).content ?? ''
+    configDirty.value = false
+  } catch (e) {
+    error.value = e.message ?? 'Не удалось прочитать файл'
+  } finally {
+    busy.value = ''
+  }
+}
+
+const saveConfig = () => act('cfg-save', async () => {
+  await gameServerApi.saveFile(configPath.value, configText.value)
+  configDirty.value = false
+}, 'Конфиг сохранён')
+
+/* ---------- Архивы ---------- */
+
+async function loadArchives() {
+  try {
+    const data = await gameServerApi.archives()
+    archives.value = data.archives ?? []
+    backups.value = data.backups ?? []
+  } catch (e) {
+    archives.value = []
+    backups.value = []
+  }
+}
+
+function pickArchive(event) {
+  archiveFile.value = event.target.files?.[0] ?? null
+}
+
+const uploadArchive = () => act('arch-upload', async () => {
+  if (!archiveFile.value) return
+
+  const result = await gameServerApi.uploadArchive(archiveFile.value)
+  archiveFile.value = null
+  notice.value = `Архив загружен: ${result.archive.name}`
+  await loadArchives()
+})
+
+const applyArchive = (name) => act('arch-apply', async () => {
+  const ok = await confirmDialog(
+      `Применить архив ${name}? Сервер остановится, сделает бэкап, распакует архив поверх и запустится снова. Игроков выкинет.`,
+      { title: 'Применить архив', confirmText: 'Применить', danger: true },
+  )
+
+  if (!ok) return
+
+  const result = await gameServerApi.applyArchive(name)
+  notice.value = 'Архив применён' + (result.result?.backup ? `, бэкап: ${result.result.backup}` : '')
+  await Promise.all([loadStatus(), loadArchives()])
+})
+
+const deleteArchive = (name) => act('arch-del', async () => {
+  const ok = await confirmDialog(`Удалить архив ${name}?`, {
+    title: 'Удалить архив',
+    confirmText: 'Удалить',
+    danger: true,
+  })
+
+  if (!ok) return
+
+  await gameServerApi.deleteArchive(name)
+  await loadArchives()
+})
+
+const restoreBackup = (name) => act('arch-restore', async () => {
+  const ok = await confirmDialog(
+      `Откатить сервер к бэкапу ${name}? Текущие файлы будут перезаписаны, сервер перезапустится.`,
+      { title: 'Восстановление', confirmText: 'Откатить', danger: true },
+  )
+
+  if (!ok) return
+
+  await gameServerApi.restoreBackup(name)
+  notice.value = 'Бэкап восстановлен'
+  await Promise.all([loadStatus(), loadArchives()])
+})
 
 async function loadPlayers() {
   busy.value = 'players'
@@ -187,6 +302,8 @@ function toggleLive() {
 onMounted(async () => {
   await refresh()
   await loadPlugins()
+  await loadConfigs()
+  await loadArchives()
   await loadStartCommand()
 })
 
@@ -341,6 +458,110 @@ onUnmounted(() => {
             <small>{{ plugin.size }}</small>
           </li>
         </ul>
+      </section>
+
+      <!-- Конфиги -->
+      <section class="srv-block">
+        <header class="srv-block__head">
+          <h3>Конфиги</h3>
+          <div class="srv-block__tools">
+            <button type="button" class="srv-btn srv-btn--sm" @click="loadConfigs">Обновить список</button>
+            <button
+                type="button"
+                class="srv-btn srv-btn--main srv-btn--sm"
+                :disabled="busy === 'cfg-save' || !configPath || !configDirty"
+                @click="saveConfig"
+            >Сохранить</button>
+          </div>
+        </header>
+
+        <div class="srv-cfg">
+          <div class="srv-cfg__list">
+            <template v-for="group in ['root', 'plugins']" :key="group">
+              <span class="srv-cfg__group">{{ group === 'root' ? 'Сервер' : 'Плагины' }}</span>
+              <button
+                  v-for="file in configFiles.filter((f) => f.group === group)"
+                  :key="file.path"
+                  type="button"
+                  class="srv-cfg__file"
+                  :class="{ 'is-active': file.path === configPath }"
+                  :disabled="busy === 'cfg-read'"
+                  @click="openConfig(file.path)"
+              >
+                <b>{{ file.path }}</b>
+                <small>{{ file.size }}</small>
+              </button>
+            </template>
+
+            <p v-if="!configFiles.length" class="srv-hint">Список пуст.</p>
+          </div>
+
+          <div class="srv-cfg__edit">
+            <p v-if="!configPath" class="srv-hint">Выбери файл слева.</p>
+
+            <template v-else>
+              <div class="srv-cfg__head">
+                <b>{{ configPath }}</b>
+                <span v-if="configDirty" class="srv-cfg__dirty">есть правки</span>
+              </div>
+              <textarea
+                  v-model="configText"
+                  class="srv-code srv-code--cfg"
+                  rows="14"
+                  spellcheck="false"
+                  @input="configDirty = true"
+              ></textarea>
+            </template>
+          </div>
+        </div>
+      </section>
+
+      <!-- Архивы сервера -->
+      <section class="srv-block">
+        <header class="srv-block__head">
+          <h3>Архивы сервера</h3>
+          <button type="button" class="srv-btn srv-btn--sm" @click="loadArchives">Обновить</button>
+        </header>
+
+        <div class="srv-upload">
+          <input type="file" class="srv-input" accept=".zip" @change="pickArchive" />
+          <button
+              type="button"
+              class="srv-btn srv-btn--main"
+              :disabled="!archiveFile || busy === 'arch-upload'"
+              @click="uploadArchive"
+          >Загрузить zip</button>
+        </div>
+
+        <p class="srv-hint">
+          Полный архив сервера. Загрузка только складывает файл в очередь; чтобы он применился —
+          нажми «Применить»: сервер остановится, сделает бэкап, распакует архив и запустится.
+        </p>
+
+        <span class="srv-cfg__group">В очереди</span>
+        <ul v-if="archives.length" class="srv-list">
+          <li v-for="a in archives" :key="a.name">
+            <b>{{ a.name }}</b>
+            <small>{{ a.size }} · {{ a.created }}</small>
+            <button type="button" class="srv-btn srv-btn--sm srv-btn--warn" :disabled="!!busy" @click="applyArchive(a.name)">
+              Применить
+            </button>
+            <button type="button" class="srv-btn srv-btn--sm" :disabled="!!busy" @click="deleteArchive(a.name)">×</button>
+          </li>
+        </ul>
+        <p v-else class="srv-hint">Архивов нет.</p>
+
+        <span class="srv-cfg__group">Бэкапы</span>
+        <ul v-if="backups.length" class="srv-list">
+          <li v-for="b in backups" :key="b.name">
+            <b>{{ b.name }}</b>
+            <small>{{ b.size }} · {{ b.created }}</small>
+            <button type="button" class="srv-btn srv-btn--sm" :disabled="!!busy" @click="restoreBackup(b.name)">
+              Откатить
+            </button>
+          </li>
+        </ul>
+        <p v-else class="srv-hint">Бэкапов нет.</p>
       </section>
 
       <!-- Команда запуска -->

@@ -934,6 +934,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/start-command', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'saveStartCommand']);
         Route::post('/command', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'command'])->middleware('throttle:30,1');
         Route::post('/upload', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'upload'])->middleware('throttle:10,1');
+        Route::get('/files', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'files']);
+        Route::get('/file', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'readFile']);
+        Route::put('/file', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'saveFile']);
+        Route::get('/archives', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'archives']);
+        Route::post('/archives', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'uploadArchive'])->middleware('throttle:10,1');
+        Route::post('/archives/{name}/apply', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'applyArchive'])->middleware('throttle:5,1');
+        Route::delete('/archives/{name}', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'deleteArchive']);
+        Route::post('/backups/{name}/restore', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'restoreBackup'])->middleware('throttle:5,1');
         Route::post('/{action}', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'power'])
             ->whereIn('action', ['start', 'stop', 'restart'])
             ->middleware('throttle:10,1');

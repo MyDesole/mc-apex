@@ -47,6 +47,113 @@ class ServerController extends Controller
         }
     }
 
+    /* ==================== Конфиги ==================== */
+
+    public function files(): JsonResponse
+    {
+        try {
+            return response()->json(['files' => $this->server->files()]);
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 502);
+        }
+    }
+
+    public function readFile(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'path' => ['required', 'string', 'max:200'],
+        ]);
+
+        try {
+            return response()->json([
+                'path' => $data['path'],
+                'content' => $this->server->readFile((string) $data['path']),
+            ]);
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function saveFile(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'path' => ['required', 'string', 'max:200'],
+            'content' => ['nullable', 'string', 'max:512000'],
+        ]);
+
+        try {
+            $this->server->saveFile((string) $data['path'], (string) ($data['content'] ?? ''));
+
+            return response()->json(['ok' => true]);
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    /* ==================== Архивы ==================== */
+
+    public function archives(): JsonResponse
+    {
+        try {
+            return response()->json([
+                'archives' => $this->server->archives(),
+                'backups' => $this->server->backups(),
+            ]);
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 502);
+        }
+    }
+
+    /** Загрузка полного архива сервера (zip). */
+    public function uploadArchive(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'file' => ['required', 'file', 'max:204800'],
+        ]);
+
+        try {
+            return response()->json([
+                'ok' => true,
+                'archive' => $this->server->uploadArchive($data['file']),
+            ]);
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    /** Применить архив: стоп → бэкап → распаковка → старт. */
+    public function applyArchive(string $name): JsonResponse
+    {
+        try {
+            return response()->json([
+                'ok' => true,
+                'result' => $this->server->applyArchive($name),
+            ]);
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 502);
+        }
+    }
+
+    public function deleteArchive(string $name): JsonResponse
+    {
+        try {
+            $this->server->deleteArchive($name);
+
+            return response()->json(['ok' => true]);
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function restoreBackup(string $name): JsonResponse
+    {
+        try {
+            return response()->json(['ok' => true, 'result' => $this->server->restoreBackup($name)]);
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 502);
+        }
+    }
+
     public function console(Request $request): JsonResponse
     {
         try {

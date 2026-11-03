@@ -14,6 +14,45 @@ export const gameServerApi = {
         return api.get('/admin/server/players')
     },
 
+    /* ---------- Конфиги ---------- */
+
+    files() {
+        return api.get('/admin/server/files')
+    },
+
+    readFile(path) {
+        return api.get('/admin/server/file', { params: { path } })
+    },
+
+    saveFile(path, content) {
+        return api.put('/admin/server/file', { path, content })
+    },
+
+    /* ---------- Архивы и бэкапы ---------- */
+
+    archives() {
+        return api.get('/admin/server/archives')
+    },
+
+    uploadArchive(file) {
+        const form = new FormData()
+        form.append('file', file)
+
+        return api.post('/admin/server/archives', form)
+    },
+
+    applyArchive(name) {
+        return api.post(`/admin/server/archives/${encodeURIComponent(name)}/apply`)
+    },
+
+    deleteArchive(name) {
+        return api.delete(`/admin/server/archives/${encodeURIComponent(name)}`)
+    },
+
+    restoreBackup(name) {
+        return api.post(`/admin/server/backups/${encodeURIComponent(name)}/restore`)
+    },
+
     /** Плагины на сервере. */
     plugins() {
         return api.get('/admin/server/plugins')
