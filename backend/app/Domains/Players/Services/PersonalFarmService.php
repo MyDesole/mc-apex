@@ -9,6 +9,7 @@ use App\Domains\Shop\Models\UserInventory;
 use App\Domains\Users\Models\User;
 use App\Domains\Wallet\Models\CoinTransaction;
 use App\Domains\Wallet\Services\CoinService;
+use App\Domains\Wallet\Services\RubleService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -52,6 +53,8 @@ class PersonalFarmService
             'unlocked' => (bool) $farm,
             'price' => self::PRICE,
             'balance' => (int) $user->apex_coins,
+            'rubles' => RubleService::balance($user),
+            'speedup_per_hour' => RubleService::SPEEDUP_PER_HOUR,
             'seeds' => $this->seeds(),
             'limits' => [
                 'mating_cost' => PetBreedingService::MATING_COST,
@@ -189,6 +192,30 @@ class PersonalFarmService
             return [
                 'pet' => ['inventory_id' => $pet->id, 'name' => $pet->item?->name, ...(PetTraits::present($pet->pet_traits, $pet->pet_serial) ?? [])],
             ];
+        });
+    }
+
+    /** Ускорить рост на грядке за Рубли. */
+    public function speedUp(User $user, int $plotId): array
+    {
+        self::assertOwns($user);
+
+        return DB::transaction(function () use ($user, $plotId) {
+            $plot = DB::table('farm_plots')->where('id', $plotId)->lockForUpdate()->first();
+
+            if (! $plot || $plot->user_id !== $user->id || $plot->claimed_at) {
+                throw new RuntimeException('Грядка не найдена.');
+            }
+
+            $cost = RubleService::speedUpCost($plot->ready_at);
+            if ($cost === 0) {
+                throw new RuntimeException('Питомец уже вырос.');
+            }
+
+            RubleService::spend($user, $cost, 'Ускорение грядки', "speedup:plot:{$plotId}");
+            DB::table('farm_plots')->where('id', $plotId)->update(['ready_at' => now(), 'updated_at' => now()]);
+
+            return ['spent' => $cost, 'rubles' => RubleService::balance($user)];
         });
     }
 

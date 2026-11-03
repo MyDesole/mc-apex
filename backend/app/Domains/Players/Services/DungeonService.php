@@ -5,6 +5,7 @@ namespace App\Domains\Players\Services;
 use App\Domains\Players\Support\DungeonBattle;
 use App\Domains\Players\Support\Dungeons;
 use App\Domains\Players\Support\PetLocks;
+use App\Domains\Wallet\Services\RubleService;
 use App\Domains\Players\Support\PetTraits;
 use App\Domains\Shop\Exceptions\NotEnoughCoins;
 use App\Domains\Shop\Models\UserInventory;
@@ -328,6 +329,10 @@ final class DungeonService
         $floors = (int) $dungeon['floors'];
         $cleared = $nextFloor > $floors;
 
+        if ($isBoss) {
+            $state = $this->grantRubles($user, $run, $dungeon, $floor, $cleared, $state);
+        }
+
         $state['battle'] = null;
         $state['phase'] = $cleared ? 'done' : 'idle';
 
@@ -440,6 +445,35 @@ final class DungeonService
     }
 
     /* ==================== Добыча ==================== */
+
+    /**
+     * Рубли за босса этажа; за первую зачистку подземелья — ещё бонус.
+     * Ключ первой зачистки привязан к игроку и подземелью, поэтому
+     * повторно он не сработает; общий суточный предел — в RubleService.
+     */
+    private function grantRubles(User $user, object $run, array $dungeon, int $floor, bool $cleared, array $state): array
+    {
+        $base = RubleService::BOSS_REWARD[(int) $dungeon['stage']] ?? 1;
+
+        $gained = RubleService::earn($user, $base, RubleService::SOURCE_DUNGEON_BOSS, 'Подземелье: босс этажа', "dungeon:{$run->id}:{$floor}:rubles");
+
+        if ($cleared) {
+            $gained += RubleService::earn(
+                $user,
+                $base * (RubleService::FIRST_CLEAR_MULTIPLIER - 1),
+                RubleService::SOURCE_DUNGEON_CLEAR,
+                'Подземелье: первая зачистка',
+                "dungeon-first:{$user->id}:{$run->dungeon}",
+            );
+        }
+
+        if ($gained > 0) {
+            $state['loot']['rubles'] = ($state['loot']['rubles'] ?? 0) + $gained;
+            $state['log'][] = ['kind' => 'rubles', 'text' => "Рубли: +{$gained}."];
+        }
+
+        return $state;
+    }
 
     private function grantLoot(User $user, object $run, array $dungeon, int $floor, bool $isBoss, array $state): array
     {

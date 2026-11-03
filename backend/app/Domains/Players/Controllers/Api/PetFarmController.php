@@ -61,6 +61,16 @@ class PetFarmController extends Controller
         return $this->run(fn () => $this->personal->harvest($request->user(), $plot));
     }
 
+    public function speedUpPlot(Request $request, int $plot): JsonResponse
+    {
+        return $this->run(fn () => $this->personal->speedUp($request->user(), $plot));
+    }
+
+    public function speedUpMating(Request $request, int $mating): JsonResponse
+    {
+        return $this->run(fn () => $this->breeding->speedUp($request->user(), $mating));
+    }
+
     public function mate(Request $request): JsonResponse
     {
         $data = $request->validate($this->pairRules());

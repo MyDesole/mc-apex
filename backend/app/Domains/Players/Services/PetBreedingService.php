@@ -12,6 +12,7 @@ use App\Domains\Shop\Services\ShopService;
 use App\Domains\Users\Models\User;
 use App\Domains\Wallet\Models\CoinTransaction;
 use App\Domains\Wallet\Services\CoinService;
+use App\Domains\Wallet\Services\RubleService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -172,7 +173,30 @@ class PetBreedingService
                 'offspring' => ['inventory_id' => $offspring->id, ...(PetTraits::present($offspring->pet_traits, $offspring->pet_serial) ?? [])],
                 'species' => $offspring->item?->effect_value,
                 'name' => $offspring->item?->name,
+                'rubles' => RubleService::earn($user, RubleService::FARM_REWARD['mating'], RubleService::SOURCE_FARM, 'Спаривание питомцев', "mating:{$breedingId}"),
             ];
+        });
+    }
+
+    /** Ускорить возвращение из Кладовки за Рубли: час ожидания стоит SPEEDUP_PER_HOUR. */
+    public function speedUp(User $user, int $breedingId): array
+    {
+        return DB::transaction(function () use ($user, $breedingId) {
+            $row = DB::table('pet_breedings')->where('id', $breedingId)->lockForUpdate()->first();
+
+            if (! $row || $row->user_id !== $user->id || $row->kind !== 'mating' || $row->claimed_at) {
+                throw new RuntimeException('Спаривание не найдено.');
+            }
+
+            $cost = RubleService::speedUpCost($row->ends_at);
+            if ($cost === 0) {
+                throw new RuntimeException('Питомцы уже вернулись.');
+            }
+
+            RubleService::spend($user, $cost, 'Ускорение Кладовки', "speedup:mating:{$breedingId}");
+            DB::table('pet_breedings')->where('id', $breedingId)->update(['ends_at' => now(), 'updated_at' => now()]);
+
+            return ['spent' => $cost, 'rubles' => RubleService::balance($user)];
         });
     }
 
@@ -242,7 +266,7 @@ class PetBreedingService
                 'acquired_at' => now(),
             ]);
 
-            DB::table('pet_breedings')->insert([
+            $crossId = DB::table('pet_breedings')->insertGetId([
                 'user_id' => $user->id,
                 'kind' => 'cross',
                 'parent1_id' => $ids[0],
@@ -253,7 +277,17 @@ class PetBreedingService
                 'updated_at' => now(),
             ]);
 
+            // Эпическая и легендарная ступени приносят Рубли
+            $rubles = RubleService::earn(
+                $user,
+                RubleService::FARM_REWARD["cross_{$next}"] ?? 0,
+                RubleService::SOURCE_FARM,
+                'Скрещивание питомцев',
+                "cross:{$crossId}",
+            );
+
             return [
+                'rubles' => $rubles,
                 'offspring' => ['inventory_id' => $offspring->id, ...(PetTraits::present($offspring->pet_traits, $offspring->pet_serial) ?? [])],
                 'species' => $species,
                 'name' => $item->name,
