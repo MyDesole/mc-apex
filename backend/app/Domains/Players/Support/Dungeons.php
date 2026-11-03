@@ -922,6 +922,96 @@ final class Dungeons
         'gear-c9-chest-iron' => ['slot' => 'armor', 'name' => 'Тяжёлая броня', 'sprite' => 'gi-chest-iron', 'atk' => 0, 'def' => 83, 'hp' => 333, 'spd' => -2, 'stage' => 9, 'rarity' => 'common', 'cap' => 'common'],
         'gear-c9-shield-iron' => ['slot' => 'armor', 'name' => 'Башенный щит', 'sprite' => 'gi-shield-iron', 'atk' => 0, 'def' => 99, 'hp' => 283, 'spd' => -2, 'stage' => 9, 'rarity' => 'common', 'cap' => 'common'],
         'gear-c9-amulet-iron' => ['slot' => 'trinket', 'name' => 'Простой амулет', 'sprite' => 'gi-amulet-iron', 'atk' => 16, 'def' => 30, 'hp' => 184, 'spd' => 13, 'stage' => 9, 'rarity' => 'common', 'cap' => 'common'],
+
+        // Ступень 1: четвёртая волна, новые формы
+        'gear-w1-scepter-iron' => ['slot' => 'weapon', 'name' => 'Скипетр костяного вора', 'sprite' => 'gi-scepter-iron', 'atk' => 3, 'def' => 0, 'hp' => 2, 'spd' => 0, 'stage' => 1, 'rarity' => 'common', 'perk' => ['stun', 8]],
+        'gear-w1-crossbow-bone' => ['slot' => 'weapon', 'name' => 'Самострел стражника', 'sprite' => 'gi-crossbow-bone', 'atk' => 4, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 1, 'rarity' => 'common', 'perk' => ['pierce', 18]],
+        'gear-w1-pauldrons-iron' => ['slot' => 'armor', 'name' => 'Ржавые наплечники', 'sprite' => 'gi-pauldrons-iron', 'atk' => 0, 'def' => 3, 'hp' => 8, 'spd' => 0, 'stage' => 1, 'rarity' => 'common', 'perk' => ['bulwark', 6]],
+        'gear-w1-mask-bone' => ['slot' => 'armor', 'name' => 'Маска мертвеца', 'sprite' => 'gi-mask-bone', 'atk' => 0, 'def' => 2, 'hp' => 10, 'spd' => 1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['dodge', 7]],
+        'gear-w1-bell-bronze' => ['slot' => 'trinket', 'name' => 'Колокольчик склепа', 'sprite' => 'gi-bell-bronze', 'atk' => 1, 'def' => 0, 'hp' => 7, 'spd' => 1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['rage', 12]],
+        'gear-w1-key-iron' => ['slot' => 'trinket', 'name' => 'Ржавый ключ', 'sprite' => 'gi-key-iron', 'atk' => 1, 'def' => 0, 'hp' => 4, 'spd' => 1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['opener', 35]],
+        'gear-w1-rune-bone' => ['slot' => 'trinket', 'name' => 'Руна первого шага', 'sprite' => 'gi-rune-bone', 'atk' => 1, 'def' => 0, 'hp' => 4, 'spd' => 1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['crit', 7]],
+
+        // Ступень 2: четвёртая волна, новые формы
+        'gear-w2-scepter-sea' => ['slot' => 'weapon', 'name' => 'Скипетр прилива', 'sprite' => 'gi-scepter-sea', 'atk' => 8, 'def' => 0, 'hp' => 4, 'spd' => 0, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['stun', 9], 'set' => 'tide'],
+        'gear-w2-crossbow-bronze' => ['slot' => 'weapon', 'name' => 'Арбалет контрабандиста', 'sprite' => 'gi-crossbow-bronze', 'atk' => 9, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['pierce', 20]],
+        'gear-w2-pauldrons-bronze' => ['slot' => 'armor', 'name' => 'Наплечники из ракушек', 'sprite' => 'gi-pauldrons-bronze', 'atk' => 0, 'def' => 6, 'hp' => 18, 'spd' => 0, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['bulwark', 7]],
+        'gear-w2-mask-sea' => ['slot' => 'armor', 'name' => 'Маска водолаза', 'sprite' => 'gi-mask-sea', 'atk' => 0, 'def' => 5, 'hp' => 21, 'spd' => 1, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['dodge', 8], 'set' => 'tide'],
+        'gear-w2-bell-sea' => ['slot' => 'trinket', 'name' => 'Корабельная рында', 'sprite' => 'gi-bell-sea', 'atk' => 1, 'def' => 2, 'hp' => 17, 'spd' => 2, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['rage', 13], 'set' => 'tide'],
+        'gear-w2-key-bronze' => ['slot' => 'trinket', 'name' => 'Ключ от сундука', 'sprite' => 'gi-key-bronze', 'atk' => 2, 'def' => 1, 'hp' => 8, 'spd' => 3, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['opener', 38]],
+        'gear-w2-rune-sea' => ['slot' => 'trinket', 'name' => 'Руна течения', 'sprite' => 'gi-rune-sea', 'atk' => 3, 'def' => 1, 'hp' => 10, 'spd' => 2, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['crit', 8]],
+
+        // Ступень 3: четвёртая волна, новые формы
+        'gear-w3-scepter-fire' => ['slot' => 'weapon', 'name' => 'Скипетр горна', 'sprite' => 'gi-scepter-fire', 'atk' => 14, 'def' => 0, 'hp' => 7, 'spd' => 0, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['stun', 10]],
+        'gear-w3-crossbow-steel' => ['slot' => 'weapon', 'name' => 'Арбалет мастера', 'sprite' => 'gi-crossbow-steel', 'atk' => 18, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['pierce', 22], 'set' => 'ember'],
+        'gear-w3-pauldrons-fire' => ['slot' => 'armor', 'name' => 'Раскалённые наплечники', 'sprite' => 'gi-pauldrons-fire', 'atk' => 0, 'def' => 12, 'hp' => 32, 'spd' => 0, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['bulwark', 7], 'set' => 'ember'],
+        'gear-w3-mask-steel' => ['slot' => 'armor', 'name' => 'Маска кузнеца', 'sprite' => 'gi-mask-steel', 'atk' => 0, 'def' => 9, 'hp' => 37, 'spd' => 1, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['dodge', 8]],
+        'gear-w3-bell-fire' => ['slot' => 'trinket', 'name' => 'Колокол кузни', 'sprite' => 'gi-bell-fire', 'atk' => 3, 'def' => 3, 'hp' => 26, 'spd' => 2, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['rage', 14]],
+        'gear-w3-key-fire' => ['slot' => 'trinket', 'name' => 'Ключ от горна', 'sprite' => 'gi-key-fire', 'atk' => 6, 'def' => 1, 'hp' => 13, 'spd' => 4, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['opener', 42]],
+        'gear-w3-rune-fire' => ['slot' => 'trinket', 'name' => 'Руна огня', 'sprite' => 'gi-rune-fire', 'atk' => 7, 'def' => 2, 'hp' => 15, 'spd' => 3, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['crit', 8], 'set' => 'ember'],
+
+        // Ступень 4: четвёртая волна, новые формы
+        'gear-w4-scepter-ice' => ['slot' => 'weapon', 'name' => 'Скипетр стужи', 'sprite' => 'gi-scepter-ice', 'atk' => 27, 'def' => 0, 'hp' => 13, 'spd' => 0, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['stun', 10], 'set' => 'rime'],
+        'gear-w4-crossbow-ice' => ['slot' => 'weapon', 'name' => 'Ледяной арбалет', 'sprite' => 'gi-crossbow-ice', 'atk' => 34, 'def' => 0, 'hp' => 0, 'spd' => -1, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['pierce', 23]],
+        'gear-w4-pauldrons-ice' => ['slot' => 'armor', 'name' => 'Наплечники инея', 'sprite' => 'gi-pauldrons-ice', 'atk' => 0, 'def' => 22, 'hp' => 63, 'spd' => 0, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['bulwark', 8], 'set' => 'rime'],
+        'gear-w4-mask-ice' => ['slot' => 'armor', 'name' => 'Маска метели', 'sprite' => 'gi-mask-ice', 'atk' => 0, 'def' => 17, 'hp' => 72, 'spd' => 2, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['dodge', 9]],
+        'gear-w4-bell-ice' => ['slot' => 'trinket', 'name' => 'Ледяной колокольчик', 'sprite' => 'gi-bell-ice', 'atk' => 5, 'def' => 6, 'hp' => 53, 'spd' => 4, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['rage', 16], 'set' => 'rime'],
+        'gear-w4-key-ice' => ['slot' => 'trinket', 'name' => 'Ключ от замёрзших врат', 'sprite' => 'gi-key-ice', 'atk' => 10, 'def' => 2, 'hp' => 26, 'spd' => 6, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['opener', 46]],
+        'gear-w4-rune-ice' => ['slot' => 'trinket', 'name' => 'Руна мороза', 'sprite' => 'gi-rune-ice', 'atk' => 13, 'def' => 4, 'hp' => 31, 'spd' => 4, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['crit', 9]],
+
+        // Ступень 5: четвёртая волна, новые формы
+        'gear-w5-scepter-void' => ['slot' => 'weapon', 'name' => 'Скипетр пустоты', 'sprite' => 'gi-scepter-void', 'atk' => 46, 'def' => 0, 'hp' => 22, 'spd' => 0, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['stun', 11]],
+        'gear-w5-crossbow-shadow' => ['slot' => 'weapon', 'name' => 'Арбалет тени', 'sprite' => 'gi-crossbow-shadow', 'atk' => 57, 'def' => 0, 'hp' => 0, 'spd' => -1, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['pierce', 25]],
+        'gear-w5-pauldrons-void' => ['slot' => 'armor', 'name' => 'Наплечники бездны', 'sprite' => 'gi-pauldrons-void', 'atk' => 0, 'def' => 36, 'hp' => 112, 'spd' => 0, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['bulwark', 8]],
+        'gear-w5-mask-shadow' => ['slot' => 'armor', 'name' => 'Маска безликого', 'sprite' => 'gi-mask-shadow', 'atk' => 0, 'def' => 28, 'hp' => 128, 'spd' => 2, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['dodge', 10]],
+        'gear-w5-bell-void' => ['slot' => 'trinket', 'name' => 'Колокол пустоты', 'sprite' => 'gi-bell-void', 'atk' => 10, 'def' => 10, 'hp' => 96, 'spd' => 6, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['rage', 17]],
+        'gear-w5-key-void' => ['slot' => 'trinket', 'name' => 'Ключ от ничто', 'sprite' => 'gi-key-void', 'atk' => 18, 'def' => 4, 'hp' => 48, 'spd' => 10, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['opener', 49]],
+        'gear-w5-rune-void' => ['slot' => 'trinket', 'name' => 'Руна небытия', 'sprite' => 'gi-rune-void', 'atk' => 22, 'def' => 6, 'hp' => 56, 'spd' => 7, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['crit', 10]],
+
+        // Ступень 6: четвёртая волна, новые формы
+        'gear-w6-scepter-sea' => ['slot' => 'weapon', 'name' => 'Скипетр левиафана', 'sprite' => 'gi-scepter-sea', 'atk' => 59, 'def' => 0, 'hp' => 28, 'spd' => 0, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['stun', 12]],
+        'gear-w6-crossbow-sea' => ['slot' => 'weapon', 'name' => 'Глубинный арбалет', 'sprite' => 'gi-crossbow-sea', 'atk' => 72, 'def' => 0, 'hp' => 0, 'spd' => -1, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['pierce', 27]],
+        'gear-w6-pauldrons-sea' => ['slot' => 'armor', 'name' => 'Наплечники глубин', 'sprite' => 'gi-pauldrons-sea', 'atk' => 0, 'def' => 45, 'hp' => 140, 'spd' => 0, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['bulwark', 9]],
+        'gear-w6-mask-shadow' => ['slot' => 'armor', 'name' => 'Маска утонувшего короля', 'sprite' => 'gi-mask-shadow', 'atk' => 0, 'def' => 35, 'hp' => 160, 'spd' => 2, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['dodge', 10]],
+        'gear-w6-bell-sea' => ['slot' => 'trinket', 'name' => 'Колокол затонувшего храма', 'sprite' => 'gi-bell-sea', 'atk' => 12, 'def' => 12, 'hp' => 120, 'spd' => 8, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['rage', 18]],
+        'gear-w6-key-shadow' => ['slot' => 'trinket', 'name' => 'Ключ от дна', 'sprite' => 'gi-key-shadow', 'atk' => 22, 'def' => 5, 'hp' => 60, 'spd' => 13, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['opener', 52]],
+        'gear-w6-rune-shadow' => ['slot' => 'trinket', 'name' => 'Руна тёмной воды', 'sprite' => 'gi-rune-shadow', 'atk' => 28, 'def' => 7, 'hp' => 70, 'spd' => 9, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['crit', 10]],
+
+        // Ступень 7: четвёртая волна, новые формы
+        'gear-w7-scepter-gold' => ['slot' => 'weapon', 'name' => 'Скипетр дракона', 'sprite' => 'gi-scepter-gold', 'atk' => 73, 'def' => 0, 'hp' => 34, 'spd' => 0, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['stun', 13]],
+        'gear-w7-crossbow-fire' => ['slot' => 'weapon', 'name' => 'Арбалет драконоборца', 'sprite' => 'gi-crossbow-fire', 'atk' => 90, 'def' => 0, 'hp' => 0, 'spd' => -1, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['pierce', 29]],
+        'gear-w7-pauldrons-gold' => ['slot' => 'armor', 'name' => 'Золотые наплечники', 'sprite' => 'gi-pauldrons-gold', 'atk' => 0, 'def' => 56, 'hp' => 175, 'spd' => 0, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['bulwark', 10]],
+        'gear-w7-mask-crystal' => ['slot' => 'armor', 'name' => 'Кристальная маска', 'sprite' => 'gi-mask-crystal', 'atk' => 0, 'def' => 43, 'hp' => 200, 'spd' => 2, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['dodge', 11]],
+        'gear-w7-bell-gold' => ['slot' => 'trinket', 'name' => 'Колокол сокровищницы', 'sprite' => 'gi-bell-gold', 'atk' => 15, 'def' => 15, 'hp' => 150, 'spd' => 10, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['rage', 19]],
+        'gear-w7-key-gold' => ['slot' => 'trinket', 'name' => 'Золотой ключ', 'sprite' => 'gi-key-gold', 'atk' => 28, 'def' => 6, 'hp' => 75, 'spd' => 16, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['opener', 56]],
+        'gear-w7-rune-crystal' => ['slot' => 'trinket', 'name' => 'Руна призмы', 'sprite' => 'gi-rune-crystal', 'atk' => 35, 'def' => 9, 'hp' => 88, 'spd' => 11, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['crit', 11]],
+
+        // Ступень 8: четвёртая волна, новые формы
+        'gear-w8-scepter-sun' => ['slot' => 'weapon', 'name' => 'Скипетр солнца', 'sprite' => 'gi-scepter-sun', 'atk' => 89, 'def' => 0, 'hp' => 42, 'spd' => 0, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['stun', 14], 'set' => 'oracle'],
+        'gear-w8-crossbow-blood' => ['slot' => 'weapon', 'name' => 'Арбалет палача', 'sprite' => 'gi-crossbow-blood', 'atk' => 110, 'def' => 0, 'hp' => 0, 'spd' => -2, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['pierce', 31]],
+        'gear-w8-pauldrons-blood' => ['slot' => 'armor', 'name' => 'Багряные наплечники', 'sprite' => 'gi-pauldrons-blood', 'atk' => 0, 'def' => 68, 'hp' => 217, 'spd' => 0, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['bulwark', 10]],
+        'gear-w8-mask-sun' => ['slot' => 'armor', 'name' => 'Маска жреца', 'sprite' => 'gi-mask-sun', 'atk' => 0, 'def' => 53, 'hp' => 248, 'spd' => 3, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['dodge', 12], 'set' => 'oracle'],
+        'gear-w8-bell-bone' => ['slot' => 'trinket', 'name' => 'Колокол павших', 'sprite' => 'gi-bell-bone', 'atk' => 18, 'def' => 18, 'hp' => 186, 'spd' => 12, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['rage', 20]],
+        'gear-w8-key-blood' => ['slot' => 'trinket', 'name' => 'Ключ от плахи', 'sprite' => 'gi-key-blood', 'atk' => 33, 'def' => 7, 'hp' => 93, 'spd' => 20, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['opener', 60]],
+        'gear-w8-rune-sun' => ['slot' => 'trinket', 'name' => 'Руна света', 'sprite' => 'gi-rune-sun', 'atk' => 42, 'def' => 11, 'hp' => 108, 'spd' => 14, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['crit', 12], 'set' => 'oracle'],
+
+        // Ступень 9: четвёртая волна, новые формы
+        'gear-w9-scepter-void' => ['slot' => 'weapon', 'name' => 'Скипетр конца', 'sprite' => 'gi-scepter-void', 'atk' => 106, 'def' => 0, 'hp' => 50, 'spd' => 0, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['stun', 14]],
+        'gear-w9-crossbow-gold' => ['slot' => 'weapon', 'name' => 'Арбалет чемпиона', 'sprite' => 'gi-crossbow-gold', 'atk' => 131, 'def' => 0, 'hp' => 0, 'spd' => -2, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['pierce', 32]],
+        'gear-w9-pauldrons-gold' => ['slot' => 'armor', 'name' => 'Наплечники чемпиона', 'sprite' => 'gi-pauldrons-gold', 'atk' => 0, 'def' => 83, 'hp' => 259, 'spd' => 0, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['bulwark', 11]],
+        'gear-w9-mask-blood' => ['slot' => 'armor', 'name' => 'Маска мстителя', 'sprite' => 'gi-mask-blood', 'atk' => 0, 'def' => 64, 'hp' => 296, 'spd' => 3, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['dodge', 13]],
+        'gear-w9-bell-sun' => ['slot' => 'trinket', 'name' => 'Колокол рассвета', 'sprite' => 'gi-bell-sun', 'atk' => 22, 'def' => 22, 'hp' => 222, 'spd' => 14, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['rage', 22]],
+        'gear-w9-key-shadow' => ['slot' => 'trinket', 'name' => 'Ключ от последней двери', 'sprite' => 'gi-key-shadow', 'atk' => 40, 'def' => 9, 'hp' => 111, 'spd' => 23, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['opener', 63]],
+        'gear-w9-rune-gold' => ['slot' => 'trinket', 'name' => 'Руна победы', 'sprite' => 'gi-rune-gold', 'atk' => 50, 'def' => 13, 'hp' => 130, 'spd' => 16, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['crit', 13]],
+
+        // Ещё реликвии
+        'gear-q3-scepter-fire' => ['slot' => 'weapon', 'name' => 'Скипетр Вечного Огня', 'sprite' => 'gi-scepter-fire', 'atk' => 17, 'def' => 0, 'hp' => 8, 'spd' => 0, 'stage' => 3, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['stun', 12], 'perk2' => ['vamp', 12]],
+        'gear-q5-crossbow-shadow' => ['slot' => 'weapon', 'name' => 'Арбалет Последнего Выстрела', 'sprite' => 'gi-crossbow-shadow', 'atk' => 68, 'def' => 0, 'hp' => 0, 'spd' => -1, 'stage' => 5, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['execute', 46], 'perk2' => ['crit', 13]],
+        'gear-q6-mask-shadow' => ['slot' => 'armor', 'name' => 'Маска Безымянного', 'sprite' => 'gi-mask-shadow', 'atk' => 0, 'def' => 42, 'hp' => 192, 'spd' => 2, 'stage' => 6, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['dodge', 14], 'perk2' => ['phoenix', 39]],
+        'gear-q7-pauldrons-gold' => ['slot' => 'armor', 'name' => 'Наплечники Дракона-Хранителя', 'sprite' => 'gi-pauldrons-gold', 'atk' => 0, 'def' => 67, 'hp' => 210, 'spd' => 0, 'stage' => 7, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['bulwark', 12], 'perk2' => ['thorns', 21]],
+        'gear-q8-rune-sun' => ['slot' => 'trinket', 'name' => 'Руна Забытых Богов', 'sprite' => 'gi-rune-sun', 'atk' => 50, 'def' => 13, 'hp' => 130, 'spd' => 14, 'stage' => 8, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['crit', 15], 'perk2' => ['regen', 4]],
+        'gear-q9-bell-void' => ['slot' => 'trinket', 'name' => 'Колокол Конца Света', 'sprite' => 'gi-bell-void', 'atk' => 26, 'def' => 26, 'hp' => 266, 'spd' => 14, 'stage' => 9, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['stun', 19], 'perk2' => ['rage', 28]],
+        'gear-q9-key-gold' => ['slot' => 'trinket', 'name' => 'Ключ Мироздания', 'sprite' => 'gi-key-gold', 'atk' => 48, 'def' => 11, 'hp' => 133, 'spd' => 23, 'stage' => 9, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['opener', 82], 'perk2' => ['phoenix', 47]],
     ];
 
     /** Шанс (в %), что с босса вместо обычной вещи выпадет реликвия его ступени. */
@@ -957,6 +1047,10 @@ final class Dungeons
         'dragon' => ['name' => 'Драконоборец', 'pieces' => ['gear-x7-greatsword-fire', 'gear-x7-chest-gold', 'gear-x7-crown-gold'], 'perk' => ['execute', 40]],
         'headsman' => ['name' => 'Палач', 'pieces' => ['gear-x8-axe-blood', 'gear-x8-chest-blood', 'gear-x8-crown-sun'], 'perk' => ['vamp', 14]],
         'champion' => ['name' => 'Чемпион', 'pieces' => ['gear-x9-greatsword-gold', 'gear-x9-chest-gold', 'gear-x9-ring-gold'], 'perk' => ['phoenix', 40]],
+        'tide' => ['name' => 'Прилив', 'pieces' => ['gear-w2-scepter-sea', 'gear-w2-mask-sea', 'gear-w2-bell-sea'], 'perk' => ['dodge', 12]],
+        'ember' => ['name' => 'Жар', 'pieces' => ['gear-w3-crossbow-steel', 'gear-w3-pauldrons-fire', 'gear-w3-rune-fire'], 'perk' => ['execute', 30]],
+        'rime' => ['name' => 'Иней', 'pieces' => ['gear-w4-scepter-ice', 'gear-w4-pauldrons-ice', 'gear-w4-bell-ice'], 'perk' => ['regen', 4]],
+        'oracle' => ['name' => 'Оракул', 'pieces' => ['gear-w8-scepter-sun', 'gear-w8-mask-sun', 'gear-w8-rune-sun'], 'perk' => ['crit', 15]],
     ];
 
     /** Материалы для крафта: по одному на тир подземелья. */
