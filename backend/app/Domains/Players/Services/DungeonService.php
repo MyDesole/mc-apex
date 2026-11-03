@@ -489,7 +489,7 @@ final class DungeonService
         if (($dungeon['currency'] ?? null) === 'rubles') {
             // Рублёвые копи: вместо ApexCoin падают Рубли, у них свой дневной предел
             $rubles = ($isBoss ? Dungeons::RUBLE_BOSS : Dungeons::RUBLE_MOB) * $floor;
-            $gained = RubleService::earn($user, $rubles, RubleService::SOURCE_RUBLE_DUNGEON, 'Рублёвые копи: добыча', $key . ':rub', RubleService::RUBLE_DUNGEON_CAP);
+            $gained = RubleService::earn($user, $rubles, RubleService::SOURCE_RUBLE_DUNGEON, 'Рублёвые копи: добыча', $key . ':rub');
 
             if ($gained > 0) {
                 $state['loot']['rubles'] = ($state['loot']['rubles'] ?? 0) + $gained;
@@ -540,7 +540,7 @@ final class DungeonService
 
         if (random_int(1, 100) <= $gearChance) {
             $slug = Dungeons::rollGear($stage, $isBoss);
-            $rarity = Dungeons::rollRarity($stage, $isBoss);
+            $rarity = Dungeons::clampRarity($slug, Dungeons::rollRarity($stage, $isBoss));
             $id = $this->gear->grant($user, $slug, $rarity);
 
             if ($id !== null) {

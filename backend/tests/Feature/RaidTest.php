@@ -386,7 +386,7 @@ class RaidTest extends TestCase
     {
         $user = $this->player();
         $ids = $this->squad($user, ['cat', 'dog', 'fox']);
-        DB::table('user_inventory')->whereIn('id', $ids)->update(['pet_xp' => 24750, 'pet_traits' => json_encode(['model' => 'classic', 'backdrop' => 'none', 'accessory' => 'none'])]);
+        DB::table('user_inventory')->whereIn('id', $ids)->update(['pet_xp' => 99810, 'pet_traits' => json_encode(['model' => 'classic', 'backdrop' => 'none', 'accessory' => 'none'])]);
 
         $this->actingAs($user)->postJson('/api/dungeons/start', ['dungeon' => 'crystal', 'squad' => $ids])->assertStatus(422);
         $this->assertDatabaseCount('dungeon_runs', 0);
@@ -396,7 +396,7 @@ class RaidTest extends TestCase
     {
         $user = $this->player();
         $ids = $this->squad($user, ['cat', 'dog', 'fox']);
-        DB::table('user_inventory')->whereIn('id', $ids)->update(['pet_xp' => 24750]);
+        DB::table('user_inventory')->whereIn('id', $ids)->update(['pet_xp' => 99810]);
 
         // Без пропуска — отказ
         $this->actingAs($user)->postJson('/api/dungeons/start', ['dungeon' => 'rubledeep', 'squad' => $ids])->assertStatus(422);
@@ -417,20 +417,13 @@ class RaidTest extends TestCase
         $this->assertSame(5, (int) DB::table('dungeon_materials')->where('user_id', $user->id)->value('quantity'));
     }
 
-    public function test_ruble_dungeon_has_its_own_daily_cap_separate_from_the_general_one(): void
+    public function test_ruble_dungeon_earnings_are_not_capped_per_day(): void
     {
         $user = $this->player();
 
-        // Общий предел выбран полностью — Рублёвые копи это не затрагивает
-        RubleService::earn($user, RubleService::DAILY_EARN_CAP, RubleService::SOURCE_FARM, 'тест');
-        $this->assertSame(0, RubleService::earn($user, 10, RubleService::SOURCE_FARM, 'ещё'));
-
-        $got = RubleService::earn($user, 50, RubleService::SOURCE_RUBLE_DUNGEON, 'копи', null, RubleService::RUBLE_DUNGEON_CAP);
-        $this->assertSame(50, $got);
-
-        // Свой предел 150
-        $this->assertSame(100, RubleService::earn($user, 200, RubleService::SOURCE_RUBLE_DUNGEON, 'копи', null, RubleService::RUBLE_DUNGEON_CAP));
-        $this->assertSame(0, RubleService::earn($user, 1, RubleService::SOURCE_RUBLE_DUNGEON, 'копи', null, RubleService::RUBLE_DUNGEON_CAP));
+        $this->assertSame(15, RubleService::earn($user, 15, RubleService::SOURCE_RUBLE_DUNGEON, 'копи'));
+        $this->assertSame(200, RubleService::earn($user, 200, RubleService::SOURCE_RUBLE_DUNGEON, 'копи'));
+        $this->assertSame(215, RubleService::balance($user));
     }
 
     public function test_new_dungeons_have_twelve_mobs_and_unique_boss_sprites(): void

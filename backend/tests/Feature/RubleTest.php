@@ -60,19 +60,13 @@ class RubleTest extends TestCase
         $this->assertDatabaseCount('ruble_transactions', 1);
     }
 
-    public function test_daily_cap_limits_earnings(): void
+    public function test_earnings_have_no_daily_cap(): void
     {
         $user = User::factory()->create();
 
-        $this->assertSame(55, RubleService::earn($user, 55, RubleService::SOURCE_FARM, 'тест'));
-        // До предела осталось 5
-        $this->assertSame(5, RubleService::earn($user, 20, RubleService::SOURCE_FARM, 'тест'));
-        $this->assertSame(0, RubleService::earn($user, 20, RubleService::SOURCE_FARM, 'тест'));
-        $this->assertSame(RubleService::DAILY_EARN_CAP, RubleService::balance($user));
-
-        // На следующий день предел сбрасывается
-        $this->travel(1)->days();
-        $this->assertSame(10, RubleService::earn($user, 10, RubleService::SOURCE_FARM, 'тест'));
+        $this->assertSame(500, RubleService::earn($user, 500, RubleService::SOURCE_RUBLE_DUNGEON, 'тест'));
+        $this->assertSame(500, RubleService::earn($user, 500, RubleService::SOURCE_RUBLE_DUNGEON, 'тест'));
+        $this->assertSame(1000, RubleService::balance($user));
     }
 
     public function test_spend_needs_enough_rubles_and_never_goes_negative(): void

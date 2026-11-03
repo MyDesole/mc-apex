@@ -25,12 +25,6 @@ class RubleService
     public const SOURCE_RAID = 'raid';
     public const SOURCE_PRIVILEGE = 'privilege';
 
-    /** Больше этого из игры за сутки не набрать (ускорения и Рублёвые копи не в счёт). */
-    public const DAILY_EARN_CAP = 60;
-
-    /** Рублёвые копи — главный источник, у него свой дневной предел. */
-    public const RUBLE_DUNGEON_CAP = 150;
-
     /** Ускорение: рублей за каждый оставшийся час (с округлением вверх). */
     public const SPEEDUP_PER_HOUR = 2;
 
@@ -48,41 +42,26 @@ class RubleService
     }
 
     /**
-     * Начислить, соблюдая суточный предел. Возвращает, сколько реально выдано.
+     * Начислить. Суточного предела нет: темп задают уровень питомцев и
+     * одноразовый пропуск в Рублёвые копи. Повтор с тем же ключом не
+     * начисляет ничего. Возвращает, сколько выдано.
      */
-    public static function earn(User $user, int $amount, string $source, string $description, ?string $key = null, ?int $cap = null): int
+    public static function earn(User $user, int $amount, string $source, string $description, ?string $key = null): int
     {
         if ($amount <= 0) {
             return 0;
         }
 
-        // Свой предел для источника (Рублёвые копи) считается только по нему
-        $scoped = $cap !== null;
-        $cap ??= self::DAILY_EARN_CAP;
-
-        return DB::transaction(function () use ($user, $amount, $source, $description, $key, $cap, $scoped) {
+        return DB::transaction(function () use ($user, $amount, $source, $description, $key) {
             $row = DB::table('users')->where('id', $user->id)->lockForUpdate()->first(['id', 'rubles']);
 
             if ($key && DB::table('ruble_transactions')->where('idempotency_key', $key)->exists()) {
                 return 0;
             }
 
-            $today = (int) DB::table('ruble_transactions')
-                ->where('user_id', $user->id)
-                ->where('amount', '>', 0)
-                ->when($scoped, fn ($q) => $q->where('source', $source), fn ($q) => $q->where('source', '!=', self::SOURCE_RUBLE_DUNGEON))
-                ->where('created_at', '>=', now()->startOfDay())
-                ->sum('amount');
+            self::write($user, (int) $row->rubles, $amount, $source, $description, $key);
 
-            $granted = min($amount, max(0, $cap - $today));
-
-            if ($granted <= 0) {
-                return 0;
-            }
-
-            self::write($user, (int) $row->rubles, $granted, $source, $description, $key);
-
-            return $granted;
+            return $amount;
         });
     }
 

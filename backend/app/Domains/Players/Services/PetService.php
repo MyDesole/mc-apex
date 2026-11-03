@@ -37,18 +37,10 @@ class PetService
         return max(1, intdiv($level, 10) - 1);
     }
 
-    /** Суточный предел опыта из экспедиций, боёв и подземелий: 200 + 2 за уровень (100 уровень — 400). */
-    public const DAILY_XP_BASE = 200;
-    public const DAILY_XP_PER_LEVEL = 2;
-
-    public static function dailyXpCap(int $level): int
-    {
-        return self::DAILY_XP_BASE + self::DAILY_XP_PER_LEVEL * $level;
-    }
-
     /**
-     * Начислить опыт с учётом суточного предела; возвращает, сколько выдано.
-     * Уход за питомцем в предел не входит: он и так раз в сутки на действие.
+     * Начислить опыт; возвращает, сколько выдано. Суточного предела нет:
+     * скорость прокачки держит кривая уровней (см. xpFor), а не лимит.
+     * Параметр $level остался для совместимости вызовов.
      */
     public static function grantXp(int $inventoryId, int $amount, int $level): int
     {
@@ -56,26 +48,9 @@ class PetService
             return 0;
         }
 
-        return DB::transaction(function () use ($inventoryId, $amount, $level) {
-            $today = today()->toDateString();
-            $row = DB::table('pet_xp_daily')->where('inventory_id', $inventoryId)->where('day', $today)->lockForUpdate()->first();
-            $used = (int) ($row->xp ?? 0);
-            $granted = min($amount, max(0, self::dailyXpCap($level) - $used));
+        DB::table('user_inventory')->where('id', $inventoryId)->increment('pet_xp', $amount);
 
-            if ($granted <= 0) {
-                return 0;
-            }
-
-            if ($row) {
-                DB::table('pet_xp_daily')->where('id', $row->id)->update(['xp' => $used + $granted, 'updated_at' => now()]);
-            } else {
-                DB::table('pet_xp_daily')->insert(['inventory_id' => $inventoryId, 'day' => $today, 'xp' => $granted, 'created_at' => now(), 'updated_at' => now()]);
-            }
-
-            DB::table('user_inventory')->where('id', $inventoryId)->increment('pet_xp', $granted);
-
-            return $granted;
-        });
+        return $amount;
     }
 
     private const HUNGRY_AFTER_HOURS = 24;
@@ -314,10 +289,28 @@ class PetService
         return self::levelFor($xp);
     }
 
-    /** Опыт на уровень растёт: 0, 5, 15, 30, 50… (5 · n(n−1)/2). */
-    private static function xpFor(int $level): int
+    /** До этого уровня опыт на уровень растёт квадратично: 0, 5, 15, 30, 50… (5 · n(n−1)/2). */
+    public const XP_CURVE_KNEE = 40;
+
+    /**
+     * За коленом кривая круче в 4,6 раза (23/5): до 100 уровня — 99 810 опыта,
+     * около 60 дней активной игры (3 захода в подземелья, экспедиция и пять боёв
+     * арены в день). 100 уровень открывает Рублёвые копи, поэтому быстрым он
+     * быть не должен.
+     */
+    public const XP_CURVE_STEEP = [23, 5];
+
+    public static function xpFor(int $level): int
     {
-        return intdiv(5 * $level * ($level - 1), 2);
+        $base = intdiv(5 * $level * ($level - 1), 2);
+
+        if ($level <= self::XP_CURVE_KNEE) {
+            return $base;
+        }
+
+        $knee = intdiv(5 * self::XP_CURVE_KNEE * (self::XP_CURVE_KNEE - 1), 2);
+
+        return $knee + intdiv(self::XP_CURVE_STEEP[0] * ($base - $knee), self::XP_CURVE_STEEP[1]);
     }
 
     private static function levelFor(int $xp): int

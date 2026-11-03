@@ -30,40 +30,47 @@ class PetXpCapTest extends TestCase
         return $row->fresh();
     }
 
-    public function test_daily_cap_formula(): void
-    {
-        $this->assertSame(202, PetService::dailyXpCap(1));
-        $this->assertSame(400, PetService::dailyXpCap(100));
-    }
-
-    public function test_xp_is_capped_per_day_and_resets_tomorrow(): void
+    public function test_xp_has_no_daily_cap(): void
     {
         $pet = $this->pet();
 
-        // Лимит 1 уровня — 202; ещё 500 опыта сверху не засчитываются
-        $this->assertSame(202, PetService::grantXp($pet->id, 700, 1));
-        $this->assertSame(0, PetService::grantXp($pet->id, 50, 1));
-        $this->assertSame(202, (int) $pet->fresh()->pet_xp);
-
-        $this->travel(1)->days();
-        $this->assertSame(100, PetService::grantXp($pet->id, 100, 1));
-        $this->assertSame(302, (int) $pet->fresh()->pet_xp);
+        $this->assertSame(5000, PetService::grantXp($pet->id, 5000, 1));
+        $this->assertSame(5000, PetService::grantXp($pet->id, 5000, 1));
+        $this->assertSame(10000, (int) $pet->fresh()->pet_xp);
+        $this->assertSame(0, PetService::grantXp($pet->id, 0, 1));
     }
 
-    public function test_partial_grant_up_to_the_cap(): void
+    public function test_level_100_takes_about_two_months_of_active_play(): void
     {
-        $pet = $this->pet();
+        // Модель дня: 3 захода в подземелье лучшего доступного уровня, одна
+        // экспедиция и пять боёв арены. Тот же расчёт, что в комментарии к кривой.
+        $mult = fn (int $n) => max(1, intdiv($n, 10) - 1);
+        $floors = function (int $n) {
+            foreach ([[8, 2], [16, 3], [24, 3], [28, 4], [40, 4], [55, 5], [75, 5], [999, 6]] as [$limit, $f]) {
+                if ($n < $limit) {
+                    return $f;
+                }
+            }
+        };
+        $expedition = function (int $n) {
+            $xp = 0;
+            foreach ([1 => 3, 3 => 8, 8 => 15, 15 => 24, 30 => 40, 45 => 60, 60 => 90, 80 => 130] as $level => $value) {
+                if ($n >= $level) {
+                    $xp = $value;
+                }
+            }
 
-        $this->assertSame(150, PetService::grantXp($pet->id, 150, 1));
-        // Осталось 52 из 202
-        $this->assertSame(52, PetService::grantXp($pet->id, 150, 1));
-    }
+            return $xp;
+        };
 
-    public function test_level_100_takes_months_at_the_cap(): void
-    {
-        // Опыта до 100 уровня — 24 750; даже на пределе 400 это месяцы, а не дни
-        $days = 24750 / PetService::dailyXpCap(100);
-        $this->assertGreaterThan(60, $days);
+        $days = 0.0;
+        for ($n = 1; $n < 100; $n++) {
+            $perDay = (3 * 18 * $floors($n) + $expedition($n) + 15) * $mult($n);
+            $days += (PetService::xpFor($n + 1) - PetService::xpFor($n)) / $perDay;
+        }
+
+        $this->assertGreaterThan(50, $days);
+        $this->assertLessThan(70, $days);
     }
 
     public function test_new_dungeons_exist_with_enemies_and_drops(): void

@@ -859,6 +859,69 @@ final class Dungeons
         'gear-r9-gauntlets-void' => ['slot' => 'armor', 'name' => 'Перчатки Конца Времён', 'sprite' => 'gi-gauntlets-void', 'atk' => 0, 'def' => 83, 'hp' => 266, 'spd' => 0, 'stage' => 9, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['stun', 19], 'perk2' => ['pierce', 42]],
         'gear-r9-medal-sun' => ['slot' => 'trinket', 'name' => 'Медаль Бессмертного', 'sprite' => 'gi-medal-sun', 'atk' => 43, 'def' => 31, 'hp' => 222, 'spd' => 16, 'stage' => 9, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['bulwark', 14], 'perk2' => ['phoenix', 47]],
         'gear-r9-sword-shadow' => ['slot' => 'weapon', 'name' => 'Клинок Забытого Героя', 'sprite' => 'gi-sword-shadow', 'atk' => 150, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 9, 'rarity' => 'legendary', 'relic' => true, 'perk' => ['crit', 16], 'perk2' => ['vamp', 19]],
+
+        // Ступень 1: простые вещи без свойств, всегда обычные
+        'gear-c1-sword-iron' => ['slot' => 'weapon', 'name' => 'Ржавый меч', 'sprite' => 'gi-sword-iron', 'atk' => 4, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 1, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c1-dagger-bone' => ['slot' => 'weapon', 'name' => 'Костяной нож', 'sprite' => 'gi-dagger-bone', 'atk' => 4, 'def' => 0, 'hp' => 0, 'spd' => 1, 'stage' => 1, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c1-vest-iron' => ['slot' => 'armor', 'name' => 'Кожаная жилетка', 'sprite' => 'gi-vest-iron', 'atk' => 0, 'def' => 2, 'hp' => 7, 'spd' => 1, 'stage' => 1, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c1-helm-iron' => ['slot' => 'armor', 'name' => 'Ведро на голову', 'sprite' => 'gi-helm-iron', 'atk' => 0, 'def' => 2, 'hp' => 10, 'spd' => 0, 'stage' => 1, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c1-ring-bronze' => ['slot' => 'trinket', 'name' => 'Колечко', 'sprite' => 'gi-ring-bronze', 'atk' => 1, 'def' => 0, 'hp' => 4, 'spd' => 1, 'stage' => 1, 'rarity' => 'common', 'cap' => 'common'],
+
+        // Ступень 2: простые вещи без свойств, всегда обычные
+        'gear-c2-axe-iron' => ['slot' => 'weapon', 'name' => 'Топорик', 'sprite' => 'gi-axe-iron', 'atk' => 9, 'def' => 0, 'hp' => 0, 'spd' => -1, 'stage' => 2, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c2-spear-iron' => ['slot' => 'weapon', 'name' => 'Копьё ополченца', 'sprite' => 'gi-spear-iron', 'atk' => 8, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 2, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c2-chest-iron' => ['slot' => 'armor', 'name' => 'Кольчужка', 'sprite' => 'gi-chest-iron', 'atk' => 0, 'def' => 6, 'hp' => 23, 'spd' => -1, 'stage' => 2, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c2-boots-bronze' => ['slot' => 'armor', 'name' => 'Сапоги', 'sprite' => 'gi-boots-bronze', 'atk' => 0, 'def' => 4, 'hp' => 14, 'spd' => 2, 'stage' => 2, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c2-amulet-bronze' => ['slot' => 'trinket', 'name' => 'Оберег', 'sprite' => 'gi-amulet-bronze', 'atk' => 1, 'def' => 3, 'hp' => 14, 'spd' => 1, 'stage' => 2, 'rarity' => 'common', 'cap' => 'common'],
+
+        // Ступень 3: простые вещи без свойств, всегда обычные
+        'gear-c3-sword-steel' => ['slot' => 'weapon', 'name' => 'Стальной меч', 'sprite' => 'gi-sword-steel', 'atk' => 15, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 3, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c3-hammer-iron' => ['slot' => 'weapon', 'name' => 'Молоток', 'sprite' => 'gi-hammer-iron', 'atk' => 18, 'def' => 2, 'hp' => 0, 'spd' => -1, 'stage' => 3, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c3-shield-iron' => ['slot' => 'armor', 'name' => 'Круглый щит', 'sprite' => 'gi-shield-iron', 'atk' => 0, 'def' => 14, 'hp' => 35, 'spd' => -1, 'stage' => 3, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c3-gauntlets-iron' => ['slot' => 'armor', 'name' => 'Рукавицы', 'sprite' => 'gi-gauntlets-iron', 'atk' => 0, 'def' => 9, 'hp' => 25, 'spd' => 0, 'stage' => 3, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c3-medal-bronze' => ['slot' => 'trinket', 'name' => 'Жетон', 'sprite' => 'gi-medal-bronze', 'atk' => 4, 'def' => 4, 'hp' => 20, 'spd' => 3, 'stage' => 3, 'rarity' => 'common', 'cap' => 'common'],
+
+        // Ступень 4: простые вещи без свойств, всегда обычные
+        'gear-c4-mace-steel' => ['slot' => 'weapon', 'name' => 'Шипастая булава', 'sprite' => 'gi-mace-steel', 'atk' => 32, 'def' => 0, 'hp' => 9, 'spd' => -1, 'stage' => 4, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c4-dagger-steel' => ['slot' => 'weapon', 'name' => 'Охотничий нож', 'sprite' => 'gi-dagger-steel', 'atk' => 25, 'def' => 0, 'hp' => 0, 'spd' => 2, 'stage' => 4, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c4-chest-steel' => ['slot' => 'armor', 'name' => 'Стёганая броня', 'sprite' => 'gi-chest-steel', 'atk' => 0, 'def' => 22, 'hp' => 81, 'spd' => -1, 'stage' => 4, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c4-helm-steel' => ['slot' => 'armor', 'name' => 'Стальной шлем', 'sprite' => 'gi-helm-steel', 'atk' => 0, 'def' => 17, 'hp' => 73, 'spd' => 0, 'stage' => 4, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c4-vial-ice' => ['slot' => 'trinket', 'name' => 'Фляга с водой', 'sprite' => 'gi-vial-ice', 'atk' => 4, 'def' => 0, 'hp' => 63, 'spd' => 4, 'stage' => 4, 'rarity' => 'common', 'cap' => 'common'],
+
+        // Ступень 5: простые вещи без свойств, всегда обычные
+        'gear-c5-sword-shadow' => ['slot' => 'weapon', 'name' => 'Тёмный меч', 'sprite' => 'gi-sword-shadow', 'atk' => 49, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 5, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c5-axe-steel' => ['slot' => 'weapon', 'name' => 'Боевой топор', 'sprite' => 'gi-axe-steel', 'atk' => 54, 'def' => 0, 'hp' => 0, 'spd' => -2, 'stage' => 5, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c5-cloak-shadow' => ['slot' => 'armor', 'name' => 'Тёмный плащ', 'sprite' => 'gi-cloak-shadow', 'atk' => 0, 'def' => 26, 'hp' => 108, 'spd' => 2, 'stage' => 5, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c5-boots-shadow' => ['slot' => 'armor', 'name' => 'Мягкие сапоги', 'sprite' => 'gi-boots-shadow', 'atk' => 0, 'def' => 20, 'hp' => 86, 'spd' => 3, 'stage' => 5, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c5-ring-shadow' => ['slot' => 'trinket', 'name' => 'Чёрное кольцо', 'sprite' => 'gi-ring-shadow', 'atk' => 19, 'def' => 0, 'hp' => 58, 'spd' => 8, 'stage' => 5, 'rarity' => 'common', 'cap' => 'common'],
+
+        // Ступень 6: простые вещи без свойств, всегда обычные
+        'gear-c6-spear-steel' => ['slot' => 'weapon', 'name' => 'Копьё стража', 'sprite' => 'gi-spear-steel', 'atk' => 59, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 6, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c6-trident-steel' => ['slot' => 'weapon', 'name' => 'Стальной трезубец', 'sprite' => 'gi-trident-steel', 'atk' => 63, 'def' => 0, 'hp' => 6, 'spd' => 0, 'stage' => 6, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c6-vest-steel' => ['slot' => 'armor', 'name' => 'Лёгкая кираса', 'sprite' => 'gi-vest-steel', 'atk' => 0, 'def' => 28, 'hp' => 126, 'spd' => 3, 'stage' => 6, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c6-shield-steel' => ['slot' => 'armor', 'name' => 'Щит стража', 'sprite' => 'gi-shield-steel', 'atk' => 0, 'def' => 54, 'hp' => 153, 'spd' => -2, 'stage' => 6, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c6-amulet-shadow' => ['slot' => 'trinket', 'name' => 'Тусклый амулет', 'sprite' => 'gi-amulet-shadow', 'atk' => 9, 'def' => 16, 'hp' => 99, 'spd' => 7, 'stage' => 6, 'rarity' => 'common', 'cap' => 'common'],
+
+        // Ступень 7: простые вещи без свойств, всегда обычные
+        'gear-c7-sword-gold' => ['slot' => 'weapon', 'name' => 'Позолоченный меч', 'sprite' => 'gi-sword-gold', 'atk' => 77, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 7, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c7-mace-iron' => ['slot' => 'weapon', 'name' => 'Тяжёлая булава', 'sprite' => 'gi-mace-iron', 'atk' => 84, 'def' => 0, 'hp' => 23, 'spd' => -1, 'stage' => 7, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c7-chest-bronze' => ['slot' => 'armor', 'name' => 'Бронзовый доспех', 'sprite' => 'gi-chest-bronze', 'atk' => 0, 'def' => 56, 'hp' => 225, 'spd' => -2, 'stage' => 7, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c7-gauntlets-bronze' => ['slot' => 'armor', 'name' => 'Бронзовые перчатки', 'sprite' => 'gi-gauntlets-bronze', 'atk' => 0, 'def' => 41, 'hp' => 135, 'spd' => 0, 'stage' => 7, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c7-medal-steel' => ['slot' => 'trinket', 'name' => 'Медаль воина', 'sprite' => 'gi-medal-steel', 'atk' => 22, 'def' => 16, 'hp' => 112, 'spd' => 11, 'stage' => 7, 'rarity' => 'common', 'cap' => 'common'],
+
+        // Ступень 8: простые вещи без свойств, всегда обычные
+        'gear-c8-greatsword-steel' => ['slot' => 'weapon', 'name' => 'Двуручник', 'sprite' => 'gi-greatsword-steel', 'atk' => 112, 'def' => 0, 'hp' => 0, 'spd' => -4, 'stage' => 8, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c8-axe-bone' => ['slot' => 'weapon', 'name' => 'Костяной топор', 'sprite' => 'gi-axe-bone', 'atk' => 106, 'def' => 0, 'hp' => 0, 'spd' => -4, 'stage' => 8, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c8-chest-bone' => ['slot' => 'armor', 'name' => 'Костяной нагрудник', 'sprite' => 'gi-chest-bone', 'atk' => 0, 'def' => 68, 'hp' => 279, 'spd' => -2, 'stage' => 8, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c8-helm-bone' => ['slot' => 'armor', 'name' => 'Костяной шлем', 'sprite' => 'gi-helm-bone', 'atk' => 0, 'def' => 55, 'hp' => 251, 'spd' => 0, 'stage' => 8, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c8-ring-steel' => ['slot' => 'trinket', 'name' => 'Кольцо стража', 'sprite' => 'gi-ring-steel', 'atk' => 35, 'def' => 0, 'hp' => 112, 'spd' => 15, 'stage' => 8, 'rarity' => 'common', 'cap' => 'common'],
+
+        // Ступень 9: простые вещи без свойств, всегда обычные
+        'gear-c9-sword-steel' => ['slot' => 'weapon', 'name' => 'Клинок воина', 'sprite' => 'gi-sword-steel', 'atk' => 112, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 9, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c9-hammer-steel' => ['slot' => 'weapon', 'name' => 'Боевой молот', 'sprite' => 'gi-hammer-steel', 'atk' => 130, 'def' => 11, 'hp' => 0, 'spd' => -4, 'stage' => 9, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c9-chest-iron' => ['slot' => 'armor', 'name' => 'Тяжёлая броня', 'sprite' => 'gi-chest-iron', 'atk' => 0, 'def' => 83, 'hp' => 333, 'spd' => -2, 'stage' => 9, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c9-shield-iron' => ['slot' => 'armor', 'name' => 'Башенный щит', 'sprite' => 'gi-shield-iron', 'atk' => 0, 'def' => 99, 'hp' => 283, 'spd' => -2, 'stage' => 9, 'rarity' => 'common', 'cap' => 'common'],
+        'gear-c9-amulet-iron' => ['slot' => 'trinket', 'name' => 'Простой амулет', 'sprite' => 'gi-amulet-iron', 'atk' => 16, 'def' => 30, 'hp' => 184, 'spd' => 13, 'stage' => 9, 'rarity' => 'common', 'cap' => 'common'],
     ];
 
     /** Шанс (в %), что с босса вместо обычной вещи выпадет реликвия его ступени. */
@@ -970,16 +1033,19 @@ final class Dungeons
 
     /** Шансы редкости в процентах по ступени подземелья. */
     public const DROP_RARITY = [
-        1 => ['common' => 70, 'rare' => 25, 'epic' => 5],
-        2 => ['common' => 45, 'rare' => 40, 'epic' => 15],
-        3 => ['common' => 25, 'rare' => 45, 'epic' => 25, 'legendary' => 5],
-        4 => ['common' => 15, 'rare' => 40, 'epic' => 35, 'legendary' => 10],
-        5 => ['common' => 10, 'rare' => 30, 'epic' => 40, 'legendary' => 20],
-        6 => ['common' => 5, 'rare' => 30, 'epic' => 42, 'legendary' => 23],
-        7 => ['common' => 3, 'rare' => 25, 'epic' => 44, 'legendary' => 28],
-        8 => ['rare' => 20, 'epic' => 45, 'legendary' => 35],
-        9 => ['epic' => 40, 'legendary' => 60],
+        1 => ['common' => 80, 'rare' => 17, 'epic' => 3],
+        2 => ['common' => 72, 'rare' => 22, 'epic' => 6],
+        3 => ['common' => 64, 'rare' => 26, 'epic' => 9, 'legendary' => 1],
+        4 => ['common' => 58, 'rare' => 28, 'epic' => 12, 'legendary' => 2],
+        5 => ['common' => 52, 'rare' => 30, 'epic' => 15, 'legendary' => 3],
+        6 => ['common' => 48, 'rare' => 31, 'epic' => 18, 'legendary' => 3],
+        7 => ['common' => 44, 'rare' => 32, 'epic' => 20, 'legendary' => 4],
+        8 => ['common' => 40, 'rare' => 32, 'epic' => 23, 'legendary' => 5],
+        9 => ['common' => 30, 'rare' => 36, 'epic' => 28, 'legendary' => 6],
     ];
+
+    /** Простые вещи (`cap`) выпадают втрое чаще остальных и не бывают выше своего потолка редкости. */
+    public const PLAIN_WEIGHT = 3;
 
     /** Слоты экипировки: на питомца надевается по одному предмету в каждый. */
     public const SLOTS = ['weapon', 'armor', 'trinket'];
@@ -1019,7 +1085,7 @@ final class Dungeons
 
     /**
      * Опыт питомцам: за моба и за босса. Дальше его умножает уровень
-     * питомца и режет суточный предел (PetService::dailyXpCap).
+     * питомца; суточного предела нет, темп держит кривая PetService::xpFor.
      */
     public const XP_PER_MOB = 3;
     public const XP_PER_BOSS = 12;
@@ -1217,6 +1283,20 @@ final class Dungeons
         ];
     }
 
+    /** Простая вещь не бывает выше потолка: выпавшая редкость обрезается до него. */
+    public static function clampRarity(string $slug, string $rarity): string
+    {
+        $cap = self::GEAR[$slug]['cap'] ?? null;
+
+        if (! $cap) {
+            return $rarity;
+        }
+
+        $order = array_keys(self::RARITY_MULT);
+
+        return array_search($rarity, $order, true) > array_search($cap, $order, true) ? $cap : $rarity;
+    }
+
     public static function rarityName(string $rarity): string
     {
         return self::RARITY_NAMES[$rarity] ?? $rarity;
@@ -1243,9 +1323,15 @@ final class Dungeons
             }
         }
 
-        $keys = array_keys($pool);
+        $bag = [];
 
-        return $keys[array_rand($keys)];
+        foreach ($pool as $slug => $gear) {
+            for ($copy = 0; $copy < (isset($gear['cap']) ? self::PLAIN_WEIGHT : 1); $copy++) {
+                $bag[] = $slug;
+            }
+        }
+
+        return $bag[array_rand($bag)];
     }
 
     public static function slotName(string $slot): string

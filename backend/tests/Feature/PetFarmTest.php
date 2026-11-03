@@ -86,10 +86,13 @@ class PetFarmTest extends TestCase
         $this->assertSame(3, PetService::xpMultiplier(40));
         $this->assertSame(9, PetService::xpMultiplier(100));
 
-        // 100 уровень начинается с 24 750 опыта и выше не растёт
-        $this->assertSame(100, PetService::levelOf(24750));
+        // 100 уровень начинается с 99 810 опыта и выше не растёт
+        $this->assertSame(99810, PetService::xpFor(100));
+        $this->assertSame(100, PetService::levelOf(99810));
         $this->assertSame(100, PetService::levelOf(10 ** 7));
-        $this->assertSame(99, PetService::levelOf(24749));
+        $this->assertSame(99, PetService::levelOf(99809));
+        // До 40 уровня кривая прежняя
+        $this->assertSame(3900, PetService::xpFor(40));
     }
 
     public function test_care_at_high_level_gives_bonus_xp(): void
@@ -121,7 +124,7 @@ class PetFarmTest extends TestCase
     public function test_expedition_coins_stop_growing_after_level_30(): void
     {
         $owner = User::factory()->create();
-        $high = $this->pet($owner, 'slime', 24750);
+        $high = $this->pet($owner, 'slime', 99810);
         $mid = $this->pet($owner, 'frog', 2175);
 
         $svc = app(\App\Domains\Players\Services\PetExpeditionService::class);
