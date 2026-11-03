@@ -14,23 +14,23 @@ use Illuminate\Database\Eloquent\Builder;
 trait HasRoles
 {
     /** Персонал: права в жалобах, профилях, правке аккаунтов. */
-    public const STAFF_ROLES = ['admin', 'moderator', 'site_admin', 'tester', 'bridge_tester', 'bridge_curator'];
+    public const STAFF_ROLES = ['admin', 'moderator', 'server_admin', 'tester', 'bridge_tester', 'bridge_curator'];
 
     /**
      * Роли, которые не участвуют в рейтингах и топах. Тестеры, бридж-
      * тестеры и кураторы бриджа соревнуются наравне с игроками — так
      * решил владелец сайта.
      */
-    public const UNRANKED_ROLES = ['admin', 'moderator', 'site_admin'];
+    public const UNRANKED_ROLES = ['admin', 'moderator', 'server_admin'];
 
     /** Роли, которым доступна админка. */
     public const ADMIN_PANEL_ROLES = ['moderator', 'admin'];
 
     /**
      * Роли, которые управляют игровым сервером (панель «Сервер»).
-     * Администратор сайта видит только этот раздел.
+     * Администратор сервера видит только этот раздел.
      */
-    public const SERVER_ROLES = ['admin', 'site_admin'];
+    public const SERVER_ROLES = ['admin', 'server_admin'];
 
     /** Роли, которые могут проводить тир-тесты. */
     public const TESTER_ROLES = ['tester', 'admin'];
@@ -54,7 +54,7 @@ trait HasRoles
         'bridge_tester' => 'Бридж-тестер',
         'bridge_curator' => 'Куратор бридж-теста',
         'moderator' => 'Модератор',
-        'site_admin' => 'Администратор сайта',
+        'server_admin' => 'Администратор сервера',
         'admin' => 'Администратор',
     ];
 
@@ -68,10 +68,10 @@ trait HasRoles
         return in_array($this->role, self::ADMIN_PANEL_ROLES, true);
     }
 
-    /** Администратор сайта: доступ к панели игрового сервера. */
-    public function isSiteAdmin(): bool
+    /** Администратор сервера: доступ только к панели игрового сервера. */
+    public function isServerAdmin(): bool
     {
-        return $this->role === 'site_admin';
+        return $this->role === 'server_admin';
     }
 
     /** Может управлять игровым сервером (админ или администратор сайта). */

@@ -38,7 +38,7 @@ const modal = ref(null)
 
 const ROLE_LABELS = {
   user: 'Игрок', media: 'Медийка', tester: 'Тестер', moderator: 'Модератор',
-  admin: 'Администратор', bridge_tester: 'Бридж-тестер', bridge_curator: 'Бридж-куратор',
+  admin: 'Администратор', server_admin: 'Администратор сервера', bridge_tester: 'Бридж-тестер', bridge_curator: 'Бридж-куратор',
 }
 
 const TEST_STATUS = { pending: 'ждёт', in_progress: 'в работе', completed: 'завершён', cancelled: 'отменён' }

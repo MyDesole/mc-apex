@@ -70,7 +70,7 @@ const SECTIONS = [
         label: 'Игровой сервер',
         icon: 'globe',
         component: AdminServer,
-        roles: ['admin', 'site_admin'],
+        roles: ['admin', 'server_admin'],
       },
     ],
   },
@@ -128,7 +128,7 @@ const canSee = (item) => {
   if (item.roles) return item.roles.includes(role.value)
 
   // Администратору сайта — только разделы с явными ролями
-  if (role.value === 'site_admin') return false
+  if (role.value === 'server_admin') return false
 
   return isAdmin.value || !item.adminOnly
 }

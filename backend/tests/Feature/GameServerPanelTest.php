@@ -181,43 +181,43 @@ class GameServerPanelTest extends TestCase
 
     public function test_moderator_cannot_open_server_panel(): void
     {
-        // Панель сервера — только «Администратор сайта» и админ
+        // Панель сервера — только «Администратор сервера» и админ
         $this->actingAs($this->user('moderator'))->getJson('/api/admin/server/status')->assertForbidden();
     }
 
-    public function test_site_admin_can_read_status_and_console(): void
+    public function test_server_admin_can_read_status_and_console(): void
     {
         $this->fakeServer();
 
-        $this->actingAs($this->user('site_admin'))
+        $this->actingAs($this->user('server_admin'))
             ->getJson('/api/admin/server/status')
             ->assertOk()
             ->assertJsonPath('running', true)
             ->assertJsonPath('players', 3)
             ->assertJsonPath('jar', 'WindSpigot-2.1.4.jar');
 
-        $this->actingAs($this->user('site_admin'))
+        $this->actingAs($this->user('server_admin'))
             ->getJson('/api/admin/server/console?lines=50')
             ->assertOk()
             ->assertJsonPath('log', fn ($log) => str_contains($log, 'Done'));
     }
 
-    public function test_site_admin_gets_exact_players(): void
+    public function test_server_admin_gets_exact_players(): void
     {
         $this->fakeServer();
 
-        $this->actingAs($this->user('site_admin'))
+        $this->actingAs($this->user('server_admin'))
             ->getJson('/api/admin/server/players')
             ->assertOk()
             ->assertJsonPath('online', 3)
             ->assertJsonPath('max', 20);
     }
 
-    public function test_site_admin_sees_plugins(): void
+    public function test_server_admin_sees_plugins(): void
     {
         $this->fakeServer();
 
-        $this->actingAs($this->user('site_admin'))
+        $this->actingAs($this->user('server_admin'))
             ->getJson('/api/admin/server/plugins')
             ->assertOk()
             ->assertJsonCount(2, 'plugins')
@@ -229,18 +229,18 @@ class GameServerPanelTest extends TestCase
         $this->fakeServer();
 
         // Каталога config на сервере нет — загрузка туда не разрешена
-        $this->actingAs($this->user('site_admin'))
+        $this->actingAs($this->user('server_admin'))
             ->postJson('/api/admin/server/upload', ['target' => 'config'])
             ->assertStatus(422);
     }
 
     /* ==================== Конфиги ==================== */
 
-    public function test_site_admin_sees_config_files(): void
+    public function test_server_admin_sees_config_files(): void
     {
         $this->fakeServer();
 
-        $this->actingAs($this->user('site_admin'))
+        $this->actingAs($this->user('server_admin'))
             ->getJson('/api/admin/server/files')
             ->assertOk()
             ->assertJsonCount(3, 'files')
@@ -248,10 +248,10 @@ class GameServerPanelTest extends TestCase
             ->assertJsonPath('files.2.group', 'plugins');
     }
 
-    public function test_site_admin_reads_and_saves_config(): void
+    public function test_server_admin_reads_and_saves_config(): void
     {
         $fake = $this->fakeServer();
-        $admin = $this->user('site_admin');
+        $admin = $this->user('server_admin');
 
         $this->actingAs($admin)
             ->getJson('/api/admin/server/file?path=server.properties')
@@ -293,22 +293,22 @@ class GameServerPanelTest extends TestCase
 
     /* ==================== Архивы ==================== */
 
-    public function test_site_admin_sees_archives_and_backups(): void
+    public function test_server_admin_sees_archives_and_backups(): void
     {
         $this->fakeServer();
 
-        $this->actingAs($this->user('site_admin'))
+        $this->actingAs($this->user('server_admin'))
             ->getJson('/api/admin/server/archives')
             ->assertOk()
             ->assertJsonPath('archives.0.name', 'server-full.zip')
             ->assertJsonPath('backups.0.name', 'server-20261103-111957.tar.gz');
     }
 
-    public function test_site_admin_applies_archive(): void
+    public function test_server_admin_applies_archive(): void
     {
         $fake = $this->fakeServer();
 
-        $this->actingAs($this->user('site_admin'))
+        $this->actingAs($this->user('server_admin'))
             ->postJson('/api/admin/server/archives/server-full.zip/apply')
             ->assertOk()
             ->assertJsonPath('result.applied', true)
@@ -317,11 +317,11 @@ class GameServerPanelTest extends TestCase
         $this->assertContains('apply:server-full.zip', $fake->calls);
     }
 
-    public function test_site_admin_uploads_archive(): void
+    public function test_server_admin_uploads_archive(): void
     {
         $fake = $this->fakeServer();
 
-        $this->actingAs($this->user('site_admin'))
+        $this->actingAs($this->user('server_admin'))
             ->post('/api/admin/server/archives', [
                 'file' => \Illuminate\Http\UploadedFile::fake()->create('pack.zip', 2048),
             ])
@@ -350,10 +350,10 @@ class GameServerPanelTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_site_admin_deletes_archive_and_restores_backup(): void
+    public function test_server_admin_deletes_archive_and_restores_backup(): void
     {
         $fake = $this->fakeServer();
-        $admin = $this->user('site_admin');
+        $admin = $this->user('server_admin');
 
         $this->actingAs($admin)
             ->deleteJson('/api/admin/server/archives/old.zip')
@@ -368,10 +368,10 @@ class GameServerPanelTest extends TestCase
         $this->assertContains('restore:server-20261103-111957.tar.gz', $fake->calls);
     }
 
-    public function test_site_admin_can_restart_and_send_command(): void
+    public function test_server_admin_can_restart_and_send_command(): void
     {
         $fake = $this->fakeServer();
-        $admin = $this->user('site_admin');
+        $admin = $this->user('server_admin');
 
         $this->actingAs($admin)->postJson('/api/admin/server/restart')->assertOk();
         $this->assertContains('restart', $fake->calls);
@@ -383,10 +383,10 @@ class GameServerPanelTest extends TestCase
         $this->assertContains('cmd:say привет', $fake->calls);
     }
 
-    public function test_site_admin_can_read_and_save_start_command(): void
+    public function test_server_admin_can_read_and_save_start_command(): void
     {
         $fake = $this->fakeServer();
-        $admin = $this->user('site_admin');
+        $admin = $this->user('server_admin');
 
         $this->actingAs($admin)
             ->getJson('/api/admin/server/start-command')
@@ -413,7 +413,7 @@ class GameServerPanelTest extends TestCase
     {
         $this->fakeServer();
 
-        $this->actingAs($this->user('site_admin'))
+        $this->actingAs($this->user('server_admin'))
             ->postJson('/api/admin/server/command', ['command' => ''])
             ->assertStatus(422);
     }
@@ -422,7 +422,7 @@ class GameServerPanelTest extends TestCase
     {
         $this->fakeServer();
 
-        $this->actingAs($this->user('site_admin'))
+        $this->actingAs($this->user('server_admin'))
             ->putJson('/api/admin/server/start-command', ['content' => ''])
             ->assertStatus(422);
     }
@@ -437,15 +437,38 @@ class GameServerPanelTest extends TestCase
         app(GameServerService::class)->upload($file, '');
     }
 
+    public function test_server_admin_role_can_be_assigned_via_admin_api(): void
+    {
+        $admin = $this->user('admin');
+        $target = $this->user('user');
+
+        $this->actingAs($admin)
+            ->postJson("/api/admin/users/{$target->id}/role", ['role' => 'server_admin'])
+            ->assertOk();
+
+        $this->assertSame('server_admin', $target->fresh()->role);
+    }
+
+    public function test_server_admin_role_is_assignable_but_not_ranked(): void
+    {
+        $user = $this->user('server_admin');
+
+        $this->assertTrue($user->canManageServer());
+        $this->assertTrue($user->isUnranked());
+        $this->assertTrue($user->isStaff());
+        $this->assertFalse($user->isModerator());
+        $this->assertFalse($user->isAdmin());
+    }
+
     /* ==================== Роль ==================== */
 
-    public function test_site_admin_role_has_server_rights(): void
+    public function test_server_admin_role_has_server_rights(): void
     {
-        $user = $this->user('site_admin');
+        $user = $this->user('server_admin');
 
-        $this->assertTrue($user->isSiteAdmin());
+        $this->assertTrue($user->isServerAdmin());
         $this->assertTrue($user->canManageServer());
-        $this->assertSame('Администратор сайта', $user->roleLabel());
+        $this->assertSame('Администратор сервера', $user->roleLabel());
         $this->assertTrue($this->user('admin')->canManageServer());
         $this->assertFalse($this->user('moderator')->canManageServer());
     }

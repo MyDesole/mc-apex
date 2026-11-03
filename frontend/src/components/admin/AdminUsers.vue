@@ -55,6 +55,7 @@ const roleLabels = {
   bridge_tester: 'Бридж-тестер',
   bridge_curator: 'Куратор бридж-теста',
   moderator: 'Модератор',
+  server_admin: 'Администратор сервера',
   admin: 'Администратор',
 }
 

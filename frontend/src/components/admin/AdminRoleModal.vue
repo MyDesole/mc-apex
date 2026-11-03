@@ -14,6 +14,7 @@ const roles = [
   { value: 'tester', label: 'Тестер', desc: 'Проводит тир-тесты' },
   { value: 'bridge_tester', label: 'Бридж-тестер', desc: 'Проверяет виды бриджа' },
   { value: 'bridge_curator', label: 'Куратор бридж-теста', desc: 'Ведёт виды и подвиды бриджа' },
+  { value: 'server_admin', label: 'Администратор сервера', desc: 'Доступ только к панели игрового сервера' },
   { value: 'moderator', label: 'Модератор', desc: 'Следит за контентом' },
   { value: 'admin', label: 'Администратор', desc: 'Полный доступ' },
 ]

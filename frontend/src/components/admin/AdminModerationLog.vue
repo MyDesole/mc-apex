@@ -18,7 +18,7 @@ const FILTERS = [
 
 const ROLE_LABELS = {
   user: 'игрок', media: 'медийка', tester: 'тестер', moderator: 'модератор',
-  admin: 'админ', bridge_tester: 'бридж-тестер', bridge_curator: 'бридж-куратор',
+  admin: 'админ', server_admin: 'администратор сервера', bridge_tester: 'бридж-тестер', bridge_curator: 'бридж-куратор',
 }
 
 const filter = ref('')

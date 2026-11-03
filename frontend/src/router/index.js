@@ -93,7 +93,7 @@ const router = createRouter({
     // Регулярка в строке JS требует двойного экранирования (\\d), иначе это литерал «d».
     { path: '/forum/:id', name: 'forum-topic', component: () => import('@/views/forum/ForumTopicView.vue'), meta: { title: 'Тема форума' } },
     { path: '/clans/create', name: 'clan-create', component: ClanCreateView, meta: { title: 'Создать клан', auth: true } },
-    { path: '/admin', name: 'admin', component: () => import('@/views/admin/AdminView.vue'), meta: { title: 'Админ-панель', auth: true, role: ['moderator', 'admin', 'site_admin'] } },
+    { path: '/admin', name: 'admin', component: () => import('@/views/admin/AdminView.vue'), meta: { title: 'Админ-панель', auth: true, role: ['moderator', 'admin', 'server_admin'] } },
     { path: '/clans/:id', name: 'clan', component: ClanView, meta: { title: 'Клан' } },
     // Каноничная красивая ссылка на клан: /clan/Имя_клана (или /clan/7)
     { path: '/clan/:id', name: 'clan-slug', component: ClanView, meta: { title: 'Клан' } },

@@ -922,10 +922,10 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     /*
     |----------------------------------------------------------------------
-    | ИГРОВОЙ СЕРВЕР (role: site_admin, admin)
+    | ИГРОВОЙ СЕРВЕР (role: server_admin, admin)
     |----------------------------------------------------------------------
     */
-    Route::middleware('role:site_admin,admin')->prefix('admin/server')->group(function () {
+    Route::middleware('role:server_admin,admin')->prefix('admin/server')->group(function () {
         Route::get('/status', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'status']);
         Route::get('/console', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'console']);
         Route::get('/players', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'players']);
