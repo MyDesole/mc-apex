@@ -138,14 +138,15 @@ class MinecraftSkinService
      */
     private function uuidFor(User $user): ?string
     {
-        if ($user->minecraft_uuid) {
-            return str_replace('-', '', $user->minecraft_uuid);
-        }
-
         $nickname = $user->minecraft_username;
 
+        // Ник важнее сохранённого UUID: в minecraft_uuid может лежать
+        // offline-UUID сервера (версия 3), по которому Mojang профиль не
+        // знает — тогда скин лицензионного аккаунта не находился.
         if (! $nickname || ! preg_match('/^[A-Za-z0-9_]{3,16}$/', $nickname)) {
-            return null;
+            return $user->minecraft_uuid
+                ? str_replace('-', '', $user->minecraft_uuid)
+                : null;
         }
 
         $key = 'minecraft:uuid:' . mb_strtolower($nickname);
