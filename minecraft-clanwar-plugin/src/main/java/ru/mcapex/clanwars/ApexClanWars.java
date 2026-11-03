@@ -112,6 +112,10 @@ public class ApexClanWars extends JavaPlugin implements Listener {
             return true;
         }
         Player p = (Player) sender;
+        if (cmd.getName().equalsIgnoreCase("bwpos")) {
+            savePoint(p, args);
+            return true;
+        }
         String sub = args.length > 0 ? args[0].toLowerCase(Locale.ROOT) : "";
         War w = byController.get(p.getUniqueId());
 
@@ -133,6 +137,30 @@ public class ApexClanWars extends JavaPlugin implements Listener {
             open(p);
         }
         return true;
+    }
+
+    /** Помощник настройки арен BedWars: /bwpos метка - пишет текущую точку в points.txt рядом с плагином. */
+    private void savePoint(Player p, String[] args) {
+        if (!p.isOp()) {
+            p.sendMessage("§cТолько для операторов.");
+            return;
+        }
+        if (args.length < 1) {
+            p.sendMessage("§7/bwpos <метка>, например: /bwpos red-iron, /bwpos red-shop, /bwpos diamond1");
+            return;
+        }
+        org.bukkit.Location l = p.getLocation();
+        String line = String.format(Locale.ROOT, "%s | world=%s | %.1f,%.1f,%.1f,%.1f,%.1f%n", args[0], l.getWorld().getName(),
+                l.getX(), l.getY(), l.getZ(), l.getYaw(), l.getPitch());
+        try {
+            java.io.File f = new java.io.File(getDataFolder(), "points.txt");
+            getDataFolder().mkdirs();
+            java.nio.file.Files.write(f.toPath(), line.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                    java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
+            p.sendMessage("§aСохранено: §f" + line.trim());
+        } catch (java.io.IOException e) {
+            p.sendMessage("§cНе удалось записать: " + e.getMessage());
+        }
     }
 
     private void open(final Player p) {

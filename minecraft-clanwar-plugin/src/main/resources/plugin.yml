@@ -13,3 +13,6 @@ commands:
     description: Клановая война (для лидера и офицера клана)
     usage: "/cw [ready | cancel]"
     aliases: [clanwar, kv]
+  bwpos:
+    description: "Записать точку для настройки арен BedWars (оператор)"
+    usage: "/bwpos <метка>"
