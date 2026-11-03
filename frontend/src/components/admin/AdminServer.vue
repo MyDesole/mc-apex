@@ -21,10 +21,6 @@ const exactPlayers = ref(null)
 const plugins = ref([])
 
 /* ---------- Конфиги ---------- */
-const configFiles = ref([])
-const configPath = ref('')
-const configText = ref('')
-const configDirty = ref(false)
 
 /* ---------- Архивы ---------- */
 const archives = ref([])
@@ -78,6 +74,15 @@ const tpsClass = computed(() => {
   return tps >= 19 ? 'is-ok' : tps >= 15 ? 'is-warn' : 'is-bad'
 })
 
+const barTone = (pct) => (pct >= 90 ? 'is-bad' : pct >= 75 ? 'is-warn' : 'is-ok')
+
+/** Хвост лога построчно: WARN и ERROR подсвечиваются. */
+const logLines = computed(() => (log.value || '').split('\n').map((text, i) => ({
+  i,
+  text,
+  tone: /\b(ERROR|SEVERE|FATAL)\b|Exception/.test(text) ? 'is-error' : /\bWARN(ING)?\b/.test(text) ? 'is-warn' : '',
+})))
+
 async function loadMetrics() {
   if (!status.value?.running) return
 
@@ -106,45 +111,6 @@ async function loadPlugins() {
     plugins.value = []
   }
 }
-
-/* ---------- Конфиги ---------- */
-
-async function loadConfigs() {
-  try {
-    configFiles.value = (await gameServerApi.files()).files ?? []
-  } catch (e) {
-    configFiles.value = []
-    error.value = e.message ?? 'Не удалось получить список конфигов'
-  }
-}
-
-async function openConfig(path) {
-  if (configDirty.value) {
-    const ok = await confirmDialog('Несохранённые правки пропадут. Открыть другой файл?', {
-      title: 'Конфиг',
-      confirmText: 'Открыть',
-    })
-
-    if (!ok) return
-  }
-
-  busy.value = 'cfg-read'
-
-  try {
-    configPath.value = path
-    configText.value = (await gameServerApi.readFile(path)).content ?? ''
-    configDirty.value = false
-  } catch (e) {
-    error.value = e.message ?? 'Не удалось прочитать файл'
-  } finally {
-    busy.value = ''
-  }
-}
-
-const saveConfig = () => act('cfg-save', async () => {
-  await gameServerApi.saveFile(configPath.value, configText.value)
-  configDirty.value = false
-}, 'Конфиг сохранён')
 
 /* ---------- Архивы ---------- */
 
@@ -358,7 +324,6 @@ onMounted(async () => {
   loadMetrics()
   metricsTimer = setInterval(loadMetrics, 20000)
   await loadPlugins()
-  await loadConfigs()
   await loadArchives()
   await loadStartCommand()
 })
@@ -423,26 +388,37 @@ onUnmounted(() => {
 
         <div class="srv-card" :class="tpsClass">
           <span>TPS</span>
-          <b>{{ metrics?.tps ?? '—' }}</b>
-          <small v-if="metrics">CPU {{ metrics.cpu }}% · java {{ metrics.java_rss }} МБ</small>
-          <small v-else>ждём метрики</small>
+          <b>{{ metrics?.tps ?? '—' }}<em> / 20</em></b>
+          <span class="srv-bar"><i :style="{ width: Math.min(100, ((metrics?.tps ?? 0) / 20) * 100) + '%' }" :class="tpsClass"></i></span>
+          <small v-if="!metrics">ждём метрики</small>
         </div>
 
-        <div v-if="metrics?.names?.length" class="srv-card">
-          <span>Кто в игре</span>
-          <small>{{ metrics.names.join(', ') }}</small>
+        <div class="srv-card">
+          <span>CPU</span>
+          <b>{{ metrics ? metrics.cpu + '%' : '—' }}</b>
+          <span class="srv-bar"><i :style="{ width: (metrics?.cpu ?? 0) + '%' }" :class="barTone(metrics?.cpu ?? 0)"></i></span>
+          <small v-if="metrics">ядер {{ metrics.cores }} · java {{ metrics.java_rss }} МБ</small>
         </div>
 
         <div class="srv-card">
           <span>Память</span>
-          <b>{{ status.mem_used }} / {{ status.mem_total }} МБ</b>
-          <span class="srv-bar"><i :style="{ width: memPercent + '%' }" :class="{ 'is-full': memPercent > 85 }"></i></span>
+          <b>{{ status.mem_used }}<em> / {{ status.mem_total }} МБ</em></b>
+          <span class="srv-bar"><i :style="{ width: memPercent + '%' }" :class="barTone(memPercent)"></i></span>
+          <small>{{ memPercent }}%</small>
         </div>
 
         <div class="srv-card">
           <span>Диск</span>
-          <b>{{ status.disk_used }} / {{ status.disk_total }}</b>
+          <b>{{ status.disk_used }}<em> / {{ status.disk_total }}</em></b>
+          <span class="srv-bar"><i :style="{ width: (metrics?.disk_pct ?? 0) + '%' }" :class="barTone(metrics?.disk_pct ?? 0)"></i></span>
           <small>нагрузка {{ status.load }}</small>
+        </div>
+
+        <div v-if="metrics?.names?.length" class="srv-card srv-card--wide">
+          <span>Кто в игре</span>
+          <div class="srv-chips">
+            <i v-for="n in metrics.names" :key="n">{{ n }}</i>
+          </div>
         </div>
 
         <div class="srv-card">
@@ -473,7 +449,10 @@ onUnmounted(() => {
           </div>
         </header>
 
-        <pre ref="consoleEl" class="srv-console">{{ log || 'Журнал пуст' }}</pre>
+        <div ref="consoleEl" class="srv-console">
+          <p v-if="!log" class="srv-console__empty">Журнал пуст</p>
+          <div v-for="line in logLines" :key="line.i" class="srv-console__line" :class="line.tone">{{ line.text }}</div>
+        </div>
 
         <small v-if="consoleAt" class="srv-hint">Обновлено в {{ consoleAt }}</small>
 
@@ -536,61 +515,6 @@ onUnmounted(() => {
         </ul>
       </section>
 
-      <!-- Конфиги -->
-      <section class="srv-block">
-        <header class="srv-block__head">
-          <h3>Конфиги</h3>
-          <div class="srv-block__tools">
-            <button type="button" class="srv-btn srv-btn--sm" @click="loadConfigs">Обновить список</button>
-            <button
-                type="button"
-                class="srv-btn srv-btn--main srv-btn--sm"
-                :disabled="busy === 'cfg-save' || !configPath || !configDirty"
-                @click="saveConfig"
-            >Сохранить</button>
-          </div>
-        </header>
-
-        <div class="srv-cfg">
-          <div class="srv-cfg__list">
-            <template v-for="group in ['root', 'plugins']" :key="group">
-              <span class="srv-cfg__group">{{ group === 'root' ? 'Сервер' : 'Плагины' }}</span>
-              <button
-                  v-for="file in configFiles.filter((f) => f.group === group)"
-                  :key="file.path"
-                  type="button"
-                  class="srv-cfg__file"
-                  :class="{ 'is-active': file.path === configPath }"
-                  :disabled="busy === 'cfg-read'"
-                  @click="openConfig(file.path)"
-              >
-                <b>{{ file.path }}</b>
-                <small>{{ file.size }}</small>
-              </button>
-            </template>
-
-            <p v-if="!configFiles.length" class="srv-hint">Список пуст.</p>
-          </div>
-
-          <div class="srv-cfg__edit">
-            <p v-if="!configPath" class="srv-hint">Выбери файл слева.</p>
-
-            <template v-else>
-              <div class="srv-cfg__head">
-                <b>{{ configPath }}</b>
-                <span v-if="configDirty" class="srv-cfg__dirty">есть правки</span>
-              </div>
-              <textarea
-                  v-model="configText"
-                  class="srv-code srv-code--cfg"
-                  rows="14"
-                  spellcheck="false"
-                  @input="configDirty = true"
-              ></textarea>
-            </template>
-          </div>
-        </div>
-      </section>
 
       <!-- Архивы сервера -->
       <section class="srv-block">
@@ -614,7 +538,7 @@ onUnmounted(() => {
           нажми «Применить»: сервер остановится, сделает бэкап, распакует архив и запустится.
         </p>
 
-        <span class="srv-cfg__group">В очереди</span>
+        <span class="srv-group">В очереди</span>
         <ul v-if="archives.length" class="srv-list">
           <li v-for="a in archives" :key="a.name">
             <b>{{ a.name }}</b>
@@ -627,7 +551,7 @@ onUnmounted(() => {
         </ul>
         <p v-else class="srv-hint">Архивов нет.</p>
 
-        <span class="srv-cfg__group">Бэкапы</span>
+        <span class="srv-group">Бэкапы</span>
         <ul v-if="backups.length" class="srv-list">
           <li v-for="b in backups" :key="b.name">
             <b>{{ b.name }}</b>
