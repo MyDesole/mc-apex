@@ -389,11 +389,12 @@ public class ApexTierTests extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
-        Bukkit.getScheduler().runTaskLater(this, new Runnable() {
+        // тир подтягиваем сразу при входе, не дожидаясь периодического обновления
+        Bukkit.getScheduler().runTaskLaterAsynchronously(this, new Runnable() {
             public void run() {
-                applyTab();
+                refreshTiers();
             }
-        }, 40L);
+        }, 20L);
     }
 
     @EventHandler
