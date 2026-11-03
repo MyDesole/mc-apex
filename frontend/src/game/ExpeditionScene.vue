@@ -18,11 +18,16 @@ const now = useNow()
 
 /** Где на карте (проценты) стоит каждая зона. */
 const SPOTS = {
-  meadow: { x: 16, y: 70 },
-  forest: { x: 38, y: 38 },
-  caves: { x: 62, y: 70 },
-  nether: { x: 84, y: 36 },
+  meadow: { x: 7, y: 72 },
+  forest: { x: 19, y: 40 },
+  caves: { x: 31, y: 72 },
+  nether: { x: 43, y: 40 },
+  ruins: { x: 55, y: 72 },
+  depths: { x: 67, y: 40 },
+  dragons: { x: 79, y: 72 },
+  edge: { x: 92, y: 40 },
 }
+const TRAIL = '7,72 19,40 31,72 43,40 55,72 67,40 79,72 92,40'
 
 const petId = ref(null)
 const zoneKey = ref(null)
@@ -92,11 +97,12 @@ onMounted(load)
     <p v-if="notice" class="g-msg">{{ notice }}</p>
 
     <!-- Карта походов -->
+    <div class="ex-scroll">
     <div class="ex-map">
       <div class="ex-map__sky" aria-hidden="true"><i class="ex-cloud ex-cloud--a" /><i class="ex-cloud ex-cloud--b" /></div>
       <div class="ex-map__land" aria-hidden="true" />
       <svg class="ex-map__trail" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <polyline points="16,70 38,38 62,70 84,36" />
+        <polyline :points="TRAIL" />
       </svg>
 
       <button
@@ -114,6 +120,7 @@ onMounted(load)
           <PetFigure :species="t.pet.species" :traits="t.pet.traits" :size="32" :backdrop="false" />
         </span>
       </button>
+    </div>
     </div>
 
     <!-- Табличка выбранной зоны -->
@@ -195,6 +202,8 @@ onMounted(load)
 </template>
 
 <style scoped>
+.ex-scroll { overflow-x: auto; border: 4px solid #1b0f06; }
+.ex-scroll .ex-map { min-width: 1180px; border: 0; }
 .ex-map { position: relative; height: 340px; overflow: hidden; border: 4px solid #1b0f06; box-shadow: inset 0 0 0 4px rgba(0, 0, 0, 0.15); background: #4f9a3c; }
 .ex-map__sky { position: absolute; inset: 0 0 62% 0; background: linear-gradient(#6ec1ff, #bfe6ff); }
 .ex-cloud { position: absolute; width: 90px; height: 22px; background: #fff; box-shadow: 14px -10px 0 #fff, 40px -10px 0 #fff, 56px 0 0 #fff; animation: ex-drift 70s linear infinite; }
@@ -229,6 +238,19 @@ onMounted(load)
 .ex-spot--nether .ex-spot__art i:nth-child(1) { inset: 6px 20px; background: linear-gradient(#a855f7, #6d28d9); border: 4px solid #1a0a2e; animation: ex-portal 1s steps(2) infinite; }
 .ex-spot--nether .ex-spot__art i:nth-child(2) { left: 6px; bottom: 4px; width: 12px; height: 8px; background: #f97316; }
 .ex-spot--nether .ex-spot__art i:nth-child(3) { right: 6px; bottom: 4px; width: 12px; height: 8px; background: #ef4444; }
+.ex-spot--ruins .ex-spot__art { background: #7c7466; }
+.ex-spot--ruins .ex-spot__art i { bottom: 6px; width: 12px; background: #a8a090; border: 3px solid #4a463c; }
+.ex-spot--ruins .ex-spot__art i:nth-child(1) { left: 8px; height: 36px; } .ex-spot--ruins .ex-spot__art i:nth-child(2) { left: 32px; height: 22px; } .ex-spot--ruins .ex-spot__art i:nth-child(3) { left: 54px; height: 44px; }
+.ex-spot--depths .ex-spot__art { background: linear-gradient(#1e5f8f, #0a2a4a); }
+.ex-spot--depths .ex-spot__art i { background: #7dd3fc; width: 8px; height: 8px; border-radius: 50%; animation: ex-bubble 2s steps(4) infinite; }
+.ex-spot--depths .ex-spot__art i:nth-child(1) { left: 14px; bottom: 6px; } .ex-spot--depths .ex-spot__art i:nth-child(2) { left: 36px; bottom: 16px; animation-delay: -0.6s; } .ex-spot--depths .ex-spot__art i:nth-child(3) { left: 56px; bottom: 4px; animation-delay: -1.2s; }
+.ex-spot--dragons .ex-spot__art { background: #5a3a2a; }
+.ex-spot--dragons .ex-spot__art i:nth-child(1) { inset: 6px 8px 0; background: #3a2418; clip-path: polygon(0 100%, 30% 20%, 50% 55%, 75% 0, 100% 100%); }
+.ex-spot--dragons .ex-spot__art i:nth-child(2) { left: 30px; top: 26px; width: 14px; height: 10px; background: #fb923c; box-shadow: 0 0 10px #f97316; }
+.ex-spot--edge .ex-spot__art { background: radial-gradient(circle at 50% 100%, #a78bfa, #0d0918 70%); }
+.ex-spot--edge .ex-spot__art i { width: 4px; height: 4px; background: #fff; animation: ex-portal 1.4s steps(2) infinite; }
+.ex-spot--edge .ex-spot__art i:nth-child(1) { left: 12px; top: 10px; } .ex-spot--edge .ex-spot__art i:nth-child(2) { left: 44px; top: 18px; animation-delay: -0.5s; } .ex-spot--edge .ex-spot__art i:nth-child(3) { left: 60px; top: 6px; animation-delay: -1s; }
+@keyframes ex-bubble { 50% { transform: translateY(-14px); opacity: 0.4; } }
 @keyframes ex-portal { 50% { filter: brightness(1.4); } }
 .ex-walker { position: absolute; right: -10px; top: 6px; animation: ex-walk 1.4s steps(2) infinite; }
 .ex-walker.is-back { animation: ex-hop 0.7s steps(2) infinite; filter: drop-shadow(0 0 6px #ffd45c); }

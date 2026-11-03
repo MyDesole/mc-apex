@@ -1739,6 +1739,82 @@ Object.assign(PIXEL_SPRITES, {
     'mat-crown': recolor('mat-void', { v: '#c026d3', w: '#fae8ff' }),
 })
 
+/** Сдвиг оттенка всех цветов спрайта: один силуэт — много разных существ. */
+function hueShift(base, deg) {
+    const source = PIXEL_SPRITES[base]
+    const shift = (hex) => {
+        if (!/^#[0-9a-f]{6}$/i.test(hex)) return hex
+        const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+        const max = Math.max(r, g, b)
+        const min = Math.min(r, g, b)
+        const l = (max + min) / 2
+        const d = max - min
+        let h = 0
+        let s = 0
+        if (d) {
+            s = d / (1 - Math.abs(2 * l - 1))
+            h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4
+            h *= 60
+        }
+        h = (h + deg + 360) % 360
+        const c = (1 - Math.abs(2 * l - 1)) * s
+        const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
+        const m = l - c / 2
+        const [rr, gg, bb] = [[c, x, 0], [x, c, 0], [0, c, x], [0, x, c], [x, 0, c], [c, 0, x]][Math.floor(h / 60) % 6]
+        return '#' + [rr, gg, bb].map((v) => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('')
+    }
+
+    return { palette: Object.fromEntries(Object.entries(source.palette).map(([k, v]) => [k, shift(v)])), rows: source.rows }
+}
+
+/** Мобы трёх глубоких подземелий и ядра боссов: у каждого свой спрайт. */
+Object.assign(PIXEL_SPRITES, {
+    'mob-abyss-1': hueShift('mob-guard', 190),
+    'mob-abyss-2': hueShift('mob-reaper', 196),
+    'mob-abyss-3': hueShift('mob-shade', 202),
+    'mob-abyss-4': hueShift('mob-drowned', 208),
+    'mob-abyss-5': hueShift('mob-shardgolem', 214),
+    'mob-abyss-6': hueShift('mob-voideye', 220),
+    'mob-abyss-7': hueShift('mob-faceless', 226),
+    'mob-abyss-8': hueShift('mob-devourer', 232),
+    'mob-abyss-9': hueShift('mob-skeleton', 238),
+    'mob-abyss-10': hueShift('mob-slime', 244),
+    'mob-abyss-11': hueShift('mob-bat', 250),
+    'mob-abyss-12': hueShift('mob-wraith', 256),
+    'mob-lair-1': hueShift('mob-imp', -12),
+    'mob-lair-2': hueShift('mob-guard', -7),
+    'mob-lair-3': hueShift('mob-devourer', -2),
+    'mob-lair-4': hueShift('mob-golem', 3),
+    'mob-lair-5': hueShift('mob-bat', 8),
+    'mob-lair-6': hueShift('mob-skeleton', 13),
+    'mob-lair-7': hueShift('mob-ashhound', 18),
+    'mob-lair-8': hueShift('mob-forgespirit', 23),
+    'mob-lair-9': hueShift('mob-rat', 28),
+    'mob-lair-10': hueShift('mob-icewitch', 33),
+    'mob-lair-11': hueShift('mob-slime', 38),
+    'mob-lair-12': hueShift('mob-guard', 43),
+    'mob-throne-1': hueShift('mob-guard', 255),
+    'mob-throne-2': hueShift('mob-reaper', 259),
+    'mob-throne-3': hueShift('mob-wraith', 263),
+    'mob-throne-4': hueShift('mob-faceless', 267),
+    'mob-throne-5': hueShift('mob-shardgolem', 271),
+    'mob-throne-6': hueShift('mob-shade', 275),
+    'mob-throne-7': hueShift('mob-icewitch', 279),
+    'mob-throne-8': hueShift('mob-imp', 283),
+    'mob-throne-9': hueShift('mob-ashhound', 287),
+    'mob-throne-10': hueShift('mob-skeleton', 291),
+    'mob-throne-11': hueShift('mob-voideye', 295),
+    'mob-throne-12': hueShift('mob-golem', 299),
+    'mat-core-catacombs': recolor('mat-void', { v: '#a16207', w: '#ffffff' }),
+    'mat-core-sunken': recolor('mat-void', { v: '#22d3ee', w: '#ffffff' }),
+    'mat-core-forge': recolor('mat-void', { v: '#f97316', w: '#ffffff' }),
+    'mat-core-crypt': recolor('mat-void', { v: '#7dd3fc', w: '#ffffff' }),
+    'mat-core-void': recolor('mat-void', { v: '#a78bfa', w: '#ffffff' }),
+    'mat-core-abyss': recolor('mat-void', { v: '#38bdf8', w: '#ffffff' }),
+    'mat-core-lair': recolor('mat-void', { v: '#facc15', w: '#ffffff' }),
+    'mat-core-throne': recolor('mat-void', { v: '#e879f9', w: '#ffffff' })
+})
+
 const cache = new Map()
 const svgCache = new Map()
 

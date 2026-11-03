@@ -5,12 +5,13 @@
  * интерьер (стены, пол, декор), а не вкладка. Выйти можно через дверь.
  * Питомцы игрока бродят по дорожке. Сводка для значков — GET /api/world.
  */
-import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { api } from '@/services/core/api.js'
 import PetFigure from '@/components/pets/PetFigure.vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
 import '@/game/gameKit.css'
+import '@/game/battleSkin.css'
 
 const route = useRoute()
 const router = useRouter()
@@ -23,9 +24,9 @@ const ForgeScene = defineAsyncComponent(() => import('@/game/ForgeScene.vue'))
 const MuseumScene = defineAsyncComponent(() => import('@/game/MuseumScene.vue'))
 const HallScene = defineAsyncComponent(() => import('@/game/HallScene.vue'))
 const DungeonView = defineAsyncComponent(() => import('@/views/pets/DungeonView.vue'))
-const MinerView = defineAsyncComponent(() => import('@/views/games/MinerView.vue'))
+const MineScene = defineAsyncComponent(() => import('@/game/MineScene.vue'))
+const MarketScene = defineAsyncComponent(() => import('@/game/MarketScene.vue'))
 const AuctionView = defineAsyncComponent(() => import('@/views/shop/AuctionView.vue'))
-const CasesView = defineAsyncComponent(() => import('@/views/shop/CasesView.vue'))
 const PetBag = defineAsyncComponent(() => import('@/components/pets/PetBag.vue'))
 
 /**
@@ -35,7 +36,7 @@ const PetBag = defineAsyncComponent(() => import('@/components/pets/PetBag.vue')
 const PLACES = [
   { id: 'gear', name: 'Кузница', kind: 'forge', x: 10, y: 60, view: ForgeScene, hint: 'Снаряжение питомцев' },
   { id: 'farm', name: 'Общая ферма', kind: 'barn', x: 26, y: 60, view: FarmView, props: { only: 'common' }, hint: 'Бронь и выкуп питомцев', badge: 'farm' },
-  { id: 'miner', name: 'Шахта', kind: 'mine', x: 42, y: 60, view: MinerView, hint: 'Копай руду, зарабатывай ApexCoin' },
+  { id: 'miner', name: 'Шахта', kind: 'mine', x: 42, y: 60, view: MineScene, hint: 'Копай руду, зарабатывай ApexCoin' },
   { id: 'dungeon', name: 'Подземелья', kind: 'dungeon', x: 58, y: 60, view: DungeonView, hint: 'Отряд, боссы и Рубли', badge: 'dungeon' },
   { id: 'museum', name: 'Питомцедекс', kind: 'museum', x: 74, y: 60, view: MuseumScene, hint: 'Коллекция видов и окрасов' },
   { id: 'hall', name: 'Доска почёта', kind: 'hall', x: 90, y: 60, view: HallScene, hint: 'Лучшие питомцы сервера' },
@@ -45,7 +46,7 @@ const PLACES = [
   { id: 'expeditions', name: 'Экспедиции', kind: 'camp', x: 49, y: 92, view: ExpeditionScene, hint: 'Поход за монетами и ключами', badge: 'expeditions' },
   { id: 'arena', name: 'Арена', kind: 'arena', x: 63, y: 92, view: ArenaScene, hint: 'Пошаговые бои питомцев' },
   { id: 'auction', name: 'Аукцион', kind: 'stall', x: 77, y: 92, view: AuctionView, hint: 'Торги питомцами' },
-  { id: 'cases', name: 'Сундуки', kind: 'chest', x: 91, y: 92, view: CasesView, hint: 'Косметика и ключи' },
+  { id: 'market', name: 'Рынок', kind: 'market', x: 91, y: 92, view: MarketScene, hint: 'Продать и купить материалы и снаряжение' },
 ]
 
 const world = ref(null)
@@ -88,12 +89,15 @@ function leave() {
 const badge = (place) => (place.badge ? (world.value?.badges?.[place.badge] ?? 0) : 0)
 const locked = (place) => place.id === 'personal' && world.value && !world.value.personal_unlocked
 
+watch(open, (place) => { document.documentElement.style.overflow = place ? 'hidden' : '' }, { immediate: true })
+
 onMounted(() => {
   load()
   timer = setInterval(load, 60000)
 })
 
 onBeforeUnmount(() => {
+  document.documentElement.style.overflow = ''
   clearInterval(timer)
   clearTimeout(enterTimer)
 })

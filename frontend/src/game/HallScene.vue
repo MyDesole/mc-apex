@@ -24,6 +24,7 @@ const podium = computed(() => [top.value[1] && { pet: top.value[1], place: 2 }, 
 function value(p) {
   if (by.value === 'level') return `ур. ${p.level}`
   if (by.value === 'rating') return `${p.rating} · ${p.wins}–${p.losses}`
+  if (p.traits?.one_in) return `1 из ${Number(p.traits.one_in).toLocaleString('ru-RU')}`
   return p.chance === undefined ? PET_RARITY[p.traits?.rarity]?.label : p.chance < 0.01 ? '< 0,01 %' : `${String(p.chance).replace('.', ',')} %`
 }
 

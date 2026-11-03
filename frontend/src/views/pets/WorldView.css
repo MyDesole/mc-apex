@@ -84,6 +84,8 @@
 .bld--camp .bld__wall { top: 52px; }
 .bld--stall { --roof: #e23b3b; --wall: #a8672f; --door: #4a2a10; --deco: #fff; }
 .bld--stall .bld__roof { background: repeating-linear-gradient(90deg, #e23b3b 0 16px, #fff 16px 32px); clip-path: polygon(0 100%, 6% 0, 94% 0, 100% 100%); height: 28px; }
+.bld--market { --roof: #2f8f5b; --wall: #8a5a2a; --door: #4a2a10; --deco: #ffd45c; }
+.bld--market .bld__roof { background: repeating-linear-gradient(90deg, #2f8f5b 0 16px, #ffd45c 16px 32px); clip-path: polygon(0 100%, 6% 0, 94% 0, 100% 100%); height: 28px; }
 .bld--chest { --roof: #a8672f; --wall: #7c4a21; --door: #ffd45c; --deco: #ffd45c; }
 .bld--chest .bld__art { width: 70px; height: 56px; }
 .bld--chest .bld__roof { clip-path: polygon(8% 100%, 0 100%, 6% 0, 94% 0, 100% 100%, 92% 100%); height: 24px; }
@@ -116,7 +118,7 @@
 .room__wallet { display: flex; gap: 8px; }
 .room__wall { position: relative; z-index: 1; flex: none; display: flex; justify-content: space-around; align-items: flex-start; height: 74px; padding: 10px 24px 0; background: linear-gradient(rgba(0, 0, 0, 0.25), transparent); }
 .room__wall i { display: block; width: 28px; height: 40px; background: var(--glow); border: 4px solid rgba(0, 0, 0, 0.55); box-shadow: 0 0 22px 4px rgba(255, 212, 92, 0.35); }
-.room__body { position: relative; z-index: 2; flex: 1; min-height: 0; overflow-y: auto; background: rgba(12, 8, 4, 0.78); border-top: 4px solid #1b0f06; }
+.room__body { position: relative; z-index: 2; flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; background: rgba(12, 8, 4, 0.78); border-top: 4px solid #1b0f06; }
 .room__floor { flex: none; height: 28px; background: repeating-linear-gradient(90deg, var(--floor-a) 0 56px, var(--floor-b) 56px 60px); border-top: 4px solid #1b0f06; }
 
 /* Двери-створки: открываются сразу после входа */

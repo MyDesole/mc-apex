@@ -470,40 +470,7 @@ function bestSquad() {
     }
 }
 
-/* ---------- Крафт из материалов ---------- */
-
-const craft = ref(null)
-const crafted = ref(null)
-const craftBusy = ref('')
-
-async function loadCraft() {
-    try {
-        craft.value = await dungeonApi.craftIndex()
-    } catch {
-        craft.value = null
-    }
-}
-
-const doCraft = async (material) => {
-    craftBusy.value = material
-    error.value = ''
-
-    try {
-        const result = await dungeonApi.craft(material)
-
-        craft.value = { ...craft.value, materials: result.materials }
-        crafted.value = result.crafted
-    } catch (e) {
-        error.value = e.message ?? 'Не удалось скрафтить.'
-    } finally {
-        craftBusy.value = ''
-    }
-}
-
-onMounted(() => {
-    load()
-    loadCraft()
-})
+onMounted(load)
 </script>
 
 <template>
@@ -905,23 +872,7 @@ onMounted(() => {
                 <p v-else-if="autoPicked" class="dg-camp__hint">Отряд подобран по силе — с экипировкой и связкой стихий.</p>
             </div>
 
-            <!-- Верстак и связки — в сундуках, а не простынёй текста -->
-            <details class="dg-fold">
-                <summary>Верстак экипировки</summary>
-                <p class="dg-fold__hint">Три материала — случайный предмет того же тира. Материалы падают с мобов и боссов.</p>
-                <div v-if="craft" class="dg-craft">
-                    <div v-for="(def, key) in craft.catalog" :key="key" class="dg-craft__item" :class="{ 'is-ready': (craft.materials[key] ?? 0) >= craft.cost }">
-                        <PixelSprite :sprite="def.sprite" :size="28" />
-                        <b>{{ def.name }}</b>
-                        <small>{{ craft.materials[key] ?? 0 }} / {{ craft.cost }}</small>
-                        <button type="button" :disabled="busy || craftBusy === key || (craft.materials[key] ?? 0) < craft.cost" @click="doCraft(key)">
-                            {{ craftBusy === key ? '…' : 'Скрафтить' }}
-                        </button>
-                    </div>
-                </div>
-                <p v-if="crafted" class="dg-fold__hint">Скрафчено: <b>{{ crafted.name }}</b> ({{ crafted.rarity_name }}) — смотри в Складе питомцев.</p>
-            </details>
-
+            <!-- Связки стихий — в сундуке, а не простынёй текста -->
             <details class="dg-fold">
                 <summary>Связки стихий</summary>
                 <div class="dg-combos">

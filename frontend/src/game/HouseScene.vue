@@ -35,6 +35,36 @@ async function feedAll() {
   })
 }
 
+/* ---------- Профиль и аукцион ---------- */
+
+const auction = ref(null)
+const DURATIONS = [12, 24, 48]
+
+function toggleProfile(p) {
+  return run(`profile-${p.inventory_id}`, async () => {
+    await api.post(`/shop/pets/${p.inventory_id}/${p.equipped ? 'unequip' : 'equip'}`)
+    p.equipped = !p.equipped
+    say(p.equipped ? `${p.name} гуляет по твоему профилю.` : `${p.name} ушёл с профиля.`)
+  }, 'Не удалось изменить профиль.')
+}
+
+function openAuction(p) {
+  auction.value = { id: p.inventory_id, price: 1000, hours: 24 }
+}
+
+function startAuction(p) {
+  return run(`auction-${p.inventory_id}`, async () => {
+    await api.post('/shop/auctions', { inventory_id: p.inventory_id, start_price: Number(auction.value.price), hours: Number(auction.value.hours) })
+    say(`${p.name} выставлен на аукцион на ${auction.value.hours} ч.`)
+    auction.value = null
+    pickedId.value = null
+    await load()
+  }, 'Не удалось выставить на аукцион.')
+}
+
+/** «1 из N» с разделителями разрядов. */
+const oneIn = (p) => (p.traits?.one_in ? `1 из ${Number(p.traits.one_in).toLocaleString('ru-RU')}` : null)
+
 onMounted(load)
 </script>
 
@@ -87,7 +117,7 @@ onMounted(load)
           <h3 class="g-title">{{ picked.name }} <small v-if="picked.traits?.serial">#{{ picked.traits.serial }}</small></h3>
           <p class="hs-chips">
             <span class="g-chip" :style="{ color: ELEMENTS[picked.element]?.color }">{{ ELEMENTS[picked.element]?.name }}</span>
-            <span class="g-chip" :style="{ color: PET_RARITY[picked.traits?.rarity]?.color }">{{ PET_RARITY[picked.traits?.rarity]?.label }}</span>
+            <span class="g-chip" :style="{ color: PET_RARITY[picked.traits?.rarity]?.color }">{{ PET_RARITY[picked.traits?.rarity]?.label }}<template v-if="oneIn(picked)"> · {{ oneIn(picked) }}</template></span>
             <span class="g-chip">рейтинг <b>{{ picked.rating }}</b></span>
             <span class="g-chip">{{ picked.wins }}–{{ picked.losses }}</span>
           </p>
@@ -99,6 +129,19 @@ onMounted(load)
           </div>
 
           <p v-if="picked.busy" class="g-hint">{{ picked.busy }}</p>
+
+          <div class="hs-manage">
+            <button type="button" class="g-btn g-btn--sm" :class="{ 'g-btn--gold': !picked.equipped }" :disabled="busy === `profile-${picked.inventory_id}`" @click="toggleProfile(picked)">
+              {{ picked.equipped ? 'Снять с профиля' : 'Надеть на профиль' }}
+            </button>
+            <button type="button" class="g-btn g-btn--red g-btn--sm" :disabled="!!picked.busy || picked.equipped" :title="picked.equipped ? 'Сначала сними с профиля' : ''" @click="openAuction(picked)">На аукцион</button>
+          </div>
+          <form v-if="auction?.id === picked.inventory_id" class="hs-auction" @submit.prevent="startAuction(picked)">
+            <label>Стартовая цена, ₳ <input v-model.number="auction.price" type="number" min="10"></label>
+            <label>Срок <select v-model.number="auction.hours"><option v-for="h in DURATIONS" :key="h" :value="h">{{ h }} ч</option></select></label>
+            <button type="submit" class="g-btn g-btn--go g-btn--sm" :disabled="busy === `auction-${picked.inventory_id}`">Выставить</button>
+            <button type="button" class="g-btn g-btn--sm" @click="auction = null">Отмена</button>
+          </form>
 
           <div class="hs-care">
             <button
@@ -177,6 +220,10 @@ onMounted(load)
 .hs-chips { display: flex; gap: 5px; flex-wrap: wrap; margin: 6px 0; }
 .hs-level { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; margin: 8px 0; font-size: 13px; }
 .hs-care { display: flex; gap: 6px; flex-wrap: wrap; }
+.hs-manage { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+.hs-auction { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 8px; padding: 8px; background: rgba(0, 0, 0, 0.3); border: 3px solid #4a2a10; }
+.hs-auction label { display: flex; flex-direction: column; gap: 3px; font-size: 11px; font-weight: 800; color: #ffe9a8; }
+.hs-auction input, .hs-auction select { width: 110px; padding: 5px 8px; font: inherit; font-size: 13px; color: #fff; background: #20150c; border: 3px solid #4a2a10; }
 .hs-label { display: block; margin-bottom: 4px; font-size: 11px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; color: #ffe9a8; }
 .hs-tricks { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px; }
 .hs-trick { width: 62px; height: 40px; }
