@@ -56,7 +56,7 @@ class MinecraftServerController extends Controller
             $nick = (string) $data['tester'];
 
             $query->whereHas('tester', function ($q) use ($nick) {
-                $q->where('minecraft_username', $nick)->orWhere('name', $nick);
+                $q->where('minecraft_username', $nick);
             });
         }
 
