@@ -125,8 +125,12 @@ class MinecraftServerController extends Controller
             return response()->json(['url' => null, 'model' => null]);
         }
 
+        // ?v= меняется при загрузке нового скина: SkinsRestorer кэширует
+        // картинку по адресу, и без этого новая текстура не подхватывалась.
+        $version = $user->custom_skin_at?->timestamp ?? 0;
+
         return response()->json([
-            'url' => url('/api/players/' . rawurlencode((string) $user->username) . '/skin'),
+            'url' => url('/api/players/' . rawurlencode((string) $user->username) . '/skin') . '?v=' . $version,
             'model' => $user->custom_skin_model ?: 'classic',
         ]);
     }
