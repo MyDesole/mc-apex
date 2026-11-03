@@ -1,0 +1,1 @@
+BedWars1058 23.12.1 (jar не в git), режим SHARED. Арены сгенерированы из карт Frost (2 команды), Aquarium (4), bw_cw (КВ, 2 команды без лимита). Миры лежат в корне сервера: bw_frost, bw_aquarium, bw_cw.
