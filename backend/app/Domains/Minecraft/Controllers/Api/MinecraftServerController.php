@@ -4,6 +4,7 @@ namespace App\Domains\Minecraft\Controllers\Api;
 
 use App\Domains\Minecraft\Services\MinecraftLinkService;
 use App\Domains\Tiers\Models\TierTest;
+use App\Domains\Tiers\Services\TierTestService;
 use App\Domains\Users\Models\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -82,13 +83,36 @@ class MinecraftServerController extends Controller
         ]);
     }
 
-    /** Плагин сообщает, что тестер пригласил испытуемого на дуэль. */
-    public function tierTestInvite(int $id): JsonResponse
+    /**
+     * Тестер пригласил игрока на дуэли. Свободную заявку закрепляем за ним,
+     * чужую в работе не трогаем.
+     */
+    public function tierTestInvite(Request $request, int $id): JsonResponse
     {
+        $data = $request->validate([
+            'tester' => ['required', 'string', 'max:32'],
+            'kits' => ['nullable', 'array', 'max:20'],
+            'kits.*' => ['string', 'max:64'],
+            'rounds' => ['nullable', 'integer', 'min:1', 'max:20'],
+        ]);
+
         $test = TierTest::find($id);
 
         if (! $test) {
             return response()->json(['message' => 'Тест не найден.'], 404);
+        }
+
+        $tester = User::query()->where('minecraft_username', $data['tester'])->first();
+
+        if (! $tester) {
+            return response()->json(['message' => 'Ник тестера не привязан к аккаунту.'], 422);
+        }
+
+        if ($test->status === 'pending') {
+            app(TierTestService::class)->claim($test, $tester);
+            $test->refresh();
+        } elseif ($test->status !== 'in_progress' || (int) $test->tester_id !== $tester->id) {
+            return response()->json(['message' => 'Заявка не ваша или уже закрыта.'], 422);
         }
 
         return response()->json([
@@ -97,21 +121,56 @@ class MinecraftServerController extends Controller
         ]);
     }
 
-    /** Тест закончен на сервере. Результат тестер ставит на сайте. */
-    public function tierTestFinish(int $id): JsonResponse
+    /**
+     * Серия дуэлей закончена. Счёт и режимы пишем в заметки заявки, тир
+     * тестер ставит на сайте по аспектам.
+     */
+    public function tierTestFinish(Request $request, int $id): JsonResponse
     {
+        $data = $request->validate([
+            'tester' => ['nullable', 'string', 'max:32'],
+            'subject_wins' => ['required', 'integer', 'min:0'],
+            'tester_wins' => ['required', 'integer', 'min:0'],
+            'draws' => ['nullable', 'integer', 'min:0'],
+            'planned' => ['nullable', 'integer', 'min:0'],
+            'completed' => ['nullable', 'boolean'],
+            'games' => ['nullable', 'array', 'max:100'],
+            'games.*.kit' => ['required', 'string', 'max:64'],
+            'games.*.winner' => ['required', 'in:subject,tester,none'],
+        ]);
+
         $test = TierTest::find($id);
 
         if (! $test) {
             return response()->json(['message' => 'Тест не найден.'], 404);
         }
 
+        if (in_array($test->status, ['completed', 'cancelled'], true)) {
+            return response()->json(['message' => 'Заявка уже закрыта.'], 422);
+        }
+
+        $lines = [sprintf(
+            'Дуэли на сервере: игрок %d : %d тестер, ничьих %d%s.',
+            $data['subject_wins'],
+            $data['tester_wins'],
+            $data['draws'] ?? 0,
+            ($data['completed'] ?? true) ? '' : ' (серия прервана)'
+        )];
+
+        foreach ($data['games'] ?? [] as $i => $game) {
+            $who = ['subject' => 'игрок', 'tester' => 'тестер', 'none' => 'ничья'][$game['winner']];
+            $lines[] = sprintf('%d. %s - %s', $i + 1, $game['kit'], $who);
+        }
+
+        $test->update([
+            'notes' => trim(($test->notes ? $test->notes . "\n\n" : '') . implode("\n", $lines)),
+        ]);
+
         return response()->json([
             'ok' => true,
             'test' => ['id' => $test->id, 'status' => $test->status],
         ]);
     }
-
     /** Скин игрока для сервера: ссылка на PNG и модель рук. */
     public function skin(Request $request): JsonResponse
     {
