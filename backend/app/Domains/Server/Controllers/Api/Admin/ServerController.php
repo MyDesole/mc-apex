@@ -2,6 +2,7 @@
 
 namespace App\Domains\Server\Controllers\Api\Admin;
 
+use App\Domains\Moderation\Models\ModerationLog;
 use App\Domains\Server\Services\GameServerService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -16,6 +17,12 @@ class ServerController extends Controller
 {
     public function __construct(private readonly GameServerService $server)
     {
+    }
+
+    /** Каждое действие панели — в журнал персонала. */
+    private function audit(Request $request, string $action, array $details = []): void
+    {
+        ModerationLog::record($request->user(), $action, null, $details);
     }
 
     public function status(): JsonResponse
@@ -83,6 +90,7 @@ class ServerController extends Controller
 
         try {
             $this->server->saveFile((string) $data['path'], (string) ($data['content'] ?? ''));
+            $this->audit($request, 'server.file_save', ['path' => $data['path']]);
 
             return response()->json(['ok' => true]);
         } catch (RuntimeException $e) {
@@ -112,18 +120,20 @@ class ServerController extends Controller
         ]);
 
         try {
-            return response()->json([
-                'ok' => true,
-                'archive' => $this->server->uploadArchive($data['file']),
-            ]);
+            $archive = $this->server->uploadArchive($data['file']);
+            $this->audit($request, 'server.archive', ['op' => 'upload', 'name' => $data['file']->getClientOriginalName()]);
+
+            return response()->json(['ok' => true, 'archive' => $archive]);
         } catch (RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
     }
 
     /** Применить архив: стоп → бэкап → распаковка → старт. */
-    public function applyArchive(string $name): JsonResponse
+    public function applyArchive(Request $request, string $name): JsonResponse
     {
+        $this->audit($request, 'server.archive', ['op' => 'apply', 'name' => $name]);
+
         try {
             return response()->json([
                 'ok' => true,
@@ -134,8 +144,10 @@ class ServerController extends Controller
         }
     }
 
-    public function deleteArchive(string $name): JsonResponse
+    public function deleteArchive(Request $request, string $name): JsonResponse
     {
+        $this->audit($request, 'server.archive', ['op' => 'delete', 'name' => $name]);
+
         try {
             $this->server->deleteArchive($name);
 
@@ -145,8 +157,10 @@ class ServerController extends Controller
         }
     }
 
-    public function restoreBackup(string $name): JsonResponse
+    public function restoreBackup(Request $request, string $name): JsonResponse
     {
+        $this->audit($request, 'server.archive', ['op' => 'restore', 'name' => $name]);
+
         try {
             return response()->json(['ok' => true, 'result' => $this->server->restoreBackup($name)]);
         } catch (RuntimeException $e) {
@@ -166,8 +180,10 @@ class ServerController extends Controller
     }
 
     /** start | stop | restart */
-    public function power(string $action): JsonResponse
+    public function power(Request $request, string $action): JsonResponse
     {
+        $this->audit($request, 'server.power', ['action' => $action]);
+
         try {
             $result = match ($action) {
                 'start' => $this->server->start(),
@@ -187,6 +203,8 @@ class ServerController extends Controller
         $data = $request->validate([
             'command' => ['required', 'string', 'max:300'],
         ]);
+
+        $this->audit($request, 'server.command', ['command' => mb_substr((string) $data['command'], 0, 300)]);
 
         try {
             return response()->json(['ok' => true, 'result' => $this->server->command((string) $data['command'])]);
@@ -212,6 +230,7 @@ class ServerController extends Controller
 
         try {
             $this->server->saveStartCommand((string) $data['content']);
+            $this->audit($request, 'server.start_command');
 
             return response()->json(['ok' => true]);
         } catch (RuntimeException $e) {
@@ -227,10 +246,10 @@ class ServerController extends Controller
         ]);
 
         try {
-            return response()->json([
-                'ok' => true,
-                'uploaded' => $this->server->upload($data['file'], (string) ($data['target'] ?? '')),
-            ]);
+            $uploaded = $this->server->upload($data['file'], (string) ($data['target'] ?? ''));
+            $this->audit($request, 'server.file_upload', ['path' => ($data['target'] ?? '') . '/' . $uploaded['name']]);
+
+            return response()->json(['ok' => true, 'uploaded' => $uploaded]);
         } catch (RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 502);
         }

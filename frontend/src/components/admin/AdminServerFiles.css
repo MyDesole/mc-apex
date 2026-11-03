@@ -1,0 +1,191 @@
+/* =========================================================
+   ФАЙЛЫ ИГРОВОГО СЕРВЕРА
+   ========================================================= */
+
+.fm {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fm-head h2 {
+  margin: 0 0 4px;
+
+  color: #fff;
+
+  font-family: var(--font-display);
+  font-size: 20px;
+}
+
+.fm-head p,
+.fm-hint,
+.fm-dim {
+  margin: 0;
+
+  color: rgba(255, 255, 255, 0.45);
+
+  font-size: 12.5px;
+}
+
+.fm-alert {
+  margin: 0;
+  padding: 9px 12px;
+
+  border-radius: 9px;
+
+  font-size: 12.5px;
+}
+
+.fm-alert--bad {
+  background: rgba(248, 113, 113, 0.12);
+  color: #fca5a5;
+}
+
+.fm-alert--ok {
+  background: rgba(34, 197, 94, 0.14);
+  color: #86efac;
+}
+
+.fm-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.fm-pane {
+  min-width: 0;
+  padding: 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.fm-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+
+  margin-bottom: 10px;
+
+  color: rgba(255, 255, 255, 0.4);
+
+  font-size: 12.5px;
+}
+
+.fm-crumbs button,
+.fm-link {
+  padding: 0;
+
+  border: 0;
+
+  background: none;
+
+  color: #93c5fd;
+
+  font: inherit;
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.fm-link { color: rgba(255, 255, 255, 0.85); word-break: break-all; }
+.fm-link.is-dir { color: #fde68a; font-weight: 800; }
+
+.fm-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  margin-bottom: 10px;
+}
+
+.fm-btn,
+.fm-act {
+  padding: 6px 10px;
+
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+
+  background: rgba(255, 255, 255, 0.05);
+
+  color: rgba(255, 255, 255, 0.82);
+
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 800;
+  text-decoration: none;
+
+  cursor: pointer;
+}
+
+.fm-btn:hover:not(:disabled),
+.fm-act:hover { background: rgba(255, 255, 255, 0.1); }
+.fm-btn:disabled { opacity: 0.4; cursor: default; }
+
+.fm-btn--main {
+  border-color: rgba(74, 222, 128, 0.45);
+  background: rgba(34, 197, 94, 0.16);
+  color: #86efac;
+}
+
+.fm-act { padding: 3px 7px; font-size: 11px; }
+.fm-act--bad { color: #fca5a5; border-color: rgba(248, 113, 113, 0.4); }
+
+.fm-table {
+  width: 100%;
+
+  border-collapse: collapse;
+
+  font-size: 12.5px;
+}
+
+.fm-table td {
+  padding: 6px 4px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+
+  vertical-align: middle;
+}
+
+.fm-acts { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+
+.fm-edit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  margin-bottom: 8px;
+
+  color: #fff;
+
+  font-size: 12.5px;
+  word-break: break-all;
+}
+
+.fm-editor {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 460px;
+  padding: 10px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+
+  background: rgba(0, 0, 0, 0.4);
+
+  color: #e5e7eb;
+
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+
+  resize: vertical;
+}
+
+@media (max-width: 900px) {
+  .fm-cols { grid-template-columns: 1fr; }
+}

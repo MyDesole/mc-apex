@@ -456,6 +456,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/dex/{milestone}/claim', 'claimDex')->middleware('throttle:20,1');
     });
 
+    // Карта-мир: единая сцена со всеми игровыми механиками
+    Route::get('/world', [\App\Domains\Players\Controllers\Api\WorldController::class, 'show']);
+
     // Фермы питомцев: Общая (бронь и выкуп) и Личная (грядки, Кладовка, скрещивание)
     Route::prefix('farm')->controller(\App\Domains\Players\Controllers\Api\PetFarmController::class)->group(function () {
         Route::get('/', 'index');
@@ -465,6 +468,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/personal/unlock', 'unlock')->middleware('throttle:10,1');
         Route::post('/personal/plant', 'plant')->middleware('throttle:30,1');
         Route::post('/personal/plots/{plot}/harvest', 'harvest')->whereNumber('plot')->middleware('throttle:30,1');
+        Route::post('/personal/plots/{plot}/speedup', 'speedUpPlot')->whereNumber('plot')->middleware('throttle:30,1');
+        Route::post('/personal/mating/{mating}/speedup', 'speedUpMating')->whereNumber('mating')->middleware('throttle:30,1');
         Route::post('/personal/mating', 'mate')->middleware('throttle:20,1');
         Route::post('/personal/mating/{mating}/claim', 'claimMating')->whereNumber('mating')->middleware('throttle:30,1');
         Route::post('/personal/cross', 'cross')->middleware('throttle:20,1');
@@ -953,6 +958,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/console', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'console']);
         Route::get('/players', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'players']);
         Route::get('/plugins', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'plugins']);
+        $fm = \App\Domains\Server\Controllers\Api\Admin\ServerFilesController::class;
+        Route::get('/metrics', [$fm, 'metrics'])->middleware('throttle:30,1');
+        Route::get('/plugins-state', [$fm, 'pluginsState'])->middleware('throttle:20,1');
+        Route::get('/fm/tree', [$fm, 'tree']);
+        Route::get('/fm/read', [$fm, 'read']);
+        Route::put('/fm/write', [$fm, 'write'])->middleware('throttle:30,1');
+        Route::post('/fm/create', [$fm, 'create'])->middleware('throttle:30,1');
+        Route::post('/fm/rename', [$fm, 'rename'])->middleware('throttle:30,1');
+        Route::post('/fm/trash', [$fm, 'trash'])->middleware('throttle:30,1');
+        Route::get('/fm/trash', [$fm, 'trashList']);
+        Route::post('/fm/upload', [$fm, 'upload'])->middleware('throttle:10,1');
+        Route::get('/fm/download', [$fm, 'download'])->middleware('throttle:20,1');
         Route::get('/start-command', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'startCommand']);
         Route::put('/start-command', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'saveStartCommand']);
         Route::post('/command', [\App\Domains\Server\Controllers\Api\Admin\ServerController::class, 'command'])->middleware('throttle:30,1');

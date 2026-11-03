@@ -66,6 +66,39 @@ async function loadStatus() {
   }
 }
 
+const metrics = ref(null)
+const pluginsLoaded = ref(false)
+let metricsTimer = null
+
+const tpsClass = computed(() => {
+  const tps = metrics.value?.tps
+
+  if (tps == null) return ''
+
+  return tps >= 19 ? 'is-ok' : tps >= 15 ? 'is-warn' : 'is-bad'
+})
+
+async function loadMetrics() {
+  if (!status.value?.running) return
+
+  try {
+    metrics.value = await gameServerApi.metrics()
+  } catch {
+    metrics.value = null
+  }
+}
+
+async function loadPluginsState() {
+  try {
+    const data = await gameServerApi.pluginsState()
+
+    plugins.value = data.plugins ?? []
+    pluginsLoaded.value = true
+  } catch (e) {
+    error.value = e.message ?? 'Не удалось получить статус плагинов'
+  }
+}
+
 async function loadPlugins() {
   try {
     plugins.value = (await gameServerApi.plugins()).plugins ?? []
@@ -322,6 +355,8 @@ function toggleLive() {
 onMounted(async () => {
   await refresh()
   if (live.value) timer = setInterval(loadConsole, 5000)
+  loadMetrics()
+  metricsTimer = setInterval(loadMetrics, 20000)
   await loadPlugins()
   await loadConfigs()
   await loadArchives()
@@ -330,6 +365,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (timer) clearInterval(timer)
+  if (metricsTimer) clearInterval(metricsTimer)
 })
 </script>
 
@@ -383,6 +419,18 @@ onUnmounted(() => {
               :disabled="busy === 'players' || !status.running"
               @click="loadPlayers"
           >Точное число</button>
+        </div>
+
+        <div class="srv-card" :class="tpsClass">
+          <span>TPS</span>
+          <b>{{ metrics?.tps ?? '—' }}</b>
+          <small v-if="metrics">CPU {{ metrics.cpu }}% · java {{ metrics.java_rss }} МБ</small>
+          <small v-else>ждём метрики</small>
+        </div>
+
+        <div v-if="metrics?.names?.length" class="srv-card">
+          <span>Кто в игре</span>
+          <small>{{ metrics.names.join(', ') }}</small>
         </div>
 
         <div class="srv-card">
@@ -472,7 +520,10 @@ onUnmounted(() => {
       <section class="srv-block">
         <header class="srv-block__head">
           <h3>Плагины <small class="srv-count">{{ plugins.length }}</small></h3>
-          <button type="button" class="srv-btn srv-btn--sm" @click="loadPlugins">Обновить</button>
+          <div class="srv-block__tools">
+            <button type="button" class="srv-btn srv-btn--sm" :disabled="!status.running" @click="loadPluginsState">Проверить статус</button>
+            <button type="button" class="srv-btn srv-btn--sm" @click="loadPlugins">Обновить</button>
+          </div>
         </header>
 
         <p v-if="!plugins.length" class="srv-hint">Плагинов нет или каталог недоступен.</p>
@@ -480,7 +531,7 @@ onUnmounted(() => {
         <ul v-else class="srv-plugins">
           <li v-for="plugin in plugins" :key="plugin.name">
             <b>{{ plugin.name }}</b>
-            <small>{{ plugin.size }}</small>
+            <small>{{ plugin.size }}<template v-if="pluginsLoaded"> · {{ plugin.enabled ? 'включён' : 'не загружен' }}</template></small>
           </li>
         </ul>
       </section>

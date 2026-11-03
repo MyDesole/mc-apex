@@ -35,6 +35,7 @@ import AdminControl from '@/components/admin/AdminControl.vue'
 import AdminSupport from '@/components/admin/AdminSupport.vue'
 import AdminProject from '@/components/admin/AdminProject.vue'
 import AdminServer from '@/components/admin/AdminServer.vue'
+import AdminServerFiles from '@/components/admin/AdminServerFiles.vue'
 import AdminTesters from '@/components/admin/AdminTesters.vue'
 
 const auth = useAuthStore()
@@ -70,6 +71,13 @@ const SECTIONS = [
         label: 'Игровой сервер',
         icon: 'globe',
         component: AdminServer,
+        roles: ['admin', 'server_admin'],
+      },
+      {
+        key: 'server-files',
+        label: 'Файлы сервера',
+        icon: 'globe',
+        component: AdminServerFiles,
         roles: ['admin', 'server_admin'],
       },
     ],

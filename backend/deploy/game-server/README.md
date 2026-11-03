@@ -19,3 +19,20 @@ archives | apply-zip NAME | rm-archive NAME | backups | restore NAME`.
 после нескольких перезапусков на сервере остаются висячие сессии
 `*.minecraft`, и `screen -S minecraft` начинает путаться: команда в
 консоль молча не доходит.
+
+## apex-files.sh: мониторинг и файловый менеджер
+
+Второй скрипт, нужен новым эндпоинтам `/api/admin/server/metrics`,
+`/plugins-state`, `/fm/*`. Ставится так же, рядом с `apex-panel.sh`
+(по явному решению владельца):
+
+```bash
+scp backend/deploy/game-server/apex-files.sh root@168.113.181.145:/opt/minecraft/server/
+ssh root@168.113.181.145 'chmod +x /opt/minecraft/server/apex-files.sh'
+```
+
+Подкоманды: `metrics | plugins-state | ls | cat | put | put-new | mkdir |
+touch | mv | trash | trash-ls | dl`. Копии перед правкой — в
+`/opt/minecraft/panel-backups`, корзина — `/opt/minecraft/trash`.
+Каталоги для проверки можно подменить переменными `APEX_DIR`, `APEX_PB`,
+`APEX_TRASH` (на сервере они не заданы).

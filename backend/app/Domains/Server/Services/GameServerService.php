@@ -399,6 +399,235 @@ class GameServerService
         return $this->simple('cmd ' . escapeshellarg($command), 20);
     }
 
+    /* ==================== Мониторинг и файловый менеджер ==================== */
+
+    public const FILES = '/opt/minecraft/server/apex-files.sh';
+
+    /** Максимум для правки текста и для загрузки через менеджер. */
+    public const MAX_TEXT = 1048576;
+
+    public const MAX_UPLOAD = 20971520;
+
+    /** Расширения, которые можно загружать через файловый менеджер. */
+    public const FM_UPLOAD_EXT = ['jar', 'zip', 'yml', 'yaml', 'json', 'txt', 'properties', 'conf', 'cfg', 'toml', 'xml', 'md', 'png'];
+
+    /** CPU, TPS и ники онлайна: тяжёлая выборка (шлёт tps и list в консоль). */
+    public function metrics(): array
+    {
+        $out = $this->fm('metrics', [], 30);
+        $data = [];
+
+        foreach (explode("\n", trim($out)) as $line) {
+            if (str_contains($line, '=')) {
+                [$k, $v] = explode('=', $line, 2);
+                $data[trim($k)] = trim($v);
+            }
+        }
+
+        $names = array_values(array_filter(array_map('trim', explode(',', $data['names'] ?? ''))));
+
+        return [
+            'cpu' => (int) ($data['cpu'] ?? 0),
+            'cores' => (int) ($data['cores'] ?? 0),
+            'java_rss' => (int) ($data['java_rss'] ?? 0),
+            'tps' => ($data['tps'] ?? '') === '' ? null : (float) str_replace('*', '', $data['tps']),
+            'online' => ($data['online'] ?? '') === '' ? null : (int) $data['online'],
+            'names' => $names,
+            'disk_pct' => (int) ($data['disk_pct'] ?? 0),
+        ];
+    }
+
+    /** Плагины с отметкой «включён»: по ответу команды pl. */
+    public function pluginsState(): array
+    {
+        $enabled = array_map('trim', explode(',', preg_replace('/§./u', '', $this->fm('plugins-state', [], 20))));
+        $enabled = array_filter($enabled);
+        $result = [];
+
+        foreach ($this->plugins() as $jar) {
+            $base = strtolower(preg_replace('/[-_ ]?v?\d.*$/', '', preg_replace('/\.jar$/i', '', $jar['name'])));
+            $on = false;
+
+            foreach ($enabled as $name) {
+                if (str_contains($base, strtolower($name)) || str_contains(strtolower($name), $base)) {
+                    $on = true;
+                    break;
+                }
+            }
+
+            $result[] = $jar + ['enabled' => $on];
+        }
+
+        return ['plugins' => $result, 'loaded' => array_values($enabled)];
+    }
+
+    /** @return array<int, array{type: string, size: int, mtime: string, name: string}> */
+    public function listDir(string $path): array
+    {
+        $this->assertRel($path, true);
+        $rows = [];
+
+        foreach (explode("\n", trim($this->fm('ls', [$path], 25))) as $line) {
+            $p = explode("\t", $line, 4);
+
+            if (count($p) === 4) {
+                $rows[] = [
+                    'type' => $p[0] === 'd' ? 'dir' : ($p[0] === 'l' ? 'link' : 'file'),
+                    'size' => (int) $p[1],
+                    'mtime' => $p[2],
+                    'name' => $p[3],
+                ];
+            }
+        }
+
+        return $rows;
+    }
+
+    public function readText(string $path): string
+    {
+        $this->assertRel($path);
+        $this->assertTextName($path);
+
+        return $this->fm('cat', [$path], 25);
+    }
+
+    /** Сохранить текст; на сервере старая версия копируется в panel-backups. */
+    public function writeText(string $path, string $content): ?string
+    {
+        $this->assertRel($path);
+        $this->assertTextName($path);
+
+        if (strlen($content) > self::MAX_TEXT) {
+            throw new RuntimeException('Файл больше 1 МБ — так не сохранить.');
+        }
+
+        $out = $this->fm('put', [$path], 40, $content);
+
+        return preg_match('/^backup=(.+)$/m', $out, $m) ? $m[1] : null;
+    }
+
+    public function createEntry(string $path, string $kind): void
+    {
+        $this->assertRel($path);
+
+        if ($kind === 'file') {
+            $this->assertTextName($path);
+        }
+
+        $this->fm($kind === 'dir' ? 'mkdir' : 'touch', [$path]);
+    }
+
+    public function rename(string $from, string $to): void
+    {
+        $this->assertRel($from);
+        $this->assertRel($to);
+        $this->fm('mv', [$from, $to]);
+    }
+
+    /** «Удаление» — перенос в корзину на сервере, не rm. */
+    public function trash(string $path): void
+    {
+        $this->assertRel($path);
+        $this->fm('trash', [$path], 60);
+    }
+
+    /** @return array<int, array{time: string, size: string, path: string}> */
+    public function trashList(): array
+    {
+        $rows = [];
+
+        foreach (explode("\n", trim($this->fm('trash-ls', [], 20))) as $line) {
+            $p = explode("\t", $line, 3);
+
+            if (count($p) === 3) {
+                $rows[] = ['time' => $p[0], 'size' => $p[1], 'path' => $p[2]];
+            }
+        }
+
+        return $rows;
+    }
+
+    public function download(string $path): string
+    {
+        $this->assertRel($path);
+
+        return $this->fm('dl', [$path], 120);
+    }
+
+    public function uploadTo(UploadedFile $file, string $dir): string
+    {
+        $this->assertRel($dir, true);
+        $name = basename((string) $file->getClientOriginalName());
+        $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+
+        if (! preg_match('/^[A-Za-z0-9_.\- ]{1,100}$/', $name) || str_contains($name, '..')) {
+            throw new RuntimeException('Недопустимое имя файла.');
+        }
+
+        if (! in_array($ext, self::FM_UPLOAD_EXT, true)) {
+            throw new RuntimeException('Такой файл загружать нельзя (.' . $ext . ').');
+        }
+
+        if ($file->getSize() > self::MAX_UPLOAD) {
+            throw new RuntimeException('Файл больше 20 МБ.');
+        }
+
+        $rel = ltrim($dir . '/' . $name, '/');
+        $this->fm('put-new', [$rel], 180, (string) file_get_contents((string) $file->getRealPath()));
+
+        return $rel;
+    }
+
+    /** Относительный путь: без .., без абсолютных и без странных символов. */
+    public function assertRel(string $path, bool $allowRoot = false): void
+    {
+        if ($path === '') {
+            if ($allowRoot) {
+                return;
+            }
+
+            throw new RuntimeException('Некорректный путь.');
+        }
+
+        if (strlen($path) > 300 || str_contains($path, '..') || str_starts_with($path, '/')
+            || ! preg_match('#^[A-Za-z0-9_ ./\-]+$#', $path)) {
+            throw new RuntimeException('Некорректный путь.');
+        }
+    }
+
+    private function assertTextName(string $path): void
+    {
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        if (! in_array($ext, ['properties', 'yml', 'yaml', 'json', 'txt', 'conf', 'cfg', 'log', 'toml', 'xml', 'sh', 'md'], true)) {
+            throw new RuntimeException('Такой файл не редактируется (.' . $ext . ').');
+        }
+    }
+
+    /** Вызов apex-files.sh; ненулевой код — понятная ошибка. */
+    private function fm(string $cmd, array $args = [], int $timeout = 20, ?string $stdin = null): string
+    {
+        $remote = 'bash ' . self::FILES . ' ' . $cmd . ' ' . implode(' ', array_map('escapeshellarg', $args));
+        $result = $this->ssh(rtrim($remote), $timeout, $stdin);
+
+        if ($result['code'] !== 0) {
+            $msg = trim($result['out'] ?: $result['err']);
+            $msg = match ($msg) {
+                'bad-path' => 'Путь вне папки сервера или некорректный.',
+                'bad-ext' => 'Этот тип файла нельзя править.',
+                'not-found' => 'Не найдено.',
+                'exists' => 'Уже существует.',
+                'too-big' => 'Файл слишком большой.',
+                'is-dir' => 'Это папка.',
+                default => $msg !== '' ? mb_substr($msg, 0, 200) : 'Ошибка сервера.',
+            };
+
+            throw new RuntimeException($msg);
+        }
+
+        return $result['out'];
+    }
+
     public function startCommand(): string
     {
         return $this->ssh('bash ' . self::PANEL . ' get-start')['out'];

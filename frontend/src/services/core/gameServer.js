@@ -53,6 +53,58 @@ export const gameServerApi = {
         return api.post(`/admin/server/backups/${encodeURIComponent(name)}/restore`)
     },
 
+    /** CPU, TPS, ники онлайна. */
+    metrics() {
+        return api.get('/admin/server/metrics')
+    },
+
+    pluginsState() {
+        return api.get('/admin/server/plugins-state')
+    },
+
+    /* ---------- Файловый менеджер ---------- */
+
+    fmTree(path = '') {
+        return api.get('/admin/server/fm/tree', { params: { path } })
+    },
+
+    fmRead(path) {
+        return api.get('/admin/server/fm/read', { params: { path } })
+    },
+
+    fmWrite(path, content) {
+        return api.put('/admin/server/fm/write', { path, content })
+    },
+
+    fmCreate(path, kind) {
+        return api.post('/admin/server/fm/create', { path, kind })
+    },
+
+    fmRename(from, to) {
+        return api.post('/admin/server/fm/rename', { from, to })
+    },
+
+    fmTrash(path) {
+        return api.post('/admin/server/fm/trash', { path, confirm: true })
+    },
+
+    fmTrashList() {
+        return api.get('/admin/server/fm/trash')
+    },
+
+    fmUpload(file, dir = '') {
+        const form = new FormData()
+        form.append('file', file)
+        form.append('dir', dir)
+
+        return api.post('/admin/server/fm/upload', form)
+    },
+
+    /** Ссылка на скачивание: авторизация по сессионной куке. */
+    fmDownloadUrl(path) {
+        return `/api/admin/server/fm/download?path=${encodeURIComponent(path)}`
+    },
+
     /** Плагины на сервере. */
     plugins() {
         return api.get('/admin/server/plugins')
