@@ -1,0 +1,74 @@
+/*
+ * Игровой набор: дерево, камень, таблички, кнопки-доски и клетки инвентаря.
+ * Класс g-* работает везде, где подключён этот файл (карта-мир WorldView).
+ * Всё пиксельное: квадратные углы, толстые рамки, ступенчатые тени.
+ */
+.g-scene { position: relative; min-height: 100%; padding: 14px; color: #fff; image-rendering: pixelated; }
+
+.g-wood { background: #7c4a21; border: 4px solid #4a2a10; box-shadow: inset 0 4px 0 #a8672f, 5px 5px 0 rgba(0, 0, 0, 0.4); }
+.g-stone { background: #2a2433; border: 4px solid #0e0b14; box-shadow: inset 0 0 0 3px #4a4058, 5px 5px 0 rgba(0, 0, 0, 0.4); }
+.g-dark { background: #1d1626; border: 4px solid #1b0f06; box-shadow: inset 0 0 0 3px #3a2f4a; }
+
+.g-plank {
+  display: inline-flex; flex-direction: column; align-items: center; padding: 2px 10px; font-size: 12px; font-weight: 800; color: #fff; text-align: center;
+  background: #7c4a21; border: 3px solid #4a2a10; box-shadow: inset 0 3px 0 #a8672f; text-shadow: 1px 1px 0 #4a2a10;
+}
+.g-plank small { font-size: 10px; font-weight: 700; color: #ffe9a8; }
+
+.g-title { margin: 0; font-size: 18px; font-weight: 800; color: #fff; text-shadow: 2px 2px 0 #1b0f06; }
+.g-hint { margin: 6px 0; font-size: 12px; line-height: 1.5; color: #e8dcc0; }
+
+.g-chip { display: inline-block; padding: 3px 9px; font-size: 12px; font-weight: 800; color: #e8dcc0; background: rgba(0, 0, 0, 0.45); border: 3px solid #1b0f06; }
+.g-chip b { color: #ffd45c; }
+.g-chip--gold { color: #ffd45c; }
+
+.g-btn {
+  padding: 7px 14px; font: inherit; font-size: 13px; font-weight: 800; color: #fff; cursor: pointer; white-space: nowrap; text-decoration: none;
+  background: #6b6b6b; border: 3px solid #2a2a2a; box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.25), 0 3px 0 #1a1a1a; text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
+}
+.g-btn:hover:not(:disabled) { filter: brightness(1.15); }
+.g-btn:active:not(:disabled) { transform: translateY(3px); box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.25); }
+.g-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.g-btn--go { background: #3f9a2f; border-color: #1f4d17; box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.25), 0 3px 0 #11300d; }
+.g-btn--red { background: #a83232; border-color: #4a1414; box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.25), 0 3px 0 #2a0c0c; }
+.g-btn--gold { background: #b8860b; border-color: #5c4305; box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.3), 0 3px 0 #2e2102; }
+.g-btn--sm { padding: 4px 10px; font-size: 12px; }
+
+/* Клетка инвентаря */
+.g-slot {
+  position: relative; display: grid; place-items: center; width: 56px; height: 56px; padding: 0; color: #fff; cursor: pointer;
+  background: #20150c; border: 3px solid var(--rar, #6b5a45); box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.5);
+}
+.g-slot:hover:not(:disabled) { filter: brightness(1.25); }
+.g-slot.is-on { background: #4a3a1a; box-shadow: 0 0 0 3px #ffd45c; }
+.g-slot:disabled { opacity: 0.4; cursor: not-allowed; }
+.g-slot__tag { position: absolute; right: 1px; bottom: 0; font-size: 11px; font-style: normal; font-weight: 800; text-shadow: 1px 1px 0 #000; }
+.g-slot--empty { cursor: default; border-color: #2a170a; }
+
+.g-bar { position: relative; height: 10px; background: rgba(0, 0, 0, 0.55); border: 2px solid #1b0f06; }
+.g-bar > i { display: block; height: 100%; width: var(--v, 0%); background: var(--c, #4ade80); transition: width 0.4s steps(8); }
+
+.g-msg { margin: 0 0 10px; padding: 8px 12px; font-size: 13px; background: rgba(20, 60, 20, 0.88); border: 3px solid #2f6b2f; }
+.g-msg--err { background: rgba(90, 20, 20, 0.9); border-color: #8b2b2b; }
+.g-msg a { color: #ffd45c; }
+
+.g-hotbar { display: flex; gap: 6px; flex-wrap: wrap; padding: 8px; background: #3b2a1a; border: 4px solid #1b0f06; }
+
+/* Окно-табличка (вылезает снизу, как в играх) */
+.g-board { position: sticky; bottom: 12px; z-index: 5; margin-top: 12px; padding: 14px 16px; }
+.g-board__x { position: absolute; top: 4px; right: 8px; padding: 0 6px; font-size: 22px; line-height: 1.2; color: #fff; cursor: pointer; background: none; border: 0; }
+.g-pop-enter-active, .g-pop-leave-active { transition: transform 0.16s steps(4), opacity 0.16s; }
+.g-pop-enter-from, .g-pop-leave-to { transform: translateY(16px); opacity: 0; }
+
+/* Модальное окно добычи и наград */
+.g-modal { position: fixed; z-index: 80; inset: 0; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, 0.65); }
+.g-modal__box { width: min(420px, 100%); padding: 20px; text-align: center; }
+.g-modal__box h3 { margin: 8px 0 4px; font-size: 18px; text-shadow: 2px 2px 0 #1b0f06; }
+.g-modal__box ul { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 12px 0; padding: 0; list-style: none; }
+.g-modal__box li { display: flex; flex-direction: column; padding: 6px 12px; background: rgba(0, 0, 0, 0.4); border: 3px solid #1b0f06; }
+.g-modal__box li small { font-size: 10px; color: #e8dcc0; }
+
+/* На телефоне табличка не закрывает комнату: идёт обычным блоком под ней */
+@media (max-width: 760px) { .g-board { position: static; } }
+
+@media (prefers-reduced-motion: reduce) { .g-pop-enter-active, .g-pop-leave-active { transition: none; } }

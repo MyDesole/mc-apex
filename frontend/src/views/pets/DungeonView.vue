@@ -604,7 +604,7 @@ onMounted(() => {
 
                 <footer class="dgn-modal__foot">
                     <button type="button" class="dgn-btn dgn-btn--main" @click="closeResult">Новый поход</button>
-                    <RouterLink to="/pets?tab=gear" class="dgn-btn" @click="markSeen">
+                    <RouterLink to="/world?at=gear" class="dgn-btn" @click="markSeen">
                         Надеть экипировку
                     </RouterLink>
                 </footer>

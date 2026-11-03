@@ -20,6 +20,9 @@ const CasesView = () => import('@/views/shop/CasesView.vue')
 const ClanView = () => import('@/views/clan/ClanView.vue')
 const ForumView = () => import('@/views/forum/ForumView.vue')
 
+// Старые вкладки «Моих питомцев» — теперь здания карты-мира
+const PET_TABS = { expeditions: 'expeditions', arena: 'arena', gear: 'gear', dex: 'museum', top: 'hall' }
+
 const router = createRouter({
   history: createWebHistory(),
   /*
@@ -81,14 +84,9 @@ const router = createRouter({
     { path: '/inventory', name: 'inventory', component: InventoryView, meta: { title: 'Инвентарь', auth: true } },
     { path: '/cases', name: 'cases', component: CasesView, meta: { title: 'Кейсы' } },
     { path: '/world', name: 'world', component: () => import('@/views/pets/WorldView.vue'), meta: { title: 'Мир APEX', auth: true } },
-    { path: '/farm', name: 'farm', component: () => import('@/views/pets/FarmView.vue'), meta: { title: 'Фермы питомцев', auth: true } },
-    { path: '/pets', name: 'pets', component: () => import('@/views/pets/PetsView.vue'), meta: { title: 'Мои питомцы', auth: true } },
-    {
-        path: '/pets/dungeon',
-        name: 'dungeons',
-        component: () => import('@/views/pets/DungeonView.vue'),
-        meta: { title: 'Подземелья', auth: true },
-    },
+    { path: '/farm', name: 'farm', redirect: (to) => ({ name: 'world', query: { at: to.query.tab === 'personal' ? 'personal' : 'farm' } }) },
+    { path: '/pets', name: 'pets', redirect: (to) => ({ name: 'world', query: { at: PET_TABS[to.query.tab] ?? 'pets' } }) },
+    { path: '/pets/dungeon', name: 'dungeons', redirect: { name: 'world', query: { at: 'dungeon' } } },
     { path: '/miner', name: 'miner', component: () => import('@/views/games/MinerView.vue'), meta: { title: 'Шахтёр', auth: true } },
     { path: '/auction', name: 'auction', component: () => import('@/views/shop/AuctionView.vue'), meta: { title: 'Аукцион питомцев' } },
     { path: '/wallet', name: 'wallet', component: () => import('@/views/shop/WalletView.vue'), meta: { title: 'Кошелёк', auth: true } },

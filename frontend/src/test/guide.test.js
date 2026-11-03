@@ -30,9 +30,10 @@ describe('guide steps', () => {
   })
 
   it('адрес шага сверяется вместе с вкладкой', () => {
-    expect(onStepRoute(GUIDE_STEPS.arena, { path: '/pets', query: { tab: 'arena' } })).toBe(true)
-    expect(onStepRoute(GUIDE_STEPS.arena, { path: '/pets', query: {} })).toBe(false)
-    expect(onStepRoute(GUIDE_STEPS.pets, { path: '/pets', query: { tab: 'arena' } })).toBe(true)
+    expect(onStepRoute(GUIDE_STEPS.arena, { path: '/world', query: { at: 'arena' } })).toBe(true)
+    expect(onStepRoute(GUIDE_STEPS.arena, { path: '/world', query: {} })).toBe(false)
+    expect(onStepRoute(GUIDE_STEPS.pets, { path: '/world', query: { at: 'arena' } })).toBe(false)
+    expect(onStepRoute(GUIDE_STEPS.pets, { path: '/world', query: { at: 'pets' } })).toBe(true)
     expect(onStepRoute(GUIDE_STEPS.rating, { path: '/miner', query: {} })).toBe(false)
     expect(onStepRoute(GUIDE_STEPS.welcome, { path: '/', query: {} })).toBe(false)
   })

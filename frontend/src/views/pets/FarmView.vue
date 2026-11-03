@@ -305,7 +305,7 @@ onMounted(() => Promise.all([loadCommon(), loadPersonal()]))
           <span class="hud-chip">Брони {{ farm.reservations }}/{{ farm.max_reservations }}</span>
           <span class="hud-chip">Покупок {{ farm.buys_left }}/{{ farm.buys_per_day }}</span>
         </template>
-        <RouterLink to="/pets" class="hud-chip hud-chip--link">Мои питомцы</RouterLink>
+        
       </div>
     </header>
 

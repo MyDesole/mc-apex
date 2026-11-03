@@ -422,7 +422,7 @@ onUnmounted(() => {
             </div>
             <div class="short__actions">
               <RouterLink to="/miner" class="short__go">В шахту</RouterLink>
-              <RouterLink to="/pets?tab=expeditions" class="short__alt">Экспедиции питомцев</RouterLink>
+              <RouterLink to="/world?at=expeditions" class="short__alt">Экспедиции питомцев</RouterLink>
             </div>
           </div>
         </div>

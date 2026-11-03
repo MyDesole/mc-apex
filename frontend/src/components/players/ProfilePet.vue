@@ -586,7 +586,7 @@ onUnmounted(() => {
 
           <div class="pet-panel__arena">
             <span>Арена: <b>{{ stats.rating ?? 1000 }}</b> · {{ stats.wins ?? 0 }}–{{ stats.losses ?? 0 }}</span>
-            <RouterLink v-if="auth.user?.id === owner?.id" to="/pets" @click="closePanel">Все мои питомцы</RouterLink>
+            <RouterLink v-if="auth.user?.id === owner?.id" to="/world?at=pets" @click="closePanel">Все мои питомцы</RouterLink>
           </div>
 
           <div class="pet-panel__actions">

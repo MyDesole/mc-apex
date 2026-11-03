@@ -61,31 +61,31 @@ export const GUIDE_STEPS = {
   pet: {
     title: 'Твой первый питомец',
     short: 'Общая ферма',
-    route: '/farm',
-    target: ['.farm-grid', 'main h1'],
+    route: '/world?at=farm',
+    target: ['.field__grass', '.farm__bar'],
     text: 'На Общей ферме растут питомцы: самый дешёвый стоит 4 000 ApexCoin. Забронируй понравившегося, а когда вырастет — выкупи. У каждого свои черты, двух одинаковых не бывает.',
     todo: 'Заведи питомца на ферме',
   },
   pets: {
     title: 'Мои питомцы',
     short: 'Питомцы',
-    route: '/pets',
-    target: ['.pv-tabs'],
+    route: '/world?at=pets',
+    target: ['.hs-room'],
     text: 'Питомца можно гладить, кормить, учить трюкам и выпускать гулять по профилю. Чем выше уровень — тем больше перков: монеты в экспедициях и шахте, бонусы на арене.',
   },
   expedition: {
     title: 'Экспедиция',
     short: 'Экспедиция',
-    route: '/pets?tab=expeditions',
-    target: ['.pv-tabs button:nth-child(2)', '.pv-tabs'],
+    route: '/world?at=expeditions',
+    target: ['.ex-map'],
     text: 'Отправь питомца в поход на 1–12 часов: вернётся с монетами, опытом и иногда с ключом от сундука. Дальние земли открываются с уровнем.',
     todo: 'Отправь питомца в экспедицию',
   },
   arena: {
     title: 'Бой на арене',
     short: 'Арена',
-    route: '/pets?tab=arena',
-    target: ['.pv-tabs button:nth-child(3)', '.pv-tabs'],
+    route: '/world?at=arena',
+    target: ['.ar-ring', '.ar-board'],
     text: 'Пошаговые бои с питомцами других игроков. Следи, что готовит соперник, контратакуй и копи ярость на ультимейт. За победу — монеты и рейтинг питомца.',
     todo: 'Проведи бой на арене',
   },
@@ -113,14 +113,14 @@ export const GUIDE_STEPS = {
   },
 }
 
-/** Совпадает ли текущий адрес с адресом шага (с учётом ?tab=). */
+/** Совпадает ли текущий адрес с адресом шага (с учётом ?tab= и ?at= — здание на карте-мире). */
 export function onStepRoute(step, route) {
   if (!step?.route) return false
 
   const [path, query = ''] = step.route.split('?')
   if (route.path !== path) return false
 
-  const want = new URLSearchParams(query).get('tab')
+  const wanted = new URLSearchParams(query)
 
-  return !want || route.query?.tab === want
+  return ['tab', 'at'].every((key) => !wanted.get(key) || route.query?.[key] === wanted.get(key))
 }

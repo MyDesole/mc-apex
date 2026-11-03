@@ -432,7 +432,7 @@ onMounted(load)
     </section>
 
     <!-- Питомцы не продаются — подсказываем, где их взять -->
-    <RouterLink to="/farm" class="shop-pets-hint">
+    <RouterLink to="/world?at=farm" class="shop-pets-hint">
       <PixelSprite sprite="paw" :size="22" />
       <span>
         <strong>Питомцы — только с ферм</strong>

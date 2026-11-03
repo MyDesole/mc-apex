@@ -118,7 +118,7 @@ onMounted(load)
       <article class="hd-card hd-card--pets">
         <h3>
           <PixelSprite sprite="paw" :size="16" /> Питомцы
-          <RouterLink to="/pets" class="hd-more">Экспедиции и арена</RouterLink>
+          <RouterLink to="/world?at=expeditions" class="hd-more">Экспедиции и арена</RouterLink>
         </h3>
 
         <div v-if="data.pets.length" class="hd-pets">

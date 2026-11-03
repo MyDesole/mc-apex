@@ -10,12 +10,18 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { api } from '@/services/core/api.js'
 import PetFigure from '@/components/pets/PetFigure.vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
+import '@/game/gameKit.css'
 
 const route = useRoute()
 const router = useRouter()
 
 const FarmView = defineAsyncComponent(() => import('@/views/pets/FarmView.vue'))
-const PetsView = defineAsyncComponent(() => import('@/views/pets/PetsView.vue'))
+const HouseScene = defineAsyncComponent(() => import('@/game/HouseScene.vue'))
+const ExpeditionScene = defineAsyncComponent(() => import('@/game/ExpeditionScene.vue'))
+const ArenaScene = defineAsyncComponent(() => import('@/game/ArenaScene.vue'))
+const ForgeScene = defineAsyncComponent(() => import('@/game/ForgeScene.vue'))
+const MuseumScene = defineAsyncComponent(() => import('@/game/MuseumScene.vue'))
+const HallScene = defineAsyncComponent(() => import('@/game/HallScene.vue'))
 const DungeonView = defineAsyncComponent(() => import('@/views/pets/DungeonView.vue'))
 const MinerView = defineAsyncComponent(() => import('@/views/games/MinerView.vue'))
 const AuctionView = defineAsyncComponent(() => import('@/views/shop/AuctionView.vue'))
@@ -27,17 +33,17 @@ const PetBag = defineAsyncComponent(() => import('@/components/pets/PetBag.vue')
  * only — какая вкладка механики живёт внутри (остальные скрыты).
  */
 const PLACES = [
-  { id: 'gear', name: 'Кузница', kind: 'forge', x: 10, y: 60, view: PetsView, props: { only: 'gear' }, hint: 'Снаряжение питомцев' },
+  { id: 'gear', name: 'Кузница', kind: 'forge', x: 10, y: 60, view: ForgeScene, hint: 'Снаряжение питомцев' },
   { id: 'farm', name: 'Общая ферма', kind: 'barn', x: 26, y: 60, view: FarmView, props: { only: 'common' }, hint: 'Бронь и выкуп питомцев', badge: 'farm' },
   { id: 'miner', name: 'Шахта', kind: 'mine', x: 42, y: 60, view: MinerView, hint: 'Копай руду, зарабатывай ApexCoin' },
   { id: 'dungeon', name: 'Подземелья', kind: 'dungeon', x: 58, y: 60, view: DungeonView, hint: 'Отряд, боссы и Рубли', badge: 'dungeon' },
-  { id: 'museum', name: 'Питомцедекс', kind: 'museum', x: 74, y: 60, view: PetsView, props: { only: 'dex' }, hint: 'Коллекция видов и окрасов' },
-  { id: 'hall', name: 'Доска почёта', kind: 'hall', x: 90, y: 60, view: PetsView, props: { only: 'top' }, hint: 'Лучшие питомцы сервера' },
-  { id: 'pets', name: 'Дом питомцев', kind: 'house', x: 7, y: 92, view: PetsView, props: { only: 'pets' }, hint: 'Уход, уровни, перки и трюки' },
+  { id: 'museum', name: 'Питомцедекс', kind: 'museum', x: 74, y: 60, view: MuseumScene, hint: 'Коллекция видов и окрасов' },
+  { id: 'hall', name: 'Доска почёта', kind: 'hall', x: 90, y: 60, view: HallScene, hint: 'Лучшие питомцы сервера' },
+  { id: 'pets', name: 'Дом питомцев', kind: 'house', x: 7, y: 92, view: HouseScene, hint: 'Уход, уровни, перки и трюки' },
   { id: 'personal', name: 'Личная ферма', kind: 'gate', x: 21, y: 92, view: FarmView, props: { only: 'personal' }, hint: 'Грядки, Кладовка и горн', badge: 'personal' },
   { id: 'bag', name: 'Склад питомцев', kind: 'store', x: 35, y: 92, view: PetBag, hint: 'Инвентарь питомцев: снаряжение, материалы, ключи' },
-  { id: 'expeditions', name: 'Экспедиции', kind: 'camp', x: 49, y: 92, view: PetsView, props: { only: 'expeditions' }, hint: 'Поход за монетами и ключами', badge: 'expeditions' },
-  { id: 'arena', name: 'Арена', kind: 'arena', x: 63, y: 92, view: PetsView, props: { only: 'arena' }, hint: 'Пошаговые бои питомцев' },
+  { id: 'expeditions', name: 'Экспедиции', kind: 'camp', x: 49, y: 92, view: ExpeditionScene, hint: 'Поход за монетами и ключами', badge: 'expeditions' },
+  { id: 'arena', name: 'Арена', kind: 'arena', x: 63, y: 92, view: ArenaScene, hint: 'Пошаговые бои питомцев' },
   { id: 'auction', name: 'Аукцион', kind: 'stall', x: 77, y: 92, view: AuctionView, hint: 'Торги питомцами' },
   { id: 'cases', name: 'Сундуки', kind: 'chest', x: 91, y: 92, view: CasesView, hint: 'Косметика и ключи' },
 ]
