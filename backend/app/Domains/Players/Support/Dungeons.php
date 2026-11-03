@@ -530,109 +530,244 @@ final class Dungeons
         'gear-sealstone' => ['slot' => 'trinket', 'name' => 'Камень печати', 'sprite' => 'gi-orb-bone', 'atk' => 34, 'def' => 0, 'hp' => 100, 'spd' => 17, 'stage' => 8, 'rarity' => 'legendary'],
 
         // Ступень 1: новые находки
-        'gear-x1-axe-iron' => ['slot' => 'weapon', 'name' => 'Ржавый топорик', 'sprite' => 'gi-axe-iron', 'atk' => 4, 'def' => 0, 'hp' => 0, 'spd' => -1, 'stage' => 1, 'rarity' => 'common'],
-        'gear-x1-mace-bone' => ['slot' => 'weapon', 'name' => 'Костяная булава', 'sprite' => 'gi-mace-bone', 'atk' => 4, 'def' => 0, 'hp' => 1, 'spd' => 0, 'stage' => 1, 'rarity' => 'common'],
-        'gear-x1-spear-bone' => ['slot' => 'weapon', 'name' => 'Копьё из бедренной кости', 'sprite' => 'gi-spear-bone', 'atk' => 4, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 1, 'rarity' => 'common'],
-        'gear-x1-vest-bone' => ['slot' => 'armor', 'name' => 'Жилет из рёбер', 'sprite' => 'gi-vest-bone', 'atk' => 0, 'def' => 2, 'hp' => 8, 'spd' => 1, 'stage' => 1, 'rarity' => 'common'],
-        'gear-x1-helm-iron' => ['slot' => 'armor', 'name' => 'Дырявый шлем', 'sprite' => 'gi-helm-iron', 'atk' => 0, 'def' => 2, 'hp' => 11, 'spd' => 0, 'stage' => 1, 'rarity' => 'common'],
-        'gear-x1-shield-bronze' => ['slot' => 'armor', 'name' => 'Крышка от бочки', 'sprite' => 'gi-shield-bronze', 'atk' => 0, 'def' => 4, 'hp' => 10, 'spd' => -1, 'stage' => 1, 'rarity' => 'common'],
-        'gear-x1-ring-bronze' => ['slot' => 'trinket', 'name' => 'Медное кольцо', 'sprite' => 'gi-ring-bronze', 'atk' => 1, 'def' => 0, 'hp' => 5, 'spd' => 1, 'stage' => 1, 'rarity' => 'common'],
-        'gear-x1-vial-blood' => ['slot' => 'trinket', 'name' => 'Склянка крови', 'sprite' => 'gi-vial-blood', 'atk' => 0, 'def' => 0, 'hp' => 10, 'spd' => 1, 'stage' => 1, 'rarity' => 'common'],
-        'gear-x1-amulet-bone' => ['slot' => 'trinket', 'name' => 'Зуб могильщика', 'sprite' => 'gi-amulet-bone', 'atk' => 0, 'def' => 0, 'hp' => 7, 'spd' => 1, 'stage' => 1, 'rarity' => 'common'],
+        'gear-x1-axe-iron' => ['slot' => 'weapon', 'name' => 'Ржавый топорик', 'sprite' => 'gi-axe-iron', 'atk' => 4, 'def' => 0, 'hp' => 0, 'spd' => -1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['vamp', 8], 'set' => 'grave'],
+        'gear-x1-mace-bone' => ['slot' => 'weapon', 'name' => 'Костяная булава', 'sprite' => 'gi-mace-bone', 'atk' => 4, 'def' => 0, 'hp' => 1, 'spd' => 0, 'stage' => 1, 'rarity' => 'common', 'perk' => ['thorns', 10]],
+        'gear-x1-spear-bone' => ['slot' => 'weapon', 'name' => 'Копьё из бедренной кости', 'sprite' => 'gi-spear-bone', 'atk' => 4, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 1, 'rarity' => 'common', 'perk' => ['pierce', 18]],
+        'gear-x1-vest-bone' => ['slot' => 'armor', 'name' => 'Жилет из рёбер', 'sprite' => 'gi-vest-bone', 'atk' => 0, 'def' => 2, 'hp' => 8, 'spd' => 1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['regen', 2], 'set' => 'grave'],
+        'gear-x1-helm-iron' => ['slot' => 'armor', 'name' => 'Дырявый шлем', 'sprite' => 'gi-helm-iron', 'atk' => 0, 'def' => 2, 'hp' => 11, 'spd' => 0, 'stage' => 1, 'rarity' => 'common', 'perk' => ['phoenix', 20]],
+        'gear-x1-shield-bronze' => ['slot' => 'armor', 'name' => 'Крышка от бочки', 'sprite' => 'gi-shield-bronze', 'atk' => 0, 'def' => 4, 'hp' => 10, 'spd' => -1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['thorns', 10]],
+        'gear-x1-ring-bronze' => ['slot' => 'trinket', 'name' => 'Медное кольцо', 'sprite' => 'gi-ring-bronze', 'atk' => 1, 'def' => 0, 'hp' => 5, 'spd' => 1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['crit', 7], 'set' => 'grave'],
+        'gear-x1-vial-blood' => ['slot' => 'trinket', 'name' => 'Склянка крови', 'sprite' => 'gi-vial-blood', 'atk' => 0, 'def' => 0, 'hp' => 10, 'spd' => 1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['regen', 2]],
+        'gear-x1-amulet-bone' => ['slot' => 'trinket', 'name' => 'Зуб могильщика', 'sprite' => 'gi-amulet-bone', 'atk' => 0, 'def' => 0, 'hp' => 7, 'spd' => 1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['bulwark', 6]],
 
         // Ступень 2: новые находки
-        'gear-x2-spear-sea' => ['slot' => 'weapon', 'name' => 'Гарпун утопленника', 'sprite' => 'gi-spear-sea', 'atk' => 9, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 2, 'rarity' => 'rare'],
-        'gear-x2-axe-bronze' => ['slot' => 'weapon', 'name' => 'Кирка-топор', 'sprite' => 'gi-axe-bronze', 'atk' => 10, 'def' => 0, 'hp' => 0, 'spd' => -1, 'stage' => 2, 'rarity' => 'rare'],
-        'gear-x2-dagger-sea' => ['slot' => 'weapon', 'name' => 'Рыбацкий нож', 'sprite' => 'gi-dagger-sea', 'atk' => 8, 'def' => 0, 'hp' => 0, 'spd' => 1, 'stage' => 2, 'rarity' => 'rare'],
-        'gear-x2-chest-bronze' => ['slot' => 'armor', 'name' => 'Кираса водолаза', 'sprite' => 'gi-chest-bronze', 'atk' => 0, 'def' => 7, 'hp' => 26, 'spd' => -1, 'stage' => 2, 'rarity' => 'rare'],
-        'gear-x2-helm-sea' => ['slot' => 'armor', 'name' => 'Шлем водолаза', 'sprite' => 'gi-helm-sea', 'atk' => 0, 'def' => 6, 'hp' => 23, 'spd' => 0, 'stage' => 2, 'rarity' => 'rare'],
-        'gear-x2-shield-iron' => ['slot' => 'armor', 'name' => 'Люк затонувшего корабля', 'sprite' => 'gi-shield-iron', 'atk' => 0, 'def' => 8, 'hp' => 22, 'spd' => -1, 'stage' => 2, 'rarity' => 'rare'],
-        'gear-x2-amulet-sea' => ['slot' => 'trinket', 'name' => 'Ракушка шторма', 'sprite' => 'gi-amulet-sea', 'atk' => 1, 'def' => 3, 'hp' => 15, 'spd' => 1, 'stage' => 2, 'rarity' => 'rare'],
-        'gear-x2-orb-sea' => ['slot' => 'trinket', 'name' => 'Пузырь глубин', 'sprite' => 'gi-orb-sea', 'atk' => 3, 'def' => 0, 'hp' => 8, 'spd' => 2, 'stage' => 2, 'rarity' => 'rare'],
-        'gear-x2-ring-iron' => ['slot' => 'trinket', 'name' => 'Якорное кольцо', 'sprite' => 'gi-ring-iron', 'atk' => 3, 'def' => 0, 'hp' => 11, 'spd' => 2, 'stage' => 2, 'rarity' => 'rare'],
+        'gear-x2-spear-sea' => ['slot' => 'weapon', 'name' => 'Гарпун утопленника', 'sprite' => 'gi-spear-sea', 'atk' => 9, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['pierce', 20], 'set' => 'drowned'],
+        'gear-x2-axe-bronze' => ['slot' => 'weapon', 'name' => 'Кирка-топор', 'sprite' => 'gi-axe-bronze', 'atk' => 10, 'def' => 0, 'hp' => 0, 'spd' => -1, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['vamp', 9]],
+        'gear-x2-dagger-sea' => ['slot' => 'weapon', 'name' => 'Рыбацкий нож', 'sprite' => 'gi-dagger-sea', 'atk' => 8, 'def' => 0, 'hp' => 0, 'spd' => 1, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['opener', 38]],
+        'gear-x2-chest-bronze' => ['slot' => 'armor', 'name' => 'Кираса водолаза', 'sprite' => 'gi-chest-bronze', 'atk' => 0, 'def' => 7, 'hp' => 26, 'spd' => -1, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['bulwark', 7], 'set' => 'drowned'],
+        'gear-x2-helm-sea' => ['slot' => 'armor', 'name' => 'Шлем водолаза', 'sprite' => 'gi-helm-sea', 'atk' => 0, 'def' => 6, 'hp' => 23, 'spd' => 0, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['phoenix', 22]],
+        'gear-x2-shield-iron' => ['slot' => 'armor', 'name' => 'Люк затонувшего корабля', 'sprite' => 'gi-shield-iron', 'atk' => 0, 'def' => 8, 'hp' => 22, 'spd' => -1, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['thorns', 11]],
+        'gear-x2-amulet-sea' => ['slot' => 'trinket', 'name' => 'Ракушка шторма', 'sprite' => 'gi-amulet-sea', 'atk' => 1, 'def' => 3, 'hp' => 15, 'spd' => 1, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['bulwark', 7], 'set' => 'drowned'],
+        'gear-x2-orb-sea' => ['slot' => 'trinket', 'name' => 'Пузырь глубин', 'sprite' => 'gi-orb-sea', 'atk' => 3, 'def' => 0, 'hp' => 8, 'spd' => 2, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['opener', 38]],
+        'gear-x2-ring-iron' => ['slot' => 'trinket', 'name' => 'Якорное кольцо', 'sprite' => 'gi-ring-iron', 'atk' => 3, 'def' => 0, 'hp' => 11, 'spd' => 2, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['crit', 8]],
 
         // Ступень 3: новые находки
-        'gear-x3-axe-fire' => ['slot' => 'weapon', 'name' => 'Топор кузнеца', 'sprite' => 'gi-axe-fire', 'atk' => 19, 'def' => 0, 'hp' => 0, 'spd' => -1, 'stage' => 3, 'rarity' => 'epic'],
-        'gear-x3-mace-fire' => ['slot' => 'weapon', 'name' => 'Раскалённая булава', 'sprite' => 'gi-mace-fire', 'atk' => 18, 'def' => 0, 'hp' => 5, 'spd' => 0, 'stage' => 3, 'rarity' => 'epic'],
-        'gear-x3-greatsword-steel' => ['slot' => 'weapon', 'name' => 'Двуручный меч мастера', 'sprite' => 'gi-greatsword-steel', 'atk' => 20, 'def' => 0, 'hp' => 0, 'spd' => -1, 'stage' => 3, 'rarity' => 'epic'],
-        'gear-x3-chest-steel' => ['slot' => 'armor', 'name' => 'Кираса горнового', 'sprite' => 'gi-chest-steel', 'atk' => 0, 'def' => 13, 'hp' => 46, 'spd' => -1, 'stage' => 3, 'rarity' => 'epic'],
-        'gear-x3-helm-fire' => ['slot' => 'armor', 'name' => 'Шлем плавильщика', 'sprite' => 'gi-helm-fire', 'atk' => 0, 'def' => 10, 'hp' => 41, 'spd' => 0, 'stage' => 3, 'rarity' => 'epic'],
-        'gear-x3-shield-fire' => ['slot' => 'armor', 'name' => 'Щит из слитка', 'sprite' => 'gi-shield-fire', 'atk' => 0, 'def' => 16, 'hp' => 39, 'spd' => -1, 'stage' => 3, 'rarity' => 'epic'],
-        'gear-x3-ring-fire' => ['slot' => 'trinket', 'name' => 'Кольцо жара', 'sprite' => 'gi-ring-fire', 'atk' => 6, 'def' => 0, 'hp' => 18, 'spd' => 3, 'stage' => 3, 'rarity' => 'epic'],
-        'gear-x3-vial-fire' => ['slot' => 'trinket', 'name' => 'Фиал лавы', 'sprite' => 'gi-vial-fire', 'atk' => 2, 'def' => 0, 'hp' => 35, 'spd' => 2, 'stage' => 3, 'rarity' => 'epic'],
-        'gear-x3-book-fire' => ['slot' => 'trinket', 'name' => 'Книга закалки', 'sprite' => 'gi-book-fire', 'atk' => 6, 'def' => 2, 'hp' => 18, 'spd' => 3, 'stage' => 3, 'rarity' => 'epic'],
+        'gear-x3-axe-fire' => ['slot' => 'weapon', 'name' => 'Топор кузнеца', 'sprite' => 'gi-axe-fire', 'atk' => 19, 'def' => 0, 'hp' => 0, 'spd' => -1, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['vamp', 10], 'set' => 'forge'],
+        'gear-x3-mace-fire' => ['slot' => 'weapon', 'name' => 'Раскалённая булава', 'sprite' => 'gi-mace-fire', 'atk' => 18, 'def' => 0, 'hp' => 5, 'spd' => 0, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['thorns', 12]],
+        'gear-x3-greatsword-steel' => ['slot' => 'weapon', 'name' => 'Двуручный меч мастера', 'sprite' => 'gi-greatsword-steel', 'atk' => 20, 'def' => 0, 'hp' => 0, 'spd' => -1, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['execute', 30]],
+        'gear-x3-chest-steel' => ['slot' => 'armor', 'name' => 'Кираса горнового', 'sprite' => 'gi-chest-steel', 'atk' => 0, 'def' => 13, 'hp' => 46, 'spd' => -1, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['bulwark', 7], 'set' => 'forge'],
+        'gear-x3-helm-fire' => ['slot' => 'armor', 'name' => 'Шлем плавильщика', 'sprite' => 'gi-helm-fire', 'atk' => 0, 'def' => 10, 'hp' => 41, 'spd' => 0, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['phoenix', 24]],
+        'gear-x3-shield-fire' => ['slot' => 'armor', 'name' => 'Щит из слитка', 'sprite' => 'gi-shield-fire', 'atk' => 0, 'def' => 16, 'hp' => 39, 'spd' => -1, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['thorns', 12]],
+        'gear-x3-ring-fire' => ['slot' => 'trinket', 'name' => 'Кольцо жара', 'sprite' => 'gi-ring-fire', 'atk' => 6, 'def' => 0, 'hp' => 18, 'spd' => 3, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['crit', 8], 'set' => 'forge'],
+        'gear-x3-vial-fire' => ['slot' => 'trinket', 'name' => 'Фиал лавы', 'sprite' => 'gi-vial-fire', 'atk' => 2, 'def' => 0, 'hp' => 35, 'spd' => 2, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['regen', 2]],
+        'gear-x3-book-fire' => ['slot' => 'trinket', 'name' => 'Книга закалки', 'sprite' => 'gi-book-fire', 'atk' => 6, 'def' => 2, 'hp' => 18, 'spd' => 3, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['opener', 42]],
 
         // Ступень 4: новые находки
-        'gear-x4-spear-ice' => ['slot' => 'weapon', 'name' => 'Ледяное копьё', 'sprite' => 'gi-spear-ice', 'atk' => 31, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 4, 'rarity' => 'epic'],
-        'gear-x4-staff-ice' => ['slot' => 'weapon', 'name' => 'Посох вьюги', 'sprite' => 'gi-staff-ice', 'atk' => 26, 'def' => 0, 'hp' => 19, 'spd' => 0, 'stage' => 4, 'rarity' => 'epic'],
-        'gear-x4-axe-ice' => ['slot' => 'weapon', 'name' => 'Секира ледника', 'sprite' => 'gi-axe-ice', 'atk' => 36, 'def' => 0, 'hp' => 0, 'spd' => -2, 'stage' => 4, 'rarity' => 'epic'],
-        'gear-x4-chest-ice' => ['slot' => 'armor', 'name' => 'Кираса инея', 'sprite' => 'gi-chest-ice', 'atk' => 0, 'def' => 24, 'hp' => 90, 'spd' => -1, 'stage' => 4, 'rarity' => 'epic'],
-        'gear-x4-helm-ice' => ['slot' => 'armor', 'name' => 'Шлем снежного короля', 'sprite' => 'gi-helm-ice', 'atk' => 0, 'def' => 19, 'hp' => 81, 'spd' => 0, 'stage' => 4, 'rarity' => 'epic'],
-        'gear-x4-shield-ice' => ['slot' => 'armor', 'name' => 'Щит ледяной глыбы', 'sprite' => 'gi-shield-ice', 'atk' => 0, 'def' => 29, 'hp' => 76, 'spd' => -1, 'stage' => 4, 'rarity' => 'epic'],
-        'gear-x4-amulet-ice' => ['slot' => 'trinket', 'name' => 'Снежинка', 'sprite' => 'gi-amulet-ice', 'atk' => 4, 'def' => 9, 'hp' => 48, 'spd' => 4, 'stage' => 4, 'rarity' => 'epic'],
-        'gear-x4-crown-ice' => ['slot' => 'trinket', 'name' => 'Венец стужи', 'sprite' => 'gi-crown-ice', 'atk' => 7, 'def' => 8, 'hp' => 57, 'spd' => 5, 'stage' => 4, 'rarity' => 'epic'],
-        'gear-x4-orb-ice' => ['slot' => 'trinket', 'name' => 'Шар метели', 'sprite' => 'gi-orb-ice', 'atk' => 14, 'def' => 0, 'hp' => 26, 'spd' => 4, 'stage' => 4, 'rarity' => 'epic'],
+        'gear-x4-spear-ice' => ['slot' => 'weapon', 'name' => 'Ледяное копьё', 'sprite' => 'gi-spear-ice', 'atk' => 31, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['pierce', 23], 'set' => 'frost'],
+        'gear-x4-staff-ice' => ['slot' => 'weapon', 'name' => 'Посох вьюги', 'sprite' => 'gi-staff-ice', 'atk' => 26, 'def' => 0, 'hp' => 19, 'spd' => 0, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['regen', 3]],
+        'gear-x4-axe-ice' => ['slot' => 'weapon', 'name' => 'Секира ледника', 'sprite' => 'gi-axe-ice', 'atk' => 36, 'def' => 0, 'hp' => 0, 'spd' => -2, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['vamp', 10]],
+        'gear-x4-chest-ice' => ['slot' => 'armor', 'name' => 'Кираса инея', 'sprite' => 'gi-chest-ice', 'atk' => 0, 'def' => 24, 'hp' => 90, 'spd' => -1, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['bulwark', 8], 'set' => 'frost'],
+        'gear-x4-helm-ice' => ['slot' => 'armor', 'name' => 'Шлем снежного короля', 'sprite' => 'gi-helm-ice', 'atk' => 0, 'def' => 19, 'hp' => 81, 'spd' => 0, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['phoenix', 26]],
+        'gear-x4-shield-ice' => ['slot' => 'armor', 'name' => 'Щит ледяной глыбы', 'sprite' => 'gi-shield-ice', 'atk' => 0, 'def' => 29, 'hp' => 76, 'spd' => -1, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['thorns', 13]],
+        'gear-x4-amulet-ice' => ['slot' => 'trinket', 'name' => 'Снежинка', 'sprite' => 'gi-amulet-ice', 'atk' => 4, 'def' => 9, 'hp' => 48, 'spd' => 4, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['bulwark', 8], 'set' => 'frost'],
+        'gear-x4-crown-ice' => ['slot' => 'trinket', 'name' => 'Венец стужи', 'sprite' => 'gi-crown-ice', 'atk' => 7, 'def' => 8, 'hp' => 57, 'spd' => 5, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['pierce', 23]],
+        'gear-x4-orb-ice' => ['slot' => 'trinket', 'name' => 'Шар метели', 'sprite' => 'gi-orb-ice', 'atk' => 14, 'def' => 0, 'hp' => 26, 'spd' => 4, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['opener', 46]],
 
         // Ступень 5: новые находки
-        'gear-x5-dagger-void' => ['slot' => 'weapon', 'name' => 'Кинжал пустоты', 'sprite' => 'gi-dagger-void', 'atk' => 48, 'def' => 0, 'hp' => 0, 'spd' => 2, 'stage' => 5, 'rarity' => 'legendary'],
-        'gear-x5-staff-void' => ['slot' => 'weapon', 'name' => 'Посох бездны', 'sprite' => 'gi-staff-void', 'atk' => 44, 'def' => 0, 'hp' => 32, 'spd' => 0, 'stage' => 5, 'rarity' => 'legendary'],
-        'gear-x5-greatsword-shadow' => ['slot' => 'weapon', 'name' => 'Меч тени', 'sprite' => 'gi-greatsword-shadow', 'atk' => 64, 'def' => 0, 'hp' => 0, 'spd' => -2, 'stage' => 5, 'rarity' => 'legendary'],
-        'gear-x5-chest-void' => ['slot' => 'armor', 'name' => 'Нагрудник пустоты', 'sprite' => 'gi-chest-void', 'atk' => 0, 'def' => 40, 'hp' => 160, 'spd' => -1, 'stage' => 5, 'rarity' => 'legendary'],
-        'gear-x5-helm-shadow' => ['slot' => 'armor', 'name' => 'Шлем безликого', 'sprite' => 'gi-helm-shadow', 'atk' => 0, 'def' => 32, 'hp' => 144, 'spd' => 0, 'stage' => 5, 'rarity' => 'legendary'],
-        'gear-x5-cloak-void' => ['slot' => 'armor', 'name' => 'Мантия звёздной тьмы', 'sprite' => 'gi-cloak-void', 'atk' => 0, 'def' => 29, 'hp' => 120, 'spd' => 2, 'stage' => 5, 'rarity' => 'legendary'],
-        'gear-x5-eye-void' => ['slot' => 'trinket', 'name' => 'Всевидящее око', 'sprite' => 'gi-eye-void', 'atk' => 22, 'def' => 0, 'hp' => 40, 'spd' => 11, 'stage' => 5, 'rarity' => 'legendary'],
-        'gear-x5-book-void' => ['slot' => 'trinket', 'name' => 'Гримуар тишины', 'sprite' => 'gi-book-void', 'atk' => 21, 'def' => 6, 'hp' => 64, 'spd' => 7, 'stage' => 5, 'rarity' => 'legendary'],
-        'gear-x5-star-void' => ['slot' => 'trinket', 'name' => 'Падшая звезда', 'sprite' => 'gi-star-void', 'atk' => 16, 'def' => 10, 'hp' => 80, 'spd' => 10, 'stage' => 5, 'rarity' => 'legendary'],
+        'gear-x5-dagger-void' => ['slot' => 'weapon', 'name' => 'Кинжал пустоты', 'sprite' => 'gi-dagger-void', 'atk' => 48, 'def' => 0, 'hp' => 0, 'spd' => 2, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['opener', 49], 'set' => 'void'],
+        'gear-x5-staff-void' => ['slot' => 'weapon', 'name' => 'Посох бездны', 'sprite' => 'gi-staff-void', 'atk' => 44, 'def' => 0, 'hp' => 32, 'spd' => 0, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['regen', 3]],
+        'gear-x5-greatsword-shadow' => ['slot' => 'weapon', 'name' => 'Меч тени', 'sprite' => 'gi-greatsword-shadow', 'atk' => 64, 'def' => 0, 'hp' => 0, 'spd' => -2, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['execute', 35]],
+        'gear-x5-chest-void' => ['slot' => 'armor', 'name' => 'Нагрудник пустоты', 'sprite' => 'gi-chest-void', 'atk' => 0, 'def' => 40, 'hp' => 160, 'spd' => -1, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['bulwark', 8], 'set' => 'void'],
+        'gear-x5-helm-shadow' => ['slot' => 'armor', 'name' => 'Шлем безликого', 'sprite' => 'gi-helm-shadow', 'atk' => 0, 'def' => 32, 'hp' => 144, 'spd' => 0, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['phoenix', 28]],
+        'gear-x5-cloak-void' => ['slot' => 'armor', 'name' => 'Мантия звёздной тьмы', 'sprite' => 'gi-cloak-void', 'atk' => 0, 'def' => 29, 'hp' => 120, 'spd' => 2, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['dodge', 10]],
+        'gear-x5-eye-void' => ['slot' => 'trinket', 'name' => 'Всевидящее око', 'sprite' => 'gi-eye-void', 'atk' => 22, 'def' => 0, 'hp' => 40, 'spd' => 11, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['execute', 35], 'set' => 'void'],
+        'gear-x5-book-void' => ['slot' => 'trinket', 'name' => 'Гримуар тишины', 'sprite' => 'gi-book-void', 'atk' => 21, 'def' => 6, 'hp' => 64, 'spd' => 7, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['opener', 49]],
+        'gear-x5-star-void' => ['slot' => 'trinket', 'name' => 'Падшая звезда', 'sprite' => 'gi-star-void', 'atk' => 16, 'def' => 10, 'hp' => 80, 'spd' => 10, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['phoenix', 28]],
 
         // Ступень 6: новые находки
-        'gear-x6-spear-sea' => ['slot' => 'weapon', 'name' => 'Трезубец левиафана', 'sprite' => 'gi-spear-sea', 'atk' => 66, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 6, 'rarity' => 'legendary'],
-        'gear-x6-hammer-sea' => ['slot' => 'weapon', 'name' => 'Молот прилива', 'sprite' => 'gi-hammer-sea', 'atk' => 79, 'def' => 7, 'hp' => 0, 'spd' => -3, 'stage' => 6, 'rarity' => 'legendary'],
-        'gear-x6-wand-sea' => ['slot' => 'weapon', 'name' => 'Жезл глубинной воды', 'sprite' => 'gi-wand-sea', 'atk' => 54, 'def' => 0, 'hp' => 28, 'spd' => 3, 'stage' => 6, 'rarity' => 'legendary'],
-        'gear-x6-chest-sea' => ['slot' => 'armor', 'name' => 'Панцирь глубин', 'sprite' => 'gi-chest-sea', 'atk' => 0, 'def' => 50, 'hp' => 200, 'spd' => -2, 'stage' => 6, 'rarity' => 'legendary'],
-        'gear-x6-shield-sea' => ['slot' => 'armor', 'name' => 'Щит-раковина', 'sprite' => 'gi-shield-sea', 'atk' => 0, 'def' => 60, 'hp' => 170, 'spd' => -2, 'stage' => 6, 'rarity' => 'legendary'],
-        'gear-x6-helm-sea' => ['slot' => 'armor', 'name' => 'Шлем бездны', 'sprite' => 'gi-helm-sea', 'atk' => 0, 'def' => 40, 'hp' => 180, 'spd' => 0, 'stage' => 6, 'rarity' => 'legendary'],
-        'gear-x6-orb-sea' => ['slot' => 'trinket', 'name' => 'Сердце океана', 'sprite' => 'gi-orb-sea', 'atk' => 32, 'def' => 0, 'hp' => 60, 'spd' => 8, 'stage' => 6, 'rarity' => 'legendary'],
-        'gear-x6-eye-sea' => ['slot' => 'trinket', 'name' => 'Око левиафана', 'sprite' => 'gi-eye-sea', 'atk' => 28, 'def' => 0, 'hp' => 50, 'spd' => 14, 'stage' => 6, 'rarity' => 'legendary'],
-        'gear-x6-crown-sea' => ['slot' => 'trinket', 'name' => 'Корона дна', 'sprite' => 'gi-crown-sea', 'atk' => 16, 'def' => 16, 'hp' => 130, 'spd' => 10, 'stage' => 6, 'rarity' => 'legendary'],
+        'gear-x6-spear-sea' => ['slot' => 'weapon', 'name' => 'Трезубец левиафана', 'sprite' => 'gi-spear-sea', 'atk' => 66, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['pierce', 27], 'set' => 'leviathan'],
+        'gear-x6-hammer-sea' => ['slot' => 'weapon', 'name' => 'Молот прилива', 'sprite' => 'gi-hammer-sea', 'atk' => 79, 'def' => 7, 'hp' => 0, 'spd' => -3, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['pierce', 27]],
+        'gear-x6-wand-sea' => ['slot' => 'weapon', 'name' => 'Жезл глубинной воды', 'sprite' => 'gi-wand-sea', 'atk' => 54, 'def' => 0, 'hp' => 28, 'spd' => 3, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['vamp', 12]],
+        'gear-x6-chest-sea' => ['slot' => 'armor', 'name' => 'Панцирь глубин', 'sprite' => 'gi-chest-sea', 'atk' => 0, 'def' => 50, 'hp' => 200, 'spd' => -2, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['bulwark', 9], 'set' => 'leviathan'],
+        'gear-x6-shield-sea' => ['slot' => 'armor', 'name' => 'Щит-раковина', 'sprite' => 'gi-shield-sea', 'atk' => 0, 'def' => 60, 'hp' => 170, 'spd' => -2, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['thorns', 15]],
+        'gear-x6-helm-sea' => ['slot' => 'armor', 'name' => 'Шлем бездны', 'sprite' => 'gi-helm-sea', 'atk' => 0, 'def' => 40, 'hp' => 180, 'spd' => 0, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['phoenix', 30]],
+        'gear-x6-orb-sea' => ['slot' => 'trinket', 'name' => 'Сердце океана', 'sprite' => 'gi-orb-sea', 'atk' => 32, 'def' => 0, 'hp' => 60, 'spd' => 8, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['opener', 52], 'set' => 'leviathan'],
+        'gear-x6-eye-sea' => ['slot' => 'trinket', 'name' => 'Око левиафана', 'sprite' => 'gi-eye-sea', 'atk' => 28, 'def' => 0, 'hp' => 50, 'spd' => 14, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['execute', 38]],
+        'gear-x6-crown-sea' => ['slot' => 'trinket', 'name' => 'Корона дна', 'sprite' => 'gi-crown-sea', 'atk' => 16, 'def' => 16, 'hp' => 130, 'spd' => 10, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['pierce', 27]],
 
         // Ступень 7: новые находки
-        'gear-x7-greatsword-fire' => ['slot' => 'weapon', 'name' => 'Меч драконоборца', 'sprite' => 'gi-greatsword-fire', 'atk' => 101, 'def' => 0, 'hp' => 0, 'spd' => -3, 'stage' => 7, 'rarity' => 'legendary'],
-        'gear-x7-spear-gold' => ['slot' => 'weapon', 'name' => 'Копьё охотника на драконов', 'sprite' => 'gi-spear-gold', 'atk' => 83, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 7, 'rarity' => 'legendary'],
-        'gear-x7-staff-crystal' => ['slot' => 'weapon', 'name' => 'Посох кристального жреца', 'sprite' => 'gi-staff-crystal', 'atk' => 71, 'def' => 0, 'hp' => 52, 'spd' => 0, 'stage' => 7, 'rarity' => 'legendary'],
-        'gear-x7-chest-gold' => ['slot' => 'armor', 'name' => 'Золотая чешуя', 'sprite' => 'gi-chest-gold', 'atk' => 0, 'def' => 62, 'hp' => 250, 'spd' => -2, 'stage' => 7, 'rarity' => 'legendary'],
-        'gear-x7-helm-fire' => ['slot' => 'armor', 'name' => 'Рогатый шлем дракона', 'sprite' => 'gi-helm-fire', 'atk' => 0, 'def' => 50, 'hp' => 225, 'spd' => 0, 'stage' => 7, 'rarity' => 'legendary'],
-        'gear-x7-shield-crystal' => ['slot' => 'armor', 'name' => 'Призматический щит', 'sprite' => 'gi-shield-crystal', 'atk' => 0, 'def' => 74, 'hp' => 212, 'spd' => -2, 'stage' => 7, 'rarity' => 'legendary'],
-        'gear-x7-crown-gold' => ['slot' => 'trinket', 'name' => 'Корона сокровищницы', 'sprite' => 'gi-crown-gold', 'atk' => 20, 'def' => 20, 'hp' => 162, 'spd' => 12, 'stage' => 7, 'rarity' => 'legendary'],
-        'gear-x7-star-crystal' => ['slot' => 'trinket', 'name' => 'Звезда призмы', 'sprite' => 'gi-star-crystal', 'atk' => 25, 'def' => 15, 'hp' => 125, 'spd' => 14, 'stage' => 7, 'rarity' => 'legendary'],
-        'gear-x7-vial-fire' => ['slot' => 'trinket', 'name' => 'Дыхание дракона', 'sprite' => 'gi-vial-fire', 'atk' => 10, 'def' => 0, 'hp' => 200, 'spd' => 10, 'stage' => 7, 'rarity' => 'legendary'],
+        'gear-x7-greatsword-fire' => ['slot' => 'weapon', 'name' => 'Меч драконоборца', 'sprite' => 'gi-greatsword-fire', 'atk' => 101, 'def' => 0, 'hp' => 0, 'spd' => -3, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['execute', 40], 'set' => 'dragon'],
+        'gear-x7-spear-gold' => ['slot' => 'weapon', 'name' => 'Копьё охотника на драконов', 'sprite' => 'gi-spear-gold', 'atk' => 83, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['pierce', 29]],
+        'gear-x7-staff-crystal' => ['slot' => 'weapon', 'name' => 'Посох кристального жреца', 'sprite' => 'gi-staff-crystal', 'atk' => 71, 'def' => 0, 'hp' => 52, 'spd' => 0, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['regen', 3]],
+        'gear-x7-chest-gold' => ['slot' => 'armor', 'name' => 'Золотая чешуя', 'sprite' => 'gi-chest-gold', 'atk' => 0, 'def' => 62, 'hp' => 250, 'spd' => -2, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['bulwark', 10], 'set' => 'dragon'],
+        'gear-x7-helm-fire' => ['slot' => 'armor', 'name' => 'Рогатый шлем дракона', 'sprite' => 'gi-helm-fire', 'atk' => 0, 'def' => 50, 'hp' => 225, 'spd' => 0, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['phoenix', 32]],
+        'gear-x7-shield-crystal' => ['slot' => 'armor', 'name' => 'Призматический щит', 'sprite' => 'gi-shield-crystal', 'atk' => 0, 'def' => 74, 'hp' => 212, 'spd' => -2, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['thorns', 16]],
+        'gear-x7-crown-gold' => ['slot' => 'trinket', 'name' => 'Корона сокровищницы', 'sprite' => 'gi-crown-gold', 'atk' => 20, 'def' => 20, 'hp' => 162, 'spd' => 12, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['pierce', 29], 'set' => 'dragon'],
+        'gear-x7-star-crystal' => ['slot' => 'trinket', 'name' => 'Звезда призмы', 'sprite' => 'gi-star-crystal', 'atk' => 25, 'def' => 15, 'hp' => 125, 'spd' => 14, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['phoenix', 32]],
+        'gear-x7-vial-fire' => ['slot' => 'trinket', 'name' => 'Дыхание дракона', 'sprite' => 'gi-vial-fire', 'atk' => 10, 'def' => 0, 'hp' => 200, 'spd' => 10, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['regen', 3]],
 
         // Ступень 8: новые находки
-        'gear-x8-axe-blood' => ['slot' => 'weapon', 'name' => 'Топор палача', 'sprite' => 'gi-axe-blood', 'atk' => 118, 'def' => 0, 'hp' => 0, 'spd' => -4, 'stage' => 8, 'rarity' => 'legendary'],
-        'gear-x8-mace-sun' => ['slot' => 'weapon', 'name' => 'Булава судьи', 'sprite' => 'gi-mace-sun', 'atk' => 113, 'def' => 0, 'hp' => 32, 'spd' => -2, 'stage' => 8, 'rarity' => 'legendary'],
-        'gear-x8-wand-sun' => ['slot' => 'weapon', 'name' => 'Жезл богов', 'sprite' => 'gi-wand-sun', 'atk' => 82, 'def' => 0, 'hp' => 42, 'spd' => 4, 'stage' => 8, 'rarity' => 'legendary'],
-        'gear-x8-chest-blood' => ['slot' => 'armor', 'name' => 'Багряный доспех', 'sprite' => 'gi-chest-blood', 'atk' => 0, 'def' => 76, 'hp' => 310, 'spd' => -2, 'stage' => 8, 'rarity' => 'legendary'],
-        'gear-x8-helm-bone' => ['slot' => 'armor', 'name' => 'Череп-шлем', 'sprite' => 'gi-helm-bone', 'atk' => 0, 'def' => 61, 'hp' => 279, 'spd' => 0, 'stage' => 8, 'rarity' => 'legendary'],
-        'gear-x8-shield-sun' => ['slot' => 'armor', 'name' => 'Солнечная эгида', 'sprite' => 'gi-shield-sun', 'atk' => 0, 'def' => 91, 'hp' => 264, 'spd' => -2, 'stage' => 8, 'rarity' => 'legendary'],
-        'gear-x8-crown-sun' => ['slot' => 'trinket', 'name' => 'Венец пантеона', 'sprite' => 'gi-crown-sun', 'atk' => 24, 'def' => 23, 'hp' => 202, 'spd' => 15, 'stage' => 8, 'rarity' => 'legendary'],
-        'gear-x8-book-bone' => ['slot' => 'trinket', 'name' => 'Книга павших', 'sprite' => 'gi-book-bone', 'atk' => 39, 'def' => 11, 'hp' => 124, 'spd' => 14, 'stage' => 8, 'rarity' => 'legendary'],
-        'gear-x8-eye-sun' => ['slot' => 'trinket', 'name' => 'Око правосудия', 'sprite' => 'gi-eye-sun', 'atk' => 42, 'def' => 0, 'hp' => 78, 'spd' => 21, 'stage' => 8, 'rarity' => 'legendary'],
+        'gear-x8-axe-blood' => ['slot' => 'weapon', 'name' => 'Топор палача', 'sprite' => 'gi-axe-blood', 'atk' => 118, 'def' => 0, 'hp' => 0, 'spd' => -4, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['vamp', 14], 'set' => 'headsman'],
+        'gear-x8-mace-sun' => ['slot' => 'weapon', 'name' => 'Булава судьи', 'sprite' => 'gi-mace-sun', 'atk' => 113, 'def' => 0, 'hp' => 32, 'spd' => -2, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['thorns', 17]],
+        'gear-x8-wand-sun' => ['slot' => 'weapon', 'name' => 'Жезл богов', 'sprite' => 'gi-wand-sun', 'atk' => 82, 'def' => 0, 'hp' => 42, 'spd' => 4, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['vamp', 14]],
+        'gear-x8-chest-blood' => ['slot' => 'armor', 'name' => 'Багряный доспех', 'sprite' => 'gi-chest-blood', 'atk' => 0, 'def' => 76, 'hp' => 310, 'spd' => -2, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['bulwark', 10], 'set' => 'headsman'],
+        'gear-x8-helm-bone' => ['slot' => 'armor', 'name' => 'Череп-шлем', 'sprite' => 'gi-helm-bone', 'atk' => 0, 'def' => 61, 'hp' => 279, 'spd' => 0, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['phoenix', 34]],
+        'gear-x8-shield-sun' => ['slot' => 'armor', 'name' => 'Солнечная эгида', 'sprite' => 'gi-shield-sun', 'atk' => 0, 'def' => 91, 'hp' => 264, 'spd' => -2, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['thorns', 17]],
+        'gear-x8-crown-sun' => ['slot' => 'trinket', 'name' => 'Венец пантеона', 'sprite' => 'gi-crown-sun', 'atk' => 24, 'def' => 23, 'hp' => 202, 'spd' => 15, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['pierce', 31], 'set' => 'headsman'],
+        'gear-x8-book-bone' => ['slot' => 'trinket', 'name' => 'Книга павших', 'sprite' => 'gi-book-bone', 'atk' => 39, 'def' => 11, 'hp' => 124, 'spd' => 14, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['opener', 60]],
+        'gear-x8-eye-sun' => ['slot' => 'trinket', 'name' => 'Око правосудия', 'sprite' => 'gi-eye-sun', 'atk' => 42, 'def' => 0, 'hp' => 78, 'spd' => 21, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['execute', 43]],
 
         // Ступень 9: новые находки
-        'gear-x9-greatsword-gold' => ['slot' => 'weapon', 'name' => 'Меч испытания', 'sprite' => 'gi-greatsword-gold', 'atk' => 148, 'def' => 0, 'hp' => 0, 'spd' => -4, 'stage' => 9, 'rarity' => 'legendary'],
-        'gear-x9-axe-blood' => ['slot' => 'weapon', 'name' => 'Топор безжалостного', 'sprite' => 'gi-axe-blood', 'atk' => 140, 'def' => 0, 'hp' => 0, 'spd' => -4, 'stage' => 9, 'rarity' => 'legendary'],
-        'gear-x9-dagger-shadow' => ['slot' => 'weapon', 'name' => 'Клинок последнего шанса', 'sprite' => 'gi-dagger-shadow', 'atk' => 110, 'def' => 0, 'hp' => 0, 'spd' => 4, 'stage' => 9, 'rarity' => 'legendary'],
-        'gear-x9-spear-sun' => ['slot' => 'weapon', 'name' => 'Копьё чемпиона', 'sprite' => 'gi-spear-sun', 'atk' => 120, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 9, 'rarity' => 'legendary'],
-        'gear-x9-hammer-void' => ['slot' => 'weapon', 'name' => 'Молот конца света', 'sprite' => 'gi-hammer-void', 'atk' => 144, 'def' => 12, 'hp' => 0, 'spd' => -4, 'stage' => 9, 'rarity' => 'legendary'],
-        'gear-x9-chest-gold' => ['slot' => 'armor', 'name' => 'Доспех чемпиона', 'sprite' => 'gi-chest-gold', 'atk' => 0, 'def' => 92, 'hp' => 370, 'spd' => -2, 'stage' => 9, 'rarity' => 'legendary'],
-        'gear-x9-cloak-shadow' => ['slot' => 'armor', 'name' => 'Плащ безмолвного', 'sprite' => 'gi-cloak-shadow', 'atk' => 0, 'def' => 66, 'hp' => 278, 'spd' => 4, 'stage' => 9, 'rarity' => 'legendary'],
-        'gear-x9-helm-blood' => ['slot' => 'armor', 'name' => 'Шлем непокорного', 'sprite' => 'gi-helm-blood', 'atk' => 0, 'def' => 74, 'hp' => 333, 'spd' => 0, 'stage' => 9, 'rarity' => 'legendary'],
-        'gear-x9-shield-sun' => ['slot' => 'armor', 'name' => 'Щит несгибаемых', 'sprite' => 'gi-shield-sun', 'atk' => 0, 'def' => 110, 'hp' => 314, 'spd' => -2, 'stage' => 9, 'rarity' => 'legendary'],
-        'gear-x9-vest-void' => ['slot' => 'armor', 'name' => 'Жилет теней', 'sprite' => 'gi-vest-void', 'atk' => 0, 'def' => 57, 'hp' => 259, 'spd' => 4, 'stage' => 9, 'rarity' => 'legendary'],
-        'gear-x9-ring-gold' => ['slot' => 'trinket', 'name' => 'Кольцо победителя', 'sprite' => 'gi-ring-gold', 'atk' => 47, 'def' => 0, 'hp' => 148, 'spd' => 18, 'stage' => 9, 'rarity' => 'legendary'],
-        'gear-x9-amulet-sun' => ['slot' => 'trinket', 'name' => 'Амулет бессмертных', 'sprite' => 'gi-amulet-sun', 'atk' => 18, 'def' => 33, 'hp' => 204, 'spd' => 13, 'stage' => 9, 'rarity' => 'legendary'],
-        'gear-x9-orb-void' => ['slot' => 'trinket', 'name' => 'Сфера судьбы', 'sprite' => 'gi-orb-void', 'atk' => 58, 'def' => 0, 'hp' => 111, 'spd' => 14, 'stage' => 9, 'rarity' => 'legendary'],
-        'gear-x9-crown-blood' => ['slot' => 'trinket', 'name' => 'Венец павшего короля', 'sprite' => 'gi-crown-blood', 'atk' => 29, 'def' => 29, 'hp' => 240, 'spd' => 18, 'stage' => 9, 'rarity' => 'legendary'],
-        'gear-x9-book-shadow' => ['slot' => 'trinket', 'name' => 'Том последних слов', 'sprite' => 'gi-book-shadow', 'atk' => 47, 'def' => 13, 'hp' => 148, 'spd' => 16, 'stage' => 9, 'rarity' => 'legendary'],
+        'gear-x9-greatsword-gold' => ['slot' => 'weapon', 'name' => 'Меч испытания', 'sprite' => 'gi-greatsword-gold', 'atk' => 148, 'def' => 0, 'hp' => 0, 'spd' => -4, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['execute', 45], 'set' => 'champion'],
+        'gear-x9-axe-blood' => ['slot' => 'weapon', 'name' => 'Топор безжалостного', 'sprite' => 'gi-axe-blood', 'atk' => 140, 'def' => 0, 'hp' => 0, 'spd' => -4, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['vamp', 14]],
+        'gear-x9-dagger-shadow' => ['slot' => 'weapon', 'name' => 'Клинок последнего шанса', 'sprite' => 'gi-dagger-shadow', 'atk' => 110, 'def' => 0, 'hp' => 0, 'spd' => 4, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['opener', 63]],
+        'gear-x9-spear-sun' => ['slot' => 'weapon', 'name' => 'Копьё чемпиона', 'sprite' => 'gi-spear-sun', 'atk' => 120, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['pierce', 32]],
+        'gear-x9-hammer-void' => ['slot' => 'weapon', 'name' => 'Молот конца света', 'sprite' => 'gi-hammer-void', 'atk' => 144, 'def' => 12, 'hp' => 0, 'spd' => -4, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['pierce', 32]],
+        'gear-x9-chest-gold' => ['slot' => 'armor', 'name' => 'Доспех чемпиона', 'sprite' => 'gi-chest-gold', 'atk' => 0, 'def' => 92, 'hp' => 370, 'spd' => -2, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['bulwark', 11], 'set' => 'champion'],
+        'gear-x9-cloak-shadow' => ['slot' => 'armor', 'name' => 'Плащ безмолвного', 'sprite' => 'gi-cloak-shadow', 'atk' => 0, 'def' => 66, 'hp' => 278, 'spd' => 4, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['dodge', 13]],
+        'gear-x9-helm-blood' => ['slot' => 'armor', 'name' => 'Шлем непокорного', 'sprite' => 'gi-helm-blood', 'atk' => 0, 'def' => 74, 'hp' => 333, 'spd' => 0, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['phoenix', 36]],
+        'gear-x9-shield-sun' => ['slot' => 'armor', 'name' => 'Щит несгибаемых', 'sprite' => 'gi-shield-sun', 'atk' => 0, 'def' => 110, 'hp' => 314, 'spd' => -2, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['thorns', 18]],
+        'gear-x9-vest-void' => ['slot' => 'armor', 'name' => 'Жилет теней', 'sprite' => 'gi-vest-void', 'atk' => 0, 'def' => 57, 'hp' => 259, 'spd' => 4, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['regen', 4]],
+        'gear-x9-ring-gold' => ['slot' => 'trinket', 'name' => 'Кольцо победителя', 'sprite' => 'gi-ring-gold', 'atk' => 47, 'def' => 0, 'hp' => 148, 'spd' => 18, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['crit', 13], 'set' => 'champion'],
+        'gear-x9-amulet-sun' => ['slot' => 'trinket', 'name' => 'Амулет бессмертных', 'sprite' => 'gi-amulet-sun', 'atk' => 18, 'def' => 33, 'hp' => 204, 'spd' => 13, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['bulwark', 11]],
+        'gear-x9-orb-void' => ['slot' => 'trinket', 'name' => 'Сфера судьбы', 'sprite' => 'gi-orb-void', 'atk' => 58, 'def' => 0, 'hp' => 111, 'spd' => 14, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['opener', 63]],
+        'gear-x9-crown-blood' => ['slot' => 'trinket', 'name' => 'Венец павшего короля', 'sprite' => 'gi-crown-blood', 'atk' => 29, 'def' => 29, 'hp' => 240, 'spd' => 18, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['pierce', 32]],
+        'gear-x9-book-shadow' => ['slot' => 'trinket', 'name' => 'Том последних слов', 'sprite' => 'gi-book-shadow', 'atk' => 47, 'def' => 13, 'hp' => 148, 'spd' => 16, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['opener', 63]],
+
+        // Ступень 1: ещё находки с особыми свойствами
+        'gear-y1-dagger-iron' => ['slot' => 'weapon', 'name' => 'Заточка узника', 'sprite' => 'gi-dagger-iron', 'atk' => 4, 'def' => 0, 'hp' => 0, 'spd' => 1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['opener', 35]],
+        'gear-y1-sword-bone' => ['slot' => 'weapon', 'name' => 'Меч-ребро', 'sprite' => 'gi-sword-bone', 'atk' => 4, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 1, 'rarity' => 'common', 'perk' => ['crit', 7]],
+        'gear-y1-hammer-iron' => ['slot' => 'weapon', 'name' => 'Кувалда стражника', 'sprite' => 'gi-hammer-iron', 'atk' => 5, 'def' => 0, 'hp' => 0, 'spd' => -1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['pierce', 18]],
+        'gear-y1-chest-iron' => ['slot' => 'armor', 'name' => 'Кираса караульного', 'sprite' => 'gi-chest-iron', 'atk' => 0, 'def' => 3, 'hp' => 12, 'spd' => -1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['bulwark', 6]],
+        'gear-y1-cloak-bone' => ['slot' => 'armor', 'name' => 'Саван', 'sprite' => 'gi-cloak-bone', 'atk' => 0, 'def' => 2, 'hp' => 9, 'spd' => 1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['dodge', 7]],
+        'gear-y1-helm-bone' => ['slot' => 'armor', 'name' => 'Череп на голове', 'sprite' => 'gi-helm-bone', 'atk' => 0, 'def' => 2, 'hp' => 11, 'spd' => 0, 'stage' => 1, 'rarity' => 'common', 'perk' => ['phoenix', 20]],
+        'gear-y1-star-bone' => ['slot' => 'trinket', 'name' => 'Мёртвая звезда', 'sprite' => 'gi-star-bone', 'atk' => 1, 'def' => 0, 'hp' => 6, 'spd' => 1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['phoenix', 20]],
+        'gear-y1-orb-bone' => ['slot' => 'trinket', 'name' => 'Глазное яблоко', 'sprite' => 'gi-orb-bone', 'atk' => 2, 'def' => 0, 'hp' => 4, 'spd' => 1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['opener', 35]],
+        'gear-y1-crown-bronze' => ['slot' => 'trinket', 'name' => 'Медный венец', 'sprite' => 'gi-crown-bronze', 'atk' => 1, 'def' => 0, 'hp' => 8, 'spd' => 1, 'stage' => 1, 'rarity' => 'common', 'perk' => ['pierce', 18]],
+
+        // Ступень 2: ещё находки с особыми свойствами
+        'gear-y2-sword-sea' => ['slot' => 'weapon', 'name' => 'Сабля контрабандиста', 'sprite' => 'gi-sword-sea', 'atk' => 9, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['crit', 8]],
+        'gear-y2-mace-bronze' => ['slot' => 'weapon', 'name' => 'Якорь-булава', 'sprite' => 'gi-mace-bronze', 'atk' => 10, 'def' => 0, 'hp' => 3, 'spd' => 0, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['thorns', 11]],
+        'gear-y2-staff-sea' => ['slot' => 'weapon', 'name' => 'Посох морской ведьмы', 'sprite' => 'gi-staff-sea', 'atk' => 7, 'def' => 0, 'hp' => 5, 'spd' => 0, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['regen', 2]],
+        'gear-y2-cloak-sea' => ['slot' => 'armor', 'name' => 'Плащ из водорослей', 'sprite' => 'gi-cloak-sea', 'atk' => 0, 'def' => 5, 'hp' => 20, 'spd' => 1, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['dodge', 8]],
+        'gear-y2-vest-bronze' => ['slot' => 'armor', 'name' => 'Тельняшка', 'sprite' => 'gi-vest-bronze', 'atk' => 0, 'def' => 4, 'hp' => 18, 'spd' => 1, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['regen', 2]],
+        'gear-y2-chest-sea' => ['slot' => 'armor', 'name' => 'Чешуйчатый панцирь', 'sprite' => 'gi-chest-sea', 'atk' => 0, 'def' => 7, 'hp' => 26, 'spd' => -1, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['bulwark', 7]],
+        'gear-y2-eye-sea' => ['slot' => 'trinket', 'name' => 'Глаз кракена', 'sprite' => 'gi-eye-sea', 'atk' => 3, 'def' => 0, 'hp' => 7, 'spd' => 3, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['execute', 28]],
+        'gear-y2-crown-bronze' => ['slot' => 'trinket', 'name' => 'Корона капитана', 'sprite' => 'gi-crown-bronze', 'atk' => 2, 'def' => 3, 'hp' => 18, 'spd' => 2, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['pierce', 20]],
+        'gear-y2-book-sea' => ['slot' => 'trinket', 'name' => 'Судовой журнал', 'sprite' => 'gi-book-sea', 'atk' => 3, 'def' => 1, 'hp' => 11, 'spd' => 2, 'stage' => 2, 'rarity' => 'rare', 'perk' => ['opener', 38]],
+
+        // Ступень 3: ещё находки с особыми свойствами
+        'gear-y3-dagger-fire' => ['slot' => 'weapon', 'name' => 'Кинжал из шлака', 'sprite' => 'gi-dagger-fire', 'atk' => 15, 'def' => 0, 'hp' => 0, 'spd' => 1, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['opener', 42]],
+        'gear-y3-hammer-fire' => ['slot' => 'weapon', 'name' => 'Молот горна', 'sprite' => 'gi-hammer-fire', 'atk' => 20, 'def' => 2, 'hp' => 0, 'spd' => -1, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['pierce', 22]],
+        'gear-y3-spear-fire' => ['slot' => 'weapon', 'name' => 'Огненная пика', 'sprite' => 'gi-spear-fire', 'atk' => 16, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['pierce', 22]],
+        'gear-y3-cloak-fire' => ['slot' => 'armor', 'name' => 'Тлеющий плащ', 'sprite' => 'gi-cloak-fire', 'atk' => 0, 'def' => 9, 'hp' => 34, 'spd' => 1, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['dodge', 8]],
+        'gear-y3-vest-fire' => ['slot' => 'armor', 'name' => 'Фартук кузнеца', 'sprite' => 'gi-vest-fire', 'atk' => 0, 'def' => 8, 'hp' => 32, 'spd' => 1, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['regen', 2]],
+        'gear-y3-chest-fire' => ['slot' => 'armor', 'name' => 'Плавильная броня', 'sprite' => 'gi-chest-fire', 'atk' => 0, 'def' => 13, 'hp' => 46, 'spd' => -1, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['bulwark', 7]],
+        'gear-y3-orb-fire' => ['slot' => 'trinket', 'name' => 'Сердце горна', 'sprite' => 'gi-orb-fire', 'atk' => 8, 'def' => 0, 'hp' => 13, 'spd' => 2, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['opener', 42]],
+        'gear-y3-amulet-fire' => ['slot' => 'trinket', 'name' => 'Искра наковальни', 'sprite' => 'gi-amulet-fire', 'atk' => 2, 'def' => 4, 'hp' => 24, 'spd' => 2, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['bulwark', 7]],
+        'gear-y3-star-fire' => ['slot' => 'trinket', 'name' => 'Падающая искра', 'sprite' => 'gi-star-fire', 'atk' => 5, 'def' => 3, 'hp' => 22, 'spd' => 4, 'stage' => 3, 'rarity' => 'epic', 'perk' => ['phoenix', 24]],
+
+        // Ступень 4: ещё находки с особыми свойствами
+        'gear-y4-sword-ice' => ['slot' => 'weapon', 'name' => 'Меч стужи', 'sprite' => 'gi-sword-ice', 'atk' => 32, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['crit', 9]],
+        'gear-y4-hammer-ice' => ['slot' => 'weapon', 'name' => 'Молот мороза', 'sprite' => 'gi-hammer-ice', 'atk' => 37, 'def' => 3, 'hp' => 0, 'spd' => -2, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['pierce', 23]],
+        'gear-y4-wand-ice' => ['slot' => 'weapon', 'name' => 'Ледяной жезл', 'sprite' => 'gi-wand-ice', 'atk' => 25, 'def' => 0, 'hp' => 13, 'spd' => 2, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['vamp', 10]],
+        'gear-y4-cloak-ice' => ['slot' => 'armor', 'name' => 'Плащ метели', 'sprite' => 'gi-cloak-ice', 'atk' => 0, 'def' => 17, 'hp' => 68, 'spd' => 2, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['dodge', 9]],
+        'gear-y4-vest-ice' => ['slot' => 'armor', 'name' => 'Шкура ледяного волка', 'sprite' => 'gi-vest-ice', 'atk' => 0, 'def' => 15, 'hp' => 63, 'spd' => 2, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['regen', 3]],
+        'gear-y4-chest-steel' => ['slot' => 'armor', 'name' => 'Стальной панцирь севера', 'sprite' => 'gi-chest-steel', 'atk' => 0, 'def' => 24, 'hp' => 90, 'spd' => -1, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['bulwark', 8]],
+        'gear-y4-ring-ice' => ['slot' => 'trinket', 'name' => 'Кольцо вечной мерзлоты', 'sprite' => 'gi-ring-ice', 'atk' => 12, 'def' => 0, 'hp' => 35, 'spd' => 5, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['crit', 9]],
+        'gear-y4-eye-ice' => ['slot' => 'trinket', 'name' => 'Око йети', 'sprite' => 'gi-eye-ice', 'atk' => 13, 'def' => 0, 'hp' => 22, 'spd' => 7, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['execute', 32]],
+        'gear-y4-book-ice' => ['slot' => 'trinket', 'name' => 'Ледяная скрижаль', 'sprite' => 'gi-book-ice', 'atk' => 12, 'def' => 4, 'hp' => 35, 'spd' => 4, 'stage' => 4, 'rarity' => 'epic', 'perk' => ['opener', 46]],
+
+        // Ступень 5: ещё находки с особыми свойствами
+        'gear-y5-sword-void' => ['slot' => 'weapon', 'name' => 'Клинок разлома', 'sprite' => 'gi-sword-void', 'atk' => 54, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['crit', 10]],
+        'gear-y5-axe-void' => ['slot' => 'weapon', 'name' => 'Секира пустоты', 'sprite' => 'gi-axe-void', 'atk' => 60, 'def' => 0, 'hp' => 0, 'spd' => -2, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['vamp', 11]],
+        'gear-y5-spear-shadow' => ['slot' => 'weapon', 'name' => 'Копьё из тьмы', 'sprite' => 'gi-spear-shadow', 'atk' => 52, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['pierce', 25]],
+        'gear-y5-shield-void' => ['slot' => 'armor', 'name' => 'Щит бездны', 'sprite' => 'gi-shield-void', 'atk' => 0, 'def' => 48, 'hp' => 136, 'spd' => -1, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['thorns', 14]],
+        'gear-y5-vest-shadow' => ['slot' => 'armor', 'name' => 'Куртка бродяги пустоты', 'sprite' => 'gi-vest-shadow', 'atk' => 0, 'def' => 25, 'hp' => 112, 'spd' => 2, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['regen', 3]],
+        'gear-y5-chest-shadow' => ['slot' => 'armor', 'name' => 'Нагрудник тени', 'sprite' => 'gi-chest-shadow', 'atk' => 0, 'def' => 40, 'hp' => 160, 'spd' => -1, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['bulwark', 8]],
+        'gear-y5-ring-void' => ['slot' => 'trinket', 'name' => 'Кольцо ничто', 'sprite' => 'gi-ring-void', 'atk' => 21, 'def' => 0, 'hp' => 64, 'spd' => 8, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['crit', 10]],
+        'gear-y5-crown-void' => ['slot' => 'trinket', 'name' => 'Венец тишины', 'sprite' => 'gi-crown-void', 'atk' => 13, 'def' => 13, 'hp' => 104, 'spd' => 8, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['pierce', 25]],
+        'gear-y5-orb-void' => ['slot' => 'trinket', 'name' => 'Шар небытия', 'sprite' => 'gi-orb-void', 'atk' => 26, 'def' => 0, 'hp' => 48, 'spd' => 6, 'stage' => 5, 'rarity' => 'legendary', 'perk' => ['opener', 49]],
+
+        // Ступень 6: ещё находки с особыми свойствами
+        'gear-y6-sword-sea' => ['slot' => 'weapon', 'name' => 'Клинок течения', 'sprite' => 'gi-sword-sea', 'atk' => 69, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['crit', 10]],
+        'gear-y6-axe-sea' => ['slot' => 'weapon', 'name' => 'Секира шторма', 'sprite' => 'gi-axe-sea', 'atk' => 77, 'def' => 0, 'hp' => 0, 'spd' => -3, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['vamp', 12]],
+        'gear-y6-dagger-sea' => ['slot' => 'weapon', 'name' => 'Игла глубин', 'sprite' => 'gi-dagger-sea', 'atk' => 61, 'def' => 0, 'hp' => 0, 'spd' => 3, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['opener', 52]],
+        'gear-y6-cloak-sea' => ['slot' => 'armor', 'name' => 'Плащ глубоководья', 'sprite' => 'gi-cloak-sea', 'atk' => 0, 'def' => 36, 'hp' => 150, 'spd' => 3, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['dodge', 10]],
+        'gear-y6-vest-sea' => ['slot' => 'armor', 'name' => 'Жилет ныряльщика', 'sprite' => 'gi-vest-sea', 'atk' => 0, 'def' => 31, 'hp' => 140, 'spd' => 3, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['regen', 3]],
+        'gear-y6-chest-shadow' => ['slot' => 'armor', 'name' => 'Броня тёмной воды', 'sprite' => 'gi-chest-shadow', 'atk' => 0, 'def' => 50, 'hp' => 200, 'spd' => -2, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['bulwark', 9]],
+        'gear-y6-ring-sea' => ['slot' => 'trinket', 'name' => 'Кольцо жемчуга', 'sprite' => 'gi-ring-sea', 'atk' => 26, 'def' => 0, 'hp' => 80, 'spd' => 10, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['crit', 10]],
+        'gear-y6-amulet-sea' => ['slot' => 'trinket', 'name' => 'Амулет прилива', 'sprite' => 'gi-amulet-sea', 'atk' => 10, 'def' => 18, 'hp' => 110, 'spd' => 7, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['bulwark', 9]],
+        'gear-y6-star-sea' => ['slot' => 'trinket', 'name' => 'Морская звезда', 'sprite' => 'gi-star-sea', 'atk' => 20, 'def' => 12, 'hp' => 100, 'spd' => 12, 'stage' => 6, 'rarity' => 'legendary', 'perk' => ['phoenix', 30]],
+
+        // Ступень 7: ещё находки с особыми свойствами
+        'gear-y7-axe-fire' => ['slot' => 'weapon', 'name' => 'Топор огнедышащего', 'sprite' => 'gi-axe-fire', 'atk' => 96, 'def' => 0, 'hp' => 0, 'spd' => -3, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['vamp', 13]],
+        'gear-y7-hammer-gold' => ['slot' => 'weapon', 'name' => 'Молот сокровищницы', 'sprite' => 'gi-hammer-gold', 'atk' => 99, 'def' => 9, 'hp' => 0, 'spd' => -3, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['pierce', 29]],
+        'gear-y7-wand-crystal' => ['slot' => 'weapon', 'name' => 'Кристальный жезл', 'sprite' => 'gi-wand-crystal', 'atk' => 67, 'def' => 0, 'hp' => 34, 'spd' => 3, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['vamp', 13]],
+        'gear-y7-cloak-fire' => ['slot' => 'armor', 'name' => 'Крыло дракона', 'sprite' => 'gi-cloak-fire', 'atk' => 0, 'def' => 45, 'hp' => 188, 'spd' => 3, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['dodge', 11]],
+        'gear-y7-vest-gold' => ['slot' => 'armor', 'name' => 'Куртка из золотой чешуи', 'sprite' => 'gi-vest-gold', 'atk' => 0, 'def' => 38, 'hp' => 175, 'spd' => 3, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['regen', 3]],
+        'gear-y7-chest-crystal' => ['slot' => 'armor', 'name' => 'Кираса из кристалла', 'sprite' => 'gi-chest-crystal', 'atk' => 0, 'def' => 62, 'hp' => 250, 'spd' => -2, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['bulwark', 10]],
+        'gear-y7-ring-gold' => ['slot' => 'trinket', 'name' => 'Кольцо дракона', 'sprite' => 'gi-ring-gold', 'atk' => 32, 'def' => 0, 'hp' => 100, 'spd' => 12, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['crit', 11]],
+        'gear-y7-amulet-gold' => ['slot' => 'trinket', 'name' => 'Амулет клада', 'sprite' => 'gi-amulet-gold', 'atk' => 12, 'def' => 22, 'hp' => 138, 'spd' => 8, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['bulwark', 10]],
+        'gear-y7-orb-crystal' => ['slot' => 'trinket', 'name' => 'Призма-шар', 'sprite' => 'gi-orb-crystal', 'atk' => 40, 'def' => 0, 'hp' => 75, 'spd' => 10, 'stage' => 7, 'rarity' => 'legendary', 'perk' => ['opener', 56]],
+
+        // Ступень 8: ещё находки с особыми свойствами
+        'gear-y8-sword-sun' => ['slot' => 'weapon', 'name' => 'Меч света', 'sprite' => 'gi-sword-sun', 'atk' => 105, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['crit', 12]],
+        'gear-y8-greatsword-blood' => ['slot' => 'weapon', 'name' => 'Меч приговора', 'sprite' => 'gi-greatsword-blood', 'atk' => 124, 'def' => 0, 'hp' => 0, 'spd' => -4, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['execute', 43]],
+        'gear-y8-dagger-blood' => ['slot' => 'weapon', 'name' => 'Кинжал палача', 'sprite' => 'gi-dagger-blood', 'atk' => 92, 'def' => 0, 'hp' => 0, 'spd' => 4, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['opener', 60]],
+        'gear-y8-cloak-sun' => ['slot' => 'armor', 'name' => 'Плащ жреца солнца', 'sprite' => 'gi-cloak-sun', 'atk' => 0, 'def' => 55, 'hp' => 232, 'spd' => 4, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['dodge', 12]],
+        'gear-y8-vest-blood' => ['slot' => 'armor', 'name' => 'Кожа палача', 'sprite' => 'gi-vest-blood', 'atk' => 0, 'def' => 47, 'hp' => 217, 'spd' => 4, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['regen', 3]],
+        'gear-y8-shield-blood' => ['slot' => 'armor', 'name' => 'Щит с гербом владыки', 'sprite' => 'gi-shield-blood', 'atk' => 0, 'def' => 91, 'hp' => 264, 'spd' => -2, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['thorns', 17]],
+        'gear-y8-ring-sun' => ['slot' => 'trinket', 'name' => 'Кольцо судьи', 'sprite' => 'gi-ring-sun', 'atk' => 39, 'def' => 0, 'hp' => 124, 'spd' => 15, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['crit', 12]],
+        'gear-y8-amulet-blood' => ['slot' => 'trinket', 'name' => 'Кровавый медальон', 'sprite' => 'gi-amulet-blood', 'atk' => 15, 'def' => 27, 'hp' => 170, 'spd' => 10, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['bulwark', 10]],
+        'gear-y8-orb-sun' => ['slot' => 'trinket', 'name' => 'Сфера пантеона', 'sprite' => 'gi-orb-sun', 'atk' => 48, 'def' => 0, 'hp' => 93, 'spd' => 12, 'stage' => 8, 'rarity' => 'legendary', 'perk' => ['opener', 60]],
+
+        // Ступень 9: ещё находки с особыми свойствами
+        'gear-y9-sword-gold' => ['slot' => 'weapon', 'name' => 'Золотой клинок', 'sprite' => 'gi-sword-gold', 'atk' => 125, 'def' => 0, 'hp' => 0, 'spd' => 0, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['crit', 13]],
+        'gear-y9-mace-blood' => ['slot' => 'weapon', 'name' => 'Булава непобеждённого', 'sprite' => 'gi-mace-blood', 'atk' => 135, 'def' => 0, 'hp' => 38, 'spd' => -2, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['thorns', 18]],
+        'gear-y9-staff-sun' => ['slot' => 'weapon', 'name' => 'Посох последнего суда', 'sprite' => 'gi-staff-sun', 'atk' => 102, 'def' => 0, 'hp' => 75, 'spd' => 0, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['regen', 4]],
+        'gear-y9-wand-shadow' => ['slot' => 'weapon', 'name' => 'Жезл забвения', 'sprite' => 'gi-wand-shadow', 'atk' => 98, 'def' => 0, 'hp' => 50, 'spd' => 4, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['vamp', 14]],
+        'gear-y9-axe-sun' => ['slot' => 'weapon', 'name' => 'Секира рассвета', 'sprite' => 'gi-axe-sun', 'atk' => 140, 'def' => 0, 'hp' => 0, 'spd' => -4, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['vamp', 14]],
+        'gear-y9-shield-gold' => ['slot' => 'armor', 'name' => 'Золотая эгида', 'sprite' => 'gi-shield-gold', 'atk' => 0, 'def' => 110, 'hp' => 314, 'spd' => -2, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['thorns', 18]],
+        'gear-y9-chest-shadow' => ['slot' => 'armor', 'name' => 'Доспех из тьмы', 'sprite' => 'gi-chest-shadow', 'atk' => 0, 'def' => 92, 'hp' => 370, 'spd' => -2, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['bulwark', 11]],
+        'gear-y9-cloak-blood' => ['slot' => 'armor', 'name' => 'Багряный плащ', 'sprite' => 'gi-cloak-blood', 'atk' => 0, 'def' => 66, 'hp' => 278, 'spd' => 4, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['dodge', 13]],
+        'gear-y9-helm-gold' => ['slot' => 'armor', 'name' => 'Корона-шлем', 'sprite' => 'gi-helm-gold', 'atk' => 0, 'def' => 74, 'hp' => 333, 'spd' => 0, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['phoenix', 36]],
+        'gear-y9-chest-void' => ['slot' => 'armor', 'name' => 'Нагрудник конца', 'sprite' => 'gi-chest-void', 'atk' => 0, 'def' => 92, 'hp' => 370, 'spd' => -2, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['bulwark', 11]],
+        'gear-y9-star-gold' => ['slot' => 'trinket', 'name' => 'Звезда чемпиона', 'sprite' => 'gi-star-gold', 'atk' => 36, 'def' => 22, 'hp' => 185, 'spd' => 22, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['phoenix', 36]],
+        'gear-y9-eye-blood' => ['slot' => 'trinket', 'name' => 'Око мстителя', 'sprite' => 'gi-eye-blood', 'atk' => 50, 'def' => 0, 'hp' => 92, 'spd' => 25, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['execute', 45]],
+        'gear-y9-vial-sun' => ['slot' => 'trinket', 'name' => 'Эликсир возрождения', 'sprite' => 'gi-vial-sun', 'atk' => 14, 'def' => 0, 'hp' => 296, 'spd' => 14, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['regen', 4]],
+        'gear-y9-ring-blood' => ['slot' => 'trinket', 'name' => 'Кольцо клятвы', 'sprite' => 'gi-ring-blood', 'atk' => 47, 'def' => 0, 'hp' => 148, 'spd' => 18, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['crit', 13]],
+        'gear-y9-amulet-shadow' => ['slot' => 'trinket', 'name' => 'Амулет безмолвия', 'sprite' => 'gi-amulet-shadow', 'atk' => 18, 'def' => 33, 'hp' => 204, 'spd' => 13, 'stage' => 9, 'rarity' => 'legendary', 'perk' => ['bulwark', 11]],
+    ];
+
+    /** Особые свойства вещей: действуют в бою подземелья. {v} — значение предмета. */
+    public const PERKS = [
+        'vamp' => ['name' => 'Вампиризм', 'text' => 'Лечит на {v}% нанесённого урона'],
+        'crit' => ['name' => 'Меткость', 'text' => '+{v}% к шансу крита'],
+        'pierce' => ['name' => 'Пробитие', 'text' => 'Игнорирует {v}% защиты врага'],
+        'execute' => ['name' => 'Добивание', 'text' => '+{v}% урона по врагу ниже 30% здоровья'],
+        'opener' => ['name' => 'Первый удар', 'text' => '+{v}% урона в первом раунде боя'],
+        'regen' => ['name' => 'Регенерация', 'text' => 'Лечит {v}% здоровья в конце раунда'],
+        'thorns' => ['name' => 'Шипы', 'text' => 'Возвращает врагу {v}% полученного урона'],
+        'bulwark' => ['name' => 'Бастион', 'text' => 'Снижает получаемый урон на {v}%'],
+        'dodge' => ['name' => 'Уклонение', 'text' => '{v}% шанс избежать удара'],
+        'phoenix' => ['name' => 'Феникс', 'text' => 'Раз за бой воскресает с {v}% здоровья'],
+    ];
+
+    /** Бонус комплекта: надеты 2 вещи — все характеристики вещей выше, 3 вещи — ещё и свойство. */
+    public const SET_STATS = [2 => 8, 3 => 20];
+
+    /** Комплекты: название, вещи по слотам и свойство за три вещи. */
+    public const SETS = [
+        'grave' => ['name' => 'Могильщик', 'pieces' => ['gear-x1-axe-iron', 'gear-x1-vest-bone', 'gear-x1-ring-bronze'], 'perk' => ['thorns', 15]],
+        'drowned' => ['name' => 'Утопленник', 'pieces' => ['gear-x2-spear-sea', 'gear-x2-chest-bronze', 'gear-x2-amulet-sea'], 'perk' => ['dodge', 10]],
+        'forge' => ['name' => 'Горновой', 'pieces' => ['gear-x3-axe-fire', 'gear-x3-chest-steel', 'gear-x3-ring-fire'], 'perk' => ['pierce', 25]],
+        'frost' => ['name' => 'Ледяной король', 'pieces' => ['gear-x4-spear-ice', 'gear-x4-chest-ice', 'gear-x4-amulet-ice'], 'perk' => ['bulwark', 12]],
+        'void' => ['name' => 'Пустотник', 'pieces' => ['gear-x5-dagger-void', 'gear-x5-chest-void', 'gear-x5-eye-void'], 'perk' => ['opener', 60]],
+        'leviathan' => ['name' => 'Левиафан', 'pieces' => ['gear-x6-spear-sea', 'gear-x6-chest-sea', 'gear-x6-orb-sea'], 'perk' => ['regen', 5]],
+        'dragon' => ['name' => 'Драконоборец', 'pieces' => ['gear-x7-greatsword-fire', 'gear-x7-chest-gold', 'gear-x7-crown-gold'], 'perk' => ['execute', 40]],
+        'headsman' => ['name' => 'Палач', 'pieces' => ['gear-x8-axe-blood', 'gear-x8-chest-blood', 'gear-x8-crown-sun'], 'perk' => ['vamp', 14]],
+        'champion' => ['name' => 'Чемпион', 'pieces' => ['gear-x9-greatsword-gold', 'gear-x9-chest-gold', 'gear-x9-ring-gold'], 'perk' => ['phoenix', 40]],
     ];
 
     /** Материалы для крафта: по одному на тир подземелья. */
@@ -982,5 +1117,66 @@ final class Dungeons
     public static function slotName(string $slot): string
     {
         return self::SLOT_NAMES[$slot] ?? $slot;
+    }
+
+    /** Сколько вещей каждого комплекта надето: ключ комплекта => число. */
+    public static function setCounts(array $slugs): array
+    {
+        $counts = [];
+
+        foreach ($slugs as $slug) {
+            $set = self::GEAR[$slug]['set'] ?? null;
+
+            if ($set) {
+                $counts[$set] = ($counts[$set] ?? 0) + 1;
+            }
+        }
+
+        return $counts;
+    }
+
+    /** Прибавка характеристик вещей от комплектов, в процентах. */
+    public static function setStatPercent(array $slugs): int
+    {
+        $percent = 0;
+
+        foreach (self::setCounts($slugs) as $count) {
+            $percent += self::SET_STATS[min(3, $count)] ?? 0;
+        }
+
+        return $percent;
+    }
+
+    /**
+     * Свойства надетых вещей: ключ свойства => суммарное значение.
+     * Комплект из трёх вещей добавляет своё свойство.
+     *
+     * @param  array<int, string>  $slugs
+     * @return array<string, int>
+     */
+    public static function perksFor(array $slugs): array
+    {
+        $perks = [];
+
+        foreach ($slugs as $slug) {
+            if ($perk = self::GEAR[$slug]['perk'] ?? null) {
+                $perks[$perk[0]] = ($perks[$perk[0]] ?? 0) + $perk[1];
+            }
+        }
+
+        foreach (self::setCounts($slugs) as $set => $count) {
+            if ($count >= 3 && isset(self::SETS[$set])) {
+                [$key, $value] = self::SETS[$set]['perk'];
+                $perks[$key] = ($perks[$key] ?? 0) + $value;
+            }
+        }
+
+        return $perks;
+    }
+
+    /** Текст свойства для карточки предмета. */
+    public static function perkText(string $key, int $value): string
+    {
+        return str_replace('{v}', (string) $value, self::PERKS[$key]['text'] ?? '');
     }
 }

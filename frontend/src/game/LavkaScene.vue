@@ -90,7 +90,7 @@ onMounted(load)
         </div>
       </section>
 
-      <p class="g-hint">Рубли привязаны к аккаунту: передать их или вывести нельзя. Заработать: <RouterLink to="/world?at=dungeon">подземелья</RouterLink>, <RouterLink to="/world?at=raid">рейд «Разлом»</RouterLink>, фермы.</p>
+      <p class="g-hint">Рубли привязаны к аккаунту: передать их или вывести нельзя. Заработать их можно только в <RouterLink to="/world?at=dungeon">Рублёвых копях</RouterLink>: сначала пройди Испытание Владыки (100 ур.), оно даёт пропуск. Осколки Разлома даёт <RouterLink to="/world?at=raid">рейд</RouterLink>.</p>
     </template>
   </div>
 </template>

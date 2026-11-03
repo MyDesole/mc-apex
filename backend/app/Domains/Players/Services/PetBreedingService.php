@@ -173,7 +173,6 @@ class PetBreedingService
                 'offspring' => ['inventory_id' => $offspring->id, ...(PetTraits::present($offspring->pet_traits, $offspring->pet_serial) ?? [])],
                 'species' => $offspring->item?->effect_value,
                 'name' => $offspring->item?->name,
-                'rubles' => RubleService::earn($user, RubleService::FARM_REWARD['mating'], RubleService::SOURCE_FARM, 'Спаривание питомцев', "mating:{$breedingId}"),
             ];
         });
     }
@@ -277,17 +276,7 @@ class PetBreedingService
                 'updated_at' => now(),
             ]);
 
-            // Эпическая и легендарная ступени приносят Рубли
-            $rubles = RubleService::earn(
-                $user,
-                RubleService::FARM_REWARD["cross_{$next}"] ?? 0,
-                RubleService::SOURCE_FARM,
-                'Скрещивание питомцев',
-                "cross:{$crossId}",
-            );
-
             return [
-                'rubles' => $rubles,
                 'offspring' => ['inventory_id' => $offspring->id, ...(PetTraits::present($offspring->pet_traits, $offspring->pet_serial) ?? [])],
                 'species' => $species,
                 'name' => $item->name,

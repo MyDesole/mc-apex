@@ -300,7 +300,7 @@ onMounted(() => Promise.all([loadCommon(), loadPersonal()]))
 
       <div class="farm__hud">
         <span class="hud-chip"><AppIcon name="coin" :size="14" />{{ fmt(scene === 'common' ? (farm?.balance ?? 0) : (personal?.balance ?? 0)) }}</span>
-        <span v-if="scene === 'personal' && personal?.unlocked" class="hud-chip hud-chip--ruble" title="Рубли: награда подземелий и ферм, тратятся на ускорения">₽ {{ fmt(personal.rubles) }}</span>
+        <span v-if="scene === 'personal' && personal?.unlocked" class="hud-chip hud-chip--ruble" title="Рубли: падают только в Рублёвых копях, тратятся на ускорения">₽ {{ fmt(personal.rubles) }}</span>
         <template v-if="scene === 'common' && farm">
           <span class="hud-chip">Брони {{ farm.reservations }}/{{ farm.max_reservations }}</span>
           <span class="hud-chip">Покупок {{ farm.buys_left }}/{{ farm.buys_per_day }}</span>

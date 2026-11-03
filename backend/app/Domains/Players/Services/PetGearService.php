@@ -35,11 +35,22 @@ final class PetGearService
             return $bonus;
         }
 
-        foreach ($this->equipped($pet) as $gear) {
+        $worn = $this->equipped($pet);
+
+        foreach ($worn as $gear) {
             $bonus['atk'] += (int) ($gear['atk'] ?? 0);
             $bonus['def'] += (int) ($gear['def'] ?? 0);
             $bonus['hp'] += (int) ($gear['hp'] ?? 0);
             $bonus['spd'] += (int) ($gear['spd'] ?? 0);
+        }
+
+        // Комплект: две вещи из одного набора усиливают всё, три усиливают сильнее
+        $percent = Dungeons::setStatPercent(array_column($worn, 'slug'));
+
+        if ($percent > 0) {
+            foreach ($bonus as $stat => $value) {
+                $bonus[$stat] = (int) round($value * (100 + $percent) / 100);
+            }
         }
 
         return $bonus;
@@ -206,8 +217,22 @@ final class PetGearService
         $meta = (array) ($row->item->metadata ?? []);
         $own = (array) ($row->gear_stats ?? []);
         $rarity = (string) ($own['rarity'] ?? $row->item->rarity ?? 'common');
+        $def = Dungeons::GEAR[$row->item->slug] ?? [];
+        $perk = $def['perk'] ?? null;
+        $set = isset($def['set']) ? (Dungeons::SETS[$def['set']] ?? null) : null;
 
         return [
+            'perk' => $perk ? [
+                'key' => $perk[0],
+                'name' => Dungeons::PERKS[$perk[0]]['name'],
+                'text' => Dungeons::perkText($perk[0], $perk[1]),
+            ] : null,
+            'set' => $set ? [
+                'key' => $def['set'],
+                'name' => $set['name'],
+                'pieces' => $set['pieces'],
+                'perk_text' => Dungeons::perkText($set['perk'][0], $set['perk'][1]),
+            ] : null,
             'inventory_id' => $row->id,
             'slug' => $row->item->slug,
             'name' => $row->item->name,

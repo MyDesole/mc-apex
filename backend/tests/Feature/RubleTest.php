@@ -89,27 +89,14 @@ class RubleTest extends TestCase
         }
     }
 
-    public function test_dungeon_boss_pays_rubles_and_first_clear_only_once(): void
+    public function test_ordinary_dungeons_never_pay_rubles(): void
     {
-        $user = User::factory()->create();
-        $service = app(DungeonService::class);
-        $method = new \ReflectionMethod($service, 'grantRubles');
-        $dungeon = ['stage' => 2];
-        $state = ['loot' => [], 'log' => []];
+        // Рубли падают только в Рублёвых копях: у остальных подземелий валюты нет
+        foreach (\App\Domains\Players\Support\Dungeons::DUNGEONS as $key => $dungeon) {
+            $this->assertSame($key === 'rubledeep', ($dungeon['currency'] ?? null) === 'rubles', $key);
+        }
 
-        $run = (object) ['id' => 1, 'dungeon' => 'sunken'];
-        // Босс последнего этажа: 2 за босса + 2 × 4 за первую зачистку
-        $first = $method->invoke($service, $user, $run, $dungeon, 3, true, $state);
-        $this->assertSame(10, $first['loot']['rubles']);
-
-        // Тот же этаж того же похода не платит дважды
-        $again = $method->invoke($service, $user, $run, $dungeon, 3, true, $state);
-        $this->assertArrayNotHasKey('rubles', $again['loot']);
-
-        // Новый поход в то же подземелье: босс платит, бонус первой зачистки — нет
-        $second = $method->invoke($service, $user, (object) ['id' => 2, 'dungeon' => 'sunken'], $dungeon, 3, true, $state);
-        $this->assertSame(2, $second['loot']['rubles']);
-        $this->assertSame(12, RubleService::balance($user));
+        $this->assertFalse(method_exists(DungeonService::class, 'grantRubles'));
     }
 
     public function test_speedup_plot_costs_rubles_per_hour(): void
@@ -162,25 +149,26 @@ class RubleTest extends TestCase
 
         DB::table('users')->where('id', $user->id)->update(['rubles' => 50]);
         $this->actingAs($user)->postJson("/api/farm/personal/mating/{$pair['id']}/speedup")->assertOk()->assertJsonPath('spent', 48);
-        $this->actingAs($user)->postJson("/api/farm/personal/mating/{$pair['id']}/claim")->assertOk()->assertJsonPath('rubles', 1);
-        $this->assertSame(3, RubleService::balance($user));
+        $this->actingAs($user)->postJson("/api/farm/personal/mating/{$pair['id']}/claim")->assertOk()->assertJsonMissingPath('rubles');
+        // Рубли потрачены на ускорение: 50 − 48, награды за спаривание нет
+        $this->assertSame(2, RubleService::balance($user));
     }
 
-    public function test_cross_into_epic_and_legendary_pays_rubles(): void
+    public function test_cross_into_epic_and_legendary_pays_no_rubles(): void
     {
         $user = $this->farmer();
         $r1 = $this->pet($user, 'panda');
         $r2 = $this->pet($user, 'capybara');
 
         $this->actingAs($user)->postJson('/api/farm/personal/cross', ['parent1' => $r1->id, 'parent2' => $r2->id])
-            ->assertCreated()->assertJsonPath('tier', 'epic')->assertJsonPath('rubles', 3);
+            ->assertCreated()->assertJsonPath('tier', 'epic')->assertJsonMissingPath('rubles');
 
         $e1 = $this->pet($user, 'robot');
         $e2 = $this->pet($user, 'ghost');
         $this->actingAs($user)->postJson('/api/farm/personal/cross', ['parent1' => $e1->id, 'parent2' => $e2->id])
-            ->assertCreated()->assertJsonPath('tier', 'legendary')->assertJsonPath('rubles', 6);
+            ->assertCreated()->assertJsonPath('tier', 'legendary')->assertJsonMissingPath('rubles');
 
-        $this->assertSame(9, RubleService::balance($user));
+        $this->assertSame(0, RubleService::balance($user));
     }
 
     public function test_world_state_has_balances_pets_and_badges(): void

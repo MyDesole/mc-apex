@@ -198,6 +198,8 @@ final class DungeonBattle
                 'species' => $member['species'],
                 'traits' => $member['traits'] ?? null,
                 'gear' => $member['gear'] ?? [],
+                'perks' => Dungeons::perksFor(array_values(array_filter(array_column($member['gear'] ?? [], 'slug')))),
+                'revived' => false,
                 'element' => $member['element'],
                 'hp' => max(1, (int) ($member['hp'] ?? $member['max'])),
                 'max' => (int) $member['max'],
@@ -360,6 +362,14 @@ final class DungeonBattle
             $this->tickStatuses($state);
 
             if ($state['status'] === 'active') {
+                foreach ($state['units'] as $index => $unit) {
+                    $regen = (int) ($unit['perks']['regen'] ?? 0);
+
+                    if ($regen > 0 && $unit['hp'] > 0) {
+                        $state['units'][$index]['hp'] = min($unit['max'], $unit['hp'] + (int) round($unit['max'] * $regen / 100));
+                    }
+                }
+
                 $state['round']++;
 
                 foreach ($state['units'] as $index => $unit) {
@@ -444,6 +454,11 @@ final class DungeonBattle
 
         $state['foe']['hp'] = max(0, $state['foe']['hp'] - $hit['damage']);
         $unit['rage'] = min(self::RAGE_MAX, $unit['rage'] + 8);
+
+        if (($unit['perks']['vamp'] ?? 0) > 0) {
+            $drain = (int) round($hit['damage'] * $unit['perks']['vamp'] / 100);
+            $unit['hp'] = min($unit['max'], $unit['hp'] + $drain);
+        }
 
         $text = $move === 'attack'
             ? "{$unit['name']} атакует {$state['foe']['name']} — {$hit['damage']}"
@@ -594,6 +609,12 @@ final class DungeonBattle
             $foe['cd'] = self::SKILL_COOLDOWN;
         }
 
+        if (($target['perks']['dodge'] ?? 0) > 0 && random_int(1, 100) <= min(40, (int) $target['perks']['dodge'])) {
+            $this->log($state, 'dodge', "{$target['name']} уклоняется от удара.", ['who' => $target['name']]);
+
+            return;
+        }
+
         $hit = $this->damage($state, $foe, $target, $power, 1.0, 0);
 
         $target['hp'] = max(0, $target['hp'] - $hit['damage']);
@@ -609,6 +630,29 @@ final class DungeonBattle
             'damage' => $hit['damage'],
             'crit' => $hit['crit'],
         ]);
+
+        // Шипы: часть удара возвращается врагу
+        if (($target['perks']['thorns'] ?? 0) > 0 && $foe['hp'] > 0) {
+            $back = max(1, (int) round($hit['damage'] * $target['perks']['thorns'] / 100));
+            $foe['hp'] = max(0, $foe['hp'] - $back);
+            $this->log($state, 'thorns', "Шипы {$target['name']} ранят {$foe['name']} — {$back}.", ['who' => $target['name'], 'damage' => $back]);
+
+            if ($foe['hp'] <= 0) {
+                $state['status'] = 'won';
+                $this->log($state, 'won', "{$foe['name']} повержен.");
+
+                return;
+            }
+        }
+
+        // Феникс: один раз за бой питомец встаёт с долей здоровья
+        if ($target['hp'] <= 0 && ($target['perks']['phoenix'] ?? 0) > 0 && empty($target['revived'])) {
+            $target['revived'] = true;
+            $target['hp'] = max(1, (int) round($target['max'] * $target['perks']['phoenix'] / 100));
+            $this->log($state, 'phoenix', "{$target['name']} возрождается из пепла!", ['who' => $target['name']]);
+
+            return;
+        }
 
         if ($target['hp'] <= 0) {
             $this->log($state, 'down', "{$target['name']} падает.");
@@ -636,15 +680,33 @@ final class DungeonBattle
 
         $atk *= (float) ($state['team']['atk'] ?? 1.0);
 
-        $raw = max(1.0, $atk * $power - (float) $target['def'] * 0.5);
+        // Свойства вещей: у врага их нет, поэтому массивы пустые
+        $mine = $attacker['perks'] ?? [];
+        $theirs = $target['perks'] ?? [];
+
+        $def = (float) $target['def'] * (1 - min(60, (int) ($mine['pierce'] ?? 0)) / 100);
+
+        $raw = max(1.0, $atk * $power - $def * 0.5);
         $raw *= $this->elementMultiplier((string) $attacker['element'], (string) $target['element']);
         $raw *= $comboMult;
+
+        if (($mine['execute'] ?? 0) > 0 && $target['hp'] / max(1, $target['max']) < 0.3) {
+            $raw *= 1 + $mine['execute'] / 100;
+        }
+
+        if (($mine['opener'] ?? 0) > 0 && ($state['round'] ?? 1) === 1) {
+            $raw *= 1 + $mine['opener'] / 100;
+        }
+
+        if (($theirs['bulwark'] ?? 0) > 0) {
+            $raw *= 1 - min(40, (int) $theirs['bulwark']) / 100;
+        }
 
         if ($target['guard'] ?? false) {
             $raw *= 0.5;
         }
 
-        $crit = random_int(1, 100) <= (self::CRIT_CHANCE + $critBonus);
+        $crit = random_int(1, 100) <= (self::CRIT_CHANCE + $critBonus + (int) ($mine['crit'] ?? 0));
 
         if ($crit) {
             $raw *= self::CRIT_MULT;

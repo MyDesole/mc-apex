@@ -75,6 +75,8 @@ onMounted(load)
             @click="!item.worn_by && (sell = { kind: 'gear', name: item.name, item: item.inventory_id })"
         >
           <PixelSprite :sprite="item.sprite || 'mob-rat'" :size="48" />
+          <i v-if="item.set" class="cell__set" title="Часть комплекта">◆</i>
+          <i v-if="item.perk" class="cell__perk" :title="item.perk.name">✦</i>
           <i v-if="item.worn_by" class="cell__tag">надет</i>
         </button>
         <span v-if="!bySlot(slot).length" class="bag__empty">Пусто: вещи выпадают в подземельях и куются в Кузнице.</span>
@@ -97,7 +99,9 @@ onMounted(load)
     <p class="bag__tip">
       <template v-if="hover">
         <b :style="{ color: COLORS[hover.rarity] }">{{ hover.name }}</b> · {{ hover.rarity_name }}<template v-if="!hover.sell"> · {{ statsText(hover) }}</template>
-        <template v-if="hover.sell || !hover.worn_by"> · нажми, чтобы продать на рынке</template>
+        <template v-if="hover.perk"><br><span class="bag__perk">✦ {{ hover.perk.name }}: {{ hover.perk.text }}</span></template>
+        <template v-if="hover.set"><br><span class="bag__set">Комплект «{{ hover.set.name }}»: 2 вещи +8% к статам, 3 вещи +20% и «{{ hover.set.perk_text }}»</span></template>
+        <template v-if="hover.sell || !hover.worn_by"><br>Нажми, чтобы продать на рынке</template>
       </template>
       <template v-else>Наведи на предмет — увидишь характеристики. Надевают и куют в <RouterLink to="/world?at=gear">Кузнице</RouterLink>, продают на <RouterLink to="/world?at=market">Рынке</RouterLink>.</template>
     </p>
@@ -116,6 +120,11 @@ onMounted(load)
 .cell:hover, .cell:focus-visible { outline: 0; background: #2c1d0e; box-shadow: 0 0 0 2px #ffd45c, inset 0 0 0 2px rgba(0, 0, 0, 0.5); z-index: 1; }
 .cell.is-worn { filter: brightness(0.6); cursor: default; }
 .cell__tag { position: absolute; bottom: 0; left: 0; right: 0; font-size: 9px; font-style: normal; text-align: center; background: rgba(0, 0, 0, 0.7); }
+.cell__perk, .cell__set { position: absolute; top: 1px; font-size: 11px; font-style: normal; line-height: 1; text-shadow: 1px 1px 0 #000; }
+.cell__perk { right: 3px; color: #ffd45c; }
+.cell__set { left: 3px; color: #7dd3fc; }
+.bag__perk { color: #ffd45c; }
+.bag__set { color: #7dd3fc; }
 .cell__qty { position: absolute; right: 2px; bottom: 0; font-size: 12px; font-style: normal; font-weight: 800; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000; }
 /* Подсказка всегда видна внизу, чтобы не прыгала вёрстка */
 .bag__tip { position: sticky; bottom: 0; margin: 12px 0 0; padding: 8px 12px; font-size: 13px; background: rgba(12, 8, 4, 0.95); border: 3px solid #4a2a10; }

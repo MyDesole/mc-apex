@@ -268,7 +268,7 @@ class RaidTest extends TestCase
         $this->actingAs($b)->postJson("/api/raids/{$id}/moves", ['moves' => $attack($units($b))])->assertOk()->assertJsonPath('status', 'won');
 
         foreach ([$a, $b] as $user) {
-            $this->assertSame(RaidService::REWARD['rubles'], RubleService::balance($user));
+            $this->assertSame(0, RubleService::balance($user), 'Рубли падают только в Рублёвых копях');
             $this->assertSame(RaidService::REWARD['shards'], (int) DB::table('users')->find($user->id)->rift_shards);
             $this->assertSame(RaidService::REWARD['coins'], (int) $user->fresh()->apex_coins);
             $this->assertSame(1, UserInventory::where('user_id', $user->id)->whereHas('item', fn ($q) => $q->where('type', ShopItem::TYPE_PET_GEAR))->count());
@@ -276,7 +276,7 @@ class RaidTest extends TestCase
 
         // Повторный ход / повторная победа награду не удваивает
         $this->actingAs($a)->postJson("/api/raids/{$id}/moves", ['moves' => [1 => 'attack']])->assertStatus(422);
-        $this->assertSame(RaidService::REWARD['rubles'], RubleService::balance($a));
+        $this->assertSame(0, RubleService::balance($a));
 
         // Второй рейд в том же окне запрещён
         $this->actingAs($a)->postJson('/api/raids', ['squad' => $this->squad($a, ['owl', 'bunny', 'robot'])])->assertStatus(422);

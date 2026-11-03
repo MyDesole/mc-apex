@@ -108,7 +108,7 @@ onBeforeUnmount(() => clearInterval(timer))
         <li>Группа 2–3 игрока, у каждого отряд из 3 питомцев (от {{ state.min_level }} ур.).</li>
         <li>Раунд {{ state.rules.round_seconds }} секунд: все выбирают приёмы одновременно.</li>
         <li>Броня босса держит 85% урона, пока в раунде не ударят разные стихии от разных игроков.</li>
-        <li>Награда: Рубли, ApexCoin, легендарная вещь и Осколки Разлома для Лавки.</li>
+        <li>Награда: ApexCoin, легендарная вещь и Осколки Разлома для Лавки.</li>
         <li>Выход из боя или молчание два раунда: бан рейдов на {{ state.rules.ban_hours }} ч, питомцы измотаны, босс сильнее.</li>
       </ul>
       <span class="g-chip g-chip--gold">Осколков Разлома: {{ state.shards }}</span>
@@ -208,7 +208,7 @@ onBeforeUnmount(() => clearInterval(timer))
 
       <div v-if="finished" class="rd-result g-wood">
         <h3 class="g-title">{{ raid.status === 'won' ? 'Разлом закрыт!' : 'Отряд пал' }}</h3>
-        <p v-if="raid.won" class="g-hint">Награда: ₽ {{ raid.won.rubles }}, ₳ {{ raid.won.coins.toLocaleString('ru-RU') }}, {{ raid.won.shards }} Осколков Разлома и легендарная вещь (смотри в Складе).</p>
+        <p v-if="raid.won" class="g-hint">Награда: ₳ {{ raid.won.coins.toLocaleString('ru-RU') }}, {{ raid.won.shards }} Осколков Разлома и легендарная вещь (смотри в Складе).</p>
         <p v-else class="g-hint">Босс устоял. Следующее окно — через <CountdownText :to="state.next_slot" />.</p>
       </div>
 

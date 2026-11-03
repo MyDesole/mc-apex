@@ -39,7 +39,7 @@ const PLACES = [
   { id: 'gear', name: 'Кузница', kind: 'forge', x: 7, y: 60, view: ForgeScene, hint: 'Снаряжение питомцев' },
   { id: 'farm', name: 'Общая ферма', kind: 'barn', x: 21, y: 60, view: FarmView, props: { only: 'common' }, hint: 'Бронь и выкуп питомцев', badge: 'farm' },
   { id: 'miner', name: 'Шахта', kind: 'mine', x: 35, y: 60, view: MineScene, hint: 'Копай руду, зарабатывай ApexCoin' },
-  { id: 'dungeon', name: 'Подземелья', kind: 'dungeon', x: 49, y: 60, view: DungeonView, hint: 'Отряд, боссы и Рубли', badge: 'dungeon' },
+  { id: 'dungeon', name: 'Подземелья', kind: 'dungeon', x: 49, y: 60, view: DungeonView, hint: 'Отряд, боссы и добыча', badge: 'dungeon' },
   { id: 'raid', name: 'Разлом', kind: 'rift', x: 63, y: 60, view: RaidScene, hint: 'Рейд на группу в 18:00 и 22:00' },
   { id: 'museum', name: 'Питомцедекс', kind: 'museum', x: 77, y: 60, view: MuseumScene, hint: 'Коллекция видов и окрасов' },
   { id: 'hall', name: 'Доска почёта', kind: 'hall', x: 91, y: 60, view: HallScene, hint: 'Лучшие питомцы сервера' },
@@ -155,7 +155,7 @@ onBeforeUnmount(() => {
         </div>
         <div class="w-wallet">
           <span class="w-chip" title="ApexCoin">₳ {{ fmt(world?.coins) }}</span>
-          <span class="w-chip w-chip--ruble" title="Рубли: награда подземелий и ферм, тратятся на ускорения. Не передаются.">₽ {{ fmt(world?.rubles) }}</span>
+          <span class="w-chip w-chip--ruble" title="Рубли: падают только в Рублёвых копях, тратятся на ускорения и привилегии. Не передаются.">₽ {{ fmt(world?.rubles) }}</span>
         </div>
       </header>
 
@@ -184,7 +184,7 @@ onBeforeUnmount(() => {
         </span>
       </div>
 
-      <p class="w-legend">Зайди в здание — у каждого свой интерьер. ₳ — ApexCoin, ₽ — Рубли за подземелья и фермы.</p>
+      <p class="w-legend">Зайди в здание — у каждого свой интерьер. ₳ — ApexCoin, ₽ — Рубли, их дают только Рублёвые копи.</p>
     </div>
 
     <!-- Интерьер здания: стены, пол, декор — вместо вкладки -->

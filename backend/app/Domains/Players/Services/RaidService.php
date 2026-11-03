@@ -10,7 +10,6 @@ use App\Domains\Shop\Models\UserInventory;
 use App\Domains\Users\Models\User;
 use App\Domains\Wallet\Models\CoinTransaction;
 use App\Domains\Wallet\Services\CoinService;
-use App\Domains\Wallet\Services\RubleService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -53,8 +52,7 @@ class RaidService
     public const BAN_HOURS = 6;
     public const MOVES = ['attack', 'skill', 'defend'];
 
-    public const REWARD = ['rubles' => 12, 'shards' => 10, 'coins' => 5000];
-    public const RUBLE_CAP = 100;
+    public const REWARD = ['shards' => 10, 'coins' => 5000];
 
     // ---- Расписание ----
 
@@ -457,7 +455,6 @@ class RaidService
         foreach (DB::table('raid_members')->where('raid_id', $raidId)->whereNull('left_at')->whereNull('rewarded_at')->get() as $member) {
             $user = User::find($member->user_id);
 
-            RubleService::earn($user, self::REWARD['rubles'], RubleService::SOURCE_RAID, 'Рейд «Разлом»', "raid:{$raidId}:{$user->id}", self::RUBLE_CAP);
             CoinService::credit($user, self::REWARD['coins'], CoinTransaction::SOURCE_OTHER, 'Рейд «Разлом»', "raid-coins:{$raidId}:{$user->id}");
             DB::table('users')->where('id', $user->id)->increment('rift_shards', self::REWARD['shards']);
             app(PetGearService::class)->grant($user, $gear[array_rand($gear)], 'legendary');
