@@ -126,7 +126,7 @@ class MinecraftServerController extends Controller
         }
 
         return response()->json([
-            'url' => url('/api/players/' . $user->id . '/skin'),
+            'url' => url('/api/players/' . rawurlencode((string) $user->username) . '/skin'),
             'model' => $user->custom_skin_model ?: 'classic',
         ]);
     }
