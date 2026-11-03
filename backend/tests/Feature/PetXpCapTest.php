@@ -82,7 +82,7 @@ class PetXpCapTest extends TestCase
             $this->assertNotEmpty(Dungeons::gearForStage($dungeon['stage']));
             // Своё снаряжение и свой материал у каждой ступени
             $own = array_filter(Dungeons::GEAR, fn (array $g) => $g['stage'] === $dungeon['stage']);
-            $this->assertCount(6, $own, $key);
+            $this->assertGreaterThanOrEqual(6, count($own), $key);
             $this->assertNotNull(Dungeons::materialForStage($dungeon['stage']));
         }
     }

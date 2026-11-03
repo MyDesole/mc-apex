@@ -13,7 +13,7 @@
 
 /* Гора */
 .dg-world {
-  position: relative; width: 100%; aspect-ratio: 190 / 62; min-height: 360px; overflow: hidden; margin-bottom: 12px;
+  position: relative; width: 100%; aspect-ratio: 190 / 76; min-height: 460px; overflow: hidden; margin-bottom: 12px;
   background: linear-gradient(#0a0816 0, #1a1330 55%, #2a2038 55%); border: 4px solid #1b0f06; box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.6);
 }
 .dg-sky { position: absolute; inset: 0 0 45% 0; }

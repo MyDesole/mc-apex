@@ -705,11 +705,12 @@ class DungeonTest extends TestCase
     public function test_every_stage_offers_variants_in_every_slot(): void
     {
         $sprites = (string) file_get_contents(base_path('../frontend/src/data/shop/pixelSprites.js'));
+        $gearSprites = (string) file_get_contents(base_path('../frontend/src/data/shop/gearSprites.js'));
 
-        // 8 ступеней × 3 слота × 2 варианта
-        $this->assertCount(48, Dungeons::GEAR);
+        // 9 ступеней по 5–6 вещей в каждом слоте
+        $this->assertGreaterThanOrEqual(130, count(Dungeons::GEAR));
 
-        foreach ([1, 2, 3, 4, 5, 6, 7, 8] as $stage) {
+        foreach ([1, 2, 3, 4, 5, 6, 7, 8, 9] as $stage) {
             $pool = Dungeons::gearForStage($stage);
 
             foreach (Dungeons::SLOTS as $slot) {
@@ -726,6 +727,14 @@ class DungeonTest extends TestCase
             foreach ($pool as $gear) {
                 $this->assertGreaterThanOrEqual($stage - 1, $gear['stage']);
                 $this->assertLessThanOrEqual($stage, $gear['stage']);
+
+                if (preg_match('/^gi-(\w+)-(\w+)$/', $gear['sprite'], $m)) {
+                    // Генерируемые иконки: форма и материал должны существовать
+                    $this->assertMatchesRegularExpression("/\\b{$m[1]}: \\[/", $gearSprites, "форма {$m[1]} должна быть нарисована");
+                    $this->assertMatchesRegularExpression("/\\b{$m[2]}: \\{ b:/", $gearSprites, "материал {$m[2]} должен быть описан");
+
+                    continue;
+                }
 
                 $this->assertStringContainsString("'{$gear['sprite']}'", $sprites, "спрайт {$gear['sprite']} должен быть нарисован");
             }

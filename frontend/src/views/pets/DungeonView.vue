@@ -188,18 +188,24 @@ const foeShare = computed(() => {
  * пропорции у любого экрана, поэтому тропа не разъезжается.
  */
 const MAP_NODES = {
-    catacombs: { x: 14, y: 50 },
-    sunken: { x: 37, y: 22 },
-    forge: { x: 60, y: 50 },
-    crypt: { x: 83, y: 22 },
-    void: { x: 106, y: 50 },
-    abyss: { x: 129, y: 22 },
-    lair: { x: 152, y: 50 },
-    throne: { x: 175, y: 22 },
+    // верхний ряд — слева направо
+    catacombs: { x: 16, y: 34 },
+    sunken: { x: 46, y: 22 },
+    forge: { x: 76, y: 34 },
+    crypt: { x: 106, y: 22 },
+    void: { x: 136, y: 34 },
+    abyss: { x: 166, y: 22 },
+    // нижний ряд — справа налево, тропа змейкой
+    lair: { x: 166, y: 70 },
+    throne: { x: 136, y: 58 },
+    crystal: { x: 106, y: 70 },
+    pantheon: { x: 76, y: 58 },
+    trial: { x: 46, y: 70 },
+    rubledeep: { x: 16, y: 58 },
 }
 
 const MAP_W = 190
-const MAP_H = 70
+const MAP_H = 76
 
 /** Положение узла в процентах контейнера. */
 function nodeStyle(dungeon, index) {
