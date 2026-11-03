@@ -464,6 +464,14 @@ class GameServerService
         $result = $this->ssh('bash ' . self::PANEL . ' ' . $action, $timeout);
         $out = trim($result['out'] . "\n" . $result['err']);
 
+        // Скрипт на сервере отвечает короткими кодами — переводим для панели
+        $out = match ($out) {
+            'not-running' => 'Сервер не запущен — команда не отправлена.',
+            'no-session' => 'Не нашёл консоль сервера (screen-сессию). Перезапустите сервер.',
+            'timeout' => 'Сервер не остановился за 90 секунд.',
+            default => $out,
+        };
+
         if ($result['code'] !== 0) {
             throw new RuntimeException($out !== '' ? $out : 'Команда завершилась с ошибкой.');
         }

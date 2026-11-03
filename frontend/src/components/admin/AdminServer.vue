@@ -5,7 +5,7 @@
  * Состояние, консоль, питание, загрузка обновлений и команда запуска.
  * Все действия идут через backend — он ходит на сервер по ключу.
  */
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import AppIcon from '@/components/core/AppIcon.vue'
 import { gameServerApi } from '@/services/core/gameServer.js'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
@@ -30,8 +30,10 @@ const configDirty = ref(false)
 const archives = ref([])
 const backups = ref([])
 const archiveFile = ref(null)
-const live = ref(false)
+const live = ref(true)
 const lines = ref(150)
+const consoleEl = ref(null)
+const consoleAt = ref('')
 
 const commandText = ref('')
 const startCommand = ref('')
@@ -188,9 +190,18 @@ async function loadPlayers() {
   }
 }
 
+function scrollConsole() {
+  const el = consoleEl.value
+
+  if (el) el.scrollTop = el.scrollHeight
+}
+
 async function loadConsole() {
   try {
     log.value = (await gameServerApi.console(lines.value)).log ?? ''
+    consoleAt.value = new Date().toLocaleTimeString('ru-RU')
+    await nextTick()
+    scrollConsole()
   } catch (e) {
     error.value = e.message ?? 'Не удалось получить консоль'
   }
@@ -250,10 +261,19 @@ const sendCommand = () => act('cmd', async () => {
 
   if (!text) return
 
-  await gameServerApi.command(text)
+  // Свой ввод показываем сразу — не ждём журнала сервера
+  log.value = (log.value.trimEnd() + '\n> ' + text + '\n')
   commandText.value = ''
-  await new Promise((resolve) => setTimeout(resolve, 600))
-  await loadConsole()
+  await nextTick()
+  scrollConsole()
+
+  await gameServerApi.command(text)
+
+  // Журнал дописывается с задержкой: пробуем несколько раз
+  for (let i = 0; i < 4; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    await loadConsole()
+  }
 }, 'Команда отправлена')
 
 async function loadStartCommand() {
@@ -301,6 +321,7 @@ function toggleLive() {
 
 onMounted(async () => {
   await refresh()
+  if (live.value) timer = setInterval(loadConsole, 5000)
   await loadPlugins()
   await loadConfigs()
   await loadArchives()
@@ -397,12 +418,16 @@ onUnmounted(() => {
             </select>
 
             <button type="button" class="srv-btn srv-btn--sm" :class="{ 'is-on': live }" @click="toggleLive">
-              {{ live ? 'Автообновление: вкл' : 'Автообновление: выкл' }}
+              {{ live ? 'Обновляется само' : 'Автообновление: выкл' }}
             </button>
+
+            <button type="button" class="srv-btn srv-btn--sm" @click="loadConsole">Обновить</button>
           </div>
         </header>
 
-        <pre class="srv-console">{{ log || 'Журнал пуст' }}</pre>
+        <pre ref="consoleEl" class="srv-console">{{ log || 'Журнал пуст' }}</pre>
+
+        <small v-if="consoleAt" class="srv-hint">Обновлено в {{ consoleAt }}</small>
 
         <form class="srv-cmd" @submit.prevent="sendCommand">
           <input
