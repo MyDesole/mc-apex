@@ -462,6 +462,36 @@ class PetFarmTest extends TestCase
         $this->assertSame(10000 - PetBreedingService::CROSS_COST, (int) $user->fresh()->apex_coins);
     }
 
+    public function test_cross_has_no_daily_limit_but_each_one_costs_more_and_resets_at_midnight(): void
+    {
+        $user = $this->withFarm(1_000_000);
+        $before = (int) $user->fresh()->apex_coins;
+        $spent = 0;
+
+        // Семь горнов подряд: лимита нет, цена растёт на CROSS_STEP
+        for ($i = 0; $i < 7; $i++) {
+            $price = PetBreedingService::CROSS_COST + PetBreedingService::CROSS_STEP * $i;
+
+            $state = $this->actingAs($user)->getJson('/api/farm/personal')->assertOk();
+            $this->assertSame($price, $state->json('limits.cross_cost'));
+            $this->assertSame($i, $state->json('limits.crosses_today'));
+
+            $a = $this->pet($user, 'slime');
+            $b = $this->pet($user, 'frog');
+            $this->actingAs($user)->postJson('/api/farm/personal/cross', ['parent1' => $a->id, 'parent2' => $b->id])->assertCreated();
+
+            $spent += $price;
+        }
+
+        $this->assertSame($before - $spent, (int) $user->fresh()->apex_coins);
+
+        // На следующие игровые сутки цена снова базовая
+        $this->travel(1)->days();
+        $this->actingAs($user)->getJson('/api/farm/personal')
+            ->assertJsonPath('limits.cross_cost', PetBreedingService::CROSS_COST)
+            ->assertJsonPath('limits.crosses_today', 0);
+    }
+
     public function test_cross_rejects_mixed_tiers_legendary_and_busy_pets(): void
     {
         $user = $this->withFarm(100000);

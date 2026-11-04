@@ -39,7 +39,8 @@ class PetBreedingService
     public const MATING_HOURS = 24;
     public const MAX_IN_STORAGE = 2;
     public const MATING_PER_DAY = 4;
-    public const CROSS_PER_DAY = 5;
+    /** Надбавка к цене горна за каждое скрещивание, уже сделанное за игровые сутки. */
+    public const CROSS_STEP = 1000;
 
     public const ENERGY_MAX = 100;
     public const ENERGY_COST = 70;
@@ -202,6 +203,19 @@ class PetBreedingService
 
     // ---- Скрещивание ----
 
+    /** Сколько скрещиваний игрок сделал за игровые сутки (сброс в 00:00 по Москве). */
+    public static function crossesToday(User $user): int
+    {
+        return DB::table('pet_breedings')->where('user_id', $user->id)->where('kind', 'cross')
+            ->where('created_at', '>=', GameDay::start())->count();
+    }
+
+    /** Цена следующего горна: базовая плюс надбавка за каждый сделанный сегодня. */
+    public static function crossPrice(int $doneToday): int
+    {
+        return self::CROSS_COST + self::CROSS_STEP * $doneToday;
+    }
+
     /** @return array<string, mixed> */
     public function cross(User $user, int $parent1Id, int $parent2Id): array
     {
@@ -238,19 +252,14 @@ class PetBreedingService
                 throw new RuntimeException('Легендарных выше некуда — их можно только спаривать.');
             }
 
-            $today = DB::table('pet_breedings')->where('user_id', $user->id)->where('kind', 'cross')
-                ->where('created_at', '>=', GameDay::start())->count();
-            if ($today >= self::CROSS_PER_DAY) {
-                throw new RuntimeException('Сегодня уже было ' . self::CROSS_PER_DAY . ' скрещиваний — продолжай завтра.');
-            }
-
             $species = PetFarmTiers::SPECIES[$next][array_rand(PetFarmTiers::SPECIES[$next])];
             $item = ShopItem::where('type', ShopItem::TYPE_PROFILE_PET)->where('effect_value', $species)->first();
             if (! $item) {
                 throw new RuntimeException('Такого питомца пока нет.');
             }
 
-            CoinService::debit($user, self::CROSS_COST, CoinTransaction::SOURCE_PURCHASE, 'Скрещивание питомцев');
+            // Лимита нет: каждый горн за сутки дороже предыдущего, в 00:00 по Москве цена сбрасывается
+            CoinService::debit($user, self::crossPrice(self::crossesToday($user)), CoinTransaction::SOURCE_PURCHASE, 'Скрещивание питомцев');
 
             $traits = $this->blend($p1->pet_traits, $p2->pet_traits, 1);
             $ids = [$p1->id, $p2->id];

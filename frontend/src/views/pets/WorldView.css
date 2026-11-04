@@ -252,12 +252,17 @@
 @keyframes room-flame { 50% { height: 40px; opacity: 0.85; } }
 
 @media (max-width: 760px) {
-  .world { inset: 0; overflow-y: auto; }
+  /* Под шапкой сайта, иначе заголовок и кошелёк уходят под неё; сцена прокручивается внутри */
+  .world { inset: 56px 0 0 0; overflow-y: auto; }
+  .w-hud { position: static; grid-column: 1 / -1; padding: 0 0 6px; }
+  .w-error { position: static; grid-column: 1 / -1; }
+  .w-title h1 { font-size: 16px; }
   .world__scene { height: auto; min-height: 100%; padding: 70px 10px 50px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 26px 8px; background: linear-gradient(#6ec1ff 0, #bfe6ff 90px, #4f9a3c 90px); }
   .bld { position: relative; left: auto !important; top: auto !important; translate: none; margin: 0 auto; }
   .w-hills, .w-path, .w-herd { display: none; }
   .w-legend { position: static; grid-column: 1 / -1; }
-  .room { inset: 0; }
+  /* Шапка сайта остаётся сверху: иначе она закрывает кнопку выхода из здания */
+  .room { inset: 56px 0 0 0; }
   .room__wall { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {

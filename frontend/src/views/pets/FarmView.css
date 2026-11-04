@@ -177,6 +177,14 @@
 @media (max-width: 640px) {
   .field { padding: 0 8px; }
   .field__grass { grid-template-columns: repeat(2, 1fr); }
+  /* Личная ферма: амбар и грядки друг под другом, а не в две колонки за край экрана */
+  .field__grass--personal { grid-template-columns: 1fr; }
+  .plots { gap: 8px; }
+  .plot { width: calc(50% - 4px); min-width: 120px; height: 128px; }
+  .barn__door { width: 42%; min-width: 100px; }
+  .herd { padding: 10px; }
+  .slot { width: 72px; height: 72px; }
+  .herd__row { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
   .gate { grid-template-columns: 1fr; }
   .board { grid-template-columns: 1fr; }
   .herd__act { margin-left: 0; }

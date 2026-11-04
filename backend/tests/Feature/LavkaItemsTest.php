@@ -64,7 +64,9 @@ class LavkaItemsTest extends TestCase
     {
         $items = LavkaService::PRIVILEGES;
 
-        $this->assertGreaterThanOrEqual(18, count($items));
+        $this->assertCount(17, $items);
+        $this->assertArrayNotHasKey('kit_slot', $items, 'слоты наборов в дуэлях и так бесплатны');
+        $this->assertArrayNotHasKey('kit_layout', $items);
         $this->assertSame(['Статусы', 'Бой', 'Эффекты', 'Чат', 'Лобби'], array_values(array_unique(array_column($items, 'group'))));
 
         foreach ($items as $key => $item) {

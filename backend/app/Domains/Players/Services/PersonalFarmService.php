@@ -59,13 +59,16 @@ class PersonalFarmService
             'seeds' => $this->seeds(),
             'limits' => [
                 'mating_cost' => PetBreedingService::MATING_COST,
-                'cross_cost' => PetBreedingService::CROSS_COST,
+                // Цена следующего горна растёт с каждым за сутки и сбрасывается в 00:00 по Москве
+                'cross_cost' => PetBreedingService::crossPrice(PetBreedingService::crossesToday($user)),
+                'cross_base' => PetBreedingService::CROSS_COST,
+                'cross_step' => PetBreedingService::CROSS_STEP,
+                'crosses_today' => PetBreedingService::crossesToday($user),
                 'mating_hours' => PetBreedingService::MATING_HOURS,
                 'energy_cost' => PetBreedingService::ENERGY_COST,
                 'energy_max' => PetBreedingService::ENERGY_MAX,
                 'max_in_storage' => PetBreedingService::MAX_IN_STORAGE,
                 'mating_per_day' => PetBreedingService::MATING_PER_DAY,
-                'cross_per_day' => PetBreedingService::CROSS_PER_DAY,
             ],
             'plots' => [],
             'plot_count' => (int) ($farm->plots ?? self::PLOTS),

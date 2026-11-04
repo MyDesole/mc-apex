@@ -35,10 +35,6 @@ class LavkaService
             'commands' => ['lp user {player} permission settemp apex.duels.priority true 30d']],
         'map_vote' => ['group' => 'Бой', 'name' => 'Голос за арену', 'about' => 'Можно выбирать карту дуэли голосованием. 30 дней.', 'price' => 100,
             'commands' => ['lp user {player} permission settemp apex.duels.mapvote true 30d']],
-        'kit_slot' => ['group' => 'Бой', 'name' => 'Дополнительный слот набора', 'about' => 'Ещё одна сохранённая раскладка набора в дуэлях. Навсегда.', 'price' => 180, 'once' => true,
-            'commands' => ['lp user {player} permission set apex.duels.kitslot.extra true']],
-        'kit_layout' => ['group' => 'Бой', 'name' => 'Своя раскладка инвентаря', 'about' => 'Расставляйте предметы набора по своим слотам. Навсегда.', 'price' => 120, 'once' => true,
-            'commands' => ['lp user {player} permission set apex.duels.layout true']],
 
         // Эффекты убийств и победы
         'kill_flame' => ['group' => 'Эффекты', 'name' => 'Огненный эффект убийства', 'about' => 'Побеждённый вспыхивает пламенем. Навсегда.', 'price' => 160, 'once' => true,

@@ -504,6 +504,7 @@ onMounted(() => Promise.all([loadCommon(), loadPersonal()]))
               </button>
               <button type="button" class="game-btn" :disabled="!sameTier || !nextTier || busy === 'cross'" @click="cross">
                 Горн<template v-if="sameTier && nextTier"> → {{ tierName[nextTier] }}</template> · {{ fmt(personal.limits.cross_cost) }} ₳
+                <small class="hud-note">(каждый следующий за сутки +{{ fmt(personal.limits.cross_step) }} ₳, в 00:00 по Москве цена сбрасывается)</small>
               </button>
               <button v-if="parent1 || parent2" type="button" class="game-btn game-btn--ghost" @click="resetPair">Сбросить</button>
             </div>
