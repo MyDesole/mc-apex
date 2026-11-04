@@ -13,6 +13,10 @@ commands:
     description: Тир-тесты (тестер - меню заявок; испытуемый - принять приглашение)
     usage: /tiertest [all | join | stop | decline]
     aliases: [tt]
+  hub:
+    description: Вернуться в хаб (выбор лобби)
+    usage: /hub
+    aliases: [lobby, spawnhub]
   tier:
     description: Управление тирами
     usage: /tier reload

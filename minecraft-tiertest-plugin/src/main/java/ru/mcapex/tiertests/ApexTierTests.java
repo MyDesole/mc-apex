@@ -72,6 +72,7 @@ public class ApexTierTests extends JavaPlugin implements Listener {
             }
         }, 40L, every);
         new Integrations(this).start();
+        new Hub(this).start();
         getLogger().info("ApexTierTests включён: " + getConfig().getString("api.url"));
     }
 

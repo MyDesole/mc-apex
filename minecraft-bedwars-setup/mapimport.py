@@ -180,12 +180,17 @@ def main():
         print(key, 'floor', fy, 'pos1', a, 'pos2', b, flush=True)
     open(out + '/arenas_add.yml', 'w', encoding='utf8').write('\n'.join(yml) + '\n')
     # лобби: Duels Lobby v2 в следующем слоте, спавн - самая частая высота у центра
-    lp = os.path.join(root, 'Lobby', 'Duels Lobby v2', 'Duels Lobby v2')
-    w = duelscan.World(lp); mn, mx = w.bbox()
-    a, b, c, fy = spawns(w, mn, mx, 10)
-    dx, dz = place(lp, len(jobs), out)
-    open(out + '/spawn.txt', 'w').write('arenas:%.1f:%.1f:%.1f:0.0:0.0\n' % (c[0] + dx + 0.5, fy, c[1] + dz + 0.5))
-    print('lobby', mn, mx, 'spawn', open(out + '/spawn.txt').read())
+    # хаб (нейтральное лобби) и лобби BedWars: следующие слоты, если передан корень BedWars
+    lobbies = [('spawn.txt', os.path.join(root, 'Lobby', 'Duels Lobby v2', 'Duels Lobby v2'))]
+    if len(sys.argv) > 3:
+        lobbies += [('hub.txt', os.path.join(root, 'Lobby', 'Duels Lobby v1', 'Duels Lobby v1')),
+                    ('bwlobby.txt', os.path.join(sys.argv[3], 'Lobby', 'Regular', 'Bedwars Lobby v2', 'Bedwars Lobby v2'))]
+    for i, (fn, lp) in enumerate(lobbies):
+        w = duelscan.World(lp); mn, mx = w.bbox()
+        a, b, c, fy = spawns(w, mn, mx, 10)
+        dx, dz = place(lp, len(jobs) + i, out)
+        open(out + '/' + fn, 'w').write('arenas:%.1f:%.1f:%.1f:0.0:0.0\n' % (c[0] + dx + 0.5, fy, c[1] + dz + 0.5))
+        print(fn, mn, mx, open(out + '/' + fn).read())
 
 
 if __name__ == '__main__':

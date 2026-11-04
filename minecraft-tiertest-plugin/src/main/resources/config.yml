@@ -7,6 +7,14 @@ tiers:
   tab: true
   chat: true
 
+hub:
+  # Точки "мир:x:y:z:yaw:pitch". Пока hub.hub не задан, хаб выключен
+  hub: ""
+  duels: ""
+  bedwars: ""
+  # Радиус вокруг хаба и лобби BedWars, где запрещены строительство и урон
+  radius: 200
+
 test:
   # Сколько секунд испытуемый может принять приглашение
   invite-timeout-seconds: 120
