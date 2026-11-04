@@ -80,6 +80,9 @@
 .bld--board { --roof: #6b4a1c; --wall: #8a5a2a; --door: #e8dcc0; --deco: #e23b3b; }
 .bld--board .bld__roof { clip-path: polygon(0 100%, 4% 20%, 96% 20%, 100% 100%); height: 26px; }
 .bld--board .bld__door { width: 46px; height: 30px; margin-left: -23px; bottom: 14px; border-bottom: 3px solid rgba(0, 0, 0, 0.5); background: repeating-linear-gradient(#e8dcc0 0 5px, #cdbf9a 5px 7px); }
+.bld--academy { --roof: #2b4a8a; --wall: #d9c9a0; --door: #4a2a6a; --deco: #c084fc; }
+.bld--academy .bld__roof { clip-path: polygon(0 100%, 50% 0, 100% 100%); height: 42px; }
+.bld--academy .bld__art::before { content: ""; position: absolute; left: 50%; top: -14px; width: 8px; height: 8px; margin-left: -4px; background: #c084fc; box-shadow: 0 0 12px 4px rgba(192, 132, 252, 0.8); animation: w-glint 1.6s steps(2) infinite; }
 .bld--rift { --roof: #3a1d6b; --wall: #2a1650; --door: #a855f7; --deco: #c4b5fd; }
 .bld--rift .bld__roof { clip-path: polygon(0 100%, 10% 20%, 28% 60%, 50% 0, 72% 60%, 90% 20%, 100% 100%); height: 38px; }
 .bld--lavka { --roof: #b8860b; --wall: #7a4a1f; --door: #3a1a0a; --deco: #ffd45c; }
@@ -199,6 +202,7 @@
 .room--dungeon { --wall-a: #3b3340; --wall-b: #2e2833; --floor-a: #26212b; --floor-b: #1d1922; --glow: #ff7a1a; }
 .room--dungeon .room__wall i { width: 12px; height: 34px; background: #ff7a1a; box-shadow: 0 0 26px 8px rgba(255, 122, 26, 0.5); animation: room-flame 0.8s steps(2) infinite; }
 .room--board { --wall-a: #8a5a2a; --wall-b: #774b22; --floor-a: #b8943c; --floor-b: #a4822f; --glow: #ffd45c; }
+.room--academy { --wall-a: #3a3a6a; --wall-b: #2e2e58; --floor-a: #4a3a6a; --floor-b: #3d2f5a; --glow: #c084fc; }
 .room--rift { --wall-a: #2a1650; --wall-b: #1d0f3a; --floor-a: #1a1030; --floor-b: #140b26; --glow: #a855f7; }
 .room--rift .room__wall i { width: 12px; height: 34px; background: #a855f7; box-shadow: 0 0 26px 8px rgba(168, 85, 247, 0.55); animation: room-flame 0.8s steps(2) infinite; }
 .room--lavka { --wall-a: #7a4a1f; --wall-b: #6a3f19; --floor-a: #c9a66b; --floor-b: #bd9a5e; --glow: #ffd45c; }

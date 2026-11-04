@@ -467,6 +467,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{raid}/moves', 'moves')->whereNumber('raid')->middleware('throttle:120,1');
     });
 
+    // Академия: таланты питомцев
+    Route::prefix('talents')->controller(\App\Domains\Players\Controllers\Api\TalentController::class)->group(function () {
+        Route::get('/', 'roster');
+        Route::get('/{pet}', 'show')->whereNumber('pet');
+        Route::post('/{pet}/learn', 'learn')->whereNumber('pet')->middleware('throttle:120,1');
+        Route::post('/{pet}/respec', 'respec')->whereNumber('pet')->middleware('throttle:10,1');
+    });
+
     // Доска заданий: ежедневные и недельные задания, Жетоны удачи
     Route::prefix('quests')->controller(\App\Domains\Players\Controllers\Api\QuestController::class)->group(function () {
         Route::get('/', 'index');

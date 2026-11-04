@@ -51,6 +51,8 @@ class WorldService
                 'expeditions' => (int) ($expeditions->ready ?? 0),
                 'dungeon' => DB::table('dungeon_runs')->where('user_id', $user->id)->where('status', 'active')->count(),
                 'quests' => app(QuestService::class)->board($user)['claimable'],
+                // Питомцы со свободными очками талантов
+                'talents' => collect(app(PetTalentService::class)->roster($user))->where('free', '>', 0)->count(),
             ],
             'tokens' => (int) DB::table('users')->where('id', $user->id)->value('pet_tokens'),
             // Ключи сундуков лежат в сумке питомцев

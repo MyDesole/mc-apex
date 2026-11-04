@@ -198,7 +198,8 @@ final class DungeonBattle
                 'species' => $member['species'],
                 'traits' => $member['traits'] ?? null,
                 'gear' => $member['gear'] ?? [],
-                'perks' => Dungeons::perksFor(array_values(array_filter(array_column($member['gear'] ?? [], 'slug')))),
+                'perks' => $this->unitPerks($member),
+                'mods' => $this->unitMods($member),
                 'revived' => false,
                 'element' => $member['element'],
                 'hp' => max(1, (int) ($member['hp'] ?? $member['max'])),
@@ -257,6 +258,70 @@ final class DungeonBattle
         $state['order'] = $this->order($state);
 
         return $state;
+    }
+
+    /** Свойства питомца: вещи, комплекты и таланты (одни и те же ключи, значения складываются). */
+    private function unitPerks(array $member): array
+    {
+        $perks = Dungeons::perksFor(array_values(array_filter(array_column($member['gear'] ?? [], 'slug'))));
+
+        foreach (PetTalents::PERK_KEYS as $key) {
+            $value = (int) ($member['talent_fx'][$key] ?? 0);
+
+            if ($value > 0) {
+                $perks[$key] = ($perks[$key] ?? 0) + $value;
+            }
+        }
+
+        return $perks;
+    }
+
+    /** Модификаторы умений из талантов: сила умения и ультимейта, лечение, перезарядка, дар стихии. */
+    private function unitMods(array $member): array
+    {
+        return array_intersect_key($member['talent_fx'] ?? [], array_flip(PetTalents::MOD_KEYS));
+    }
+
+    /** Умение питомца с учётом его талантов. */
+    private function tune(?array $ability, array $unit, string $move): ?array
+    {
+        if (! $ability) {
+            return null;
+        }
+
+        $mods = $unit['mods'] ?? [];
+        $power = (float) $ability['power'];
+
+        if ($move === 'skill') {
+            $power *= 1 + ($mods['skill_power'] ?? 0) / 100;
+        }
+
+        if ($move === 'ultimate') {
+            $power *= 1 + ($mods['ult_power'] ?? 0) / 100;
+        }
+
+        $ability['power'] = $power;
+
+        $heal = 1 + ($mods['heal_power'] ?? 0) / 100;
+        $sig = 1 + ($mods['sig'] ?? 0) / 100;
+
+        foreach (['heal_lowest', 'heal_team', 'drain_team'] as $field) {
+            if (isset($ability[$field])) {
+                $ability[$field] = (float) $ability[$field] * $heal * $sig;
+            }
+        }
+
+        foreach (['burn', 'stun_chance', 'fear', 'crit_bonus'] as $field) {
+            if (isset($ability[$field])) {
+                $ability[$field] = min(100, (int) round($ability[$field] * $sig));
+            }
+        }
+
+        if (isset($ability['team_atk'])) {
+            $ability['team_atk'] = 1 + ((float) $ability['team_atk'] - 1) * $sig;
+        }
+
+        return $ability;
     }
 
     /**
@@ -435,13 +500,13 @@ final class DungeonBattle
         }
 
         $ability = self::ABILITIES[$unit['element']] ?? self::ABILITIES['beast'];
-        $chosen = $move === 'ultimate' ? $ability['ultimate'] : ($move === 'skill' ? $ability['skill'] : null);
+        $chosen = $this->tune($move === 'ultimate' ? $ability['ultimate'] : ($move === 'skill' ? $ability['skill'] : null), $unit, $move);
 
         $power = (float) ($chosen['power'] ?? 1.0);
         $label = $chosen['name'] ?? 'атакует';
 
         if ($move === 'skill') {
-            $unit['cd'] = self::SKILL_COOLDOWN + 1;
+            $unit['cd'] = max(2, self::SKILL_COOLDOWN + 1 - (int) ($unit['mods']['skill_cd'] ?? 0));
         }
 
         if ($move === 'ultimate') {
@@ -693,7 +758,14 @@ final class DungeonBattle
         $def = (float) $target['def'] * (1 - min(60, (int) ($mine['pierce'] ?? 0)) / 100);
 
         $raw = max(1.0, $atk * $power - $def * 0.5);
-        $raw *= $this->elementMultiplier((string) $attacker['element'], (string) $target['element']);
+        $elementMult = $this->elementMultiplier((string) $attacker['element'], (string) $target['element']);
+        $raw *= $elementMult;
+
+        // Мастер стихии: талант добавляет урон, когда стихия сильнее вражеской
+        if ($elementMult > 1.0 && ($attacker['mods']['element_power'] ?? 0) > 0) {
+            $raw *= 1 + $attacker['mods']['element_power'] / 100;
+        }
+
         $raw *= $comboMult;
 
         if (($mine['execute'] ?? 0) > 0 && $target['hp'] / max(1, $target['max']) < 0.3) {

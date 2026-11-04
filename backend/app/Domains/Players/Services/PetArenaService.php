@@ -340,6 +340,14 @@ class PetArenaService
         $atkBonus = PetPerks::attackBonus($level);
         $defBonus = PetPerks::bodyBonus($level);
 
+        // Таланты Академии: проценты к характеристикам (перки работают в подземельях)
+        $stats = \App\Domains\Players\Support\PetTalents::applyStats([
+            'hp' => $hp,
+            'atk' => (int) round((10 + $level * 1.2 + $r * 1.5 + $gear['atk']) * $atkBonus),
+            'def' => (int) round((5 + $level * 0.6 + $r + $gear['def']) * $defBonus),
+            'spd' => (int) round(10 + $level * 0.4 + ($element === 'shadow' ? 2 : 0) + ($element === 'beast' ? 1 : 0) + $gear['spd']),
+        ], PetTalentService::effectsFor($pet->id));
+
         return [
             'inventory_id' => $pet->id,
             'species' => $species,
@@ -347,11 +355,11 @@ class PetArenaService
             'traits' => $traits,
             'level' => $level,
             'element' => $element,
-            'hp' => $hp,
-            'max' => $hp,
-            'atk' => (int) round((10 + $level * 1.2 + $r * 1.5 + $gear['atk']) * $atkBonus),
-            'def' => (int) round((5 + $level * 0.6 + $r + $gear['def']) * $defBonus),
-            'spd' => (int) round(10 + $level * 0.4 + ($element === 'shadow' ? 2 : 0) + ($element === 'beast' ? 1 : 0) + $gear['spd']),
+            'hp' => $stats['hp'],
+            'max' => $stats['hp'],
+            'atk' => $stats['atk'],
+            'def' => $stats['def'],
+            'spd' => $stats['spd'],
             'cd' => 0,
         ];
     }

@@ -6,6 +6,7 @@ use App\Support\GameDay;
 use App\Domains\Players\Support\DungeonBattle;
 use App\Domains\Players\Support\Dungeons;
 use App\Domains\Players\Support\PetLocks;
+use App\Domains\Players\Support\PetTalents;
 use App\Domains\Wallet\Services\RubleService;
 use App\Domains\Players\Support\PetTraits;
 use App\Domains\Shop\Exceptions\NotEnoughCoins;
@@ -590,6 +591,7 @@ final class DungeonService
         $pets = UserInventory::with('item')->where('user_id', $user->id)->whereIn('id', $ids)->get();
         $levels = PetService::levels($ids);
         $arena = app(PetArenaService::class);
+        $talents = PetTalentService::effectsForMany($pets->pluck('id')->all());
 
         $members = [];
 
@@ -601,8 +603,17 @@ final class DungeonService
             $level = $levels[$pet->id] ?? 1;
             $r = self::RARITY[$pet->pet_traits['rarity'] ?? 'common'] ?? 0;
             $bonus = $this->gear->bonus($pet);
-            $max = (int) round((60 + $level * 6 + $r * 8 + $bonus['hp']) * DungeonBattle::HP_FACTOR);
+            $fx = $talents[$pet->id] ?? [];
             $species = $pet->item?->effect_value;
+
+            // Таланты: проценты к характеристикам считаются от базы с вещами
+            $stats = PetTalents::applyStats([
+                'hp' => (int) round((60 + $level * 6 + $r * 8 + $bonus['hp']) * DungeonBattle::HP_FACTOR),
+                'atk' => (int) round(10 + $level * 1.2 + $r * 1.5) + $bonus['atk'],
+                'def' => (int) round(5 + $level * 0.6 + $r) + $bonus['def'],
+                'spd' => (int) round(10 + $level * 0.4) + $bonus['spd'],
+            ], $fx);
+            $max = $stats['hp'];
 
             $members[] = [
                 'inventory_id' => $pet->id,
@@ -615,9 +626,10 @@ final class DungeonService
                 'level' => $level,
                 'hp' => $max,
                 'max' => $max,
-                'atk' => (int) round(10 + $level * 1.2 + $r * 1.5) + $bonus['atk'],
-                'def' => (int) round(5 + $level * 0.6 + $r) + $bonus['def'],
-                'spd' => (int) round(10 + $level * 0.4) + $bonus['spd'],
+                'atk' => $stats['atk'],
+                'def' => $stats['def'],
+                'spd' => $stats['spd'],
+                'talent_fx' => $fx,
                 'busy' => PetLocks::reason($pet->id),
             ];
         }
