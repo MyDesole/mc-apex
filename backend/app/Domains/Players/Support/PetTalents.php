@@ -17,6 +17,21 @@ class PetTalents
     /** Сколько очков в ветке надо вложить, чтобы открылся ярус. */
     public const TIER_GATE = [1 => 0, 2 => 5, 3 => 12, 4 => 20];
 
+    /**
+     * Пороги для «Пути стихии»: в нём три яруса, и до третьего можно вложить
+     * только 8 очков (5 + 3), поэтому общий порог 12 закрывал бы его навсегда.
+     * Третий ярус открывается, когда первые два вкачаны полностью.
+     */
+    public const ELEMENT_TIER_GATE = [1 => 0, 2 => 5, 3 => 8];
+
+    /** Сколько очков надо вложить в ветку, чтобы открылся ярус. */
+    public static function gate(string $branch, int $tier): int
+    {
+        $gates = $branch === 'element' ? self::ELEMENT_TIER_GATE : self::TIER_GATE;
+
+        return $gates[$tier] ?? 0;
+    }
+
     /** Сброс талантов питомца, ApexCoin. */
     public const RESPEC_COST = 5000;
 

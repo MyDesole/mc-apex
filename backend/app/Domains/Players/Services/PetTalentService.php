@@ -111,7 +111,7 @@ class PetTalentService
                 throw new RuntimeException('Талант уже изучен полностью.');
             }
 
-            $gate = PetTalents::TIER_GATE[$def['tier']] ?? 0;
+            $gate = PetTalents::gate($def['branch'], $def['tier']);
 
             if (PetTalents::spentIn($ranks, $def['branch']) < $gate) {
                 throw new RuntimeException("Ярус откроется, когда в ветке «" . PetTalents::BRANCHES[$def['branch']]['name'] . "» будет вложено {$gate} очков.");
@@ -190,7 +190,7 @@ class PetTalentService
                     continue;
                 }
 
-                $gate = PetTalents::TIER_GATE[$def['tier']];
+                $gate = PetTalents::gate($key, $def['tier']);
                 $text = $def['text'];
 
                 if ($talentKey === 'm_sig') {
@@ -210,7 +210,7 @@ class PetTalentService
                 ];
             }
 
-            $branches[] = ['key' => $key, 'name' => $branch['name'], 'text' => $branch['text'], 'color' => $branch['color'], 'sprite' => $branch['sprite'], 'spent' => $inBranch, 'talents' => $talents];
+            $branches[] = ['key' => $key, 'name' => $branch['name'], 'text' => $branch['text'], 'color' => $branch['color'], 'sprite' => $branch['sprite'], 'spent' => $inBranch, 'gates' => $key === 'element' ? PetTalents::ELEMENT_TIER_GATE : PetTalents::TIER_GATE, 'talents' => $talents];
         }
 
         return [

@@ -83,6 +83,43 @@ class PetTalentTest extends TestCase
         }
     }
 
+    /**
+     * Каждый ярус должен быть достижим: очков в ярусах ниже хватает на его порог.
+     * Раньше у всех стихий порог третьего яруса был 12, а набрать до него можно
+     * было только 8 (5 + 3), поэтому «Пепельное возрождение» и его аналоги
+     * нельзя было изучить.
+     */
+    public function test_every_tier_can_be_unlocked_in_every_branch_and_element(): void
+    {
+        $trees = [];
+
+        foreach (PetTalents::TALENTS as $def) {
+            $name = $def['branch'] === 'element' ? 'element:' . $def['element'] : $def['branch'];
+            $trees[$name][] = $def;
+        }
+
+        // три общие ветки и восемь стихий
+        $this->assertCount(11, $trees);
+
+        foreach ($trees as $name => $talents) {
+            $branch = explode(':', $name)[0];
+
+            foreach (array_unique(array_column($talents, 'tier')) as $tier) {
+                $gate = PetTalents::gate($branch, $tier);
+                $reachable = array_sum(array_map(
+                    fn ($t) => $t['tier'] < $tier ? $t['max'] : 0,
+                    $talents,
+                ));
+
+                $this->assertGreaterThanOrEqual(
+                    $gate,
+                    $reachable,
+                    "{$name}: ярус {$tier} требует {$gate} очков, а до него можно вложить только {$reachable}",
+                );
+            }
+        }
+    }
+
     public function test_points_come_from_levels_and_effects_sum_by_rank(): void
     {
         $this->assertSame(0, PetTalents::totalPoints(1));

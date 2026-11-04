@@ -33,7 +33,9 @@ const ROMAN = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV' }
 const summary = computed(() => Object.entries(tree.value?.effects ?? {}).map(([k, v]) => ({ key: k, text: `${EFFECT_NAMES[k]?.[0] ?? k} +${v}${EFFECT_NAMES[k]?.[1] ?? ''}` })))
 const element = computed(() => ELEMENTS[tree.value?.pet.element] ?? { name: '', color: '#fbbf24' })
 const tierTalents = (branch, tier) => branch.talents.filter((t) => t.tier === tier)
-const tierOpen = (branch, tier) => branch.spent >= (tree.value.gates[tier] ?? 0)
+// У ветки свои пороги (у «Пути стихии» ниже, чем у остальных)
+const gateOf = (branch, tier) => (branch.gates ?? tree.value.gates)[tier] ?? 0
+const tierOpen = (branch, tier) => branch.spent >= gateOf(branch, tier)
 const hasTier = (branch, tier) => branch.talents.some((t) => t.tier === tier)
 
 async function loadRoster() {
@@ -144,7 +146,7 @@ onMounted(loadRoster)
             <template v-for="tier in TIERS" :key="tier">
               <div v-if="hasTier(b, tier)" class="ta-tier" :class="{ 'is-closed': !tierOpen(b, tier) }">
                 <span class="ta-tier__ribbon">
-                  Ярус {{ ROMAN[tier] }}<template v-if="tree.gates[tier]"> · от {{ tree.gates[tier] }} оч.</template>
+                  Ярус {{ ROMAN[tier] }}<template v-if="gateOf(b, tier)"> · от {{ gateOf(b, tier) }} оч.</template>
                   <em v-if="!tierOpen(b, tier)">закрыт</em>
                 </span>
                 <div class="ta-nodes">
