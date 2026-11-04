@@ -17,6 +17,7 @@ import { mergeMessages } from '@/utils/chatMessages.js'
 import { dayLabel, startsNewDay } from '@/utils/chatDates.js'
 import { openReport } from '@/composables/core/useReport.js'
 import ChatLinkCard from '@/components/chat/ChatLinkCard.vue'
+import LinkifiedText from '@/components/core/LinkifiedText.vue'
 import ChatVoicePlayer from '@/components/chat/ChatVoicePlayer.vue'
 import ChatVoiceRecorder from '@/components/chat/ChatVoiceRecorder.vue'
 import ChatGiftPanel from '@/components/chat/ChatGiftPanel.vue'
@@ -2881,7 +2882,7 @@ onUnmounted(() => {
                       <!-- Стикер из магазина: картинка вместо текста-метки -->
                       <ChatSticker v-if="parseSticker(m.body)" :sticker="parseSticker(m.body)" />
                       <!-- Ссылки, ставшие карточками, в тексте не дублируем -->
-                      <template v-else>{{ bodyWithoutCards(m) }}</template>
+                      <LinkifiedText v-else :text="bodyWithoutCards(m)" />
                     </span>
 
                     <!-- Ссылки на игрока, питомца, клан или лот — живыми карточками -->

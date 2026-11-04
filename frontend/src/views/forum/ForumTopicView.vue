@@ -11,6 +11,7 @@ import ForumAttachmentsInput from '@/components/forum/ForumAttachmentsInput.vue'
 import ForumReplyNode from '@/components/forum/ForumReplyNode.vue'
 import FileDropOverlay from '@/components/core/FileDropOverlay.vue'
 import ImageLightbox from '@/components/core/ImageLightbox.vue'
+import LinkifiedText from '@/components/core/LinkifiedText.vue'
 import { filesFromClipboard, useFileDrop } from '@/composables/core/useFileDrop.js'
 
 const route = useRoute()
@@ -531,9 +532,7 @@ onMounted(load)
               {{ topic.title }}
             </h1>
 
-            <div class="topic-card__body">
-              {{ topic.body }}
-            </div>
+            <div class="topic-card__body"><LinkifiedText :text="topic.body" /></div>
           </template>
 
           <!-- Attachments -->

@@ -3,6 +3,7 @@ import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { onMounted, ref } from 'vue'
 import { myClanApi } from '@/services/clan/myClan.js'
 import { useAuthStore } from '@/stores/core/auth.js'
+import LinkifiedText from '@/components/core/LinkifiedText.vue'
 
 const props = defineProps({
   clan: { type: Object, required: true },
@@ -488,7 +489,7 @@ onMounted(load)
           <h1>{{ topicData.title }}</h1>
 
           <div class="topic-post__content">
-            <pre>{{ topicData.body }}</pre>
+            <pre><LinkifiedText :text="topicData.body" /></pre>
           </div>
         </article>
 
@@ -527,7 +528,7 @@ onMounted(load)
                   <span>{{ formatDate(r.created_at) }}</span>
                 </div>
 
-                <pre>{{ r.body }}</pre>
+                <pre><LinkifiedText :text="r.body" /></pre>
               </div>
             </article>
           </div>

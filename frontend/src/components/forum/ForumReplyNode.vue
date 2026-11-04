@@ -5,6 +5,7 @@ import { userLink } from '@/utils/links.js'
 import AppIcon from '@/components/core/AppIcon.vue'
 import { openReport } from '@/composables/core/useReport.js'
 import ImageLightbox from '@/components/core/ImageLightbox.vue'
+import LinkifiedText from '@/components/core/LinkifiedText.vue'
 
 const props = defineProps({
   reply: {
@@ -423,7 +424,7 @@ function onDelete() {
             v-else
             class="forum-reply__text"
         >
-          {{ body }}
+          <LinkifiedText :text="body" />
         </div>
 
         <!-- ATTACHMENTS -->
