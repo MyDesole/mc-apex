@@ -88,19 +88,30 @@ class DungeonTest extends TestCase
     {
         $this->pet($this->user, 'axolotl');
 
-        $data = $this->actingAs($this->user)
+        $live = $this->actingAs($this->user)
             ->getJson('/api/dungeons')
             ->assertOk()
             ->assertJsonCount(12, 'dungeons')
-            ->assertJsonCount(2, 'dungeons.0.bosses')
-            ->assertJsonStructure(['dungeons' => [['key', 'name', 'emblem', 'tone', 'elements', 'bosses', 'rooms', 'available']]])
+            ->assertJsonStructure(['dungeons' => [['key', 'available']]])
             ->assertJsonPath('runs_left', Dungeons::DAILY_RUNS)
             ->json();
 
-        $pet = $data['pets'][0];
+        // Обзор лёгкий: справочник и описания приходят отдельным ответом
+        $this->assertArrayNotHasKey('reference', $live);
+        $this->assertArrayNotHasKey('features', $live);
+        $this->assertArrayNotHasKey('owner', $live['pets'][0]);
+        $this->assertArrayNotHasKey('ability', $live['pets'][0]);
+        $this->assertSame('water', $live['pets'][0]['element']);
 
-        $this->assertSame('water', $pet['element']);
-        $this->assertSame('Цунами', $pet['ability']['ultimate']['name']);
+        $data = $this->actingAs($this->user)
+            ->getJson('/api/dungeons/reference')
+            ->assertOk()
+            ->assertJsonCount(12, 'dungeons')
+            ->assertJsonCount(2, 'dungeons.0.bosses')
+            ->assertJsonStructure(['dungeons' => [['key', 'name', 'emblem', 'tone', 'elements', 'bosses', 'rooms']]])
+            ->json();
+
+        $this->assertSame('Цунами', $data['reference']['abilities']['water']['ultimate']['name']);
         $this->assertNotEmpty($data['reference']['combos']);
         $this->assertArrayHasKey('steam', $data['reference']['combos']);
         $this->assertSame('nature', $data['reference']['combos']['steam']['counters']);

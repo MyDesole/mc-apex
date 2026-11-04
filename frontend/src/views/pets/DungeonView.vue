@@ -305,7 +305,18 @@ async function load() {
     }
 }
 
-async function act(call) {
+/** По умолчанию каждый живой питомец бьёт атакой. */
+function applyDefaultMoves() {
+    for (const unit of battle.value?.units ?? []) {
+        if (unit.hp > 0 && !moves[unit.id]) moves[unit.id] = 'attack'
+    }
+}
+
+/*
+ * light — ход внутри похода (зал, раунд боя): ответ уже содержит весь поход,
+ * поэтому не перезапрашиваем сводку со всем зверинцем и складом.
+ */
+async function act(call, { light = false } = {}) {
     busy.value = true
     error.value = ''
 
@@ -320,6 +331,13 @@ async function act(call) {
             result.value = outcome
 
             if (data.value) data.value.run = null
+
+            return
+        }
+
+        if (light && data.value && outcome?.status === 'active' && outcome.members) {
+            data.value.run = outcome
+            applyDefaultMoves()
 
             return
         }
@@ -365,7 +383,7 @@ const enterRoom = () => act(async () => {
     for (const key of Object.keys(moves)) delete moves[key]
 
     return dungeonApi.advance(run.value.id)
-})
+}, { light: true })
 
 const turn = () => act(async () => {
     const payload = {}
@@ -375,7 +393,7 @@ const turn = () => act(async () => {
     }
 
     return dungeonApi.move(run.value.id, payload)
-})
+}, { light: true })
 
 const retreat = () => act(() => dungeonApi.retreat(run.value.id))
 

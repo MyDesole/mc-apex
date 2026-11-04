@@ -6,10 +6,37 @@ import { api } from '@/services/core/api.js'
  * Поход — не потоковое соединение: каждый зал открывается отдельным
  * запросом, поэтому поход продолжается с любого устройства.
  */
+// Справочник не меняется между ходами: грузим один раз за открытие сайта
+let referenceCache = null
+
+function loadReference() {
+    referenceCache ??= api.get('/dungeons/reference').catch((e) => {
+        referenceCache = null
+        throw e
+    })
+
+    return referenceCache
+}
+
 export const dungeonApi = {
-    /** Сводка: подземелья, отряд, активный поход, экипировка. */
-    overview() {
-        return api.get('/dungeons')
+    /**
+     * Сводка: подземелья, отряд, активный поход, экипировка.
+     *
+     * Сервер отдаёт отдельно изменчивое (поход, отряд) и справочник;
+     * здесь они склеиваются в тот же объект, что был раньше.
+     */
+    async overview() {
+        const [live, ref] = await Promise.all([api.get('/dungeons'), loadReference()])
+        const available = Object.fromEntries(live.dungeons.map(d => [d.key, d.available]))
+        const abilities = ref.reference?.abilities ?? {}
+
+        return {
+            ...live,
+            dungeons: ref.dungeons.map(d => ({ ...d, available: available[d.key] ?? false })),
+            features: ref.features,
+            reference: ref.reference,
+            pets: live.pets.map(p => ({ ...p, ability: abilities[p.element] ?? null })),
+        }
     },
 
     /** Купить ещё один поход на сегодня: цена растёт с каждой покупкой. */

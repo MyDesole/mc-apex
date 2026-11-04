@@ -523,6 +523,7 @@ Route::middleware('auth:sanctum')->group(function () {
      */
     Route::prefix('dungeons')->controller(\App\Domains\Players\Controllers\Api\DungeonController::class)->group(function () {
         Route::get('/', 'index');
+        Route::get('/reference', 'reference');
         Route::post('/start', 'start')->middleware(['citadel', 'throttle:20,1']);
         Route::post('/buy-run', 'buyRun')->middleware(['citadel', 'throttle:20,1']);
         Route::get('/craft', 'craftIndex')->middleware('throttle:30,1');

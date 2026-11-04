@@ -94,6 +94,13 @@ class DungeonController extends Controller
         return response()->json($this->dungeons->overview($request->user()));
     }
 
+    /** Неизменные данные: описания, свойства врагов, справочник боя. Кэшируется. */
+    public function reference(): JsonResponse
+    {
+        return response()->json($this->dungeons->reference())
+            ->header('Cache-Control', 'private, max-age=600');
+    }
+
     /** Начать поход: подземелье и отряд 2–3 питомцев. */
     public function start(Request $request): JsonResponse
     {

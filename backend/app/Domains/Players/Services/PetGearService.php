@@ -22,6 +22,37 @@ use RuntimeException;
  */
 final class PetGearService
 {
+    /** Строки экипировки, загруженные пачкой на время одного ответа: id => строка. */
+    private ?array $preloaded = null;
+
+    /**
+     * Загружает экипировку всех питомцев одним запросом.
+     *
+     * Без этого `equipped()` ходит в базу на каждого питомца, а в списке
+     * подземелий его зовут по несколько раз. Вызывать `flush()` после ответа.
+     */
+    public function preload(iterable $pets): void
+    {
+        $ids = [];
+
+        foreach ($pets as $pet) {
+            foreach ((array) ($pet->pet_gear ?? []) as $id) {
+                $ids[(int) $id] = true;
+            }
+        }
+
+        unset($ids[0]);
+
+        $this->preloaded = $ids
+            ? UserInventory::with('item')->whereIn('id', array_keys($ids))->get()->keyBy('id')->all()
+            : [];
+    }
+
+    public function flush(): void
+    {
+        $this->preloaded = null;
+    }
+
     /**
      * Бонусы от надетой экипировки.
      *
@@ -71,12 +102,14 @@ final class PetGearService
             return [];
         }
 
-        $rows = UserInventory::with('item')->whereIn('id', $ids)->get();
+        $rows = $this->preloaded !== null && ! array_diff($ids, array_keys($this->preloaded))
+            ? $this->preloaded
+            : UserInventory::with('item')->whereIn('id', $ids)->get()->keyBy('id')->all();
 
         $result = [];
 
         foreach ($map as $slot => $id) {
-            $row = $rows->firstWhere('id', (int) $id);
+            $row = $rows[(int) $id] ?? null;
 
             if (! $row || ! $row->item) {
                 continue;

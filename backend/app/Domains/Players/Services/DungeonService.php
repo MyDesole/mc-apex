@@ -102,6 +102,21 @@ final class DungeonService
 
     /* ==================== Обзор ==================== */
 
+    /**
+     * Неизменные данные: описания подземелий, свойства врагов, справочник боя.
+     *
+     * Отдельный ответ, который браузер держит в кэше: раньше всё это уходило
+     * вместе с обзором при каждом ходе и весило больше самого похода.
+     */
+    public function reference(): array
+    {
+        return [
+            'dungeons' => array_values(Dungeons::all()),
+            'features' => Dungeons::TRAITS,
+            'reference' => $this->battle->reference(),
+        ];
+    }
+
     public function overview(User $user): array
     {
         $active = DB::table('dungeon_runs')
@@ -129,18 +144,31 @@ final class DungeonService
         $levels = PetService::levels($pets->pluck('id')->all());
         $arena = app(PetArenaService::class);
 
-        $squad = $pets->map(fn (UserInventory $pet) => [
-            ...$arena->card($pet, $levels[$pet->id] ?? 1),
-            'gear' => $this->gear->equipped($pet),
-            'bonus' => $this->gear->bonus($pet),
-            'busy' => PetLocks::reason($pet->id),
-            'hp_max' => $this->petMaxHp($pet, $levels[$pet->id] ?? 1),
-            // Условная сила для подбора отряда: атака весит больше защиты
-            'power' => $this->petPower($pet, $levels[$pet->id] ?? 1),
-            'ability' => \App\Domains\Players\Support\DungeonBattle::ABILITIES[$arena->card($pet, 1)['element']] ?? null,
-        ])->values()->all();
+        // Всё, что раньше грузилось по питомцу, берём пачкой: владелец, занятость, экипировка
+        $pets->each(fn (UserInventory $pet) => $pet->setRelation('user', $user));
+        $locks = PetLocks::reasons($pets->pluck('id')->all());
+        $this->gear->preload($pets);
 
-        return [
+        $squad = $pets->map(function (UserInventory $pet) use ($arena, $levels, $locks) {
+            $level = $levels[$pet->id] ?? 1;
+            $card = $arena->card($pet, $level);
+            $bonus = $this->gear->bonus($pet);
+
+            // Владелец — сам игрок, приёмы по стихии лежат в справочнике: не повторяем в каждой карточке
+            unset($card['owner']);
+
+            return [
+                ...$card,
+                'gear' => $this->gear->equipped($pet),
+                'bonus' => $bonus,
+                'busy' => $locks[$pet->id] ?? null,
+                'hp_max' => $this->petMaxHp($pet, $level, $bonus),
+                // Условная сила для подбора отряда: атака весит больше защиты
+                'power' => $this->petPower($pet, $level, $bonus),
+            ];
+        })->values()->all();
+
+        $overview = [
             'runs_left' => $this->runsLeft($user),
             'runs_per_day' => Dungeons::DAILY_RUNS,
             'extra_bought' => $this->extraBought($user),
@@ -148,15 +176,18 @@ final class DungeonService
             'squad_min' => Dungeons::SQUAD_MIN,
             'squad_max' => Dungeons::SQUAD_MAX,
             'pass_count' => (int) DB::table('dungeon_materials')->where('user_id', $user->id)->where('material', 'ruble_pass')->value('quantity'),
-            'dungeons' => array_map(fn (array $d) => $d + ['available' => $this->canEnter($d, $squad)], Dungeons::all()),
-            'features' => Dungeons::TRAITS,
-            'reference' => $this->battle->reference(),
+            // Только доступность: описания подземелий, свойства и справочник боя — в reference()
+            'dungeons' => array_map(fn (array $d) => ['key' => $d['key'], 'available' => $this->canEnter($d, $squad)], Dungeons::all()),
             'pets' => $squad,
             'run' => $active ? $this->present($active) : null,
             'last_result' => $lastFinished ? $this->present($lastFinished) : null,
             'gear_bag' => $this->gear->bag($user),
             'gear_slots' => Dungeons::SLOT_NAMES,
         ];
+
+        $this->gear->flush();
+
+        return $overview;
     }
 
     private function canEnter(array $dungeon, array $squad): bool
@@ -644,23 +675,23 @@ final class DungeonService
      * здоровье входит вчетверо слабее. Связка добавляется отдельно, в
      * интерфейсе.
      */
-    private function petPower(UserInventory $pet, int $level): int
+    private function petPower(UserInventory $pet, int $level, ?array $bonus = null): int
     {
         $r = self::RARITY[$pet->pet_traits['rarity'] ?? 'common'] ?? 0;
-        $bonus = $this->gear->bonus($pet);
+        $bonus ??= $this->gear->bonus($pet);
 
         $atk = (int) round(10 + $level * 1.2 + $r * 1.5) + $bonus['atk'];
         $def = (int) round(5 + $level * 0.6 + $r) + $bonus['def'];
         $spd = (int) round(10 + $level * 0.4) + $bonus['spd'];
-        $hp = $this->petMaxHp($pet, $level);
+        $hp = $this->petMaxHp($pet, $level, $bonus);
 
         return (int) round($atk * 2 + $def * 1.5 + $spd + $hp / 4);
     }
 
-    private function petMaxHp(UserInventory $pet, int $level): int
+    private function petMaxHp(UserInventory $pet, int $level, ?array $bonus = null): int
     {
         $r = self::RARITY[$pet->pet_traits['rarity'] ?? 'common'] ?? 0;
-        $bonus = $this->gear->bonus($pet);
+        $bonus ??= $this->gear->bonus($pet);
 
         return (int) round((60 + $level * 6 + $r * 8 + $bonus['hp']) * DungeonBattle::HP_FACTOR);
     }
