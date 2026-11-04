@@ -24,11 +24,11 @@ final class PetFarmTiers
 
     /** Ступень => виды (effect_value питомца из магазина). */
     public const SPECIES = [
-        'common' => ['slime', 'frog', 'bee', 'shroom', 'penguin'],
-        'uncommon' => ['cat', 'dog', 'fox', 'owl', 'bunny'],
-        'rare' => ['panda', 'capybara', 'axolotl', 'octopus', 'jelly'],
-        'epic' => ['robot', 'ghost'],
-        'legendary' => ['dragon', 'phoenix', 'unicorn'],
+        'common' => ['slime', 'frog', 'bee', 'shroom', 'penguin', 'cloud', 'turtle'],
+        'uncommon' => ['cat', 'dog', 'fox', 'owl', 'bunny', 'hawk', 'mole'],
+        'rare' => ['panda', 'capybara', 'axolotl', 'octopus', 'jelly', 'bat'],
+        'epic' => ['robot', 'ghost', 'golem', 'fairy'],
+        'legendary' => ['dragon', 'phoenix', 'unicorn', 'griffin'],
     ];
 
     /** Цена в ApexCoin на Общей ферме (выросший питомец). Эпиков и легенд там нет. */

@@ -244,16 +244,25 @@ class DungeonTest extends TestCase
 
     public function test_all_pairs_have_a_counter(): void
     {
-        // Десять пар: у каждой стихии ровно две контры
-        $counters = array_count_values(array_column(\App\Domains\Players\Support\DungeonBattle::COMBOS, 'counters'));
+        // 19 связок: у шести старых стихий не меньше двух контр, у ветра и земли — не меньше одной
+        $combos = \App\Domains\Players\Support\DungeonBattle::COMBOS;
+        $counters = array_count_values(array_column($combos, 'counters'));
 
-        $this->assertCount(12, \App\Domains\Players\Support\DungeonBattle::COMBOS);
-        $this->assertSame(2, $counters['fire']);
-        $this->assertSame(2, $counters['water']);
-        $this->assertSame(2, $counters['nature']);
-        $this->assertSame(2, $counters['shadow']);
-        $this->assertSame(2, $counters['beast']);
-        $this->assertSame(2, $counters['light']);
+        $this->assertCount(19, $combos);
+
+        foreach (['fire', 'water', 'nature', 'shadow', 'beast', 'light'] as $element) {
+            $this->assertGreaterThanOrEqual(2, $counters[$element], $element);
+        }
+
+        foreach (['wind', 'earth'] as $element) {
+            $this->assertGreaterThanOrEqual(1, $counters[$element] ?? 0, $element);
+        }
+
+        // Контра всегда против известной стихии, а пара — из известных
+        foreach ($combos as $key => $combo) {
+            $this->assertArrayHasKey($combo['counters'], \App\Domains\Players\Support\DungeonBattle::ELEMENTS, $key);
+            $this->assertCount(2, array_intersect($combo['pair'], array_keys(\App\Domains\Players\Support\DungeonBattle::ELEMENTS)), $key);
+        }
     }
 
     public function test_water_ultimate_heals_the_whole_squad(): void

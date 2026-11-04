@@ -22,23 +22,27 @@ const fighter = computed(() => freePets.value.find((p) => p.inventory_id === pet
 const arena = computed(() => hub.value?.arena ?? null)
 
 // Кто кого бьёт сильнее — как на сервере
-const STRONG = { fire: 'nature', nature: 'water', water: 'fire', shadow: 'beast', beast: 'light', light: 'shadow' }
+const STRONG = {
+  fire: ['nature', 'wind'], nature: ['water', 'earth'], water: ['fire'], shadow: ['beast'],
+  beast: ['light'], light: ['shadow'], wind: ['earth'], earth: ['fire'],
+}
+const beats = (a, b) => (STRONG[a] ?? []).includes(b)
 
 /** Примерный шанс: Эло по рейтингу плюс поправка за уровни и стихии. */
 function odds(foe) {
   const me = fighter.value
   if (!me) return 50
   let diff = (me.rating - foe.rating) + (me.level - foe.level) * 25
-  if (STRONG[me.element] === foe.element) diff += 60
-  if (STRONG[foe.element] === me.element) diff -= 60
+  if (beats(me.element, foe.element)) diff += 60
+  if (beats(foe.element, me.element)) diff -= 60
   return Math.max(3, Math.min(97, Math.round(100 / (1 + 10 ** (-diff / 400)))))
 }
 
 function matchup(foe) {
   const me = fighter.value
   if (!me) return null
-  if (STRONG[me.element] === foe.element) return { text: 'Твоя стихия сильнее', cls: 'is-good' }
-  if (STRONG[foe.element] === me.element) return { text: 'Его стихия сильнее', cls: 'is-bad' }
+  if (beats(me.element, foe.element)) return { text: 'Твоя стихия сильнее', cls: 'is-good' }
+  if (beats(foe.element, me.element)) return { text: 'Его стихия сильнее', cls: 'is-bad' }
   return null
 }
 

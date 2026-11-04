@@ -511,6 +511,14 @@ export const PET_SHAPES = {
     capybara: { top: 2, head: [0, 10], eyes: [2.5, 7.5], eyeY: 3.5, neck: 6 },
     jelly: { top: 0, head: [0, 8], eyes: [2.5, 5.5], eyeY: 3.5, neck: 4.4 },
     unicorn: { top: 2, head: [1, 9], eyes: [3.5, 6.5], eyeY: 3.5, neck: 6 },
+    hawk: { top: 0, head: [1, 7], eyes: [2.5, 5.5], eyeY: 2.5, neck: 5 },
+    cloud: { top: 0, head: [0, 8], eyes: [2.5, 5.5], eyeY: 3.5, neck: 5 },
+    turtle: { top: 0, head: [0, 8], eyes: [1.5, 6.5], eyeY: 5.5, neck: 6.5 },
+    mole: { top: 0, head: [1, 7], eyes: [2, 5.5], eyeY: 2.5, neck: 5 },
+    bat: { top: 1, head: [1, 7], eyes: [2.5, 5.5], eyeY: 3.5, neck: 5 },
+    golem: { top: 0, head: [1, 7], eyes: [2, 6], eyeY: 2.5, neck: 5 },
+    fairy: { top: 0, head: [1, 7], eyes: [2, 5.5], eyeY: 2.5, neck: 4 },
+    griffin: { top: 0, head: [1, 7], eyes: [2, 5.5], eyeY: 2.5, neck: 4.5 },
 }
 
 /**

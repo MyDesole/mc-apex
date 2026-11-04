@@ -25,6 +25,8 @@ final class PetBattleEngine
         'shadow' => ['name' => 'Тень', 'power' => 1.45, 'pierce' => true, 'fear' => 50],
         'beast' => ['name' => 'Рывок', 'power' => 1.5, 'crit' => 30, 'bleed' => true],
         'light' => ['name' => 'Вспышка', 'power' => 1.45, 'fear' => 40],
+        'wind' => ['name' => 'Порыв', 'power' => 1.4, 'crit' => 35, 'fear' => 25],
+        'earth' => ['name' => 'Обвал', 'power' => 1.3, 'pierce' => true, 'thorns' => 0.2],
     ];
 
     /** Ультимейты: открываются, когда ярость дошла до 100. */
@@ -35,6 +37,8 @@ final class PetBattleEngine
         'shadow' => ['name' => 'Пожиратель душ', 'power' => 2.0, 'pierce' => true, 'drain' => 0.6, 'about' => 'Урон сквозь защиту, крадёт здоровье'],
         'beast' => ['name' => 'Ярость стаи', 'power' => 0.9, 'hits' => 3, 'about' => 'Три удара подряд, каждый может стать критом'],
         'light' => ['name' => 'Рассвет', 'power' => 1.6, 'heal' => 0.15, 'about' => 'Урон и лечение: свет возвращает силы'],
+        'wind' => ['name' => 'Ураган', 'power' => 0.8, 'hits' => 4, 'about' => 'Четыре быстрых удара подряд'],
+        'earth' => ['name' => 'Землетрясение', 'power' => 2.1, 'pierce' => true, 'heal' => 0.1, 'about' => 'Огромный урон сквозь защиту и немного лечения'],
     ];
 
     /** Арены: чья стихия сильнее (+20%) и особенность. */
@@ -65,10 +69,25 @@ final class PetBattleEngine
         'shadow' => ['name' => 'Хитрый', 'skill' => 60, 'counter' => 35, 'defend' => 25],
         'beast' => ['name' => 'Безрассудный', 'skill' => 75, 'counter' => 10, 'defend' => 10],
         'light' => ['name' => 'Справедливый', 'skill' => 70, 'counter' => 15, 'defend' => 30],
+        'wind' => ['name' => 'Переменчивый', 'skill' => 70, 'counter' => 10, 'defend' => 20],
+        'earth' => ['name' => 'Упрямый', 'skill' => 55, 'counter' => 25, 'defend' => 45],
     ];
 
-    /** Кто кого бьёт сильнее: огонь > природа > вода > огонь, тень > зверь. */
-    private const STRONG = ['fire' => 'nature', 'nature' => 'water', 'water' => 'fire', 'shadow' => 'beast', 'beast' => 'light', 'light' => 'shadow'];
+    /**
+     * Кто кого бьёт сильнее. Круги: огонь > природа > вода > огонь;
+     * тень > зверь > свет > тень; ветер > земля > огонь, огонь > ветер;
+     * природа ещё бьёт землю.
+     */
+    private const STRONG = [
+        'fire' => ['nature', 'wind'],
+        'nature' => ['water', 'earth'],
+        'water' => ['fire'],
+        'shadow' => ['beast'],
+        'beast' => ['light'],
+        'light' => ['shadow'],
+        'wind' => ['earth'],
+        'earth' => ['fire'],
+    ];
 
     /** Плохие статусы, которые смывает Волна. */
     private const DEBUFFS = ['burn', 'bleed', 'fear', 'wet', 'stun'];
@@ -401,9 +420,9 @@ final class PetBattleEngine
         $damage = $atk * $power * random_int(90, 110) / 100;
         $damage -= $pierce ? 0 : $target['def'] * 0.6;
 
-        if ((self::STRONG[$attacker['element']] ?? null) === $target['element']) {
+        if (in_array($target['element'], self::STRONG[$attacker['element']] ?? [], true)) {
             $damage *= 1.25;
-        } elseif ((self::STRONG[$target['element']] ?? null) === $attacker['element']) {
+        } elseif (in_array($attacker['element'], self::STRONG[$target['element']] ?? [], true)) {
             $damage *= 0.8;
         }
 

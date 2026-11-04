@@ -8,6 +8,9 @@ export const ELEMENTS = {
     nature: { name: 'Природа', color: '#4ade80', skill: 'Шипы: возврат урона' },
     shadow: { name: 'Тень', color: '#a78bfa', skill: 'Тень: сквозь защиту, пугает' },
     beast: { name: 'Зверь', color: '#fbbf24', skill: 'Рывок: шанс крита, крит ранит' },
+    light: { name: 'Свет', color: '#f8fafc', skill: 'Вспышка: урон и страх' },
+    wind: { name: 'Ветер', color: '#6ee7b7', skill: 'Порыв: шанс крита и страха' },
+    earth: { name: 'Земля', color: '#a16207', skill: 'Обвал: сквозь защиту, возврат урона' },
 }
 
 /** Арены боя: цвета сцены. Названия и особенности приходят с сервера. */
@@ -32,9 +35,15 @@ export const STATUS_COLORS = {
 /** Как в PetService::MAX_LEVEL. */
 export const MAX_PET_LEVEL = 100
 
-/** Опыт, с которого начинается уровень: 0, 5, 15, 30… */
+/**
+ * Опыт, с которого начинается уровень: до 40 уровня 0, 5, 15, 30…, дальше
+ * превышение умножается на 23/5. Как PetService::xpFor.
+ */
 export function levelXp(level) {
-    return (5 * level * (level - 1)) / 2
+    const base = Math.floor((5 * level * (level - 1)) / 2)
+    const knee = 3900
+
+    return level <= 40 ? base : knee + Math.floor((23 * (base - knee)) / 5)
 }
 
 export const PET_NAMES = {
@@ -42,4 +51,6 @@ export const PET_NAMES = {
     ghost: 'Призрак', dragon: 'Дракончик', robot: 'Робот', penguin: 'Пингвин', bee: 'Пчёлка',
     crow: 'Ворона', owl: 'Совёнок', frog: 'Лягушонок', bunny: 'Зайчик', panda: 'Панда', shroom: 'Грибочек',
     octopus: 'Осьминожка', capybara: 'Капибара', jelly: 'Медуза', phoenix: 'Феникс', unicorn: 'Единорог',
+    hawk: 'Ястреб', cloud: 'Облачко', turtle: 'Черепашка', mole: 'Крот', bat: 'Летучая мышь',
+    golem: 'Голем', fairy: 'Фея', griffin: 'Грифон',
 }

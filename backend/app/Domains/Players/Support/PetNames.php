@@ -13,6 +13,8 @@ class PetNames
         'ghost' => 'Призрак', 'dragon' => 'Дракончик', 'robot' => 'Робот', 'penguin' => 'Пингвин', 'bee' => 'Пчёлка',
         'crow' => 'Ворона', 'owl' => 'Совёнок', 'frog' => 'Лягушонок', 'bunny' => 'Зайчик', 'panda' => 'Панда', 'shroom' => 'Грибочек',
         'octopus' => 'Осьминожка', 'capybara' => 'Капибара', 'jelly' => 'Медуза', 'phoenix' => 'Феникс', 'unicorn' => 'Единорог',
+        'hawk' => 'Ястреб', 'cloud' => 'Облачко', 'turtle' => 'Черепашка', 'mole' => 'Крот', 'bat' => 'Летучая мышь',
+        'golem' => 'Голем', 'fairy' => 'Фея', 'griffin' => 'Грифон',
     ];
 
     public static function species(?string $key): string

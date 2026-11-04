@@ -46,6 +46,8 @@ final class DungeonBattle
         'shadow' => ['name' => 'Тень', 'color' => '#a78bfa'],
         'beast' => ['name' => 'Зверь', 'color' => '#fbbf24'],
         'light' => ['name' => 'Свет', 'color' => '#f8fafc'],
+        'wind' => ['name' => 'Ветер', 'color' => '#a7f3d0'],
+        'earth' => ['name' => 'Земля', 'color' => '#a16207'],
     ];
 
     /**
@@ -81,6 +83,14 @@ final class DungeonBattle
         'light' => [
             'skill' => ['name' => 'Вспышка', 'power' => 1.45, 'fear' => 30],
             'ultimate' => ['name' => 'Рассвет', 'power' => 1.4, 'heal_team' => 0.1, 'cleanse' => true],
+        ],
+        'wind' => [
+            'skill' => ['name' => 'Порыв', 'power' => 1.35, 'crit_bonus' => 25, 'fear' => 20],
+            'ultimate' => ['name' => 'Ураган', 'power' => 1.5, 'team_atk' => 1.2, 'rounds' => 2, 'stun_chance' => 30],
+        ],
+        'earth' => [
+            'skill' => ['name' => 'Обвал', 'power' => 1.4, 'stun_chance' => 25],
+            'ultimate' => ['name' => 'Землетрясение', 'power' => 2.2, 'stun' => 60, 'heal_team' => 0.05],
         ],
     ];
 
@@ -174,6 +184,55 @@ final class DungeonBattle
             'power' => 1.35,
             'text' => 'Зверь и свет разгоняют тень.',
         ],
+        'sandstorm' => [
+            'name' => 'Песчаная буря',
+            'pair' => ['wind', 'earth'],
+            'counters' => 'water',
+            'power' => 1.35,
+            'text' => 'Ветер несёт песок и высушивает воду.',
+        ],
+        'wildfire' => [
+            'name' => 'Шквал',
+            'pair' => ['wind', 'fire'],
+            'counters' => 'nature',
+            'power' => 1.35,
+            'text' => 'Ветер раздувает огонь, и он пожирает лес.',
+        ],
+        'mud' => [
+            'name' => 'Трясина',
+            'pair' => ['earth', 'water'],
+            'counters' => 'fire',
+            'power' => 1.35,
+            'text' => 'Сырая земля гасит любое пламя.',
+        ],
+        'quake' => [
+            'name' => 'Толчок',
+            'pair' => ['earth', 'beast'],
+            'counters' => 'wind',
+            'power' => 1.35,
+            'text' => 'Топот зверя сотрясает землю и сбивает ветер.',
+        ],
+        'dune' => [
+            'name' => 'Барханы',
+            'pair' => ['earth', 'shadow'],
+            'counters' => 'light',
+            'power' => 1.35,
+            'text' => 'Тёмные барханы поглощают свет.',
+        ],
+        'gale' => [
+            'name' => 'Ливень',
+            'pair' => ['wind', 'water'],
+            'counters' => 'earth',
+            'power' => 1.35,
+            'text' => 'Ветер гонит ливень и размывает землю.',
+        ],
+        'rainbow' => [
+            'name' => 'Радуга',
+            'pair' => ['wind', 'light'],
+            'counters' => 'shadow',
+            'power' => 1.35,
+            'text' => 'Ветер разгоняет тучи, и свет прогоняет тень.',
+        ],
     ];
 
     public const STATUSES = [
@@ -183,7 +242,15 @@ final class DungeonBattle
     ];
 
     /** Стихия бьёт сильнее по этой. */
-    private const STRONG = ['fire' => 'nature', 'nature' => 'water', 'water' => 'fire', 'shadow' => 'beast', 'beast' => 'shadow'];
+    private const STRONG = [
+        'fire' => ['nature', 'wind'],
+        'nature' => ['water', 'earth'],
+        'water' => ['fire'],
+        'shadow' => ['beast'],
+        'beast' => ['shadow'],
+        'wind' => ['earth'],
+        'earth' => ['fire'],
+    ];
 
     /* ==================== Начало боя ==================== */
 
@@ -797,11 +864,11 @@ final class DungeonBattle
 
     private function elementMultiplier(string $mine, string $theirs): float
     {
-        if ((self::STRONG[$mine] ?? null) === $theirs) {
+        if (in_array($theirs, self::STRONG[$mine] ?? [], true)) {
             return 1.25;
         }
 
-        if ((self::STRONG[$theirs] ?? null) === $mine) {
+        if (in_array($mine, self::STRONG[$theirs] ?? [], true)) {
             return 0.8;
         }
 

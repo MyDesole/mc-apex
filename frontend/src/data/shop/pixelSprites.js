@@ -1,6 +1,7 @@
 import { DUNGEON_SPRITES } from './dungeonSprites.js'
 import { CLASSIC_SPRITES } from './classicSprites.js'
 import { GEAR_SPRITES } from './gearSprites.js'
+import { NEW_PET_SPRITES } from './newPetSprites.js'
 
 /**
  * Пиксельные картинки в стиле Minecraft для косметики: бейджи, рамки,
@@ -1728,7 +1729,7 @@ Object.assign(PIXEL_SPRITES, {
 })
 
 // Мобы и боссы глубоких подземелий нарисованы вручную
-Object.assign(PIXEL_SPRITES, CLASSIC_SPRITES, DUNGEON_SPRITES, GEAR_SPRITES)
+Object.assign(PIXEL_SPRITES, CLASSIC_SPRITES, DUNGEON_SPRITES, GEAR_SPRITES, NEW_PET_SPRITES)
 
 const cache = new Map()
 const svgCache = new Map()
