@@ -5,8 +5,14 @@
 #
 #   APP_DIR=/var/www/mc-apex.ru/mc-apex bash backend/deploy/deploy.sh
 #
-# Делает: бэкап БД, зависимости, миграции, кеши, сборку фронтенда,
+# Делает: бэкап БД, сборку фронтенда, зависимости, миграции, кеши,
 # перезапуск очередей и Reverb. Сидеры каталога безопасно перезапускать.
+#
+# Без простоя API: тяжёлая часть (бэкап, npm ci, vite build — минуты) идёт
+# при работающем сайте, фронтенд собирается в frontend/dist.next и подменяется
+# одним переименованием. Режим обслуживания включается, только если есть
+# неприменённые миграции или поменялся composer.lock, и держится лишь пока
+# идут composer, миграции и кеши (секунды).
 
 set -euo pipefail
 
@@ -32,12 +38,54 @@ git -C "$APP_DIR" rev-parse HEAD > "$BACKUP_DIR/$TS/git-head.txt"
 # Храним последние 14 бэкапов
 ls -1dt "$BACKUP_DIR"/*/ 2>/dev/null | tail -n +15 | xargs -r rm -rf
 
-log "Режим обслуживания"
-php artisan down --retry=15 || true
-trap 'php "$APP_DIR/backend/artisan" up' EXIT
+log "Фронтенд (сайт при этом работает)"
+cd "$APP_DIR/frontend"
+npm ci --no-audit --no-fund
+rm -rf dist.next
+npm run build -- --outDir dist.next --emptyOutDir
 
-log "Composer"
-composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+# Карта сайта кладётся в свежую сборку заранее: после подмены она уже на месте
+cd "$APP_DIR/backend"
+php artisan sitemap:generate --path="$APP_DIR/frontend/dist.next/sitemap.xml" || true
+# Планировщик (www-data) обновляет карту раз в сутки — файл должен быть его
+chown "$WEB_USER":"$WEB_USER" "$APP_DIR/frontend/dist.next/sitemap.xml" 2>/dev/null || true
+
+# Открытые вкладки ещё просят чанки старой сборки: оставляем их рядом с новыми
+if [ -d "$APP_DIR/frontend/dist/assets" ]; then
+    cp -rn "$APP_DIR/frontend/dist/assets/." "$APP_DIR/frontend/dist.next/assets/" 2>/dev/null || true
+fi
+# ...но не навсегда: старше двух недель выбрасываем
+find "$APP_DIR/frontend/dist.next/assets" -type f -mtime +14 -delete 2>/dev/null || true
+
+log "Нужен ли режим обслуживания"
+LOCK_HASH_FILE="$BACKUP_DIR/.composer-lock.md5"
+LOCK_HASH="$(md5sum composer.lock | cut -d' ' -f1)"
+NEED_DOWN=0
+REASON=""
+
+if ! php artisan migrate:status --pending 2>/dev/null | grep -q "No pending migrations"; then
+    NEED_DOWN=1
+    REASON="есть неприменённые миграции"
+fi
+
+if [ ! -f "$LOCK_HASH_FILE" ] || [ "$(cat "$LOCK_HASH_FILE")" != "$LOCK_HASH" ]; then
+    NEED_DOWN=1
+    REASON="${REASON:+$REASON, }изменился composer.lock"
+fi
+
+if [ "$NEED_DOWN" = "1" ]; then
+    log "Режим обслуживания ($REASON)"
+    php artisan down --retry=15 || true
+    trap 'php "$APP_DIR/backend/artisan" up' EXIT
+
+    log "Composer"
+    composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+    echo "$LOCK_HASH" > "$LOCK_HASH_FILE"
+else
+    log "Без простоя: миграций и новых зависимостей нет"
+    # Новые классы нужны автозагрузчику, зависимости при этом не трогаем
+    composer dump-autoload --optimize --no-interaction
+fi
 
 log "Миграции и каталог"
 php artisan migrate --force
@@ -56,16 +104,13 @@ php artisan view:cache
 php artisan event:cache
 php artisan storage:link 2>/dev/null || true
 
-log "Фронтенд"
+log "Подмена фронтенда"
 cd "$APP_DIR/frontend"
-npm ci --no-audit --no-fund
-npm run build
-
-# Карта сайта кладётся в свежую сборку (dist пересоздаётся при каждой сборке)
-cd "$APP_DIR/backend"
-php artisan sitemap:generate || true
-# Планировщик (www-data) обновляет карту раз в сутки — файл должен быть его
-chown "$WEB_USER":"$WEB_USER" "$APP_DIR/frontend/dist/sitemap.xml" 2>/dev/null || true
+# Два переименования подряд: окно, когда dist нет, — доли секунды
+rm -rf dist.old
+if [ -d dist ]; then mv dist dist.old; fi
+mv dist.next dist
+rm -rf dist.old
 
 log "Права"
 chown -R "$WEB_USER":"$WEB_USER" "$APP_DIR/backend/storage" "$APP_DIR/backend/bootstrap/cache"
