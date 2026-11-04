@@ -11,7 +11,7 @@ import { RouterLink } from 'vue-router'
 
 import UserName from '@/components/players/UserName.vue'
 import { userLink, clanLink } from '@/utils/links.js'
-import { bridgeRankOf, rankColor, rankLabel } from '@/utils/playerStyling.js'
+import { bridgeRankOf, rankColor, rankLabel, rankShort } from '@/utils/playerStyling.js'
 
 const props = defineProps({
   // Игрок или клан
@@ -82,8 +82,9 @@ const initial = computed(() => {
           class="tier-block"
           :class="{ 'tier-block--rank': bridgeRankOf(entry) }"
           :style="{ '--tier': tierColor }"
+          :title="rankLabel(entry)"
       >
-        {{ rankLabel(entry) }}
+        {{ rankShort(entry) }}
       </span>
     </div>
 

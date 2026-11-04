@@ -64,6 +64,45 @@ export function rankLabel(player, fallback = '—') {
   return bridgeRankOf(player)?.label || player?.tier || fallback
 }
 
+// Первые буквы слов кириллицей → латиница: «BRIDGE ПРОФИ» даёт B.P
+const CYR_TO_LAT = {
+  А: 'A', Б: 'B', В: 'V', Г: 'G', Д: 'D', Е: 'E', Ё: 'E', Ж: 'Z', З: 'Z', И: 'I', Й: 'Y',
+  К: 'K', Л: 'L', М: 'M', Н: 'N', О: 'O', П: 'P', Р: 'R', С: 'S', Т: 'T', У: 'U', Ф: 'F',
+  Х: 'H', Ц: 'C', Ч: 'C', Ш: 'S', Щ: 'S', Ы: 'Y', Э: 'E', Ю: 'Y', Я: 'Y',
+}
+
+/**
+ * Короткая подпись звания для узких мест: инициалы слов через точку
+ * (BRIDGE ПРОФИ → B.P, BRIDGE БОЕЦ → B.B). Слово из одного слова: короткое
+ * остаётся как есть, длинное режется до трёх букв.
+ */
+export function shortRankLabel(label) {
+  const words = String(label ?? '').trim().split(/[\s\-_]+/).filter(Boolean)
+
+  if (words.length === 0) return ''
+
+  if (words.length === 1) {
+    const word = words[0].toUpperCase()
+
+    return word.length <= 6 ? word : word.slice(0, 3)
+  }
+
+  return words
+    .map((word) => {
+      const first = word[0].toUpperCase()
+
+      return CYR_TO_LAT[first] ?? first
+    })
+    .join('.')
+}
+
+/** Подпись в узких бейджах: звание бриджера сокращено, тир как есть. */
+export function rankShort(player, fallback = '—') {
+  const bridge = bridgeRankOf(player)
+
+  return bridge?.label ? shortRankLabel(bridge.label) : player?.tier || fallback
+}
+
 /** Цвет подписи рядом с ником. */
 export function rankColor(player, fallback = '#a78bfa') {
   return bridgeRankOf(player)?.color || TIER_COLORS[player?.tier] || fallback

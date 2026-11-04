@@ -10,7 +10,7 @@ import HomeDashboard from '@/components/players/HomeDashboard.vue'
 import HomeFeatures from '@/components/players/HomeFeatures.vue'
 import { tierColors } from '@/data/players/profileCustomization.js'
 import { userLink, clanLink } from '@/utils/links.js'
-import { bridgeRankOf, rankColor, rankLabel } from '@/utils/playerStyling.js'
+import { bridgeRankOf, rankColor, rankLabel, rankShort } from '@/utils/playerStyling.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 
 const auth = useAuthStore()
@@ -195,8 +195,9 @@ onMounted(async () => {
                 class="tier-block leader__tier"
                 :class="{ 'tier-block--rank': bridgeRankOf(leader) }"
                 :style="{ '--tier': playerTierColor(leader) }"
+                :title="rankLabel(leader)"
             >
-              {{ rankLabel(leader) }}
+              {{ rankShort(leader) }}
             </span>
           </div>
         </RouterLink>
@@ -399,8 +400,9 @@ onMounted(async () => {
                     class="tier-block rank-row__tier"
                     :class="{ 'tier-block--rank': bridgeRankOf(player) }"
                     :style="{ '--tier': playerTierColor(player) }"
+                    :title="rankLabel(player)"
                 >
-                  {{ rankLabel(player) }}
+                  {{ rankShort(player) }}
                 </span>
               </RouterLink>
             </li>
