@@ -151,6 +151,7 @@ class MarketService
 
             CoinService::debit($buyer, (int) $listing->price, CoinTransaction::SOURCE_PURCHASE, 'Рынок: ' . $this->name($listing));
             CoinService::credit($seller, (int) $listing->price - $fee, CoinTransaction::SOURCE_OTHER, 'Рынок: продажа ' . $this->name($listing), "market:{$id}:seller");
+            QuestService::track($seller, 'market_sell');
 
             $this->deliver($buyer, $listing);
 

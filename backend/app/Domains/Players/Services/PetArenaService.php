@@ -394,6 +394,7 @@ class PetArenaService
         if ($won) {
             $coins = (int) round((40 + min($level, PetPerks::COIN_SCALING_CAP) * 3) * self::WIN_MULTIPLIER * (PetPerks::arenaBonus($level) ? 1.25 : 1));
             CoinService::credit($user, $coins, CoinTransaction::SOURCE_OTHER, 'Победа на арене питомцев', "pet-battle:{$battleId}");
+            QuestService::track($user, 'arena_win');
         }
 
         DB::table('pet_battles')->where('id', $battleId)->update([

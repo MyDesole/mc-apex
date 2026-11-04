@@ -338,6 +338,7 @@ final class DungeonService
         }
 
         $state = $this->grantLoot($user, $run, $dungeon, $floor, (bool) $foe['is_boss'], $state);
+        QuestService::track($user, $foe['is_boss'] ? 'dungeon_boss' : 'dungeon_mob');
 
         $isBoss = (bool) $foe['is_boss'];
         $nextEncounter = $encounter + 1;
@@ -357,6 +358,7 @@ final class DungeonService
         if ($cleared) {
             $state['pending'] = null;
             $state['log'][] = ['kind' => 'clear', 'text' => 'Все этажи пройдены. Подземелье зачищено.'];
+            QuestService::track($user, 'dungeon_clear');
 
             if (! empty($dungeon['grants'])) {
                 DB::table('dungeon_materials')->upsert(

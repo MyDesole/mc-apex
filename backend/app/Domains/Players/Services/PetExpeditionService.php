@@ -124,6 +124,8 @@ class PetExpeditionService
                 LootCaseService::grantKeys($user, $slug, $count);
             }
 
+            QuestService::track($user, 'expedition');
+
             return $this->present(DB::table('pet_expeditions')->find($id)) + ['balance' => (int) $user->fresh()->apex_coins];
         });
     }

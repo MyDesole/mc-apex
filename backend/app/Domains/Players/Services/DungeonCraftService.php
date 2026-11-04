@@ -218,6 +218,7 @@ class DungeonCraftService
     private function result(User $user, string $slug, string $rarity): array
     {
         $id = $this->gear->grant($user, $slug, $rarity);
+        QuestService::track($user, 'craft');
         $gear = Dungeons::GEAR[$slug];
         $stats = Dungeons::scaledStats($gear, $rarity);
 

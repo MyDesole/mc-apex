@@ -172,6 +172,10 @@ class PetService
             throw ValidationException::withMessages(['action' => ['Сегодня ты уже это делал — приходи завтра.']]);
         }
 
+        if ($actor->id === $owner->id) {
+            QuestService::track($actor, 'care');
+        }
+
         // Бонус за высокий уровень кладём в pet_xp: сам уход считается по строкам pet_interactions
         $bonus = self::ACTIONS[$action] * (self::xpMultiplier($levelBefore) - 1);
         if ($pet && $bonus > 0) {

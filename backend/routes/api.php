@@ -467,6 +467,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{raid}/moves', 'moves')->whereNumber('raid')->middleware('throttle:120,1');
     });
 
+    // Доска заданий: ежедневные и недельные задания, Жетоны удачи
+    Route::prefix('quests')->controller(\App\Domains\Players\Controllers\Api\QuestController::class)->group(function () {
+        Route::get('/', 'index');
+        Route::post('/bonus', 'bonus')->middleware('throttle:20,1');
+        Route::post('/{key}/claim', 'claim')->middleware('throttle:30,1');
+    });
+
     // Лавка: привилегии сервера за Рубли и уникальные вещи за Осколки Разлома
     Route::prefix('lavka')->controller(\App\Domains\Players\Controllers\Api\RaidController::class)->group(function () {
         Route::get('/', 'lavka');

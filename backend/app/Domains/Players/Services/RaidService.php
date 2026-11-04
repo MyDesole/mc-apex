@@ -459,6 +459,7 @@ class RaidService
             DB::table('users')->where('id', $user->id)->increment('rift_shards', self::REWARD['shards']);
             app(PetGearService::class)->grant($user, $gear[array_rand($gear)], 'legendary');
 
+            QuestService::track($user, 'raid_win');
             DB::table('raid_members')->where('id', $member->id)->update(['rewarded_at' => now()]);
         }
     }

@@ -25,6 +25,7 @@ const MuseumScene = defineAsyncComponent(() => import('@/game/MuseumScene.vue'))
 const HallScene = defineAsyncComponent(() => import('@/game/HallScene.vue'))
 const DungeonView = defineAsyncComponent(() => import('@/views/pets/DungeonView.vue'))
 const MineScene = defineAsyncComponent(() => import('@/game/MineScene.vue'))
+const QuestScene = defineAsyncComponent(() => import('@/game/QuestScene.vue'))
 const RaidScene = defineAsyncComponent(() => import('@/game/RaidScene.vue'))
 const LavkaScene = defineAsyncComponent(() => import('@/game/LavkaScene.vue'))
 const MarketScene = defineAsyncComponent(() => import('@/game/MarketScene.vue'))
@@ -36,13 +37,14 @@ const PetBag = defineAsyncComponent(() => import('@/components/pets/PetBag.vue')
  * only — какая вкладка механики живёт внутри (остальные скрыты).
  */
 const PLACES = [
-  { id: 'gear', name: 'Кузница', kind: 'forge', x: 7, y: 60, view: ForgeScene, hint: 'Снаряжение питомцев' },
-  { id: 'farm', name: 'Общая ферма', kind: 'barn', x: 21, y: 60, view: FarmView, props: { only: 'common' }, hint: 'Бронь и выкуп питомцев', badge: 'farm' },
-  { id: 'miner', name: 'Шахта', kind: 'mine', x: 35, y: 60, view: MineScene, hint: 'Копай руду, зарабатывай ApexCoin' },
-  { id: 'dungeon', name: 'Подземелья', kind: 'dungeon', x: 49, y: 60, view: DungeonView, hint: 'Отряд, боссы и добыча', badge: 'dungeon' },
-  { id: 'raid', name: 'Разлом', kind: 'rift', x: 63, y: 60, view: RaidScene, hint: 'Рейд на группу в 18:00 и 22:00' },
-  { id: 'museum', name: 'Питомцедекс', kind: 'museum', x: 77, y: 60, view: MuseumScene, hint: 'Коллекция видов и окрасов' },
-  { id: 'hall', name: 'Доска почёта', kind: 'hall', x: 91, y: 60, view: HallScene, hint: 'Лучшие питомцы сервера' },
+  { id: 'quests', name: 'Задания', kind: 'board', x: 6, y: 60, view: QuestScene, hint: 'Задания дня и недели, Жетоны удачи', badge: 'quests' },
+  { id: 'gear', name: 'Кузница', kind: 'forge', x: 18.5, y: 60, view: ForgeScene, hint: 'Снаряжение питомцев' },
+  { id: 'farm', name: 'Общая ферма', kind: 'barn', x: 31, y: 60, view: FarmView, props: { only: 'common' }, hint: 'Бронь и выкуп питомцев', badge: 'farm' },
+  { id: 'miner', name: 'Шахта', kind: 'mine', x: 43.5, y: 60, view: MineScene, hint: 'Копай руду, зарабатывай ApexCoin' },
+  { id: 'dungeon', name: 'Подземелья', kind: 'dungeon', x: 56, y: 60, view: DungeonView, hint: 'Отряд, боссы и добыча', badge: 'dungeon' },
+  { id: 'raid', name: 'Разлом', kind: 'rift', x: 68.5, y: 60, view: RaidScene, hint: 'Рейд на группу в 18:00 и 22:00' },
+  { id: 'museum', name: 'Питомцедекс', kind: 'museum', x: 81, y: 60, view: MuseumScene, hint: 'Коллекция видов и окрасов' },
+  { id: 'hall', name: 'Доска почёта', kind: 'hall', x: 93.5, y: 60, view: HallScene, hint: 'Лучшие питомцы сервера' },
   { id: 'pets', name: 'Дом питомцев', kind: 'house', x: 6, y: 92, view: HouseScene, hint: 'Уход, уровни, перки и трюки' },
   { id: 'personal', name: 'Личная ферма', kind: 'gate', x: 19, y: 92, view: FarmView, props: { only: 'personal' }, hint: 'Грядки, Кладовка и горн', badge: 'personal' },
   { id: 'bag', name: 'Склад питомцев', kind: 'store', x: 32, y: 92, view: PetBag, hint: 'Инвентарь питомцев: снаряжение, материалы, ключи' },
@@ -156,6 +158,7 @@ onBeforeUnmount(() => {
         <div class="w-wallet">
           <span class="w-chip" title="ApexCoin">₳ {{ fmt(world?.coins) }}</span>
           <span class="w-chip w-chip--ruble" title="Рубли: падают только в Рублёвых копях, тратятся на ускорения и привилегии. Не передаются.">₽ {{ fmt(world?.rubles) }}</span>
+          <span class="w-chip" title="Жетоны удачи: дают задания, нужны для сундуков и колеса удачи">Жетоны {{ fmt(world?.tokens) }}</span>
         </div>
       </header>
 
