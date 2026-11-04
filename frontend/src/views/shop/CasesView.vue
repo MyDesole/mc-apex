@@ -162,14 +162,19 @@ function watchTicks() {
   tickFrame = requestAnimationFrame(step)
 }
 
-async function openCase() {
+// «Открыть все» берёт не больше стольких ключей за раз (так же ограничивает сервер)
+const MAX_ALL = 50
+const allCount = (caseData) => Math.min(caseData?.keys ?? 0, MAX_ALL)
+
+async function openCase({ all = false } = {}) {
   const caseData = selected.value
   if (!caseData || !canOpen(caseData)) return
+  if (all && (caseData.free_daily || !(caseData.keys > 0))) return
 
-  const count = caseData.free_daily ? 1 : batch.value
+  const count = all ? allCount(caseData) : (caseData.free_daily ? 1 : batch.value)
 
-  // Монет не хватает — сразу предлагаем заработать, без запроса
-  if (missing(caseData, count) > 0) {
+  // Монет не хватает — сразу предлагаем заработать, без запроса (ключи монет не требуют)
+  if (!all && missing(caseData, count) > 0) {
     shortage.value = { missing: missing(caseData, count), count }
     return
   }
@@ -180,7 +185,7 @@ async function openCase() {
   showResult.value = false
 
   try {
-    const response = await casesApi.open(caseData.slug, count)
+    const response = all ? await casesApi.openAll(caseData.slug) : await casesApi.open(caseData.slug, count)
 
     // Сбрасываем ленту в начало без анимации, затем крутим до выигрыша
     reelDuration.value = 0
@@ -408,6 +413,17 @@ onUnmounted(() => {
               @click="auth.isAuthenticated ? openCase() : router.push('/login')"
           >
             {{ openLabel(selected) }}
+          </button>
+
+          <!-- Все ключи этого кейса разом, без монет -->
+          <button
+              v-if="auth.isAuthenticated && !selected.free_daily && selected.keys > 1"
+              type="button"
+              class="open-all"
+              :disabled="opening"
+              @click="openCase({ all: true })"
+          >
+            Открыть все ключи · {{ allCount(selected) }}<template v-if="selected.keys > allCount(selected)"> из {{ selected.keys }}</template>
           </button>
           <p v-if="openError" class="open-error">{{ openError }}</p>
 

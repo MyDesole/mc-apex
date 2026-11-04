@@ -106,6 +106,39 @@ class LootCaseTest extends TestCase
         $this->actingAs($rich)->postJson('/api/shop/cases/seeker/open', ['count' => 7])->assertStatus(422);
     }
 
+    public function test_open_all_spends_every_key_and_takes_no_coins(): void
+    {
+        $user = User::factory()->create(['apex_coins' => 0]);
+        DB::table('loot_case_keys')->insert(['user_id' => $user->id, 'case_slug' => 'seeker', 'count' => 4]);
+
+        $response = $this->actingAs($user)->postJson('/api/shop/cases/seeker/open', ['all' => true])
+            ->assertOk()
+            ->assertJsonCount(4, 'prizes')
+            ->assertJsonPath('used_keys', 4)
+            ->assertJsonPath('spent', 0);
+
+        $this->assertSame(4, CaseOpening::where('user_id', $user->id)->count());
+        $this->assertSame(0, (int) DB::table('loot_case_keys')->where('user_id', $user->id)->where('case_slug', 'seeker')->value('count'));
+        // монеты — только выигранные, ни одной не списано
+        $this->assertSame((int) collect($response->json('prizes'))->sum('coins'), (int) $user->fresh()->apex_coins);
+
+        // Ключей больше нет — открывать нечего; бесплатный сундук так не открывается
+        $this->actingAs($user)->postJson('/api/shop/cases/seeker/open', ['all' => true])->assertStatus(422);
+        $this->actingAs($user)->postJson('/api/shop/cases/daily/open', ['all' => true])->assertStatus(422);
+    }
+
+    public function test_open_all_is_capped_per_request(): void
+    {
+        $user = User::factory()->create(['apex_coins' => 0]);
+        DB::table('loot_case_keys')->insert(['user_id' => $user->id, 'case_slug' => 'seeker', 'count' => 60]);
+
+        $this->actingAs($user)->postJson('/api/shop/cases/seeker/open', ['all' => true])
+            ->assertOk()
+            ->assertJsonCount(\App\Domains\Shop\Services\LootCaseService::MAX_ALL, 'prizes');
+
+        $this->assertSame(10, (int) DB::table('loot_case_keys')->where('user_id', $user->id)->where('case_slug', 'seeker')->value('count'));
+    }
+
     public function test_item_prize_lands_in_inventory_and_duplicate_pays_coins(): void
     {
         // Королевский: без пустоты и обычных — предмет почти наверняка

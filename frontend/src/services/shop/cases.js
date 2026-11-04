@@ -15,4 +15,9 @@ export const casesApi = {
     open(slug, count = 1) {
         return api.post(`/shop/cases/${slug}/open`, count > 1 ? { count } : {})
     },
+
+    /** «Открыть все»: потратить все ключи кейса (до 50 за раз), монеты не списываются. */
+    openAll(slug) {
+        return api.post(`/shop/cases/${slug}/open`, { all: true })
+    },
 }

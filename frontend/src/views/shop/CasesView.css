@@ -647,6 +647,36 @@
   cursor: default;
 }
 
+/* «Открыть все ключи»: вторая по важности, без заливки */
+.open-all {
+  min-width: 280px;
+  min-height: 44px;
+  padding: 0 24px;
+
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+
+  cursor: pointer;
+
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.open-all:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.open-all:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
 .open-error {
   margin: 0;
   color: #f87171;

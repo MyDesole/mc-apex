@@ -30,9 +30,17 @@ class LootCaseController extends Controller
 
     public function open(Request $request, string $slug, LootCaseService $cases): JsonResponse
     {
-        $data = $request->validate(['count' => ['nullable', 'integer', 'in:' . implode(',', LootCases::BATCHES)]]);
+        $data = $request->validate([
+            'count' => ['nullable', 'integer', 'in:' . implode(',', LootCases::BATCHES)],
+            // «Открыть все»: потратить все ключи этого кейса
+            'all' => ['nullable', 'boolean'],
+        ]);
 
         try {
+            if (! empty($data['all'])) {
+                return response()->json($cases->openAllKeys($request->user(), $slug));
+            }
+
             return response()->json($cases->openMany($request->user(), $slug, (int) ($data['count'] ?? 1)));
         } catch (NotEnoughCoins $e) {
             // Клиент предложит заработать: шахта, экспедиции питомцев

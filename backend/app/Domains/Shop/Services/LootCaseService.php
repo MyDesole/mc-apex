@@ -250,6 +250,44 @@ class LootCaseService
             $openings[] = $this->open($user->fresh(), $slug);
         }
 
+        return $this->summarize($openings, $cost);
+    }
+
+    /** Больше за один раз не открываем: ответ и рулетка должны остаться разумными. */
+    public const MAX_ALL = 50;
+
+    /**
+     * «Открыть все»: тратит все ключи кейса (до MAX_ALL за раз), монет не берёт.
+     */
+    public function openAllKeys(User $user, string $slug): array
+    {
+        $case = LootCases::find($slug);
+
+        if (! $case) {
+            throw new RuntimeException('Такого кейса нет.');
+        }
+
+        if ($case['free_daily']) {
+            throw new RuntimeException('Бесплатный сундук открывается раз в день.');
+        }
+
+        $keys = $this->keys($user, $slug);
+
+        if ($keys <= 0) {
+            throw new RuntimeException('Ключей от этого кейса нет.');
+        }
+
+        $openings = [];
+        for ($i = 0, $count = min($keys, self::MAX_ALL); $i < $count; $i++) {
+            $openings[] = $this->open($user->fresh(), $slug);
+        }
+
+        return $this->summarize($openings, 0);
+    }
+
+    /** Общий ответ на пачку открытий: лучшая награда для рулетки и список всех. */
+    private function summarize(array $openings, int $cost): array
+    {
         // Лента рулетки крутится до лучшей награды пачки
         $rank = array_flip(['nothing', 'coins', ...LootCases::RARITIES]);
         $best = collect($openings)->sortByDesc(fn ($o) => $rank[$o['prize']['outcome']] ?? 0)->first();

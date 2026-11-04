@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { dungeonApi } from '@/services/pets/dungeon.js'
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
 import AppIcon from '@/components/core/AppIcon.vue'
 import PetFigure from '@/components/pets/PetFigure.vue'
@@ -395,7 +396,15 @@ const turn = () => act(async () => {
     return dungeonApi.move(run.value.id, payload)
 }, { light: true })
 
-const retreat = () => act(() => dungeonApi.retreat(run.value.id))
+// Отступление необратимо: поход закончится, а недопройденное не засчитается
+async function retreat() {
+    const ok = await confirmDialog('Отступить из подземелья? Добыча сохранится, но поход закончится.', {
+        danger: true,
+        confirmText: 'Отступить',
+    })
+
+    if (ok) await act(() => dungeonApi.retreat(run.value.id))
+}
 
 const buyRun = () => act(() => dungeonApi.buyRun())
 

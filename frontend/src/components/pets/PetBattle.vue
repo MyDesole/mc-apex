@@ -131,7 +131,7 @@ async function move(kind) {
 }
 
 async function forfeit() {
-  if (!await confirmDialog('Сдаться? Бой засчитается как поражение.')) return
+  if (!await confirmDialog('Сдаться? Бой засчитается как поражение.', { danger: true, confirmText: 'Сдаться' })) return
   busy.value = true
   try {
     emit('update', await api.post(`/pets/battles/${props.battle.id}/forfeit`))
