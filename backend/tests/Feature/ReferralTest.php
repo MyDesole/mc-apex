@@ -72,8 +72,8 @@ class ReferralTest extends TestCase
         $reward = (int) config('apex.coins.referral.amount');
         $welcome = (int) config('apex.coins.referral.welcome_bonus');
 
-        $this->assertSame(200, $reward);
-        $this->assertSame(50, $welcome);
+        $this->assertSame(10000, $reward);
+        $this->assertSame(2500, $welcome);
 
         $this->assertSame($reward, $referrer->fresh()->apex_coins);
         $this->assertSame($welcome, $invited->fresh()->apex_coins);
@@ -143,9 +143,9 @@ class ReferralTest extends TestCase
         $first = RewardService::forReferral($referrer, $invited);
         $second = RewardService::forReferral($referrer, $invited);
 
-        $this->assertSame(200, $first);
+        $this->assertSame(10000, $first);
         $this->assertSame(0, $second, 'Повторная награда за одного приглашённого не начисляется');
-        $this->assertSame(200, $referrer->fresh()->apex_coins);
+        $this->assertSame(10000, $referrer->fresh()->apex_coins);
         $this->assertSame(1, CoinTransaction::where('user_id', $referrer->id)->count());
     }
 
@@ -156,9 +156,9 @@ class ReferralTest extends TestCase
         $first = RewardService::welcomeBonus($invited);
         $second = RewardService::welcomeBonus($invited);
 
-        $this->assertSame(50, $first);
+        $this->assertSame(2500, $first);
         $this->assertSame(0, $second);
-        $this->assertSame(50, $invited->fresh()->apex_coins);
+        $this->assertSame(2500, $invited->fresh()->apex_coins);
         $this->assertSame(1, CoinTransaction::where('user_id', $invited->id)->count());
     }
 
@@ -215,7 +215,7 @@ class ReferralTest extends TestCase
         $second = User::where('username', 'chain_two')->firstOrFail();
 
         $this->assertSame($first->id, $second->referred_by);
-        $this->assertSame(200, $first->fresh()->apex_coins);
+        $this->assertSame(10000, $first->fresh()->apex_coins);
 
         // Код второго игрока тоже рабочий
         $this->register('chain_three', 'chain_three@example.com', $second->fresh()->referral_code)->assertCreated();
@@ -223,8 +223,8 @@ class ReferralTest extends TestCase
         $third = User::where('username', 'chain_three')->firstOrFail();
 
         $this->assertSame($second->id, $third->referred_by);
-        // chain_two: 50 приветственных + 200 за своё приглашение
-        $this->assertSame(250, $second->fresh()->apex_coins);
-        $this->assertSame(50, $third->apex_coins);
+        // chain_two: 2500 приветственных + 10000 за своё приглашение
+        $this->assertSame(12500, $second->fresh()->apex_coins);
+        $this->assertSame(2500, $third->apex_coins);
     }
 }
