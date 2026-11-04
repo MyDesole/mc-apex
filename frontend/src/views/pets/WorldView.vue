@@ -8,6 +8,7 @@
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { api } from '@/services/core/api.js'
+import { confirm as confirmDialog } from '@/utils/dialog.js'
 import PetFigure from '@/components/pets/PetFigure.vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
 import '@/game/gameKit.css'
@@ -37,33 +38,50 @@ const PetBag = defineAsyncComponent(() => import('@/components/pets/PetBag.vue')
  * Постройки. x, y — точка на земле (в процентах сцены), где здание стоит;
  * only — какая вкладка механики живёт внутри (остальные скрыты).
  */
+/*
+ * Две локации. Деревня — мирные занятия (фермы, шахта, экспедиции, торговля),
+ * открыта всем. Цитадель — бои (подземелья, Разлом, арена, Академия, Кузница):
+ * вход покупается один раз, а сервер отказывает в боевых действиях без него.
+ */
 const PLACES = [
-  { id: 'quests', name: 'Задания', kind: 'board', x: 5.5, y: 60, view: QuestScene, hint: 'Задания дня и недели, Жетоны удачи', badge: 'quests' },
-  { id: 'academy', name: 'Академия', kind: 'academy', x: 17, y: 60, view: TalentScene, hint: 'Таланты питомцев: ярость, бастион, дух', badge: 'talents' },
-  { id: 'gear', name: 'Кузница', kind: 'forge', x: 28.5, y: 60, view: ForgeScene, hint: 'Снаряжение питомцев' },
-  { id: 'farm', name: 'Общая ферма', kind: 'barn', x: 40, y: 60, view: FarmView, props: { only: 'common' }, hint: 'Бронь и выкуп питомцев', badge: 'farm' },
-  { id: 'miner', name: 'Шахта', kind: 'mine', x: 51.5, y: 60, view: MineScene, hint: 'Копай руду, зарабатывай ApexCoin' },
-  { id: 'dungeon', name: 'Подземелья', kind: 'dungeon', x: 63, y: 60, view: DungeonView, hint: 'Отряд, боссы и добыча', badge: 'dungeon' },
-  { id: 'raid', name: 'Разлом', kind: 'rift', x: 74.5, y: 60, view: RaidScene, hint: 'Рейд на группу в 18:00 и 22:00' },
-  { id: 'museum', name: 'Питомцедекс', kind: 'museum', x: 86, y: 60, view: MuseumScene, hint: 'Коллекция видов и окрасов' },
-  { id: 'hall', name: 'Доска почёта', kind: 'hall', x: 97.5, y: 60, view: HallScene, hint: 'Лучшие питомцы сервера' },
-  { id: 'pets', name: 'Дом питомцев', kind: 'house', x: 6, y: 92, view: HouseScene, hint: 'Уход, уровни, перки и трюки' },
-  { id: 'personal', name: 'Личная ферма', kind: 'gate', x: 19, y: 92, view: FarmView, props: { only: 'personal' }, hint: 'Грядки, Кладовка и горн', badge: 'personal' },
-  { id: 'bag', name: 'Склад питомцев', kind: 'store', x: 32, y: 92, view: PetBag, hint: 'Инвентарь питомцев: снаряжение, материалы, ключи' },
-  { id: 'expeditions', name: 'Экспедиции', kind: 'camp', x: 45, y: 92, view: ExpeditionScene, hint: 'Поход за монетами и ключами', badge: 'expeditions' },
-  { id: 'arena', name: 'Арена', kind: 'arena', x: 58, y: 92, view: ArenaScene, hint: 'Пошаговые бои питомцев' },
-  { id: 'auction', name: 'Аукцион', kind: 'stall', x: 71, y: 92, view: AuctionView, hint: 'Торги питомцами' },
-  { id: 'market', name: 'Рынок', kind: 'market', x: 83, y: 92, view: MarketScene, hint: 'Продать и купить материалы и снаряжение' },
-  { id: 'lavka', name: 'Лавка', kind: 'lavka', x: 95, y: 92, view: LavkaScene, hint: 'Привилегии за Рубли, вещи за Осколки' },
+  // Деревня, верхний ряд
+  { loc: 'village', id: 'quests', name: 'Задания', kind: 'board', x: 8, y: 60, view: QuestScene, hint: 'Задания дня и недели, Жетоны удачи', badge: 'quests' },
+  { loc: 'village', id: 'farm', name: 'Общая ферма', kind: 'barn', x: 24, y: 60, view: FarmView, props: { only: 'common' }, hint: 'Бронь и выкуп питомцев', badge: 'farm' },
+  { loc: 'village', id: 'miner', name: 'Шахта', kind: 'mine', x: 40, y: 60, view: MineScene, hint: 'Копай руду, зарабатывай ApexCoin' },
+  { loc: 'village', id: 'museum', name: 'Питомцедекс', kind: 'museum', x: 56, y: 60, view: MuseumScene, hint: 'Коллекция видов и окрасов' },
+  { loc: 'village', id: 'hall', name: 'Доска почёта', kind: 'hall', x: 72, y: 60, view: HallScene, hint: 'Лучшие питомцы сервера' },
+  { loc: 'village', id: 'to-citadel', name: 'Врата Цитадели', kind: 'castle', x: 88, y: 60, gate: 'citadel', hint: 'Вторая локация: бои, подземелья, рейд. Вход покупается один раз' },
+  // Деревня, нижний ряд
+  { loc: 'village', id: 'pets', name: 'Дом питомцев', kind: 'house', x: 10, y: 92, view: HouseScene, hint: 'Уход, уровни, перки и трюки' },
+  { loc: 'village', id: 'personal', name: 'Личная ферма', kind: 'gate', x: 29, y: 92, view: FarmView, props: { only: 'personal' }, hint: 'Грядки, Кладовка и горн', badge: 'personal' },
+  { loc: 'village', id: 'expeditions', name: 'Экспедиции', kind: 'camp', x: 48, y: 92, view: ExpeditionScene, hint: 'Поход за монетами и ключами', badge: 'expeditions' },
+  { loc: 'village', id: 'auction', name: 'Аукцион', kind: 'stall', x: 67, y: 92, view: AuctionView, hint: 'Торги питомцами' },
+  { loc: 'village', id: 'lavka', name: 'Лавка', kind: 'lavka', x: 86, y: 92, view: LavkaScene, hint: 'Привилегии за Рубли, вещи за Осколки и ApexCoin' },
+  // Цитадель, верхний ряд
+  { loc: 'citadel', id: 'dungeon', name: 'Подземелья', kind: 'dungeon', x: 13, y: 62, view: DungeonView, hint: 'Отряд, боссы и добыча', badge: 'dungeon' },
+  { loc: 'citadel', id: 'raid', name: 'Разлом', kind: 'rift', x: 38, y: 62, view: RaidScene, hint: 'Рейд на группу в 18:00 и 22:00' },
+  { loc: 'citadel', id: 'arena', name: 'Арена', kind: 'arena', x: 63, y: 62, view: ArenaScene, hint: 'Пошаговые бои питомцев' },
+  { loc: 'citadel', id: 'academy', name: 'Академия', kind: 'academy', x: 88, y: 62, view: TalentScene, hint: 'Таланты питомцев: ярость, бастион, дух, стихия', badge: 'talents' },
+  // Цитадель, нижний ряд
+  { loc: 'citadel', id: 'gear', name: 'Кузница', kind: 'forge', x: 13, y: 92, view: ForgeScene, hint: 'Снаряжение питомцев' },
+  { loc: 'citadel', id: 'bag', name: 'Склад питомцев', kind: 'store', x: 38, y: 92, view: PetBag, hint: 'Инвентарь питомцев: снаряжение, материалы, ключи' },
+  { loc: 'citadel', id: 'market', name: 'Рынок', kind: 'market', x: 63, y: 92, view: MarketScene, hint: 'Продать и купить материалы и снаряжение' },
+  { loc: 'citadel', id: 'to-village', name: 'Дорога в Деревню', kind: 'signpost', x: 88, y: 92, gate: 'village', hint: 'Вернуться в мирную Деревню' },
 ]
 
-/** Декор: деревья, кусты, цветы. Координаты — проценты сцены, стоит основанием на точке. */
+/** Декор Деревни: деревья, кусты, цветы. Координаты — проценты сцены, стоит основанием на точке. */
 const TREES = [[2, 47], [11, 45], [20, 43], [31, 46], [42, 44], [57, 45], [69, 43], [82, 46], [96, 44], [2, 79], [98, 80]]
-const BUSHES = [[14, 61], [28, 60], [42, 61], [56, 61], [70, 60], [84, 61], [12.5, 93], [25.5, 94], [38.5, 93], [51.5, 94], [64.5, 93], [77.5, 94], [89, 93]]
+const BUSHES = [[16, 61], [32, 60], [48, 61], [64, 60], [80, 61], [14, 93], [28, 94], [42, 93], [56, 94], [70, 93], [84, 94]]
 const FLOWERS = Array.from({ length: 36 }, (_, i) => [(i * 29.7 + 7) % 98 + 1, 66 + ((i * 13) % 5) * 0.4 + (i % 2 ? 8 : 0), i % 4])
 const LAMPS = [[7, 72], [21, 72], [35, 72], [49, 72], [63, 72], [77, 72], [91, 72]]
 const BIRDS = [[12, 14, 0], [48, 9, 7], [75, 18, 14]]
 const BUTTERFLIES = [[18, 66], [44, 80], [70, 64], [88, 82]]
+
+/** Декор Цитадели: колонны, факелы, знамёна и тлеющие угли. */
+const PILLARS = [[4, 58], [35, 58], [65, 58], [96, 58], [4, 90], [35, 90], [65, 90], [96, 90]]
+const TORCHES = [[12, 70], [28, 70], [43, 70], [58, 70], [73, 70], [88, 70]]
+const BANNERS = [[10, 52], [34, 52], [66, 52], [90, 52]]
+const EMBERS = Array.from({ length: 18 }, (_, i) => [(i * 37 + 5) % 96 + 2, 40 + ((i * 17) % 55), (i % 6) * -0.6])
 
 const hour = ref(new Date().getHours())
 const night = computed(() => hour.value >= 21 || hour.value < 6)
@@ -76,8 +94,13 @@ const entering = ref(null)
 let timer = null
 let enterTimer = null
 
-const openId = computed(() => (PLACES.some((p) => p.id === route.query.at) ? route.query.at : null))
+const openId = computed(() => (PLACES.some((p) => p.id === route.query.at && p.view) ? route.query.at : null))
 const open = computed(() => PLACES.find((p) => p.id === openId.value) ?? null)
+
+// Локация: открытое здание определяет её само, иначе берём из адреса
+const loc = computed(() => open.value?.loc ?? (route.query.loc === 'citadel' ? 'citadel' : 'village'))
+const places = computed(() => PLACES.filter((p) => p.loc === loc.value))
+const citadelOpen = computed(() => !!world.value?.citadel?.unlocked)
 
 const fmt = (n) => Number(n ?? 0).toLocaleString('ru-RU')
 
@@ -90,22 +113,56 @@ async function load() {
   }
 }
 
+const locQuery = (to) => (to === 'citadel' ? { loc: 'citadel' } : {})
+
+/** Ворота между локациями: в Цитадель пускают после единоразовой покупки. */
+async function travel(to) {
+  if (to === 'citadel' && !citadelOpen.value) {
+    const price = world.value?.citadel?.price ?? 0
+    const ok = await confirmDialog(
+      `Вход в Цитадель стоит ${fmt(price)} ApexCoin и покупается один раз. Там подземелья, рейд «Разлом», арена, Академия, Кузница, Склад и Рынок.`,
+      { title: 'Вход в Цитадель', confirmText: 'Купить вход' },
+    )
+    if (!ok) return
+
+    try {
+      world.value = await api.post('/world/citadel')
+      error.value = ''
+    } catch (e) {
+      error.value = e.message || 'Не удалось купить вход.'
+      return
+    }
+  }
+
+  router.replace({ query: locQuery(to) })
+}
+
 /** Открыть дверь и зайти: сначала дверь светится, потом сменяется интерьер. */
 function enter(place) {
   if (entering.value) return
+  if (place.gate) return travel(place.gate)
+
   entering.value = place.id
 
   enterTimer = setTimeout(() => {
     entering.value = null
-    router.replace({ query: { at: place.id } })
+    router.replace({ query: { at: place.id, ...locQuery(place.loc) } })
   }, 420)
 }
 
 function leave() {
-  router.replace({ query: {} })
+  router.replace({ query: locQuery(open.value?.loc) })
   // Вышли на улицу — значки могли измениться
   load()
 }
+
+// Ссылка прямо в боевое здание без купленного входа ведёт к воротам, а не внутрь
+watch([open, world], () => {
+  if (open.value?.loc === 'citadel' && world.value && !citadelOpen.value) {
+    router.replace({ query: {} })
+    error.value = 'Эта локация закрыта: купи вход у Врат Цитадели.'
+  }
+})
 
 const badge = (place) => (place.badge ? (world.value?.badges?.[place.badge] ?? 0) : 0)
 const locked = (place) => place.id === 'personal' && world.value && !world.value.personal_unlocked
@@ -129,25 +186,36 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="world">
-    <div class="world__scene" :class="{ 'is-dim': open, 'is-entering': entering, 'is-night': night, 'is-dusk': dusk }">
+    <div :key="loc" class="world__scene" :class="[`world__scene--${loc}`, { 'is-dim': open, 'is-entering': entering, 'is-night': night, 'is-dusk': dusk }]">
       <!-- Небо и холмы -->
       <div class="w-sky" aria-hidden="true">
         <i class="w-cloud w-cloud--a" /><i class="w-cloud w-cloud--b" /><i class="w-cloud w-cloud--c" />
-        <i :class="night ? 'w-moon' : 'w-sun'" />
+        <i :class="night || loc === 'citadel' ? 'w-moon' : 'w-sun'" />
         <i v-for="n in 26" :key="`s${n}`" class="w-star" :style="{ left: (n * 37) % 100 + '%', top: (n * 53) % 34 + '%', animationDelay: (n % 5) * -0.7 + 's' }" />
-        <i v-for="[x, y, d] in BIRDS" :key="`b${x}`" class="w-bird" :style="{ left: x + '%', top: y + '%', animationDelay: -d + 's' }" />
+        <template v-if="loc === 'village'">
+          <i v-for="[x, y, d] in BIRDS" :key="`b${x}`" class="w-bird" :style="{ left: x + '%', top: y + '%', animationDelay: -d + 's' }" />
+        </template>
       </div>
       <div class="w-hills" aria-hidden="true"><i /><i /><i /></div>
       <div class="w-ground" aria-hidden="true"><i class="w-path w-path--a" /><i class="w-path w-path--b" /></div>
 
-      <!-- Декор: растёт и живёт сам по себе -->
-      <div class="w-decor" aria-hidden="true">
+      <!-- Декор Деревни: растёт и живёт сам по себе -->
+      <div v-if="loc === 'village'" class="w-decor" aria-hidden="true">
         <i v-for="[x, y, k] in FLOWERS" :key="`f${x}`" class="w-flower" :class="`w-flower--${k}`" :style="{ left: x + '%', top: y + '%' }" />
         <i v-for="[x, y] in BUSHES" :key="`h${x}${y}`" class="w-bush" :style="{ left: x + '%', top: y + '%' }" />
         <i v-for="[x, y] in TREES" :key="`t${x}${y}`" class="w-tree" :style="{ left: x + '%', top: y + '%', '--s': 0.85 + ((x * 7) % 5) / 10 }"><b /></i>
         <i v-for="[x, y] in LAMPS" :key="`l${x}`" class="w-lamp" :style="{ left: x + '%', top: y + '%' }" />
         <i v-for="[x, y] in BUTTERFLIES" :key="`p${x}`" class="w-fly" :style="{ left: x + '%', top: y + '%', animationDelay: -x / 10 + 's' }" />
         <div class="w-river"><i class="w-bridge" /></div>
+      </div>
+
+      <!-- Декор Цитадели: колонны, факелы, знамёна, угли, лава внизу -->
+      <div v-else class="w-decor" aria-hidden="true">
+        <i v-for="[x, y] in PILLARS" :key="`c${x}${y}`" class="w-pillar" :style="{ left: x + '%', top: y + '%' }" />
+        <i v-for="[x, y] in BANNERS" :key="`n${x}`" class="w-banner" :style="{ left: x + '%', top: y + '%' }" />
+        <i v-for="[x, y] in TORCHES" :key="`o${x}`" class="w-torchpost" :style="{ left: x + '%', top: y + '%' }" />
+        <i v-for="[x, y, d] in EMBERS" :key="`e${x}${y}`" class="w-ember" :style="{ left: x + '%', top: y + '%', animationDelay: d + 's' }" />
+        <div class="w-lava" />
       </div>
       <div class="w-dark" aria-hidden="true" />
 
@@ -156,6 +224,7 @@ onBeforeUnmount(() => {
         <div class="w-title">
           <PixelSprite sprite="paw" :size="22" />
           <h1>Мир APEX</h1>
+          <span class="w-loc">{{ loc === 'citadel' ? 'Цитадель' : 'Деревня' }}</span>
         </div>
         <div class="w-wallet">
           <span class="w-chip" title="ApexCoin">₳ {{ fmt(world?.coins) }}</span>
@@ -168,7 +237,7 @@ onBeforeUnmount(() => {
 
       <!-- Постройки: стоят на земле, дверь открывается при входе -->
       <button
-          v-for="place in PLACES"
+          v-for="place in places"
           :key="place.id"
           type="button"
           class="bld"
@@ -189,7 +258,8 @@ onBeforeUnmount(() => {
         </span>
       </div>
 
-      <p class="w-legend">Зайди в здание — у каждого свой интерьер. ₳ — ApexCoin, ₽ — Рубли, их дают только Рублёвые копи.</p>
+      <p v-if="loc === 'village'" class="w-legend">Деревня: фермы, шахта, экспедиции, аукцион и Лавка. Бои, Рынок и Склад ждут за Вратами Цитадели. ₳ — ApexCoin, ₽ — Рубли из Рублёвых копей.</p>
+      <p v-else class="w-legend">Цитадель: подземелья, рейд, арена, Академия, Кузница, Склад и Рынок. Мирные дела остались в Деревне.</p>
     </div>
 
     <!-- Интерьер здания: стены, пол, декор — вместо вкладки -->
@@ -198,7 +268,7 @@ onBeforeUnmount(() => {
         <div class="room__doors" aria-hidden="true"><i /><i /></div>
 
         <header class="room__top">
-          <button type="button" class="room__exit" @click="leave"><span aria-hidden="true">←</span> На улицу</button>
+          <button type="button" class="room__exit" @click="leave"><span aria-hidden="true">←</span> {{ open.loc === 'citadel' ? 'Во двор' : 'На улицу' }}</button>
           <div class="room__sign">{{ open.name }}</div>
           <div class="room__wallet">
             <span class="w-chip">₳ {{ fmt(world?.coins) }}</span>

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Players\Services;
 
+use App\Domains\Players\Support\DungeonBattle;
 use App\Domains\Players\Support\PetLocks;
 use App\Domains\Players\Support\PetNames;
 use App\Domains\Players\Support\PetTalents;
@@ -93,6 +94,11 @@ class PetTalentService
             $level = PetService::levels([$pet->id])[$pet->id] ?? 1;
             $ranks = self::ranksForMany([$pet->id])[$pet->id];
 
+            // Таланты пути стихии доступны только питомцам этой стихии
+            if (isset($def['element']) && $def['element'] !== PetArenaService::element($pet->item?->effect_value)) {
+                throw new RuntimeException('Этот талант — для питомцев другой стихии.');
+            }
+
             $free = PetTalents::totalPoints($level) - array_sum($ranks);
 
             if ($free <= 0) {
@@ -172,8 +178,15 @@ class PetTalentService
             $inBranch = PetTalents::spentIn($ranks, $key);
             $talents = [];
 
+            // Ветка стихии получает имя и цвет стихии питомца
+            if ($key === 'element') {
+                $info = DungeonBattle::ELEMENTS[$element] ?? ['name' => $element, 'color' => $branch['color']];
+                $branch['name'] = 'Путь стихии: ' . $info['name'];
+                $branch['color'] = $info['color'];
+            }
+
             foreach (PetTalents::TALENTS as $talentKey => $def) {
-                if ($def['branch'] !== $key) {
+                if ($def['branch'] !== $key || (isset($def['element']) && $def['element'] !== $element)) {
                     continue;
                 }
 

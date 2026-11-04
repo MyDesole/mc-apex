@@ -160,6 +160,41 @@
 .bld--arena .bld__art::before { content: ""; position: absolute; left: 6px; top: -22px; width: 18px; height: 14px; background: #e23b3b; box-shadow: 56px 0 0 #e23b3b; animation: w-flag 0.8s steps(2) infinite; }
 @keyframes w-flag { 50% { height: 10px; } }
 
+/* Вторая локация: Цитадель. Тот же каркас сцены, другой облик */
+.world__scene { animation: w-in 0.4s steps(5); }
+@keyframes w-in { from { opacity: 0.2; } }
+.w-loc { margin-left: 4px; padding: 2px 8px; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #ffe9a8; background: rgba(0, 0, 0, 0.35); border: 2px solid #4a2a10; }
+.world__scene--citadel { background: linear-gradient(#1a0a24 0, #4a1f3a 36%, #2c2630 36%); }
+.world__scene--citadel .w-cloud { background: #6b3a5a; box-shadow: 18px -14px 0 #6b3a5a, 50px -14px 0 #6b3a5a, 70px 0 0 #6b3a5a; opacity: 0.6; }
+.world__scene--citadel .w-star { display: block; position: absolute; width: 3px; height: 3px; background: #ffd9b0; animation: w-twinkle 2.5s steps(2) infinite; }
+.world__scene--citadel .w-moon { display: block; background: #ffb48a; box-shadow: inset -12px 0 0 #e8845a, 0 0 0 10px rgba(255, 140, 90, 0.18); }
+.world__scene--citadel .w-hills i { background: #2a1830; clip-path: polygon(0 100%, 14% 30%, 24% 55%, 38% 6%, 52% 55%, 60% 100%); }
+.world__scene--citadel .w-hills i:nth-child(2) { background: #351d3c; }
+.world__scene--citadel .w-hills i:nth-child(3) { background: #24132a; }
+.world__scene--citadel .w-ground { background: repeating-conic-gradient(#3a343f 0 25%, #302a35 0 50%) 0 0 / 36px 36px; }
+.world__scene--citadel .w-path { background: repeating-conic-gradient(#5a5260 0 25%, #4d4553 0 50%) 0 0 / 18px 18px; }
+.world__scene--citadel .w-dark { background: rgba(60, 10, 30, 0.22); }
+.world__scene--citadel .w-sky { z-index: 0; }
+.w-pillar { width: 26px; height: 90px; background: repeating-linear-gradient(#5f5868 0 12px, #4d4553 12px 14px); border: 3px solid #2a2230; box-shadow: inset 4px 0 0 #7a7186; }
+.w-pillar::before { content: ""; position: absolute; left: -7px; right: -7px; top: -8px; height: 10px; background: #6f677a; border: 3px solid #2a2230; }
+.w-banner { width: 22px; height: 54px; background: #8b1f3a; border: 3px solid #4a0f1f; clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%); animation: w-flag 1.2s steps(2) infinite; }
+.w-torchpost { width: 6px; height: 36px; background: #3a2a1a; }
+.w-torchpost::before { content: ""; position: absolute; left: -6px; top: -16px; width: 18px; height: 18px; background: #ff9a2a; box-shadow: 0 0 22px 8px rgba(255, 140, 40, 0.65); animation: w-flick 0.5s steps(2) infinite; }
+.w-ember { width: 4px; height: 4px; background: #ff7a3a; box-shadow: 0 0 8px 2px rgba(255, 120, 50, 0.7); animation: w-ember 5s linear infinite; }
+@keyframes w-ember { from { opacity: 0.9; translate: 0 0; } to { opacity: 0; translate: 20px -90px; } }
+.w-lava { position: absolute; left: 0; right: 0; bottom: 0; height: 30px; background: repeating-linear-gradient(90deg, #e8501a 0 24px, #ff8a2a 24px 48px); border-top: 4px solid #8a2a0a; animation: w-flow 2.4s linear infinite; box-shadow: 0 -16px 40px 6px rgba(255, 90, 20, 0.35); }
+.bld--castle { --roof: #3b3340; --wall: #5a5260; --door: #1a0a24; --deco: #ff7a1a; }
+.bld--castle .bld__art { width: 120px; height: 100px; }
+.bld--castle .bld__roof { clip-path: polygon(0 100%, 0 20%, 10% 20%, 10% 0, 24% 0, 24% 20%, 38% 20%, 38% 0, 52% 0, 52% 20%, 66% 20%, 66% 0, 80% 0, 80% 20%, 90% 20%, 90% 0, 100% 0, 100% 100%); height: 44px; }
+.bld--castle .bld__wall { top: 36px; }
+.bld--castle .bld__door { width: 36px; height: 52px; margin-left: -18px; border-radius: 18px 18px 0 0; background: radial-gradient(circle at 50% 70%, #a855f7, #1a0a24 70%); }
+.bld--castle .bld__deco { display: none; }
+.bld--signpost .bld__art { width: 60px; height: 70px; }
+.bld--signpost .bld__roof { left: 24px; right: auto; top: 0; width: 12px; height: 70px; background: #6b4a1c; clip-path: none; border: 3px solid #3a2810; }
+.bld--signpost .bld__wall { left: 0; right: auto; top: 8px; width: 60px; bottom: auto; height: 22px; background: #8a5a2a; border: 3px solid #4a2a10; }
+.bld--signpost .bld__door, .bld--signpost .bld__deco { display: none; }
+.bld--castle .bld__badge { display: none; }
+
 /* Питомцы на дорожке */
 .w-herd { position: absolute; z-index: 4; left: 4%; right: 4%; top: 69%; height: 44px; margin-top: -10px; pointer-events: none; }
 .w-walker { position: absolute; left: 0; bottom: 0; animation: w-roam calc(26s + var(--i) * 7s) linear calc(var(--i) * -9s) infinite alternate; }

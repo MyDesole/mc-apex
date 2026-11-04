@@ -19,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\EnsureUserHasRole::class,
             'not.banned' => \App\Http\Middleware\EnsureUserIsNotBanned::class,
             'clan.member' => \App\Http\Middleware\EnsureClanMember::class,
+            // Бои, Академия и Кузница — только после покупки входа в Цитадель
+            'citadel' => \App\Http\Middleware\EnsureCitadelUnlocked::class,
                 'minecraft.server' => \App\Http\Middleware\EnsureMinecraftServer::class,
             // Переключатели функций с «Пульта» админки
             'feature' => \App\Http\Middleware\EnsureFeatureEnabled::class,

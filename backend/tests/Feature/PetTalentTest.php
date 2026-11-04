@@ -50,18 +50,27 @@ class PetTalentTest extends TestCase
         ];
     }
 
-    public function test_tree_is_three_branches_of_eight_and_does_not_fit_in_99_points(): void
+    public function test_tree_has_three_branches_of_ten_plus_an_element_path_and_does_not_fit_in_99_points(): void
     {
-        $this->assertCount(3, PetTalents::BRANCHES);
+        $this->assertCount(4, PetTalents::BRANCHES);
 
         $all = 0;
 
-        foreach (array_keys(PetTalents::BRANCHES) as $branch) {
+        foreach (['fury', 'bastion', 'spirit'] as $branch) {
             $talents = array_filter(PetTalents::TALENTS, fn ($t) => $t['branch'] === $branch);
-            $this->assertCount(8, $talents, $branch);
+            $this->assertCount(10, $talents, $branch);
             $all += array_sum(array_column($talents, 'max'));
         }
 
+        // Путь стихии: по три таланта на каждую из восьми стихий
+        foreach (array_keys(\App\Domains\Players\Support\DungeonBattle::ELEMENTS) as $element) {
+            $own = array_filter(PetTalents::TALENTS, fn ($t) => ($t['element'] ?? null) === $element);
+            $this->assertCount(3, $own, $element);
+            $this->assertSame([1, 2, 3], array_values(array_column($own, 'tier')));
+        }
+
+        $this->assertCount(24, array_filter(PetTalents::TALENTS, fn ($t) => $t['branch'] === 'element'));
+        $this->assertCount(54, PetTalents::TALENTS);
         $this->assertGreaterThan(PetTalents::totalPoints(100), $all, 'всё древо не помещается в очки 100 уровня');
 
         foreach (PetTalents::TALENTS as $key => $talent) {
@@ -116,6 +125,24 @@ class PetTalentTest extends TestCase
             ->assertJsonPath('effects.pierce', 4);
 
         $this->actingAs($user)->postJson("/api/talents/{$pet->id}/learn", ['talent' => 'nope'])->assertStatus(422);
+    }
+
+    public function test_element_path_belongs_to_the_pets_element(): void
+    {
+        $user = User::factory()->create();
+        $pet = $this->pet($user, 950, 'dragon'); // огонь
+
+        $tree = $this->actingAs($user)->getJson("/api/talents/{$pet->id}")->assertOk();
+        $element = collect($tree->json('branches'))->firstWhere('key', 'element');
+
+        $this->assertSame('Путь стихии: Огонь', $element['name']);
+        $this->assertSame(['e_fire_1', 'e_fire_2', 'e_fire_3'], array_column($element['talents'], 'key'));
+
+        $this->actingAs($user)->postJson("/api/talents/{$pet->id}/learn", ['talent' => 'e_fire_1'])
+            ->assertOk()->assertJsonPath('effects.atk_pct', 3);
+
+        // Таланты чужой стихии выучить нельзя
+        $this->actingAs($user)->postJson("/api/talents/{$pet->id}/learn", ['talent' => 'e_water_1'])->assertStatus(422);
     }
 
     public function test_no_points_without_levels(): void

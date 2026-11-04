@@ -5,8 +5,11 @@ namespace App\Domains\Players\Services;
 use App\Domains\Players\Support\PetTraits;
 use App\Domains\Shop\Models\UserInventory;
 use App\Domains\Users\Models\User;
+use App\Domains\Wallet\Models\CoinTransaction;
+use App\Domains\Wallet\Services\CoinService;
 use App\Domains\Wallet\Services\RubleService;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 /**
  * Карта-мир: одна сцена, из которой открываются все игровые механики.
@@ -15,6 +18,25 @@ use Illuminate\Support\Facades\DB;
  */
 class WorldService
 {
+    /** Вход в Цитадель (бои, Академия, Кузница): единоразовая покупка за ApexCoin. */
+    public const CITADEL_PRICE = 100000;
+
+    /** Купить вход в Цитадель. Повторно купить нельзя, монеты не списываются. */
+    public function unlockCitadel(User $user): void
+    {
+        DB::transaction(function () use ($user) {
+            $row = DB::table('users')->where('id', $user->id)->lockForUpdate()->first(['id', 'citadel_unlocked_at']);
+
+            if ($row->citadel_unlocked_at) {
+                throw new RuntimeException('Вход в Цитадель уже куплен.');
+            }
+
+            CoinService::debit($user, self::CITADEL_PRICE, CoinTransaction::SOURCE_PURCHASE, 'Вход в Цитадель');
+
+            DB::table('users')->where('id', $user->id)->update(['citadel_unlocked_at' => now()]);
+        });
+    }
+
     public function state(User $user): array
     {
         $now = now();
@@ -55,6 +77,8 @@ class WorldService
                 'talents' => collect(app(PetTalentService::class)->roster($user))->where('free', '>', 0)->count(),
             ],
             'tokens' => (int) DB::table('users')->where('id', $user->id)->value('pet_tokens'),
+            // Две локации: Деревня (мирная, всегда открыта) и Цитадель (бои, платный вход)
+            'citadel' => ['unlocked' => (bool) DB::table('users')->where('id', $user->id)->value('citadel_unlocked_at'), 'price' => self::CITADEL_PRICE],
             // Ключи сундуков лежат в сумке питомцев
             'keys' => DB::table('loot_case_keys')->where('user_id', $user->id)->where('count', '>', 0)->pluck('count', 'case_slug')->map(fn ($n) => (int) $n)->all(),
             'personal_unlocked' => $personal,

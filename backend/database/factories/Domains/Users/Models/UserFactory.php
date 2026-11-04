@@ -38,6 +38,8 @@ class UserFactory extends Factory
 
             // ApexCoin и роль: чтобы тесты магазина не собирали это вручную
             'apex_coins' => 5000,
+            // Вход в Цитадель в тестах открыт; закрытого игрока даёт ->citadelLocked()
+            'citadel_unlocked_at' => now(),
             'role' => 'user',
             'is_banned' => false,
 
@@ -48,6 +50,12 @@ class UserFactory extends Factory
              */
             'rating_points' => fn (array $attributes) => (int) ($attributes['tier_score'] ?? 0),
         ];
+    }
+
+    /** Игрок, который ещё не купил вход в Цитадель. */
+    public function citadelLocked(): static
+    {
+        return $this->state(fn () => ['citadel_unlocked_at' => null]);
     }
 
     /**

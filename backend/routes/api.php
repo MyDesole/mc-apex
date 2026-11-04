@@ -442,13 +442,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', 'index');
         // Всё разом за монеты и дополнительный бой на арене
         Route::post('/bulk/{action}', 'bulk')->whereIn('action', ['feed', 'send', 'claim'])->middleware('throttle:20,1');
-        Route::post('/arena/buy-fight', 'buyFight')->middleware('throttle:20,1');
+        Route::post('/arena/buy-fight', 'buyFight')->middleware(['citadel', 'throttle:20,1']);
         Route::post('/{row}/trick', 'trick')->whereNumber('row')->middleware('throttle:30,1');
         Route::post('/{row}/expedition', 'expedition')->whereNumber('row')->middleware('throttle:30,1');
         Route::post('/expeditions/{expedition}/claim', 'claimExpedition')->whereNumber('expedition')->middleware('throttle:30,1');
         Route::post('/expeditions/{expedition}/recall', 'recallExpedition')->whereNumber('expedition')->middleware('throttle:30,1');
-        Route::get('/{row}/opponents', 'opponents')->whereNumber('row')->middleware('throttle:30,1');
-        Route::post('/{row}/battle', 'battle')->whereNumber('row')->middleware('throttle:20,1');
+        Route::get('/{row}/opponents', 'opponents')->whereNumber('row')->middleware(['citadel', 'throttle:30,1']);
+        Route::post('/{row}/battle', 'battle')->whereNumber('row')->middleware(['citadel', 'throttle:20,1']);
         Route::get('/battles/{battle}', 'showBattle')->whereNumber('battle');
         Route::post('/battles/{battle}/move', 'move')->whereNumber('battle')->middleware('throttle:120,1');
         Route::post('/battles/{battle}/forfeit', 'forfeit')->whereNumber('battle')->middleware('throttle:20,1');
@@ -459,9 +459,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Рейд «Разлом»: группы по 3 игрока, раунды по 30 секунд
     Route::prefix('raids')->controller(\App\Domains\Players\Controllers\Api\RaidController::class)->group(function () {
         Route::get('/', 'index');
-        Route::post('/', 'create')->middleware('throttle:20,1');
+        Route::post('/', 'create')->middleware(['citadel', 'throttle:20,1']);
         Route::get('/{raid}', 'show')->whereNumber('raid');
-        Route::post('/{raid}/join', 'join')->whereNumber('raid')->middleware('throttle:20,1');
+        Route::post('/{raid}/join', 'join')->whereNumber('raid')->middleware(['citadel', 'throttle:20,1']);
         Route::post('/{raid}/leave', 'leave')->whereNumber('raid')->middleware('throttle:20,1');
         Route::post('/{raid}/start', 'start')->whereNumber('raid')->middleware('throttle:20,1');
         Route::post('/{raid}/moves', 'moves')->whereNumber('raid')->middleware('throttle:120,1');
@@ -471,8 +471,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('talents')->controller(\App\Domains\Players\Controllers\Api\TalentController::class)->group(function () {
         Route::get('/', 'roster');
         Route::get('/{pet}', 'show')->whereNumber('pet');
-        Route::post('/{pet}/learn', 'learn')->whereNumber('pet')->middleware('throttle:120,1');
-        Route::post('/{pet}/respec', 'respec')->whereNumber('pet')->middleware('throttle:10,1');
+        Route::post('/{pet}/learn', 'learn')->whereNumber('pet')->middleware(['citadel', 'throttle:120,1']);
+        Route::post('/{pet}/respec', 'respec')->whereNumber('pet')->middleware(['citadel', 'throttle:10,1']);
     });
 
     // Доска заданий: ежедневные и недельные задания, Жетоны удачи
@@ -486,20 +486,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('lavka')->controller(\App\Domains\Players\Controllers\Api\RaidController::class)->group(function () {
         Route::get('/', 'lavka');
         Route::post('/privileges/{key}', 'buyPrivilege')->middleware('throttle:10,1');
-        Route::post('/shards/{key}', 'buyShards')->middleware('throttle:20,1');
-    });
+        Route::post('/shards/{key}', 'buyShards')->middleware('throttle:20,1');    });
 
     // Рынок игроков: материалы и снаряжение подземелий
     Route::prefix('market')->controller(\App\Domains\Players\Controllers\Api\MarketController::class)->group(function () {
         Route::get('/', 'index');
-        Route::post('/sell-material', 'sellMaterial')->middleware('throttle:30,1');
-        Route::post('/sell-gear', 'sellGear')->middleware('throttle:30,1');
-        Route::post('/{listing}/buy', 'buy')->whereNumber('listing')->middleware('throttle:30,1');
-        Route::post('/{listing}/cancel', 'cancel')->whereNumber('listing')->middleware('throttle:30,1');
+        Route::post('/sell-material', 'sellMaterial')->middleware(['citadel', 'throttle:30,1']);
+        Route::post('/sell-gear', 'sellGear')->middleware(['citadel', 'throttle:30,1']);
+        Route::post('/{listing}/buy', 'buy')->whereNumber('listing')->middleware(['citadel', 'throttle:30,1']);
+        Route::post('/{listing}/cancel', 'cancel')->whereNumber('listing')->middleware(['citadel', 'throttle:30,1']);
     });
 
     // Карта-мир: единая сцена со всеми игровыми механиками
     Route::get('/world', [\App\Domains\Players\Controllers\Api\WorldController::class, 'show']);
+    Route::post('/world/citadel', [\App\Domains\Players\Controllers\Api\WorldController::class, 'unlockCitadel'])->middleware('throttle:10,1');
 
     // Фермы питомцев: Общая (бронь и выкуп) и Личная (грядки, Кладовка, скрещивание)
     Route::prefix('farm')->controller(\App\Domains\Players\Controllers\Api\PetFarmController::class)->group(function () {
@@ -523,13 +523,13 @@ Route::middleware('auth:sanctum')->group(function () {
      */
     Route::prefix('dungeons')->controller(\App\Domains\Players\Controllers\Api\DungeonController::class)->group(function () {
         Route::get('/', 'index');
-        Route::post('/start', 'start')->middleware('throttle:20,1');
-        Route::post('/buy-run', 'buyRun')->middleware('throttle:20,1');
+        Route::post('/start', 'start')->middleware(['citadel', 'throttle:20,1']);
+        Route::post('/buy-run', 'buyRun')->middleware(['citadel', 'throttle:20,1']);
         Route::get('/craft', 'craftIndex')->middleware('throttle:30,1');
-        Route::post('/craft', 'craft')->middleware('throttle:30,1');
-        Route::post('/craft/forge', 'forge')->middleware('throttle:30,1');
-        Route::post('/craft/upgrade', 'upgrade')->middleware('throttle:30,1');
-        Route::post('/craft/dismantle', 'dismantle')->middleware('throttle:30,1');
+        Route::post('/craft', 'craft')->middleware(['citadel', 'throttle:30,1']);
+        Route::post('/craft/forge', 'forge')->middleware(['citadel', 'throttle:30,1']);
+        Route::post('/craft/upgrade', 'upgrade')->middleware(['citadel', 'throttle:30,1']);
+        Route::post('/craft/dismantle', 'dismantle')->middleware(['citadel', 'throttle:30,1']);
         Route::post('/{run}/advance', 'advance')->whereNumber('run')->middleware('throttle:120,1');
         Route::post('/{run}/move', 'move')->whereNumber('run')->middleware('throttle:120,1');
         Route::post('/{run}/retreat', 'retreat')->whereNumber('run')->middleware('throttle:20,1');
