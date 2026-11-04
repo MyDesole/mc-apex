@@ -355,6 +355,8 @@ async function copyNickname() {
 }
 
 .showcase__info {
+  min-width: 0;
+
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -371,17 +373,23 @@ async function copyNickname() {
 }
 
 .showcase__nick {
+  min-width: 0;
+
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 8px 12px;
 }
 
 .showcase__nick strong {
+  min-width: 0;
+
   color: #fff;
 
   font-family: var(--font-display);
-  font-size: 24px;
+  font-size: clamp(18px, 6vw, 24px);
   letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
 }
 
 .showcase__copy {
@@ -537,7 +545,8 @@ async function copyNickname() {
 
 @media (max-width: 760px) {
   .showcase {
-    grid-template-columns: 1fr;
+    /* Просто 1fr растягивался под длинный ник и выталкивал карточку за экран */
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .showcase__stage {

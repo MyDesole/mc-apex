@@ -674,7 +674,8 @@ a.leader:hover {
 
 .rank-row {
   display: grid;
-  grid-template-columns: 32px 36px minmax(0, 1fr) 160px 52px 32px;
+  /* Последняя колонка — тир или звание бриджера: звание длиннее одной буквы, колонка растёт до 112px */
+  grid-template-columns: 32px 36px minmax(0, 1fr) 160px 52px minmax(32px, 112px);
   align-items: center;
   gap: 14px;
 
@@ -879,7 +880,7 @@ a.leader:hover {
   }
 
   .rank-row {
-    grid-template-columns: 24px 32px minmax(0, 1fr) 44px 32px;
+    grid-template-columns: 24px 32px minmax(0, 1fr) 44px minmax(32px, 96px);
     gap: 10px;
     padding: 10px 12px;
   }

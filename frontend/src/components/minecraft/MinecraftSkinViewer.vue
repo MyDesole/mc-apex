@@ -48,7 +48,10 @@ async function mount() {
 
     viewer.background = null
     viewer.fov = 40
-    viewer.zoom = 0.72
+    // Плашка с ником шире модели: у длинных ников отъезжаем, чтобы она влезла в кадр
+    const tagLength = props.nameTag ? props.nameTag.length : 0
+
+    viewer.zoom = tagLength > 10 ? Math.max(0.4, 0.72 * 10 / tagLength) : 0.72
     viewer.globalLight.intensity = 2.6
     viewer.cameraLight.intensity = 0.7
 
