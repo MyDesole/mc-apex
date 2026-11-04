@@ -1,3 +1,5 @@
+import { isUpdateStatus, startMaintenance } from '@/services/core/maintenance.js'
+
 const API_URL = '/api'
 
 function getCookie(name) {
@@ -76,6 +78,9 @@ async function request(url, options = {}) {
     const data = await response.json().catch(() => ({}))
 
     if (!response.ok) {
+        // Сайт обновляется: показываем окно ожидания вместо россыпи ошибок
+        if (isUpdateStatus(response.status)) startMaintenance()
+
         throw {
             status: response.status,
             message: data.message || 'Произошла ошибка.',
