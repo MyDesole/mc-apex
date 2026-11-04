@@ -3365,6 +3365,11 @@
     align-items: start;
   }
 
+  .profile-header__compact-name.is-mid {
+    font-size: 17px;
+    letter-spacing: -0.4px;
+  }
+
   .profile-header__compact-name.is-long {
     font-size: 16px;
   }
@@ -3407,6 +3412,11 @@
   .profile-header__name {
     font-size: 28px;
     line-height: 1.1;
+  }
+
+  .profile-header__name.is-mid {
+    font-size: 23px;
+    letter-spacing: -1px;
   }
 
   .profile-header__name.is-long {

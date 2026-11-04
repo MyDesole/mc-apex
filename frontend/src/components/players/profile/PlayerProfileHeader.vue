@@ -427,6 +427,8 @@ const nameLengthClass = computed(() => {
   const length = displayNameWithClan.value.length
   if (length > 26) return 'is-xlong'
   if (length > 18) return 'is-long'
+  // 13–18 знаков, особенно цифры и подчёркивания, на телефоне не влезали полным размером
+  if (length > 12) return 'is-mid'
   return null
 })
 
