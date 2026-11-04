@@ -8,6 +8,7 @@ use App\Domains\Players\Support\PetTraits;
 use App\Domains\Shop\Models\ShopItem;
 use App\Domains\Shop\Models\UserInventory;
 use App\Domains\Users\Models\User;
+use App\Support\GameDay;
 use App\Domains\Wallet\Models\CoinTransaction;
 use App\Domains\Wallet\Services\CoinService;
 use Illuminate\Support\Carbon;
@@ -59,14 +60,15 @@ class RaidService
     /** Начало открытого окна рейда или null. */
     public static function currentSlot(?Carbon $now = null): ?Carbon
     {
-        $now ??= now();
+        // Окна заданы по Москве, наружу отдаём момент в UTC: так он хранится в базе
+        $now = ($now ?? now())->copy()->setTimezone(GameDay::TIMEZONE);
 
         foreach (self::SLOTS as $time) {
             [$h, $m] = array_map('intval', explode(':', $time));
             $start = $now->copy()->setTime($h, $m, 0);
 
             if ($now->gte($start) && $now->lt($start->copy()->addMinutes(self::LOBBY_MINUTES))) {
-                return $start;
+                return $start->setTimezone('UTC');
             }
         }
 
@@ -75,7 +77,7 @@ class RaidService
 
     public static function nextSlot(?Carbon $now = null): Carbon
     {
-        $now ??= now();
+        $now = ($now ?? now())->copy()->setTimezone(GameDay::TIMEZONE);
         $candidates = [];
 
         foreach ([0, 1] as $day) {
@@ -83,7 +85,7 @@ class RaidService
                 [$h, $m] = array_map('intval', explode(':', $time));
                 $start = $now->copy()->addDays($day)->setTime($h, $m, 0);
                 if ($start->gt($now)) {
-                    $candidates[] = $start;
+                    $candidates[] = $start->setTimezone('UTC');
                 }
             }
         }

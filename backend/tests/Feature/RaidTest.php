@@ -27,8 +27,14 @@ class RaidTest extends TestCase
     {
         parent::setUp();
         $this->seed(DungeonGearSeeder::class);
-        // Рейд открыт в 18:00–18:30
-        $this->travelTo(now()->setTime(18, 5));
+        // Рейд открыт в 18:00–18:30 по Москве
+        $this->travelTo($this->moscow(18, 5));
+    }
+
+    /** Сегодняшнее время по Москве: окна рейда заданы в нём, а не в UTC. */
+    private function moscow(int $h, int $m = 0): \Illuminate\Support\Carbon
+    {
+        return \Illuminate\Support\Carbon::now(\App\Support\GameDay::TIMEZONE)->setTime($h, $m, 0);
     }
 
     private function player(int $coins = 10000): User
@@ -66,13 +72,17 @@ class RaidTest extends TestCase
 
     public function test_slots_open_at_18_and_22_for_half_an_hour(): void
     {
-        $this->assertNotNull(RaidService::currentSlot(now()->setTime(18, 0)));
-        $this->assertNotNull(RaidService::currentSlot(now()->setTime(22, 29)));
-        $this->assertNull(RaidService::currentSlot(now()->setTime(18, 30)));
-        $this->assertNull(RaidService::currentSlot(now()->setTime(12, 0)));
+        $this->assertNotNull(RaidService::currentSlot($this->moscow(18, 0)));
+        $this->assertNotNull(RaidService::currentSlot($this->moscow(22, 29)));
+        $this->assertNull(RaidService::currentSlot($this->moscow(18, 30)));
+        $this->assertNull(RaidService::currentSlot($this->moscow(12, 0)));
 
-        $this->assertSame('22:00', RaidService::nextSlot(now()->setTime(19, 0))->format('H:i'));
-        $this->assertSame('18:00', RaidService::nextSlot(now()->setTime(23, 0))->format('H:i'));
+        // Те же окна, но при 21:52 по Москве (18:52 UTC) 22:00 ещё впереди, а не «через 3 часа»
+        $this->assertSame('22:00', RaidService::nextSlot($this->moscow(21, 52))->setTimezone(\App\Support\GameDay::TIMEZONE)->format('H:i'));
+        $this->assertSame(8, (int) $this->moscow(21, 52)->diffInMinutes(RaidService::nextSlot($this->moscow(21, 52))));
+
+        $this->assertSame('22:00', RaidService::nextSlot($this->moscow(19, 0))->setTimezone(\App\Support\GameDay::TIMEZONE)->format('H:i'));
+        $this->assertSame('18:00', RaidService::nextSlot($this->moscow(23, 0))->setTimezone(\App\Support\GameDay::TIMEZONE)->format('H:i'));
     }
 
     public function test_cannot_create_group_outside_the_window(): void
