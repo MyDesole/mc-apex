@@ -76,7 +76,12 @@ const orbit = computed(() => {
   if (kind.value !== 'orbit') return []
 
   const count = d.count ?? 3
-  return Array.from({ length: count }, (_, i) => ({ '--angle': `${(360 / count) * i}deg` }))
+
+  return Array.from({ length: count }, (_, i) => ({
+    style: { '--angle': `${(360 / count) * i}deg` },
+    // decor.sprites раздаёт разные спрайты по очереди, decor.sprite — один на всех
+    sprite: d.sprites ? d.sprites[i % d.sprites.length] : d.sprite,
+  }))
 })
 
 const spriteSize = computed(() => Math.max(10, Math.round(props.size * 0.24)))
@@ -102,7 +107,7 @@ const PLANETS = [
   <span
       v-if="kind"
       class="decor"
-      :class="[`decor--${kind}`, { 'decor--cycle': decor.cycle }]"
+      :class="`decor--${kind}`"
       :style="{
         '--decor-color': decor.color || decor.colors?.[0],
         '--decor-color-2': decor.color2 || decor.inner || decor.tip || decor.color,
@@ -177,9 +182,9 @@ const PLANETS = [
 
     <!-- Орбита -->
     <span v-else-if="kind === 'orbit'" class="decor__orbit">
-      <span v-for="(style, i) in orbit" :key="i" class="decor__satellite" :style="style">
+      <span v-for="(item, i) in orbit" :key="i" class="decor__satellite" :style="item.style">
         <span class="decor__satellite-inner">
-          <PixelSprite :sprite="decor.sprite" :size="spriteSize" />
+          <PixelSprite :sprite="item.sprite" :size="spriteSize" />
         </span>
       </span>
     </span>
@@ -315,26 +320,6 @@ const PLANETS = [
   to { opacity: 1; }
 }
 
-/*
- * Переливание пламени «Энергетик: микс»: синий → фиолетовый → красный и
- * обратно. Идём не по полному кругу тонов, чтобы огонь не стал зелёным.
- */
-.decor--cycle {
-  animation: decor-cycle 9s ease-in-out infinite;
-}
-
-@keyframes decor-cycle {
-  0%, 100% { filter: hue-rotate(205deg); }
-  33% { filter: hue-rotate(255deg); }
-  66% { filter: hue-rotate(350deg); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .decor--cycle {
-    animation: none;
-    filter: hue-rotate(255deg);
-  }
-}
 
 .decor__flame {
   position: absolute;
