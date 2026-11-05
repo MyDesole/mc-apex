@@ -211,9 +211,28 @@ final class AlleyGate {
         }
     }
 
-    private boolean isAlleyBoard(org.bukkit.scoreboard.Scoreboard sb, String alleyObjective) {
-        org.bukkit.scoreboard.Objective side = sb.getObjective(org.bukkit.scoreboard.DisplaySlot.SIDEBAR);
-        return side != null && alleyObjective != null && side.getName().equals(alleyObjective);
+    /**
+     * Alley цепляет свою цель к любому скорборду игрока, в том числе к чужому (BedWars): getScoreboard()
+     * отдаёт текущий скорборд, если он не главный. После удаления доски эта цель остаётся и перекрывает
+     * боковую панель владельца. Убираем её и возвращаем владельцу его панель и скорборд.
+     */
+    private void releaseForeign(Player p, org.bukkit.scoreboard.Scoreboard sb, String alleyObjective) {
+        try {
+            org.bukkit.scoreboard.Objective alley = alleyObjective == null ? null : sb.getObjective(alleyObjective);
+            if (alley != null) alley.unregister();
+            int others = sb.getObjectives().size();
+            if (others == 0) return;   // это была собственная доска Alley: игроку остаётся главный скорборд
+            if (sb.getObjective(org.bukkit.scoreboard.DisplaySlot.SIDEBAR) == null) {
+                for (org.bukkit.scoreboard.Objective o : sb.getObjectives()) {
+                    if (o.getDisplaySlot() == null && !"health".equalsIgnoreCase(o.getCriteria())) {
+                        o.setDisplaySlot(org.bukkit.scoreboard.DisplaySlot.SIDEBAR);
+                        break;
+                    }
+                }
+            }
+            if (p.getScoreboard() != sb) p.setScoreboard(sb);
+        } catch (IllegalStateException ignored) {
+        }
     }
 
     private void syncBoards() {
@@ -229,9 +248,8 @@ final class AlleyGate {
                     // чужую доску (BedWars, наш скорборд) Alley при удалении сбрасывает на главную: возвращаем её
                     org.bukkit.scoreboard.Scoreboard before = p.getScoreboard();
                     String alleyObj = objectiveName(board);
-                    boolean foreign = before != main && !isAlleyBoard(before, alleyObj);
                     removeBoard.invoke(assemble, p);
-                    if (foreign && p.getScoreboard() != before) p.setScoreboard(before);
+                    if (before != main) releaseForeign(p, before, alleyObj);
                 } else if (zone && board == null) {
                     createBoard.invoke(assemble, p);
                 } else if (zone && p.getScoreboard() == main) {
