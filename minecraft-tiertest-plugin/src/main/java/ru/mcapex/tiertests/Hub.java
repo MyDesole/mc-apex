@@ -68,11 +68,12 @@ final class Hub implements Listener, CommandExecutor {
     private void startBoard() {
         board = new FbHud(plugin.getLogger(), new FbHud.Source() {
             public String title(Player p) {
-                return "§6§lAPEX";
+                return inBedwarsLobby(p) ? "§6§lBEDWARS" : "§6§lAPEX";
             }
 
             public java.util.List<String> lines(Player p) {
-                if (hub == null || !p.getWorld().equals(hub.getWorld())) return null;
+                boolean bwLobby = inBedwarsLobby(p);
+                if (!bwLobby && (hub == null || !p.getWorld().equals(hub.getWorld()))) return null;
                 String tier = plugin.tierOf(p.getName());
                 java.util.List<String> l = new java.util.ArrayList<String>();
                 l.add(SEP);
@@ -80,10 +81,25 @@ final class Hub implements Listener, CommandExecutor {
                 l.add("§fТир: " + (tier.isEmpty() ? "§7без тира" : "§6" + tier));
                 l.add("§a ");
                 l.add("§fОнлайн: §a" + Bukkit.getOnlinePlayers().size());
-                l.add("§fРежимы: §7компас в руке");
+                if (bwLobby) {
+                    // BedWars в режиме SHARED панель в лобби не выдаёт, только внутри арены
+                    int playing = 0;
+                    for (Player q : Bukkit.getOnlinePlayers()) {
+                        String w = q.getWorld().getName();
+                        if (w.startsWith("bw_") && !w.equals(bedwars.getWorld().getName())) playing++;
+                    }
+                    l.add("§fВ играх: §e" + playing);
+                    l.add("§fАрены: §7предметы в хотбаре");
+                } else {
+                    l.add("§fРежимы: §7компас в руке");
+                }
                 l.add("§7§m                      ");
                 l.add("§emc-apex.ru");
                 return l;
+            }
+
+            private boolean inBedwarsLobby(Player p) {
+                return bedwars != null && p.getWorld().equals(bedwars.getWorld());
             }
         });
         Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
