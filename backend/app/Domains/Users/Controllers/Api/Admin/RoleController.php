@@ -22,6 +22,9 @@ class RoleController extends Controller
             'to' => $user->role,
         ]);
 
+        // Ранг на сервере следует за ролью: тестер получает группу «Тестер» и теряет её со сменой роли
+        app(\App\Domains\Minecraft\Services\ServerRankService::class)->syncRole($user->fresh());
+
         return response()->json(['user' => $user->fresh()]);
     }
 }

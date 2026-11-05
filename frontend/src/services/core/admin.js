@@ -34,6 +34,20 @@ export const adminApi = {
         return api.get('/admin/referrals')
     },
 
+    // Ранги сервера (группы LuckPerms)
+    ranks(userId) {
+        return api.get(`/admin/users/${userId}/ranks`)
+    },
+    grantRank(userId, rank, days = null) {
+        return api.post(`/admin/users/${userId}/ranks`, { rank, days })
+    },
+    revokeRank(userId, rank) {
+        return api.delete(`/admin/users/${userId}/ranks/${rank}`)
+    },
+    rankSetup() {
+        return api.get('/admin/server-ranks/setup')
+    },
+
     // «Пульт»
     control() {
         return api.get('/admin/control')

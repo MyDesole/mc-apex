@@ -95,7 +95,11 @@ class MinecraftLinkService
             'minecraft_uuid' => null,
         ])->save();
 
-        return $user->fresh();
+        // Ранги, выданные до привязки ника, уходят на сервер сейчас
+        $fresh = $user->fresh();
+        app(ServerRankService::class)->deliver($fresh);
+
+        return $fresh;
     }
 
     /** Снять заявку ника. */

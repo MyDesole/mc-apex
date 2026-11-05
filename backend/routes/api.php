@@ -1083,6 +1083,12 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/verify-email', [$player, 'verifyEmail']);
             Route::post('/logout-everywhere', [$player, 'logoutEverywhere']);
             Route::post('/unlink-minecraft', [$player, 'unlinkMinecraft']);
+
+            // Ранги сервера (группы LuckPerms)
+            $ranks = \App\Domains\Minecraft\Controllers\Api\Admin\ServerRankController::class;
+            Route::get('/ranks', [$ranks, 'show']);
+            Route::post('/ranks', [$ranks, 'grant']);
+            Route::delete('/ranks/{rank}', [$ranks, 'revoke']);
             Route::get('/bridge', [\App\Domains\Bridge\Controllers\Api\Admin\BridgeAdminController::class, 'show']);
 
             // Инвентарь игрока: посмотреть, надеть/снять, количество, забрать, питомец
@@ -1098,6 +1104,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // Бридж игрока: исправить оценки тестера, статус или удалить заявку
         Route::put('/bridge/submissions/{submission}', [\App\Domains\Bridge\Controllers\Api\Admin\BridgeAdminController::class, 'update'])->whereNumber('submission');
         Route::delete('/bridge/submissions/{submission}', [\App\Domains\Bridge\Controllers\Api\Admin\BridgeAdminController::class, 'destroy'])->whereNumber('submission');
+
+        Route::get('/server-ranks/setup', [\App\Domains\Minecraft\Controllers\Api\Admin\ServerRankController::class, 'setup']);
 
         // Рефералы: кто кого привёл
         Route::get('/referrals', [\App\Domains\Moderation\Controllers\PlayerAdminController::class, 'referrals']);

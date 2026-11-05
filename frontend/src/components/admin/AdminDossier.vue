@@ -15,6 +15,7 @@ import { useAuthStore } from '@/stores/core/auth.js'
 import { alert, confirm, confirmWithReason, prompt } from '@/utils/dialog.js'
 import AdminAspectsModal from '@/components/admin/AdminAspectsModal.vue'
 import AdminRoleModal from '@/components/admin/AdminRoleModal.vue'
+import AdminRanksModal from '@/components/admin/AdminRanksModal.vue'
 import AdminAchievementsModal from '@/components/admin/AdminAchievementsModal.vue'
 import AdminTierTestModal from '@/components/admin/AdminTierTestModal.vue'
 import AdminDossierBridge from '@/components/admin/AdminDossierBridge.vue'
@@ -352,6 +353,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               <button type="button" class="kit-btn" :disabled="busy" @click="modal = 'tierTest'">Провести тест</button>
               <button type="button" class="kit-btn" :disabled="busy" @click="modal = 'achievements'">Ачивки</button>
               <button v-if="!isSelf" type="button" class="kit-btn" :disabled="busy" @click="modal = 'role'">Роль</button>
+              <button type="button" class="kit-btn" :disabled="busy" @click="modal = 'ranks'">Ранги сервера</button>
               <button type="button" class="kit-btn" :disabled="busy" @click="grantCoins">ApexCoin</button>
               <button v-if="!giftItems" type="button" class="kit-btn" :disabled="busy" @click="openGift">Подарить предмет</button>
               <span v-else class="dossier__inline">
@@ -532,6 +534,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
     <AdminTierTestModal v-if="modal === 'tierTest'" :user="user" @close="modal = null" @updated="onModalUpdated" />
     <AdminAchievementsModal v-if="modal === 'achievements'" :user="user" @close="modal = null" @updated="onModalUpdated" />
     <AdminRoleModal v-if="modal === 'role'" :user="user" @close="modal = null" @updated="onModalUpdated" />
+    <AdminRanksModal v-if="modal === 'ranks'" :user="user" @close="modal = null" />
+
   </Teleport>
 </template>
 
