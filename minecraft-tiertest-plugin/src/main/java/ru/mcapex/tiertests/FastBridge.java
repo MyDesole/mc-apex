@@ -19,6 +19,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockCanBuildEvent;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -556,6 +557,23 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         target.setTypeIdAndData(Material.SANDSTONE.getId(), (byte) 0, false);
         record(s, target);
         target.getWorld().playSound(target.getLocation(), Sound.DIG_STONE, 0.8f, 1f);
+    }
+
+    /**
+     * Перед установкой Bukkit спрашивает «можно ли строить здесь» (BlockCanBuildEvent), и плагины вроде BedWars
+     * отвечают «нет». Тогда клиент и сервер расходятся и блок «мигает». На дорожках отвечаем «да»:
+     * окончательно решает onPlace (дорожка, высота, не в самого себя).
+     */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onCanBuild(BlockCanBuildEvent e) {
+        Block b = e.getBlock();
+        if (!b.getWorld().equals(world)) return;
+        int lane = Math.round((float) b.getZ() / SPACING);
+        if (lane < 0 || lane >= LANES) return;
+        if (Math.abs(b.getZ() - lane * SPACING) <= HALF_WIDTH && b.getX() >= -2 && b.getX() <= ISLAND + FbMap.INF_LIMIT + ISLAND
+                && b.getY() >= FLOOR_Y - 2 && b.getY() <= FLOOR_Y + maxHeight()) {
+            e.setBuildable(true);
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

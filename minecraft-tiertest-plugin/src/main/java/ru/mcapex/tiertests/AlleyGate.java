@@ -8,6 +8,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.EventException;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockCanBuildEvent;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -56,6 +57,7 @@ final class AlleyGate {
     private final Predicate<Player> inZone;
     private final Predicate<World> zoneWorld;
     private int wrapped;
+    private boolean boardsOn = true;
 
     // скорборд Alley (через рефлексию: у харнесса Alley нет)
     private Object assemble;
@@ -77,6 +79,12 @@ final class AlleyGate {
         this.zoneWorld = zoneWorld;
     }
 
+    /** Только глушить события, доски не трогать (для плагинов, у которых досок Assemble нет). */
+    AlleyGate withoutBoards() {
+        this.boardsOn = false;
+        return this;
+    }
+
     AlleyGate onlyListeners(Predicate<Object> filter) {
         this.listenerFilter = filter;
         return this;
@@ -84,6 +92,7 @@ final class AlleyGate {
 
     int start() {
         wrap();
+        if (!boardsOn) return wrapped;
         bindBoards();
         Bukkit.getScheduler().runTaskTimer(host, new Runnable() {
             public void run() {
@@ -146,7 +155,7 @@ final class AlleyGate {
         if (!(e instanceof PlayerMoveEvent || e instanceof PlayerInteractEvent || e instanceof PlayerInteractEntityEvent
                 || e instanceof PlayerDropItemEvent || e instanceof PlayerPickupItemEvent || e instanceof PlayerItemConsumeEvent
                 || e instanceof PlayerItemHeldEvent || e instanceof PlayerBucketEmptyEvent || e instanceof PlayerBucketFillEvent
-                || e instanceof BlockPlaceEvent || e instanceof BlockBreakEvent || e instanceof BlockDamageEvent
+                || e instanceof BlockPlaceEvent || e instanceof BlockBreakEvent || e instanceof BlockDamageEvent || e instanceof BlockCanBuildEvent
                 || e instanceof EntityDamageEvent || e instanceof FoodLevelChangeEvent || e instanceof EntityRegainHealthEvent
                 || e instanceof EntityShootBowEvent || e instanceof ProjectileLaunchEvent || e instanceof CreatureSpawnEvent
                 || e instanceof InventoryClickEvent || e instanceof InventoryDragEvent || e instanceof InventoryOpenEvent
@@ -181,6 +190,7 @@ final class AlleyGate {
 
     private World worldOf(Event e) {
         if (e instanceof WeatherChangeEvent) return ((WeatherChangeEvent) e).getWorld();
+        if (e instanceof org.bukkit.event.block.BlockEvent) return ((org.bukkit.event.block.BlockEvent) e).getBlock().getWorld();
         if (e instanceof org.bukkit.event.entity.EntityEvent) return ((org.bukkit.event.entity.EntityEvent) e).getEntity().getWorld();
         return null;
     }

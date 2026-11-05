@@ -130,6 +130,24 @@ public class ApexTierTests extends JavaPlugin implements Listener {
         };
         int n = new AlleyGate(this, alley, inZone, zoneWorld).start();
         getLogger().info("AlleyGate: Alley работает только в " + zone + "; обработчиков под контролем: " + n);
+
+        // BedWars защищает всё от строительства и вмешивается в клики там, где идёт не его игра.
+        // Он работает только в мирах bw_* (арены и лобби bw_lobby).
+        org.bukkit.plugin.Plugin bw = Bukkit.getPluginManager().getPlugin("BedWars1058");
+        if (bw != null && getConfig().getBoolean("alley.gate-bedwars", true)) {
+            java.util.function.Predicate<org.bukkit.World> bwWorld = new java.util.function.Predicate<org.bukkit.World>() {
+                public boolean test(org.bukkit.World w) {
+                    return w.getName().startsWith("bw_");
+                }
+            };
+            java.util.function.Predicate<Player> bwZone = new java.util.function.Predicate<Player>() {
+                public boolean test(Player p) {
+                    return p.getWorld().getName().startsWith("bw_");
+                }
+            };
+            int m = new AlleyGate(this, bw, bwZone, bwWorld).withoutBoards().start();
+            getLogger().info("AlleyGate: BedWars1058 работает только в мирах bw_*; обработчиков под контролем: " + m);
+        }
     }
 
     Hub hub() {

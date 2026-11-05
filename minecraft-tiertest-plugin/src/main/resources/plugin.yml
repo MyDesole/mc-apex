@@ -7,7 +7,7 @@ website: https://mc-apex.ru
 load: POSTWORLD
 api-version: '1.8'
 depend: [Alley]
-softdepend: [TAB]
+softdepend: [TAB, BedWars1058]
 
 commands:
   tiertest:
