@@ -36,7 +36,7 @@ class ServerPrefixService
 
         $badge = $this->players->badge($user);
         if (! empty($badge['short'])) {
-            $parts[] = $this->hex((string) $badge['color']) . $badge['short'];
+            $parts[] = $this->hex((string) $badge['color']) . '&l' . $badge['short'];
         }
 
         return $parts ? implode(' ', $parts) . ' &r' : null;
@@ -48,8 +48,6 @@ class ServerPrefixService
     public function sync(): int
     {
         $changed = 0;
-
-        $this->retryFailedForOnline();
 
         $state = DB::table('server_prefix_state')->get()->keyBy('user_id');
 
@@ -117,29 +115,29 @@ class ServerPrefixService
     }
 
     /**
-     * Игрока, который ещё ни разу не заходил, LuckPerms не знает, и команда
-     * префикса падает. Как только он появился на сервере, отправляем её снова:
-     * забываем, что префикс уже отправлен.
+     * Игрок зашёл на сервер: отправляем его префикс ещё раз.
+     *
+     * LuckPerms не знает игрока, который ни разу не заходил, и команда
+     * `lp user …` для него молча не срабатывает, хотя плагин честно
+     * отвечает «выполнено». Поэтому при входе шлём префикс повторно.
+     *
+     * @param  array<int, string>  $nicks  ники в нижнем регистре
      */
-    private function retryFailedForOnline(): void
+    public function onJoin(array $nicks): void
     {
-        $online = (array) \Illuminate\Support\Facades\Cache::get(\App\Domains\Minecraft\Controllers\Api\MinecraftIntegrationController::ONLINE_KEY, []);
+        $rows = DB::table('server_prefix_state')
+            ->whereNotNull('prefix')
+            ->whereIn(DB::raw('LOWER(nick)'), array_map('mb_strtolower', $nicks))
+            ->get();
 
-        if (! $online) {
-            return;
-        }
-
-        $failed = MinecraftGrant::query()
-            ->where('status', MinecraftGrant::FAILED)
-            ->where(fn ($q) => $q->whereNull('error')->orWhere('error', '!=', 'superseded'))
-            ->where('created_at', '>=', now()->subDay())
-            ->whereIn(DB::raw('LOWER(minecraft_username)'), $online)
-            ->get()
-            ->filter(fn ($g) => str_contains((string) ($g->commands[0] ?? ''), 'meta setprefix ' . self::PRIORITY));
-
-        foreach ($failed as $grant) {
-            DB::table('server_prefix_state')->where('user_id', $grant->user_id)->delete();
-            $grant->forceFill(['error' => 'superseded'])->save();
+        foreach ($rows as $row) {
+            MinecraftGrant::create([
+                'user_id' => $row->user_id,
+                'shop_item_id' => null,
+                'minecraft_username' => $row->nick,
+                'commands' => ['lp user ' . $row->nick . ' meta setprefix ' . self::PRIORITY . ' "' . $row->prefix . '"'],
+                'status' => MinecraftGrant::PENDING,
+            ]);
         }
     }
 

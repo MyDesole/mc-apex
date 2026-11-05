@@ -24,16 +24,16 @@ class ServerRankService
      */
     public const RANKS = [
         // Платные и боевые: растут по цене и по значимости
-        'vip' => ['name' => 'VIP', 'kind' => 'donate', 'group' => 'vip', 'weight' => 10, 'prefix' => '&aVIP', 'about' => 'Базовый статус'],
-        'mvp' => ['name' => 'MVP', 'kind' => 'donate', 'group' => 'mvp', 'weight' => 20, 'prefix' => '&bMVP', 'about' => 'Статус бойца'],
-        'mvp_plus' => ['name' => 'MVP+', 'kind' => 'donate', 'group' => 'mvp_plus', 'weight' => 30, 'prefix' => '&bMVP&c+', 'about' => 'Расширенный MVP'],
-        'apex' => ['name' => 'APEX', 'kind' => 'donate', 'group' => 'apex', 'weight' => 40, 'prefix' => '&6APEX', 'about' => 'Высший боевой статус'],
-        'legend' => ['name' => 'LEGEND', 'kind' => 'donate', 'group' => 'legend', 'weight' => 50, 'prefix' => '&dLEGEND', 'about' => 'Редкий статус'],
+        'vip' => ['name' => 'VIP', 'kind' => 'donate', 'group' => 'vip', 'weight' => 10, 'prefix' => '&a&lVIP', 'about' => 'Базовый статус'],
+        'mvp' => ['name' => 'MVP', 'kind' => 'donate', 'group' => 'mvp', 'weight' => 20, 'prefix' => '&3&lM&b&lVP', 'about' => 'Статус бойца'],
+        'mvp_plus' => ['name' => 'MVP+', 'kind' => 'donate', 'group' => 'mvp_plus', 'weight' => 30, 'prefix' => '&3&lM&b&lVP&c&l+', 'about' => 'Расширенный MVP'],
+        'apex' => ['name' => 'APEX', 'kind' => 'donate', 'group' => 'apex', 'weight' => 40, 'prefix' => '&6&lAP&e&lEX', 'about' => 'Высший боевой статус'],
+        'legend' => ['name' => 'LEGEND', 'kind' => 'donate', 'group' => 'legend', 'weight' => 50, 'prefix' => '&5&lLEG&d&lEND', 'about' => 'Редкий статус'],
 
         // Следуют за ролью на сайте
-        'tester' => ['name' => 'Тестер', 'kind' => 'staff', 'group' => 'tester', 'weight' => 60, 'prefix' => '&eТестер', 'about' => 'Выдаётся роли «Тестер»', 'role' => 'tester'],
-        'media' => ['name' => 'Медиа', 'kind' => 'staff', 'group' => 'media', 'weight' => 65, 'prefix' => '&5Медиа', 'about' => 'Выдаётся роли «Медийка»', 'role' => 'media'],
-        'moderator' => ['name' => 'Модератор', 'kind' => 'staff', 'group' => 'moderator', 'weight' => 80, 'prefix' => '&9Модер', 'about' => 'Выдаётся роли «Модератор»', 'role' => 'moderator'],
+        'tester' => ['name' => 'Тестер', 'kind' => 'staff', 'group' => 'tester', 'weight' => 60, 'prefix' => '&e&lТЕСТЕР', 'about' => 'Выдаётся роли «Тестер»', 'role' => 'tester'],
+        'media' => ['name' => 'Медиа', 'kind' => 'staff', 'group' => 'media', 'weight' => 65, 'prefix' => '&5&lМЕДИА', 'about' => 'Выдаётся роли «Медийка»', 'role' => 'media'],
+        'moderator' => ['name' => 'Модератор', 'kind' => 'staff', 'group' => 'moderator', 'weight' => 80, 'prefix' => '&9&lМОДЕР', 'about' => 'Выдаётся роли «Модератор»', 'role' => 'moderator'],
     ];
 
     /** Срок по умолчанию в днях для быстрых кнопок админки. */

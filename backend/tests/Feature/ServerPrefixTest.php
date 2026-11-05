@@ -25,7 +25,7 @@ class ServerPrefixTest extends TestCase
 
         $prefix = app(ServerPrefixService::class)->compose($user->fresh());
 
-        $this->assertStringStartsWith('&bMVP&c+ &#f97316A', $prefix);
+        $this->assertStringStartsWith('&3&lM&b&lVP&c&l+ &#f97316&lA', $prefix);
         $this->assertStringNotContainsString('[', $prefix);
         $this->assertStringEndsWith(' &r', $prefix);
     }
@@ -34,7 +34,7 @@ class ServerPrefixTest extends TestCase
     {
         $prefix = app(ServerPrefixService::class)->compose($this->player());
 
-        $this->assertSame('&#f97316A &r', $prefix);
+        $this->assertSame('&#f97316&lA &r', $prefix);
     }
 
     public function test_highest_rank_wins_and_expired_is_ignored(): void
@@ -46,7 +46,7 @@ class ServerPrefixTest extends TestCase
         $ranks->grant($user, 'legend', 1);
         \DB::table('server_rank_grants')->where('rank', 'legend')->update(['expires_at' => now()->subHour()]);
 
-        $this->assertStringStartsWith('&6APEX ', app(ServerPrefixService::class)->compose($user->fresh()));
+        $this->assertStringStartsWith('&6&lAP&e&lEX ',app(ServerPrefixService::class)->compose($user->fresh()));
     }
 
     public function test_sync_sends_only_changes(): void
@@ -58,7 +58,7 @@ class ServerPrefixTest extends TestCase
         $this->assertGreaterThanOrEqual(1, $service->sync());
 
         $grant = MinecraftGrant::where('minecraft_username', 'Steve_1')->first();
-        $this->assertSame(['lp user Steve_1 meta setprefix 1000 "&#f97316A &r"'], $grant->commands);
+        $this->assertSame(['lp user Steve_1 meta setprefix 1000 "&#f97316&lA &r"'], $grant->commands);
 
         // Ничего не менялось: второй проход тихий
         $count = MinecraftGrant::count();
@@ -71,25 +71,24 @@ class ServerPrefixTest extends TestCase
         $this->assertSame($count + 1, MinecraftGrant::count());
     }
 
-    public function test_failed_prefix_is_resent_when_player_comes_online(): void
+    public function test_prefix_is_resent_when_player_joins(): void
     {
         $this->player();
         $service = app(ServerPrefixService::class);
         $service->sync();
+        MinecraftGrant::query()->delete();
 
-        // Игрок ещё не заходил: LuckPerms его не знал, команда провалилась
-        MinecraftGrant::query()->update(['status' => MinecraftGrant::FAILED]);
-        $service->sync();
-        $this->assertSame(0, MinecraftGrant::where('status', MinecraftGrant::PENDING)->count());
+        // Зашёл на сервер: LuckPerms мог не знать его раньше, шлём префикс снова
+        $service->onJoin(['steve_1']);
 
-        // Зашёл на сервер: отправляем снова
-        \Cache::put(\App\Domains\Minecraft\Controllers\Api\MinecraftIntegrationController::ONLINE_KEY, ['steve_1'], 60);
-        $service->sync();
-        $this->assertSame(1, MinecraftGrant::where('status', MinecraftGrant::PENDING)->count());
+        $grant = MinecraftGrant::first();
+        $this->assertSame('Steve_1', $grant->minecraft_username);
+        $this->assertSame(['lp user Steve_1 meta setprefix 1000 "&#f97316&lA &r"'], $grant->commands);
 
-        // и не зацикливаемся
-        $service->sync();
-        $this->assertSame(1, MinecraftGrant::where('status', MinecraftGrant::PENDING)->count());
+        // Чужой ник ничего не создаёт
+        MinecraftGrant::query()->delete();
+        $service->onJoin(['nobody']);
+        $this->assertSame(0, MinecraftGrant::count());
     }
 
     public function test_nick_change_clears_old_nick(): void
@@ -104,6 +103,6 @@ class ServerPrefixTest extends TestCase
 
         $all = MinecraftGrant::all()->flatMap(fn ($g) => $g->commands)->all();
         $this->assertContains('lp user Steve_1 meta removeprefix 1000', $all);
-        $this->assertContains('lp user Alex_9 meta setprefix 1000 "&#f97316A &r"', $all);
+        $this->assertContains('lp user Alex_9 meta setprefix 1000 "&#f97316&lA &r"', $all);
     }
 }

@@ -79,7 +79,15 @@ class MinecraftIntegrationController extends Controller
 
         $nicks = collect($data['players'])->map(fn ($n) => mb_strtolower($n))->unique()->values()->all();
 
+        // Кто зашёл с прошлого опроса: LuckPerms узнаёт игрока только после первого входа,
+        // поэтому префикс, отправленный заранее, мог не примениться
+        $joined = array_values(array_diff($nicks, (array) Cache::get(self::ONLINE_KEY, [])));
+
         Cache::put(self::ONLINE_KEY, $nicks, now()->addSeconds(120));
+
+        if ($joined) {
+            app(\App\Domains\Minecraft\Services\ServerPrefixService::class)->onJoin($joined);
+        }
 
         return response()->json(['ok' => true, 'count' => count($nicks)]);
     }
