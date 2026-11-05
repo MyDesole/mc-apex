@@ -168,7 +168,13 @@
 .pb-align--right .pb-block__body { text-align: right; }
 
 /* Высота */
-.pb-h--compact { max-height: 220px; overflow-y: auto; }
+/*
+ * «Низкий» блок — плотный, без пустоты, но без обрезания. Раньше было
+ * max-height: 220px с прокруткой: у блока со всеми «низкими» на странице
+ * у каждого вылезала полоса прокрутки и прятала содержимое.
+ */
+.pb-h--compact { padding-block: 10px; }
+.pb-h--compact .block-title { margin-bottom: 8px; }
 .pb-h--tall { min-height: 320px; }
 .pb-h--huge { min-height: 480px; }
 

@@ -455,6 +455,34 @@
 }
 
 /*
+ * Блоки конструктора на светлом макете. Раньше у них оставалась тёмная
+ * подложка и принудительный светлый текст (.pb-text--light), а вложенные
+ * панели красились в кремовый: получалось белое на белом. Теперь блок с
+ * обычным фоном берёт бумагу и чернила макета, а выбранный «светлый» текст
+ * на светлой бумаге не применяется. Блоки со своим фоном (неон, стекло,
+ * градиент и т. п.) не трогаем: цвет там задаёт сам автор.
+ */
+.profile-layout.profile-layout--light .pb-block.pb-tone--default {
+  --text: var(--ink);
+  --text-dim: var(--ink-soft);
+  --text-muted: var(--ink-muted);
+
+  color: var(--ink);
+  background: var(--paper-surface);
+  border-color: var(--paper-line, rgba(0, 0, 0, 0.12));
+}
+
+.profile-layout.profile-layout--light .pb-block.pb-tone--default :is(.block-title, .pb-block__title, .section-heading h3, h2, h3, h4) {
+  color: var(--ink);
+}
+
+/* Вложенные панели прозрачные, как и на тёмных макетах: фон даёт блок */
+.profile-layout.profile-layout--light .pb-block .side-panel {
+  background: none;
+  box-shadow: none;
+}
+
+/*
  * Вложенные блоки с «зашитыми» тёмными цветами (аспекты, соцсети,
  * плашки в шапке): на пергаменте они выпадали тёмным пятном или
  * становились нечитаемыми — перекрашиваем в бумагу и чернила.
