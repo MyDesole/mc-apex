@@ -500,6 +500,40 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
+/*
+ * Плашка клана: фон и название у неё заданы тёмной темой (светлое название
+ * на полупрозрачном тёмном). На светлом макете верх плашки серел, низ был
+ * светлым, и название читалось только наполовину. Здесь она молочная,
+ * текст чернилами макета. Селекторы длинные, чтобы перебить правило для
+ * «не обычных» тонов блока выше по файлу.
+ */
+.profile-layout.profile-layout--light .pb-block .pb-block__body .clan-badge,
+.profile-layout.profile-layout--light .pb-block:not(.pb-tone--default) .pb-block__body .clan-badge {
+  background: var(--paper-chip, rgba(255, 255, 255, 0.7));
+  border-color: var(--paper-line, rgba(0, 0, 0, 0.1));
+  box-shadow: 0 6px 16px var(--paper-shadow-soft, rgba(0, 0, 0, 0.06));
+}
+
+.profile-layout.profile-layout--light .clan-badge__name {
+  color: var(--ink);
+}
+
+.profile-layout.profile-layout--light .clan-badge__tag {
+  color: color-mix(in srgb, var(--clan-color) 72%, var(--ink));
+}
+
+.profile-layout.profile-layout--light .clan-badge__meta,
+.profile-layout.profile-layout--light .clan-badge__meta .separator,
+.profile-layout.profile-layout--light .clan-badge__label {
+  color: var(--ink-muted);
+}
+
+.profile-layout.profile-layout--light .clan-badge__arrow {
+  color: var(--ink-muted);
+  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--paper-line, rgba(0, 0, 0, 0.1));
+}
+
 /* Вложенные панели прозрачные, как и на тёмных макетах: фон даёт блок */
 .profile-layout.profile-layout--light .pb-block .side-panel {
   background: none;
