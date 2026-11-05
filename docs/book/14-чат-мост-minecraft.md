@@ -806,6 +806,15 @@ users ──┬─< conversation_participants >── conversations ──< mess
 | `GET /api/minecraft/clan-duels` | топ-20 кланов по победам их участников: победы, поражения, винрейт |
 | `GET /api/minecraft/online` | число ников на сервере и игроки сайта среди них |
 
+**API клиентского мода APEX** (`ModController`, `ModPlayerService`, без авторизации, только публичные данные: без почты, UUID и настроек):
+
+| Метод и путь | Лимит | Ответ |
+|---|---|---|
+| `GET /api/mod/player/{query}` | 30/мин | `player`: `username`, `minecraft_username`, `tier`, `tier_score`, `tier_color`, `badge` (`type` tier/bridge, `label`, `short`, `color`), `profile_url`, `visible`, `aspects[]`, `bridge` (виды и сумма), `clan` (`name`, `tag`, `role`, `title`), `friends_count`, `achievements_count`. Поиск без учёта регистра сначала по `minecraft_username`, потом по `username`; забаненные - 404. Закрытый профиль (`profile_visibility` не `public`): только тир, звание и ссылка, остальные поля `null` |
+| `POST /api/mod/tiers` `{nicks: [..]}` | 60/мин | до 60 ников, ищет только по нику Minecraft; `players[]` с `nick` и `badge` (найденные) |
+
+Ответы кэшируются на 60 секунд (`ModPlayerService::CACHE_TTL`), включая «не найден» для пакета. Палитра тиров продублирована в `ModPlayerService::TIER_COLORS` и должна совпадать с `useTier.js`; сокращение звания (`BRIDGE ПРОФИ` -> `B.P`) - порт `shortRankLabel` из `playerStyling.js`. Исходники мода: `minecraft-mod/`.
+
 Клановая статистика считается из `minecraft_duels` через `clan_members` (сейчашний состав клана), отдельной таблицы нет.
 
 **Таблицы.** `minecraft_duels` (`match_key` unique, `kit`, `winner_name`, `loser_name`, `winner_user_id`, `loser_user_id` с `nullOnDelete`, `duration_seconds`, `ranked`, `played_at`; индексы по киту, именам и парам игрок + дата). `minecraft_grants` (`user_id`, `shop_item_id`, `minecraft_username`, `commands` json, `status` pending/done/failed, `attempts`, `error`, `delivered_at`).

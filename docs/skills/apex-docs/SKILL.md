@@ -52,6 +52,7 @@ docs/tools/             сборка: markdown → DOCX → PDF
 | Экспедиции: зоны, добыча | `backend/app/Domains/Players/Services/PetExpeditionService.php` |
 | Рейтинг, сила клана | `backend/app/Domains/Players/Services/RatingService.php` |
 | Пороги тиров | `TierTestService::TIER_THRESHOLDS` и `User::recalcTierFromAspects()` |
+| API клиентского мода (`/api/mod/*`): палитра тиров, сокращение звания, кэш | `backend/app/Domains/Minecraft/Services/ModPlayerService.php` (при смене `TIER_COLORS` на сайте менять и там, и в `minecraft-mod/`) |
 | Лимиты форм | `backend/app/Domains/*/Requests/**/*.php` |
 | Схема таблиц | `backend/database/migrations/` |
 | Роуты и права | `backend/routes/api.php` |

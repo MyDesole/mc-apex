@@ -229,6 +229,14 @@ Route::middleware('minecraft.server')->prefix('minecraft')->group(function () {
     Route::post('/presence', [\App\Domains\Minecraft\Controllers\Api\MinecraftIntegrationController::class, 'presence']);
 });
 
+// Клиентский мод APEX: публичные данные игрока без авторизации, с лимитами
+Route::prefix('mod')->group(function () {
+    Route::get('/player/{query}', [\App\Domains\Minecraft\Controllers\Api\ModController::class, 'player'])
+        ->middleware('throttle:30,1');
+    Route::post('/tiers', [\App\Domains\Minecraft\Controllers\Api\ModController::class, 'tiers'])
+        ->middleware('throttle:60,1');
+});
+
 // Данные сервера для сайта: дуэли игрока, топ кланов по дуэлям, кто в игре
 Route::get('/players/{user}/duels', [\App\Domains\Minecraft\Controllers\Api\MinecraftStatsController::class, 'playerDuels'])
     ->middleware('throttle:60,1');
