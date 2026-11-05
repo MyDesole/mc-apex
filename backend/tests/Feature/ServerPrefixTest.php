@@ -25,7 +25,7 @@ class ServerPrefixTest extends TestCase
 
         $strings = app(ServerPrefixService::class)->compose($user->fresh());
 
-        $this->assertSame('&3&lM&b&lVP&c&l+ &c&lA &r', $strings['prefix']);
+        $this->assertSame('&3&lᴍ&b&lᴠᴘ&c&l+ &c&lA &r', $strings['prefix']);
         $this->assertStringNotContainsString('[', $strings['prefix']);
         $this->assertStringNotContainsString('&#', $strings['prefix'], 'на 1.8 hex-цветов нет');
     }
@@ -64,7 +64,7 @@ class ServerPrefixTest extends TestCase
         $ranks->grant($user, 'legend', 1);
         \DB::table('server_rank_grants')->where('rank', 'legend')->update(['expires_at' => now()->subHour()]);
 
-        $this->assertStringStartsWith('&6&lAP&e&lEX ', app(ServerPrefixService::class)->compose($user->fresh())['prefix']);
+        $this->assertStringStartsWith('&6&lᴀᴘ&e&lᴇx ', app(ServerPrefixService::class)->compose($user->fresh())['prefix']);
     }
 
     public function test_sync_sends_prefix_and_tag_only_on_change(): void
@@ -121,7 +121,7 @@ class ServerPrefixTest extends TestCase
         $this->assertDatabaseHas('server_rank_grants', ['user_id' => $admin->id, 'rank' => 'admin', 'source' => 'role']);
         $all = MinecraftGrant::all()->flatMap(fn ($g) => $g->commands)->all();
         $this->assertContains('lp user Steve_1 parent add admin', $all);
-        $this->assertContains('lp user Steve_1 meta setprefix 1000 "&c&lАДМИН &c&lA &r"', $all);
+        $this->assertContains('lp user Steve_1 meta setprefix 1000 "&c&lᴀᴅᴍɪɴ &c&lA &r"', $all);
     }
 
     public function test_nick_change_clears_old_nick(): void

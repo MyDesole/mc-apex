@@ -25,18 +25,18 @@ class ServerRankService
     public const RANKS = [
         // Платные и боевые: растут по цене и по значимости
         // `compact` — короткая форма без жирного для ника над головой (там до 16 символов)
-        'vip' => ['name' => 'VIP', 'kind' => 'donate', 'group' => 'vip', 'weight' => 10, 'prefix' => '&a&lVIP', 'compact' => '&aVIP', 'about' => 'Базовый статус'],
-        'mvp' => ['name' => 'MVP', 'kind' => 'donate', 'group' => 'mvp', 'weight' => 20, 'prefix' => '&3&lM&b&lVP', 'compact' => '&3M&bVP', 'about' => 'Статус бойца'],
-        'mvp_plus' => ['name' => 'MVP+', 'kind' => 'donate', 'group' => 'mvp_plus', 'weight' => 30, 'prefix' => '&3&lM&b&lVP&c&l+', 'compact' => '&3M&bVP&c+', 'about' => 'Расширенный MVP'],
-        'apex' => ['name' => 'APEX', 'kind' => 'donate', 'group' => 'apex', 'weight' => 40, 'prefix' => '&6&lAP&e&lEX', 'compact' => '&6AP&eEX', 'about' => 'Высший боевой статус'],
-        'legend' => ['name' => 'LEGEND', 'kind' => 'donate', 'group' => 'legend', 'weight' => 50, 'prefix' => '&5&lLEG&d&lEND', 'compact' => '&5LEG&dEND', 'about' => 'Редкий статус'],
+        'vip' => ['name' => 'VIP', 'kind' => 'donate', 'group' => 'vip', 'weight' => 10, 'prefix' => '&a&lᴠɪᴘ', 'compact' => '&aᴠɪᴘ', 'about' => 'Базовый статус'],
+        'mvp' => ['name' => 'MVP', 'kind' => 'donate', 'group' => 'mvp', 'weight' => 20, 'prefix' => '&3&lᴍ&b&lᴠᴘ', 'compact' => '&3ᴍ&bᴠᴘ', 'about' => 'Статус бойца'],
+        'mvp_plus' => ['name' => 'MVP+', 'kind' => 'donate', 'group' => 'mvp_plus', 'weight' => 30, 'prefix' => '&3&lᴍ&b&lᴠᴘ&c&l+', 'compact' => '&3ᴍ&bᴠᴘ&c+', 'about' => 'Расширенный MVP'],
+        'apex' => ['name' => 'APEX', 'kind' => 'donate', 'group' => 'apex', 'weight' => 40, 'prefix' => '&6&lᴀᴘ&e&lᴇx', 'compact' => '&6ᴀᴘ&eᴇx', 'about' => 'Высший боевой статус'],
+        'legend' => ['name' => 'LEGEND', 'kind' => 'donate', 'group' => 'legend', 'weight' => 50, 'prefix' => '&5&lʟᴇɢ&d&lᴇɴᴅ', 'compact' => '&5ʟᴇɢ&dᴇɴᴅ', 'about' => 'Редкий статус'],
 
         // Персонал: тестер, медиа, модератор и админ следуют за ролью на сайте
-        'tester' => ['name' => 'Тестер', 'kind' => 'staff', 'group' => 'tester', 'weight' => 60, 'prefix' => '&e&lТЕСТЕР', 'compact' => '&eТЕСТЕР', 'about' => 'Выдаётся роли «Тестер»', 'role' => 'tester'],
-        'media' => ['name' => 'Медиа', 'kind' => 'staff', 'group' => 'media', 'weight' => 65, 'prefix' => '&5&lМЕДИА', 'compact' => '&5МЕДИА', 'about' => 'Выдаётся роли «Медийка»', 'role' => 'media'],
-        'helper' => ['name' => 'Хелпер', 'kind' => 'staff', 'group' => 'helper', 'weight' => 70, 'prefix' => '&a&lХЕЛПЕР', 'compact' => '&aХЕЛПЕР', 'about' => 'Выдаётся вручную'],
-        'moderator' => ['name' => 'Модератор', 'kind' => 'staff', 'group' => 'moderator', 'weight' => 80, 'prefix' => '&9&lМОДЕР', 'compact' => '&9МОДЕР', 'about' => 'Выдаётся роли «Модератор»', 'role' => 'moderator'],
-        'admin' => ['name' => 'Админ', 'kind' => 'staff', 'group' => 'admin', 'weight' => 100, 'prefix' => '&c&lАДМИН', 'compact' => '&cАДМИН', 'about' => 'Выдаётся роли «Администратор»', 'role' => 'admin'],
+        'tester' => ['name' => 'Тестер', 'kind' => 'staff', 'group' => 'tester', 'weight' => 60, 'prefix' => '&e&lᴛᴇꜱᴛᴇʀ', 'compact' => '&eᴛᴇꜱᴛᴇʀ', 'about' => 'Выдаётся роли «Тестер»', 'role' => 'tester'],
+        'media' => ['name' => 'Медиа', 'kind' => 'staff', 'group' => 'media', 'weight' => 65, 'prefix' => '&5&lᴍᴇᴅɪᴀ', 'compact' => '&5ᴍᴇᴅɪᴀ', 'about' => 'Выдаётся роли «Медийка»', 'role' => 'media'],
+        'helper' => ['name' => 'Хелпер', 'kind' => 'staff', 'group' => 'helper', 'weight' => 70, 'prefix' => '&a&lʜᴇʟᴘᴇʀ', 'compact' => '&aʜᴇʟᴘᴇʀ', 'about' => 'Выдаётся вручную'],
+        'moderator' => ['name' => 'Модератор', 'kind' => 'staff', 'group' => 'moderator', 'weight' => 80, 'prefix' => '&9&lᴍᴏᴅᴇʀ', 'compact' => '&9ᴍᴏᴅᴇʀ', 'about' => 'Выдаётся роли «Модератор»', 'role' => 'moderator'],
+        'admin' => ['name' => 'Админ', 'kind' => 'staff', 'group' => 'admin', 'weight' => 100, 'prefix' => '&c&lᴀᴅᴍɪɴ', 'compact' => '&cᴀᴅᴍɪɴ', 'about' => 'Выдаётся роли «Администратор»', 'role' => 'admin'],
     ];
 
     /** Срок по умолчанию в днях для быстрых кнопок админки. */
