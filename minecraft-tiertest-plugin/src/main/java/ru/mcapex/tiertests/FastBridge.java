@@ -510,6 +510,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         if (s == null || s.run.finished) return;
 
         if (a == Action.RIGHT_CLICK_BLOCK && holdingBlocks(p)) {
+            if (e.isCancelled()) debug("клик уже отменён до нас; слушатели клика: " + listeners(PlayerInteractEvent.getHandlerList()));
             allow(e);
             final Block target = e.getClickedBlock().getRelative(e.getBlockFace());
             Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
@@ -532,6 +533,25 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
     }
 
     private int fallbackUsed;
+    private int debugLeft = 25;
+
+    /** Первые записи в логе о том, кто мешает штатной установке блоков (потом замолкает сам). */
+    private void debug(String msg) {
+        if (debugLeft <= 0) return;
+        debugLeft--;
+        plugin.getLogger().info("FastBridge[отладка]: " + msg);
+    }
+
+    private String listeners(org.bukkit.event.HandlerList list) {
+        StringBuilder sb = new StringBuilder();
+        for (org.bukkit.plugin.RegisteredListener rl : list.getRegisteredListeners()) {
+            if (rl.getPlugin() == plugin) continue;
+            if (sb.length() > 0) sb.append(", ");
+            sb.append(rl.getPlugin().getName()).append(':').append(rl.getPriority());
+            if (sb.length() > 300) break;
+        }
+        return sb.toString();
+    }
 
     /** Сколько раз пришлось ставить или ломать блок запасным путём (для проверки и логов). */
     int fallbackUsed() {
@@ -554,6 +574,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         if (s.p.getEyeLocation().distance(target.getLocation().add(0.5, 0.5, 0.5)) > 6.5) return;
         if (!holdingBlocks(s.p)) return;
         warnFallback();
+        debug("запасной путь: поставил блок " + key(target) + " сам, игрок " + s.p.getName());
         target.setTypeIdAndData(Material.SANDSTONE.getId(), (byte) 0, false);
         record(s, target);
         target.getWorld().playSound(target.getLocation(), Sound.DIG_STONE, 0.8f, 1f);
@@ -570,6 +591,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         if (!b.getWorld().equals(world)) return;
         int lane = Math.round((float) b.getZ() / SPACING);
         if (lane < 0 || lane >= LANES) return;
+        if (!e.isBuildable()) debug("canBuild=false до нас; слушатели: " + listeners(BlockCanBuildEvent.getHandlerList()));
         if (Math.abs(b.getZ() - lane * SPACING) <= HALF_WIDTH && b.getX() >= -2 && b.getX() <= ISLAND + FbMap.INF_LIMIT + ISLAND
                 && b.getY() >= FLOOR_Y - 2 && b.getY() <= FLOOR_Y + maxHeight()) {
             e.setBuildable(true);
@@ -584,6 +606,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
             if (e.getPlayer().getGameMode() != GameMode.CREATIVE) e.setCancelled(true);
             return;
         }
+        if (e.isCancelled()) debug("установка уже отменена до нас; слушатели: " + listeners(BlockPlaceEvent.getHandlerList()));
         boolean ok = !s.run.finished && inLane(s, e.getBlock()) && e.getBlock().getType() == Material.SANDSTONE
                 && !intersectsPlayer(e.getPlayer(), e.getBlock());
         if (!ok) limitHint(e.getPlayer(), e.getBlock());
@@ -619,7 +642,6 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
                     if (st != null && st.getType() == Material.SANDSTONE && st.getAmount() < 64) st.setAmount(64);
                 }
                 if (p.getInventory().getItem(0) == null) p.getInventory().setItem(0, new ItemStack(Material.SANDSTONE, 64));
-                p.updateInventory();
             }
         });
     }
