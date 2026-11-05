@@ -130,6 +130,9 @@ final class Hub implements Listener, CommandExecutor {
         Inventory inv = Bukkit.createInventory(null, 27, MENU);
         inv.setItem(11, item(Material.IRON_SWORD, "§6Лобби дуэлей", "§7Дуэли, рейтинг, киты"));
         inv.setItem(15, item(Material.BED, "§6Лобби BedWars", "§7Арены на 2, 4 и 8 команд"));
+        if (plugin.fastBridge().enabled()) {
+            inv.setItem(13, item(Material.SANDSTONE, "§6Fastbridge", "§7Тренировка быстрого моста", "§7с записью каждой попытки"));
+        }
         p.openInventory(inv);
     }
 
@@ -178,6 +181,7 @@ final class Hub implements Listener, CommandExecutor {
             e.setCancelled(true);
             if (e.getRawSlot() == 11) { p.closeInventory(); toDuels(p); }
             else if (e.getRawSlot() == 15) { p.closeInventory(); toBedwars(p); }
+            else if (e.getRawSlot() == 13 && plugin.fastBridge().enabled()) { p.closeInventory(); plugin.fastBridge().join(p); }
         } else if (inZone(p.getLocation()) && p.getGameMode() != GameMode.CREATIVE) {
             e.setCancelled(true);
         }

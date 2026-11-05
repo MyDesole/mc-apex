@@ -74,9 +74,28 @@ public class ApexTierTests extends JavaPlugin implements Listener {
             }
         }, 40L, every);
         new Integrations(this).start();
-        new Hub(this).start();
+        hub = new Hub(this);
+        fastBridge = new FastBridge(this);
+        fastBridge.start();
+        hub.start();
         new TabGuard(this).start();
         getLogger().info("ApexTierTests включён: " + getConfig().getString("api.url"));
+    }
+
+    private Hub hub;
+    private FastBridge fastBridge;
+
+    Hub hub() {
+        return hub;
+    }
+
+    FastBridge fastBridge() {
+        return fastBridge;
+    }
+
+    @Override
+    public void onDisable() {
+        if (fastBridge != null) fastBridge.stop();
     }
 
     private void readConfig() {

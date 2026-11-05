@@ -18,6 +18,10 @@ commands:
     description: Вернуться в хаб (выбор лобби)
     usage: /hub
     aliases: [lobby, spawnhub]
+  fastbridge:
+    description: Тренировка быстрого моста и записи попыток
+    usage: /fb [play | leave | top | replay [last|ник|id] [скорость]]
+    aliases: [fb]
   tier:
     description: Управление тирами
     usage: /tier reload
