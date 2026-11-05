@@ -1,0 +1,40 @@
+plugins {
+    id "net.fabricmc.fabric-loom" version "1.19.3"
+}
+
+group = "ru.mcapex"
+version = "1.0.0"
+
+base { archivesName = "apex-mod-fabric-26.3" }
+
+repositories {
+    mavenCentral()
+}
+
+sourceSets.main.java.srcDir("../core/src/main/java")
+
+// С 26.1 игра без обфускации: маппинги не нужны, зависимости подключаются без mod-префикса
+dependencies {
+    minecraft "com.mojang:minecraft:26.3"
+    implementation "net.fabricmc:fabric-loader:0.20.1"
+    implementation "net.fabricmc.fabric-api:fabric-api:0.165.2+26.3"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    options.release = 25
+    options.annotationProcessorPath = files()
+}
+
+java {
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+processResources {
+    inputs.property "version", project.version
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}

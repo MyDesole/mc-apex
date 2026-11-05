@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "apex",
+  "version": "${version}",
+  "name": "APEX",
+  "description": "Тиры и звания игроков mc-apex.ru над ником и в табе, команда /apex <ник>.",
+  "authors": ["APEX"],
+  "contact": { "homepage": "https://mc-apex.ru" },
+  "license": "All-Rights-Reserved",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["ru.mcapex.mod.fabric.ApexModClient"]
+  },
+  "mixins": ["apex.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.4",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

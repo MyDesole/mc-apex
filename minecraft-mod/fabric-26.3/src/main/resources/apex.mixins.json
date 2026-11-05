@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "ru.mcapex.mod.fabric.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": ["PlayerDisplayNameMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

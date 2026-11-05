@@ -17,16 +17,28 @@ forge-1.8.9/     Forge 1.8.9 (Java 8, сборка Essential Loom на JDK 17)
 вся логика, не связанная с игрой, живёт только в `core`. Новая версия = новый каталог с тонким адаптером
 (команда, таб, значок над ником, перевод `ChatFormat.Line` в компоненты чата).
 
-Версии: Forge 1.8.9 (готово). Fabric 1.21.x и 26.x - планируются отдельными подпроектами. Forge для 26.x
-не рассматривается: там Fabric и NeoForge.
+| Подпроект | Игра | Загрузчик | JDK | Gradle | Jar |
+|---|---|---|---|---|---|
+| `forge-1.8.9` | 1.8.9 | Forge 11.15.1.2318 | 17 (код на Java 8) | 7.6.4 | `apex-mod-forge-1.8.9-1.0.0.jar` |
+| `fabric-1.21.4` | 1.21.4 | Fabric Loader 0.16+, Fabric API | 21 | 8.10.2 | `apex-mod-fabric-1.21.4-1.0.0.jar` |
+| `fabric-26.3` | 26.3 | Fabric Loader 0.20+, Fabric API | 25 | 9.8.0 | `apex-mod-fabric-26.3-1.0.0.jar` |
+
+Не сделано: 1.12.2, остальные 1.16-1.21.x, NeoForge, 26.1/26.2 (jar под 26.3 с ними не проверялся;
+API 26.x меняется между релизами, поэтому проверять сборкой по версии). Новые версии 1.21.x - копия
+`fabric-1.21.4` с правкой версий в `build.gradle` и `fabric.mod.json` (с 1.21.5 нужно переписать
+`ClickEvent`, как это сделано в `fabric-26.3`).
+
+В игре мод проверен только сборкой (клиента Minecraft на машине нет): запуск и отрисовка не тестировались.
 
 ## Сборка (WSL)
 
-Нужны JDK 17 и Gradle 7.6.x для `forge-1.8.9`:
+JDK и Gradle по таблице выше, например:
 
 ```bash
 cd minecraft-mod/forge-1.8.9
 JAVA_HOME=~/dev/tools/jdk/17 ~/dev/tools/gradle-7.6.4/bin/gradle build
+cd ../fabric-26.3
+JAVA_HOME=~/dev/tools/jdk/25 ~/dev/tools/gradle-9.8.0/bin/gradle build
 ```
 
 Готовый jar - `forge-1.8.9/build/libs/apex-mod-forge-1.8.9-1.0.0.jar` (в `mods/` клиента; файл с `-dev` - для среды разработки, не ставить). Jar в git не коммитятся.
