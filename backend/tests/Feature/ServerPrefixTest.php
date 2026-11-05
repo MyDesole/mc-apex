@@ -23,18 +23,36 @@ class ServerPrefixTest extends TestCase
         $user = $this->player();
         app(ServerRankService::class)->grant($user, 'mvp_plus', 30);
 
-        $prefix = app(ServerPrefixService::class)->compose($user->fresh());
+        $strings = app(ServerPrefixService::class)->compose($user->fresh());
 
-        $this->assertStringStartsWith('&3&lM&b&lVP&c&l+ &#f97316&lA', $prefix);
-        $this->assertStringNotContainsString('[', $prefix);
-        $this->assertStringEndsWith(' &r', $prefix);
+        $this->assertSame('&3&lM&b&lVP&c&l+ &c&lA &r', $strings['prefix']);
+        $this->assertStringNotContainsString('[', $strings['prefix']);
+        $this->assertStringNotContainsString('&#', $strings['prefix'], 'на 1.8 hex-цветов нет');
+    }
+
+    public function test_tag_over_head_never_exceeds_sixteen_chars(): void
+    {
+        $service = app(ServerPrefixService::class);
+
+        foreach (array_keys(ServerRankService::RANKS) as $rank) {
+            foreach (['S+', 'A', 'E'] as $tier) {
+                $user = User::factory()->create(['minecraft_username' => 'P' . random_int(1000, 9999), 'tier' => $tier, 'tier_score' => 10]);
+                app(ServerRankService::class)->grant($user, $rank, null);
+
+                $tag = $service->compose($user->fresh())['tag'];
+
+                $this->assertLessThanOrEqual(16, mb_strlen($tag), "{$rank} {$tier}: {$tag}");
+                $this->assertStringEndsWith('&r', $tag);
+            }
+        }
     }
 
     public function test_without_donate_only_tier(): void
     {
-        $prefix = app(ServerPrefixService::class)->compose($this->player());
+        $strings = app(ServerPrefixService::class)->compose($this->player());
 
-        $this->assertSame('&#f97316&lA &r', $prefix);
+        $this->assertSame('&c&lA &r', $strings['prefix']);
+        $this->assertSame('&c&lA &r', $strings['tag']);
     }
 
     public function test_highest_rank_wins_and_expired_is_ignored(): void
@@ -46,10 +64,10 @@ class ServerPrefixTest extends TestCase
         $ranks->grant($user, 'legend', 1);
         \DB::table('server_rank_grants')->where('rank', 'legend')->update(['expires_at' => now()->subHour()]);
 
-        $this->assertStringStartsWith('&6&lAP&e&lEX ',app(ServerPrefixService::class)->compose($user->fresh()));
+        $this->assertStringStartsWith('&6&lAP&e&lEX ', app(ServerPrefixService::class)->compose($user->fresh())['prefix']);
     }
 
-    public function test_sync_sends_only_changes(): void
+    public function test_sync_sends_prefix_and_tag_only_on_change(): void
     {
         $user = $this->player();
         MinecraftGrant::query()->delete();
@@ -58,7 +76,10 @@ class ServerPrefixTest extends TestCase
         $this->assertGreaterThanOrEqual(1, $service->sync());
 
         $grant = MinecraftGrant::where('minecraft_username', 'Steve_1')->first();
-        $this->assertSame(['lp user Steve_1 meta setprefix 1000 "&#f97316&lA &r"'], $grant->commands);
+        $this->assertSame([
+            'lp user Steve_1 meta setprefix 1000 "&c&lA &r"',
+            'lp user Steve_1 meta setsuffix 1000 "&c&lA &r"',
+        ], $grant->commands);
 
         // Ничего не менялось: второй проход тихий
         $count = MinecraftGrant::count();
@@ -83,12 +104,24 @@ class ServerPrefixTest extends TestCase
 
         $grant = MinecraftGrant::first();
         $this->assertSame('Steve_1', $grant->minecraft_username);
-        $this->assertSame(['lp user Steve_1 meta setprefix 1000 "&#f97316&lA &r"'], $grant->commands);
+        $this->assertSame('lp user Steve_1 meta setprefix 1000 "&c&lA &r"', $grant->commands[0]);
 
         // Чужой ник ничего не создаёт
         MinecraftGrant::query()->delete();
         $service->onJoin(['nobody']);
         $this->assertSame(0, MinecraftGrant::count());
+    }
+
+    public function test_site_admin_gets_admin_rank_on_sync(): void
+    {
+        $admin = $this->player(['role' => 'admin']);
+
+        app(ServerPrefixService::class)->sync();
+
+        $this->assertDatabaseHas('server_rank_grants', ['user_id' => $admin->id, 'rank' => 'admin', 'source' => 'role']);
+        $all = MinecraftGrant::all()->flatMap(fn ($g) => $g->commands)->all();
+        $this->assertContains('lp user Steve_1 parent add admin', $all);
+        $this->assertContains('lp user Steve_1 meta setprefix 1000 "&c&lАДМИН &c&lA &r"', $all);
     }
 
     public function test_nick_change_clears_old_nick(): void
@@ -103,6 +136,7 @@ class ServerPrefixTest extends TestCase
 
         $all = MinecraftGrant::all()->flatMap(fn ($g) => $g->commands)->all();
         $this->assertContains('lp user Steve_1 meta removeprefix 1000', $all);
-        $this->assertContains('lp user Alex_9 meta setprefix 1000 "&#f97316&lA &r"', $all);
+        $this->assertContains('lp user Steve_1 meta removesuffix 1000', $all);
+        $this->assertContains('lp user Alex_9 meta setprefix 1000 "&c&lA &r"', $all);
     }
 }
