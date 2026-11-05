@@ -90,6 +90,23 @@ async function act(call, ok) {
 
 const equip = (item) => act(() => dungeonApi.equip(pet.value.inventory_id, item.inventory_id), () => `${item.name} надет.`)
 const unequip = (key) => act(() => dungeonApi.unequip(pet.value.inventory_id, key))
+
+// Сила вещи для сравнения: здоровье весит меньше, чем атака и защита
+const power = (g) => (g?.atk ?? 0) + (g?.def ?? 0) + (g?.spd ?? 0) + (g?.hp ?? 0) / 4
+
+// Лучшая свободная вещь на каждый слот, если она сильнее надетой
+const upgrades = computed(() => {
+  const list = []
+  for (const [key] of SLOTS) {
+    const best = freeAll.value.filter((g) => g.slot === key).reduce((a, g) => (!a || power(g) > power(a) ? g : a), null)
+    if (best && power(best) > power(pet.value?.gear?.[key])) list.push(best)
+  }
+  return list
+})
+
+const equipBest = () => act(async () => {
+  for (const item of upgrades.value) await dungeonApi.equip(pet.value.inventory_id, item.inventory_id)
+}, () => 'Надето самое сильное.')
 const makeBasic = (m) => act(() => dungeonApi.craft(m.key))
 const forgeCore = (core, key) => act(() => api.post('/dungeons/craft/forge', { core: core.key, slot: key }), () => { coreSel.value = null; return 'Откована вещь на ядре босса!' })
 const upgrade = () => act(() => api.post('/dungeons/craft/upgrade', { first: pair.value[0], second: pair.value[1] }))
@@ -144,6 +161,7 @@ onMounted(load)
             <li v-for="[k, label] in STATS" :key="k" :class="{ 'is-zero': !total[k] }"><span>{{ label }}</span><b>{{ total[k] > 0 ? '+' : '' }}{{ total[k] }}</b></li>
           </ul>
           <button v-if="pet.gear?.[slot]" type="button" class="g-btn g-btn--red g-btn--sm fg-take" :disabled="busy" @click="unequip(slot)">Снять</button>
+          <button type="button" class="g-btn g-btn--go g-btn--sm fg-best" :disabled="busy || !upgrades.length" :title="upgrades.length ? `Улучшений: ${upgrades.length}` : 'Лучше уже не найти'" @click="equipBest">Надеть самое сильное</button>
         </section>
 
         <!-- Сумка выбранного слота и действия с предметом -->
@@ -277,6 +295,7 @@ onMounted(load)
 .fg-total li.is-zero { opacity: 0.45; }
 .fg-total b { color: #ffd45c; }
 .fg-take { position: absolute; right: 12px; top: 12px; }
+.fg-best { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); white-space: nowrap; }
 .fg-bag { padding: 14px; }
 .fg-bag h3 small { color: #ffe9a8; font-size: 12px; }
 .fg-bag__grid { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0; }
