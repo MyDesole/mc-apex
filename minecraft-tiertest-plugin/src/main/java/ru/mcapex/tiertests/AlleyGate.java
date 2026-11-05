@@ -201,16 +201,44 @@ final class AlleyGate {
         }
     }
 
+    /** Имя боковой цели Alley на его доске (по существующей доске). */
+    private String objectiveName(Object board) {
+        try {
+            Object obj = board.getClass().getMethod("getObjective").invoke(board);
+            return obj == null ? null : (String) obj.getClass().getMethod("getName").invoke(obj);
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    private boolean isAlleyBoard(org.bukkit.scoreboard.Scoreboard sb, String alleyObjective) {
+        org.bukkit.scoreboard.Objective side = sb.getObjective(org.bukkit.scoreboard.DisplaySlot.SIDEBAR);
+        return side != null && alleyObjective != null && side.getName().equals(alleyObjective);
+    }
+
     private void syncBoards() {
         if (assemble == null) return;
         try {
             java.util.Map<?, ?> boards = (java.util.Map<?, ?>) getBoards.invoke(assemble);
             List<Player> players = new ArrayList<Player>(Bukkit.getOnlinePlayers());
+            org.bukkit.scoreboard.Scoreboard main = Bukkit.getScoreboardManager().getMainScoreboard();
             for (Player p : players) {
-                boolean has = boards.containsKey(p.getUniqueId());
+                Object board = boards.get(p.getUniqueId());
                 boolean zone = inZone.test(p);
-                if (!zone && has) removeBoard.invoke(assemble, p);
-                else if (zone && !has) createBoard.invoke(assemble, p);
+                if (!zone && board != null) {
+                    // чужую доску (BedWars, наш скорборд) Alley при удалении сбрасывает на главную: возвращаем её
+                    org.bukkit.scoreboard.Scoreboard before = p.getScoreboard();
+                    String alleyObj = objectiveName(board);
+                    boolean foreign = before != main && !isAlleyBoard(before, alleyObj);
+                    removeBoard.invoke(assemble, p);
+                    if (foreign && p.getScoreboard() != before) p.setScoreboard(before);
+                } else if (zone && board == null) {
+                    createBoard.invoke(assemble, p);
+                } else if (zone && p.getScoreboard() == main) {
+                    // доска есть, а у игрока главный скорборд (его сбросили): Alley из-за этого сыплет ошибками. Пересоздаём.
+                    removeBoard.invoke(assemble, p);
+                    createBoard.invoke(assemble, p);
+                }
             }
         } catch (Throwable t) {
             host.getLogger().warning("AlleyGate: скорборд Alley не синхронизирован: " + t);

@@ -59,7 +59,8 @@ final class FbHud {
 
     void release(Player p) {
         Sidebar s = own.remove(p.getUniqueId());
-        if (s != null && p.isOnline()) p.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
+        // сбрасываем только свою доску: если игроку уже поставили чужую (Alley, BedWars), её не трогаем
+        if (s != null && p.isOnline() && p.getScoreboard() == s.sb) p.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
     }
 
     static final class Sidebar {
