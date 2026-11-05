@@ -462,18 +462,42 @@
  * на светлой бумаге не применяется. Блоки со своим фоном (неон, стекло,
  * градиент и т. п.) не трогаем: цвет там задаёт сам автор.
  */
-.profile-layout.profile-layout--light .pb-block.pb-tone--default {
+.profile-layout.profile-layout--light .pb-block:is(.pb-tone--default, .pb-tone--glass, .pb-tone--outline, .pb-tone--transparent) {
   --text: var(--ink);
   --text-dim: var(--ink-soft);
   --text-muted: var(--ink-muted);
 
   color: var(--ink);
+}
+
+.profile-layout.profile-layout--light .pb-block:is(.pb-tone--default, .pb-tone--glass, .pb-tone--outline, .pb-tone--transparent) :is(.block-title, .pb-block__title, .section-heading h3, h2, h3, h4) {
+  color: var(--ink);
+}
+
+.profile-layout.profile-layout--light .pb-block.pb-tone--default {
   background: var(--paper-surface);
   border-color: var(--paper-line, rgba(0, 0, 0, 0.12));
 }
 
-.profile-layout.profile-layout--light .pb-block.pb-tone--default :is(.block-title, .pb-block__title, .section-heading h3, h2, h3, h4) {
-  color: var(--ink);
+/*
+ * Стекло рассчитано на тёмный фон (белая дымка 8%): на светлой странице
+ * оно давало серую муть. Здесь это молочное стекло, сквозь которое виден узор.
+ */
+.profile-layout.profile-layout--light .pb-block.pb-tone--glass {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.52));
+  border-color: var(--paper-line, rgba(255, 255, 255, 0.8));
+  box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 8px 22px var(--paper-shadow-soft, rgba(0, 0, 0, 0.06));
+}
+
+/* Тёмная вуаль под блоками («Фон под блоками»): на светлой странице она светлая */
+.profile-layout.profile-layout--light .pb-backdrop--dim .pb-grid {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.profile-layout.profile-layout--light .pb-backdrop--blur .pb-grid {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* Вложенные панели прозрачные, как и на тёмных макетах: фон даёт блок */
