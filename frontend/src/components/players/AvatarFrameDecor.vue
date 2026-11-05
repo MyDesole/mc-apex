@@ -102,7 +102,7 @@ const PLANETS = [
   <span
       v-if="kind"
       class="decor"
-      :class="`decor--${kind}`"
+      :class="[`decor--${kind}`, { 'decor--cycle': decor.cycle }]"
       :style="{
         '--decor-color': decor.color || decor.colors?.[0],
         '--decor-color-2': decor.color2 || decor.inner || decor.tip || decor.color,
@@ -313,6 +313,27 @@ const PLANETS = [
 @keyframes heat {
   from { opacity: 0.6; }
   to { opacity: 1; }
+}
+
+/*
+ * Переливание пламени «Энергетик: микс»: синий → фиолетовый → красный и
+ * обратно. Идём не по полному кругу тонов, чтобы огонь не стал зелёным.
+ */
+.decor--cycle {
+  animation: decor-cycle 9s ease-in-out infinite;
+}
+
+@keyframes decor-cycle {
+  0%, 100% { filter: hue-rotate(205deg); }
+  33% { filter: hue-rotate(255deg); }
+  66% { filter: hue-rotate(350deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .decor--cycle {
+    animation: none;
+    filter: hue-rotate(255deg);
+  }
 }
 
 .decor__flame {

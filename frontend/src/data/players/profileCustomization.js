@@ -36,6 +36,14 @@ export const AVATAR_FRAMES = [
      * из-за угла, жабры аксолотля.
      */
     { id: 'hellfire', name: 'Адское пламя', color: '#f97316', gradient: 'linear-gradient(135deg, #7f1d1d, #f97316, #fde047, #b91c1c)', rarity: 'legendary', glow: true, decor: { kind: 'flames' } },
+    /*
+     * «Энергетик»: то же пламя по кругу, но по цветам банок. hue сдвигает
+     * оранжевый огонь в синий (205) или фиолетовый с розовым (255), а у
+     * «Микса» (cycle) тон плавно переливается синий → фиолетовый → красный.
+     */
+    { id: 'energy_blue', name: 'Энергетик: синий', color: '#3b82f6', gradient: 'linear-gradient(135deg, #172554, #3b82f6, #bfdbfe, #1e40af)', rarity: 'epic', glow: true, decor: { kind: 'flames', hue: 205 } },
+    { id: 'energy_purple', name: 'Энергетик: фиолетовый', color: '#a855f7', gradient: 'linear-gradient(135deg, #3b0764, #a855f7, #f5d0fe, #6d28d9)', rarity: 'epic', glow: true, decor: { kind: 'flames', hue: 255 } },
+    { id: 'energy_mix', name: 'Энергетик: микс', color: '#8b5cf6', gradient: 'linear-gradient(135deg, #1d4ed8, #a855f7, #ef4444, #a855f7)', rarity: 'legendary', glow: true, decor: { kind: 'flames', hue: 0, cycle: true } },
     { id: 'nether_horns', name: 'Рога Незера', color: '#ef4444', gradient: 'linear-gradient(135deg, #1e1b2e, #7f1d1d, #1e1b2e)', rarity: 'epic', decor: { kind: 'horns', color: '#1e1b2e', tip: '#f97316' } },
     { id: 'warden', name: 'Варден', color: '#2dd4bf', gradient: 'linear-gradient(135deg, #042f2e, #134e4a, #2dd4bf, #042f2e)', rarity: 'legendary', glow: true, decor: { kind: 'shockwave', color: '#5eead4' } },
     { id: 'creeper', name: 'Криппер', color: '#4ade80', gradient: 'linear-gradient(135deg, #14532d, #4ade80, #166534)', rarity: 'epic', decor: { kind: 'peek', sprite: 'creeper' } },
