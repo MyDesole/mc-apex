@@ -312,24 +312,48 @@ final class FastBridge implements Listener, CommandExecutor {
             if (e.getPlayer().getGameMode() != GameMode.CREATIVE) e.setCancelled(true);
             return;
         }
-        e.setCancelled(false);
-        long now = System.currentTimeMillis();
-        if (r.timerStart < 0) r.timerStart = now;
-        Block b = e.getBlock();
-        r.placed.add(key(b));
-        r.blocks.add(new int[]{(int) (now - r.recStart), b.getX(), b.getY() - FLOOR_Y, b.getZ() - r.lane * SPACING,
-                b.getTypeId(), b.getData(), 1});
-        // блоки не кончаются
-        final Player p = e.getPlayer();
-        final int slot = p.getInventory().getHeldItemSlot();
-        Bukkit.getScheduler().runTask(plugin, new Runnable() {
-            public void run() {
-                ItemStack s = p.getInventory().getItem(slot);
-                if (s != null && s.getType() == Material.SANDSTONE) s.setAmount(64);
-                else p.getInventory().setItem(slot, new ItemStack(Material.SANDSTONE, 64));
-                p.updateInventory();
+        // Блоки ставим сами в onClick: Alley и другие плагины отменяют события лобби,
+        // и штатная установка до этого места не доходит.
+        e.setCancelled(true);
+    }
+
+    /**
+     * Ставим и ломаем блоки руками, минуя чужие отмены. ПКМ по блоку с песчаником - поставить
+     * на соседнюю клетку, ЛКМ по своему блоку - убрать. Работает только на своей дорожке.
+     */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onClick(PlayerInteractEvent e) {
+        Player p = e.getPlayer();
+        if (!p.getWorld().equals(world)) return;
+        Run r = runs.get(p.getUniqueId());
+        if (r == null || r.finished || e.getClickedBlock() == null) return;
+        Action a = e.getAction();
+        if (a == Action.RIGHT_CLICK_BLOCK) {
+            ItemStack inHand = p.getItemInHand();
+            if (inHand == null || inHand.getType() != Material.SANDSTONE) return;
+            e.setCancelled(true);
+            Block target = e.getClickedBlock().getRelative(e.getBlockFace());
+            if (!target.getType().equals(Material.AIR) || !inLane(r, target)) return;
+            // как в игре: нельзя ставить блок в себя
+            Location pl = p.getLocation();
+            if (target.getX() == pl.getBlockX() && target.getZ() == pl.getBlockZ()
+                    && (target.getY() == pl.getBlockY() || target.getY() == pl.getBlockY() + 1)) return;
+            long now = System.currentTimeMillis();
+            if (r.timerStart < 0) r.timerStart = now;
+            target.setTypeIdAndData(Material.SANDSTONE.getId(), (byte) 0, false);
+            r.placed.add(key(target));
+            r.blocks.add(new int[]{(int) (now - r.recStart), target.getX(), target.getY() - FLOOR_Y,
+                    target.getZ() - r.lane * SPACING, Material.SANDSTONE.getId(), 0, 1});
+            target.getWorld().playSound(target.getLocation(), org.bukkit.Sound.DIG_STONE, 0.6f, 1f);
+        } else if (a == Action.LEFT_CLICK_BLOCK) {
+            Block b = e.getClickedBlock();
+            if (r.placed.remove(key(b))) {
+                e.setCancelled(true);
+                b.setType(Material.AIR);
+                r.blocks.add(new int[]{(int) (System.currentTimeMillis() - r.recStart), b.getX(), b.getY() - FLOOR_Y,
+                        b.getZ() - r.lane * SPACING, 0, 0, 0});
             }
-        });
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
