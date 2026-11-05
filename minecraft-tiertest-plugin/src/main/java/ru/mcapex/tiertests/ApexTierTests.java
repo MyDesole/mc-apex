@@ -38,6 +38,8 @@ public class ApexTierTests extends JavaPlugin implements Listener {
 
     private Api api;
     private final Map<String, String> tiers = new ConcurrentHashMap<String, String>();
+    /** Полный префикс игрока с сайта (донат + тир), ник в нижнем регистре. */
+    private final Map<String, String> prefixes = new ConcurrentHashMap<String, String>();
     private final Map<UUID, Setup> setups = new HashMap<UUID, Setup>();
     private final Map<UUID, Session> byPlayer = new HashMap<UUID, Session>();
     private boolean tabOn;
@@ -387,7 +389,14 @@ public class ApexTierTests extends JavaPlugin implements Listener {
     @EventHandler
     public void onChat(AsyncPlayerChatEvent e) {
         if (!chatOn) return;
-        String t = tiers.get(e.getPlayer().getName().toLowerCase());
+        String key = e.getPlayer().getName().toLowerCase();
+        // Готовый префикс (донат + тир) собирает сайт: он же стоит в списке игроков и над головой
+        String full = prefixes.get(key);
+        if (full != null && !full.isEmpty()) {
+            e.setFormat(org.bukkit.ChatColor.translateAlternateColorCodes('&', full).replace("%", "%%") + "§7%1$s§8: §f%2$s");
+            return;
+        }
+        String t = tiers.get(key);
         if (t != null && !t.isEmpty()) e.setFormat(prefix(t) + "§7%1$s§8: §f%2$s");
     }
 
@@ -447,6 +456,8 @@ public class ApexTierTests extends JavaPlugin implements Listener {
                 String nick = o.get("nick").getAsString().toLowerCase();
                 String tier = o.get("tier").isJsonNull() ? "" : o.get("tier").getAsString();
                 tiers.put(nick, tier);
+                if (o.has("prefix") && !o.get("prefix").isJsonNull()) prefixes.put(nick, o.get("prefix").getAsString());
+                else prefixes.remove(nick);
             }
             Bukkit.getScheduler().runTask(this, new Runnable() {
                 public void run() {

@@ -124,6 +124,21 @@ class ServerPrefixTest extends TestCase
         $this->assertContains('lp user Steve_1 meta setprefix 1000 "&c&lᴀᴅᴍɪɴ &c&lA &r"', $all);
     }
 
+    public function test_server_tiers_endpoint_returns_ready_prefix_for_chat(): void
+    {
+        config(['services.minecraft.server_key' => 'test-key']);
+        $this->player();
+        app(ServerPrefixService::class)->sync();
+
+        $row = $this->withHeaders(['X-Minecraft-Server-Key' => 'test-key'])
+            ->getJson('/api/minecraft/tiers?nicks=Steve_1')
+            ->assertOk()
+            ->json('tiers.0');
+
+        $this->assertSame('Steve_1', $row['nick']);
+        $this->assertSame('&c&lA &r', $row['prefix']);
+    }
+
     public function test_nick_change_clears_old_nick(): void
     {
         $user = $this->player();

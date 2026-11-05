@@ -208,13 +208,17 @@ class MinecraftServerController extends Controller
 
         $rows = User::query()
             ->whereIn('minecraft_username', $nicks)
-            ->get(['minecraft_username', 'tier']);
+            ->get(['id', 'minecraft_username', 'tier']);
+
+        // Готовый префикс (донат + тир): плагин ставит его в чат
+        $prefixes = \DB::table('server_prefix_state')->whereIn('user_id', $rows->pluck('id'))->pluck('prefix', 'user_id');
 
         return response()->json([
             'tiers' => $rows->map(fn (User $user) => [
                 'nick' => $user->minecraft_username,
                 'account' => $user->minecraft_username,
                 'tier' => $user->tier,
+                'prefix' => $prefixes[$user->id] ?? null,
             ])->all(),
         ]);
     }
