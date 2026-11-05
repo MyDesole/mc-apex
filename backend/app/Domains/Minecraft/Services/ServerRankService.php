@@ -24,16 +24,16 @@ class ServerRankService
      */
     public const RANKS = [
         // Платные и боевые: растут по цене и по значимости
-        'vip' => ['name' => 'VIP', 'kind' => 'donate', 'group' => 'vip', 'weight' => 10, 'prefix' => '&a[VIP] ', 'about' => 'Базовый статус'],
-        'mvp' => ['name' => 'MVP', 'kind' => 'donate', 'group' => 'mvp', 'weight' => 20, 'prefix' => '&b[MVP] ', 'about' => 'Статус бойца'],
-        'mvp_plus' => ['name' => 'MVP+', 'kind' => 'donate', 'group' => 'mvp_plus', 'weight' => 30, 'prefix' => '&b[MVP&c+&b] ', 'about' => 'Расширенный MVP'],
-        'apex' => ['name' => 'APEX', 'kind' => 'donate', 'group' => 'apex', 'weight' => 40, 'prefix' => '&6[APEX] ', 'about' => 'Высший боевой статус'],
-        'legend' => ['name' => 'LEGEND', 'kind' => 'donate', 'group' => 'legend', 'weight' => 50, 'prefix' => '&d[LEGEND] ', 'about' => 'Редкий статус'],
+        'vip' => ['name' => 'VIP', 'kind' => 'donate', 'group' => 'vip', 'weight' => 10, 'prefix' => '&aVIP', 'about' => 'Базовый статус'],
+        'mvp' => ['name' => 'MVP', 'kind' => 'donate', 'group' => 'mvp', 'weight' => 20, 'prefix' => '&bMVP', 'about' => 'Статус бойца'],
+        'mvp_plus' => ['name' => 'MVP+', 'kind' => 'donate', 'group' => 'mvp_plus', 'weight' => 30, 'prefix' => '&bMVP&c+', 'about' => 'Расширенный MVP'],
+        'apex' => ['name' => 'APEX', 'kind' => 'donate', 'group' => 'apex', 'weight' => 40, 'prefix' => '&6APEX', 'about' => 'Высший боевой статус'],
+        'legend' => ['name' => 'LEGEND', 'kind' => 'donate', 'group' => 'legend', 'weight' => 50, 'prefix' => '&dLEGEND', 'about' => 'Редкий статус'],
 
         // Следуют за ролью на сайте
-        'tester' => ['name' => 'Тестер', 'kind' => 'staff', 'group' => 'tester', 'weight' => 60, 'prefix' => '&e[Тестер] ', 'about' => 'Выдаётся роли «Тестер»', 'role' => 'tester'],
-        'media' => ['name' => 'Медиа', 'kind' => 'staff', 'group' => 'media', 'weight' => 65, 'prefix' => '&5[Медиа] ', 'about' => 'Выдаётся роли «Медийка»', 'role' => 'media'],
-        'moderator' => ['name' => 'Модератор', 'kind' => 'staff', 'group' => 'moderator', 'weight' => 80, 'prefix' => '&9[Модер] ', 'about' => 'Выдаётся роли «Модератор»', 'role' => 'moderator'],
+        'tester' => ['name' => 'Тестер', 'kind' => 'staff', 'group' => 'tester', 'weight' => 60, 'prefix' => '&eТестер', 'about' => 'Выдаётся роли «Тестер»', 'role' => 'tester'],
+        'media' => ['name' => 'Медиа', 'kind' => 'staff', 'group' => 'media', 'weight' => 65, 'prefix' => '&5Медиа', 'about' => 'Выдаётся роли «Медийка»', 'role' => 'media'],
+        'moderator' => ['name' => 'Модератор', 'kind' => 'staff', 'group' => 'moderator', 'weight' => 80, 'prefix' => '&9Модер', 'about' => 'Выдаётся роли «Модератор»', 'role' => 'moderator'],
     ];
 
     /** Срок по умолчанию в днях для быстрых кнопок админки. */
@@ -162,7 +162,7 @@ class ServerRankService
         foreach (self::RANKS as $def) {
             $commands[] = "lp creategroup {$def['group']}";
             $commands[] = "lp group {$def['group']} setweight {$def['weight']}";
-            $commands[] = "lp group {$def['group']} meta setprefix {$def['weight']} \"{$def['prefix']}\"";
+            $commands[] = "lp group {$def['group']} meta setprefix {$def['weight']} \"{$def['prefix']} &r\"";
         }
 
         return $commands;

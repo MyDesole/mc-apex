@@ -33,6 +33,12 @@ Schedule::call(fn () => app(\App\Domains\Players\Services\MarketService::class)-
     ->name('market:expire')
     ->withoutOverlapping();
 
+// Префикс игрока на сервере (донат, тир): отправляем только изменившееся
+Schedule::call(fn () => app(\App\Domains\Minecraft\Services\ServerPrefixService::class)->sync())
+    ->everyTwoMinutes()
+    ->name('minecraft:sync-prefix')
+    ->withoutOverlapping();
+
 // Рейд «Разлом»: закрыть просроченные раунды и неначатые группы
 Schedule::call(fn () => app(\App\Domains\Players\Services\RaidService::class)->tick())
     ->everyMinute()
