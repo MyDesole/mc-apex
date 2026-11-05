@@ -158,9 +158,19 @@ public class ApexTierTests extends JavaPlugin implements Listener {
                     return w.getName().startsWith("bw_");
                 }
             };
+            // BedWars работает в мирах bw_*, а также у любого, кто настраивает арену (меню выбора способа
+            // открывается в другом мире) или играет в арене BedWars
             java.util.function.Predicate<Player> bwZone = new java.util.function.Predicate<Player>() {
                 public boolean test(Player p) {
-                    return p.getWorld().getName().startsWith("bw_");
+                    if (p.getWorld().getName().startsWith("bw_")) return true;
+                    try {
+                        Class<?> setup = Class.forName("com.andrei1058.bedwars.arena.SetupSession");
+                        if ((Boolean) setup.getMethod("isInSetupSession", java.util.UUID.class).invoke(null, p.getUniqueId())) return true;
+                        Class<?> arena = Class.forName("com.andrei1058.bedwars.arena.Arena");
+                        return arena.getMethod("getArenaByPlayer", Player.class).invoke(null, p) != null;
+                    } catch (Throwable t) {
+                        return false;
+                    }
                 }
             };
             int m = new AlleyGate(this, bw, bwZone, bwWorld).withoutBoards().start();

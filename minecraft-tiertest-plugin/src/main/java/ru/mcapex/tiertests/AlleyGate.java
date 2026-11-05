@@ -322,6 +322,9 @@ final class AlleyGate {
                     removeBoard.invoke(assemble, p);
                     if (before != main) releaseForeign(p, before, alleyObj);
                 } else if (zone && board == null) {
+                    // доска Alley цепляется к текущему скорборду игрока, если он не главный (например, к нашему):
+                    // сначала главный, чтобы Alley завёл свой, иначе наш потом сбросит ему скорборд и доска сломается
+                    if (p.getScoreboard() != main) p.setScoreboard(main);
                     createBoard.invoke(assemble, p);
                 } else if (zone && p.getScoreboard() == main) {
                     // доска есть, а у игрока главный скорборд (его сбросили): Alley из-за этого сыплет ошибками. Пересоздаём.
