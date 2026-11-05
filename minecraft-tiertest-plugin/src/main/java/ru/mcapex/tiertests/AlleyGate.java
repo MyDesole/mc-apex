@@ -158,18 +158,26 @@ final class AlleyGate {
         }
     }
 
-    /** Событие происходит вне зоны Alley и относится к тем, что мы глушим. */
+    /**
+     * Событие происходит вне зоны Alley и относится к тем, что мы глушим: любые события игроков, блоков,
+     * существ, инвентаря, транспорта и погоды. Не глушим жизненный цикл игрока (вход, выход, кик, смена мира,
+     * телепорт, возрождение, смерть), чат и команды: профиль игрока в Alley должен оставаться
+     * в порядке, чтобы возврат в дуэли работал.
+     */
     boolean muted(Event e) {
-        if (!(e instanceof PlayerMoveEvent || e instanceof PlayerInteractEvent || e instanceof PlayerInteractEntityEvent
-                || e instanceof PlayerDropItemEvent || e instanceof PlayerPickupItemEvent || e instanceof PlayerItemConsumeEvent
-                || e instanceof PlayerItemHeldEvent || e instanceof PlayerBucketEmptyEvent || e instanceof PlayerBucketFillEvent
-                || e instanceof BlockPlaceEvent || e instanceof BlockBreakEvent || e instanceof BlockDamageEvent || e instanceof BlockCanBuildEvent
-                || e instanceof EntityDamageEvent || e instanceof FoodLevelChangeEvent || e instanceof EntityRegainHealthEvent
-                || e instanceof EntityShootBowEvent || e instanceof ProjectileLaunchEvent || e instanceof CreatureSpawnEvent
-                || e instanceof InventoryClickEvent || e instanceof InventoryDragEvent || e instanceof InventoryOpenEvent
-                || e instanceof WeatherChangeEvent)) {
+        if (e instanceof org.bukkit.event.player.PlayerJoinEvent || e instanceof org.bukkit.event.player.PlayerQuitEvent
+                || e instanceof org.bukkit.event.player.PlayerLoginEvent || e instanceof org.bukkit.event.player.PlayerKickEvent
+                || e instanceof org.bukkit.event.player.PlayerChangedWorldEvent || e instanceof org.bukkit.event.player.PlayerTeleportEvent
+                || e instanceof org.bukkit.event.player.PlayerRespawnEvent || e instanceof org.bukkit.event.player.PlayerCommandPreprocessEvent
+                || e instanceof org.bukkit.event.player.AsyncPlayerChatEvent || e instanceof org.bukkit.event.player.PlayerResourcePackStatusEvent
+                || e instanceof org.bukkit.event.entity.EntityDeathEvent) {
             return false;
         }
+        boolean candidate = e instanceof PlayerEvent || e instanceof org.bukkit.event.block.BlockEvent
+                || e instanceof org.bukkit.event.entity.EntityEvent || e instanceof org.bukkit.event.inventory.InventoryEvent
+                || e instanceof org.bukkit.event.vehicle.VehicleEvent || e instanceof org.bukkit.event.hanging.HangingEvent
+                || e instanceof WeatherChangeEvent;
+        if (!candidate) return false;
         Player p = playerOf(e);
         if (p != null) return !inZone.test(p);
         World w = worldOf(e);
@@ -181,12 +189,8 @@ final class AlleyGate {
         if (e instanceof BlockPlaceEvent) return ((BlockPlaceEvent) e).getPlayer();
         if (e instanceof BlockBreakEvent) return ((BlockBreakEvent) e).getPlayer();
         if (e instanceof BlockDamageEvent) return ((BlockDamageEvent) e).getPlayer();
-        if (e instanceof org.bukkit.event.inventory.InventoryInteractEvent) {
-            org.bukkit.entity.HumanEntity h = ((org.bukkit.event.inventory.InventoryInteractEvent) e).getWhoClicked();
-            return h instanceof Player ? (Player) h : null;
-        }
-        if (e instanceof InventoryOpenEvent) {
-            org.bukkit.entity.HumanEntity h = ((InventoryOpenEvent) e).getPlayer();
+        if (e instanceof org.bukkit.event.inventory.InventoryEvent) {
+            org.bukkit.entity.HumanEntity h = ((org.bukkit.event.inventory.InventoryEvent) e).getView().getPlayer();
             return h instanceof Player ? (Player) h : null;
         }
         if (e instanceof org.bukkit.event.entity.EntityEvent) {
@@ -200,6 +204,8 @@ final class AlleyGate {
         if (e instanceof WeatherChangeEvent) return ((WeatherChangeEvent) e).getWorld();
         if (e instanceof org.bukkit.event.block.BlockEvent) return ((org.bukkit.event.block.BlockEvent) e).getBlock().getWorld();
         if (e instanceof org.bukkit.event.entity.EntityEvent) return ((org.bukkit.event.entity.EntityEvent) e).getEntity().getWorld();
+        if (e instanceof org.bukkit.event.vehicle.VehicleEvent) return ((org.bukkit.event.vehicle.VehicleEvent) e).getVehicle().getWorld();
+        if (e instanceof org.bukkit.event.hanging.HangingEvent) return ((org.bukkit.event.hanging.HangingEvent) e).getEntity().getWorld();
         return null;
     }
 
