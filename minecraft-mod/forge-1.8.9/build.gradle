@@ -1,0 +1,48 @@
+plugins {
+    id "java"
+    id "gg.essential.loom" version "0.10.0.+"
+}
+
+group = "ru.mcapex"
+version = "1.0.0"
+
+sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
+
+repositories {
+    mavenCentral()
+    maven { url = "https://repo.essential.gg/repository/maven-public" }
+}
+
+sourceSets.main.java.srcDir("../core/src/main/java")
+
+loom {
+    forge {
+        pack200Provider.set(new dev.architectury.pack200.java.Pack200Adapter())
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:1.8.9"
+    mappings "de.oceanlabs.mcp:mcp_stable:22-1.8.9"
+    forge "net.minecraftforge:forge:1.8.9-11.15.1.2318-1.8.9"
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+    // Процессоры аннотаций не нужны; без этого Gradle лезет в libraries.minecraft.net за пустой конфигурацией
+    options.annotationProcessorPath = files()
+}
+
+processResources {
+    inputs.property "version", project.version
+    filesMatching("mcmod.info") {
+        expand "version": project.version
+    }
+}
+
+jar {
+    archiveBaseName.set("ApexMod-forge-1.8.9")
+    manifest.attributes(
+        "FMLCorePluginContainsFMLMod": "true"
+    )
+}

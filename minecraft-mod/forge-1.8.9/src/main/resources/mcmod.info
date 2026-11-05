@@ -1,0 +1,11 @@
+[
+  {
+    "modid": "apex",
+    "name": "APEX",
+    "description": "Тиры и звания игроков mc-apex.ru над ником и в табе, команда /apex <ник>.",
+    "version": "${version}",
+    "mcversion": "1.8.9",
+    "url": "https://mc-apex.ru",
+    "authorList": ["APEX"]
+  }
+]
