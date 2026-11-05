@@ -82,6 +82,10 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
     private static final int KEEP_PER_PLAYER = 40;
     private static final double[] SPEEDS = {0.25, 0.5, 1, 2, 4};
 
+    /** Зачёркнутые пробелы: пустая линия постоянной ширины. Две разные, потому что строки доски не повторяются. */
+    static final String SEP_TOP = "§8§m                      ";
+    static final String SEP_BOTTOM = "§7§m                      ";
+
     private static final String T_MAP = "§8Fastbridge: карта";
     private static final String T_REPLAYS = "§8Fastbridge: реплеи";
 
@@ -93,6 +97,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
     private static final String W_PAUSE = "§aПауза / дальше §7(ПКМ)";
     private static final String W_FAST = "§eБыстрее §7(ПКМ)";
     private static final String W_AGAIN = "§bСначала §7(ПКМ)";
+    private static final String W_BACK = "§cНазад к тренировке §7(ПКМ)";
 
     private final JavaPlugin plugin;
     private final Consumer<Player> toHub;
@@ -400,6 +405,8 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         UUID u = s.p.getUniqueId();
         Run r = s.run;
         List<String> l = new ArrayList<String>();
+        // линия фиксированной длины держит ширину доски: без неё доска «пляшет» при смене цифр
+        l.add(SEP_TOP);
         l.add("§7Карта: §f" + s.map.title);
         l.add("§a ");
         if (s.map.endless()) {
@@ -413,7 +420,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         l.add("§fРекорд: §6" + fmtVal(s.map, stats.best(u, s.map)));
         l.add("§fРекорд 24ч: §d" + fmtVal(s.map, stats.best24h(u, s.map)));
         l.add("§fПопыток: §e" + stats.attempts24h(u, s.map) + " §7(24ч)");
-        l.add("§c ");
+        l.add(SEP_BOTTOM);
         l.add("§emc-apex.ru");
         s.hud = Collections.unmodifiableList(l);
         if (hud != null) hud.refresh(s.p);
@@ -437,11 +444,29 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
 
     /* ============================== установка блоков ============================== */
 
+    /** Сколько слоёв можно строить над островками: без ограничения, пока не упрёмся в потолок мира (fastbridge.max-height). */
+    private int maxHeight() {
+        return Math.max(0, plugin.getConfig().getInt("fastbridge.max-height", 250 - FLOOR_Y));
+    }
+
     private boolean inLane(Sess s, Block b) {
         int lz = s.lane * SPACING;
         return b.getWorld().equals(world) && Math.abs(b.getZ() - lz) <= HALF_WIDTH
                 && b.getX() >= -2 && b.getX() <= endX(s.map) + ISLAND + 2
-                && b.getY() >= FLOOR_Y - 2 && b.getY() <= FLOOR_Y + 3;
+                && b.getY() >= FLOOR_Y - 2 && b.getY() <= FLOOR_Y + maxHeight();
+    }
+
+    /** Блок пересекается с телом игрока (0,6 x 1,8): ставить его нельзя, как и в обычной игре. */
+    private boolean intersectsPlayer(Player p, Block b) {
+        Location l = p.getLocation();
+        double h = p.isSneaking() ? 1.65 : 1.8;
+        return l.getX() - 0.3 < b.getX() + 1 && l.getX() + 0.3 > b.getX()
+                && l.getY() < b.getY() + 1 && l.getY() + h > b.getY()
+                && l.getZ() - 0.3 < b.getZ() + 1 && l.getZ() + 0.3 > b.getZ();
+    }
+
+    private void limitHint(Player p, Block b) {
+        if (b.getY() > FLOOR_Y + maxHeight()) FbHud.actionBar(p, "§cВыше строить нельзя: максимум " + maxHeight() + " бл. над островком");
     }
 
     private void allow(PlayerInteractEvent e) {
@@ -524,9 +549,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
     private void fallbackPlace(Sess s, Block target) {
         if (sessions.get(s.p.getUniqueId()) != s || s.run.finished) return;
         if (target.getType() != Material.AIR || s.run.placed.contains(key(target)) || !inLane(s, target)) return;
-        Location pl = s.p.getLocation();
-        if (target.getX() == pl.getBlockX() && target.getZ() == pl.getBlockZ()
-                && (target.getY() == pl.getBlockY() || target.getY() == pl.getBlockY() + 1)) return;
+        if (intersectsPlayer(s.p, target)) return;
         if (s.p.getEyeLocation().distance(target.getLocation().add(0.5, 0.5, 0.5)) > 6.5) return;
         if (!holdingBlocks(s.p)) return;
         warnFallback();
@@ -543,7 +566,9 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
             if (e.getPlayer().getGameMode() != GameMode.CREATIVE) e.setCancelled(true);
             return;
         }
-        boolean ok = !s.run.finished && inLane(s, e.getBlock()) && e.getBlock().getType() == Material.SANDSTONE;
+        boolean ok = !s.run.finished && inLane(s, e.getBlock()) && e.getBlock().getType() == Material.SANDSTONE
+                && !intersectsPlayer(e.getPlayer(), e.getBlock());
+        if (!ok) limitHint(e.getPlayer(), e.getBlock());
         e.setCancelled(!ok);
     }
 
@@ -766,14 +791,14 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
             viewer.getInventory().setItem(1, item(Material.REDSTONE_TORCH_ON, 0, W_PAUSE, "§7Пауза и продолжить"));
             viewer.getInventory().setItem(2, item(Material.BLAZE_ROD, 0, W_FAST, "§7Скорость больше"));
             viewer.getInventory().setItem(4, item(Material.EYE_OF_ENDER, 0, W_AGAIN, "§7Проиграть заново"));
-            viewer.getInventory().setItem(8, item(Material.BARRIER, 0, I_EXIT, "§7Вернуться в хаб"));
+            viewer.getInventory().setItem(8, item(Material.BARRIER, 0, W_BACK, "§7Закрыть запись и вернуться на дорожку"));
             viewer.getInventory().setHeldItemSlot(4);
             viewer.setAllowFlight(true);
             viewer.teleport(new Location(world, -3.5, FLOOR_Y + 4, lz + 0.5, -90f, 25f));
             viewer.setFlying(true);
             if (!spawnStand()) return false;
             viewer.sendMessage("§6Fastbridge: §7запись игрока §e" + rep.player + " §7на карте §f" + map.title + "§7, результат §a" + fmtVal(map, rep.value));
-            viewer.sendMessage("§7Предметы в хотбаре: скорость, пауза, заново. Выход: §c" + "барьер §7или §f/fb leave");
+            viewer.sendMessage("§7Предметы: скорость, пауза, сначала. §cБарьер §7- назад на дорожку, §f/fb leave §7- в хаб.");
             task = Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
                 public void run() {
                     tick();
@@ -853,7 +878,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
             stand.setHeadPose(new EulerAngle(Math.toRadians(pose[4]), 0, 0));
             if (!ended && t >= rep.duration() + 1200) {
                 ended = true;
-                viewer.sendMessage("§6Fastbridge: §7запись закончилась. «Сначала» - ещё раз, барьер - выход.");
+                viewer.sendMessage("§6Fastbridge: §7запись закончилась. «Сначала» - ещё раз, барьер - назад на дорожку.");
             }
             if (ticks % 4 == 0) {
                 long shownT = (long) Math.min(t, rep.duration());
@@ -870,13 +895,14 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
 
         void refreshHud() {
             List<String> l = new ArrayList<String>();
+            l.add(SEP_TOP);
             l.add("§7Реплей: §e" + rep.player);
             l.add("§7Карта: §f" + map.title);
             l.add("§a ");
             l.add("§fРезультат: §a" + fmtVal(map, rep.value));
             l.add("§fПрошло: §e" + fmt((long) Math.min(t, rep.duration())) + "/" + fmt(rep.duration()));
             l.add("§fСкорость: §bx" + trim(speed()) + (paused ? " §c||" : ""));
-            l.add("§b ");
+            l.add(SEP_BOTTOM);
             l.add("§emc-apex.ru");
             hud = Collections.unmodifiableList(l);
             if (FastBridge.this.hud != null) FastBridge.this.hud.refresh(viewer);
@@ -963,6 +989,13 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         return true;
     }
 
+    /** Закрыть запись, но остаться в режиме: игрок снова на своей дорожке. */
+    private void backToTraining(Watch w) {
+        Player p = w.viewer;
+        w.cleanup(false);
+        if (p.isOnline()) join(p);
+    }
+
     private boolean buttonWatch(Watch w, String name) {
         if (name.equals(W_SLOW)) {
             w.speedIdx = Math.max(0, w.speedIdx - 1);
@@ -972,8 +1005,8 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
             w.paused = !w.paused;
         } else if (name.equals(W_AGAIN)) {
             w.again();
-        } else if (name.equals(I_EXIT)) {
-            w.cleanup(true);
+        } else if (name.equals(W_BACK)) {
+            backToTraining(w);
         } else {
             return false;
         }

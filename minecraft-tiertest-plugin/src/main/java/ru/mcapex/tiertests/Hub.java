@@ -57,7 +57,40 @@ final class Hub implements Listener, CommandExecutor {
         }
         Bukkit.getPluginManager().registerEvents(this, plugin);
         plugin.getCommand("hub").setExecutor(this);
+        startBoard();
         plugin.getLogger().info("Хаб включён");
+    }
+
+    /** Скорборд основного лобби: один на всех режимах, без мерцания (Alley и BedWars тут свои доски не рисуют). */
+    private FbHud board;
+    private static final String SEP = "§8§m                      ";
+
+    private void startBoard() {
+        board = new FbHud(plugin.getLogger(), new FbHud.Source() {
+            public String title(Player p) {
+                return "§6§lAPEX";
+            }
+
+            public java.util.List<String> lines(Player p) {
+                if (hub == null || !p.getWorld().equals(hub.getWorld())) return null;
+                String tier = plugin.tierOf(p.getName());
+                java.util.List<String> l = new java.util.ArrayList<String>();
+                l.add(SEP);
+                l.add("§fИгрок: §e" + p.getName());
+                l.add("§fТир: " + (tier.isEmpty() ? "§7без тира" : "§6" + tier));
+                l.add("§a ");
+                l.add("§fОнлайн: §a" + Bukkit.getOnlinePlayers().size());
+                l.add("§fРежимы: §7компас в руке");
+                l.add("§7§m                      ");
+                l.add("§emc-apex.ru");
+                return l;
+            }
+        });
+        Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
+            public void run() {
+                for (Player p : Bukkit.getOnlinePlayers()) board.refresh(p);
+            }
+        }, 20L, 20L);
     }
 
     private Location loc(String path) {

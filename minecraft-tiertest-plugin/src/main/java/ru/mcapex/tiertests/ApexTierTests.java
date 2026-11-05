@@ -90,6 +90,12 @@ public class ApexTierTests extends JavaPlugin implements Listener {
     private Hub hub;
     private FastBridge fastBridge;
 
+    /** Тир игрока с сайта (пусто, если неизвестен). */
+    String tierOf(String nick) {
+        String t = tiers.get(nick.toLowerCase());
+        return t == null ? "" : t;
+    }
+
     /**
      * Alley работает только в лобби дуэлей и в дуэлях: зона - миры из alley.zone-worlds
      * (по умолчанию pr_lobby, pr_*, temporary_arena_world) и любой игрок в очереди или матче,

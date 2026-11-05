@@ -89,7 +89,27 @@ final class AlleyGate {
             public void run() {
                 syncBoards();
             }
-        }, 20L, 10L);
+        }, 20L, 4L);
+        // сразу при входе и смене мира: иначе доска Alley успевает мигнуть
+        Bukkit.getPluginManager().registerEvents(new org.bukkit.event.Listener() {
+            @org.bukkit.event.EventHandler
+            public void onWorld(org.bukkit.event.player.PlayerChangedWorldEvent e) {
+                Bukkit.getScheduler().runTask(host, new Runnable() {
+                    public void run() {
+                        syncBoards();
+                    }
+                });
+            }
+
+            @org.bukkit.event.EventHandler
+            public void onJoin(org.bukkit.event.player.PlayerJoinEvent e) {
+                Bukkit.getScheduler().runTaskLater(host, new Runnable() {
+                    public void run() {
+                        syncBoards();
+                    }
+                }, 2L);
+            }
+        }, host);
         return wrapped;
     }
 
