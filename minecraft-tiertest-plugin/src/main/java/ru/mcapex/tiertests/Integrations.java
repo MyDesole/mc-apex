@@ -217,11 +217,27 @@ final class Integrations {
             GameMode gm = p.getGameMode();
             if (gm == GameMode.CREATIVE || gm == GameMode.SPECTATOR) continue;
             Profile pr = profiles.getProfile(p.getUniqueId());
+            // наблюдатель в дуэли летает по правилам Alley: его полёт не трогаем
+            if (pr != null && pr.getState() == ProfileState.SPECTATING) {
+                flyGranted.remove(p.getUniqueId());
+                continue;
+            }
             boolean inLobby = pr != null && pr.getState() == ProfileState.LOBBY;
-            if (p.getAllowFlight() != inLobby) {
-                p.setAllowFlight(inLobby);
-                if (!inLobby) p.setFlying(false);
+            if (inLobby) {
+                if (!p.getAllowFlight()) {
+                    p.setAllowFlight(true);
+                    flyGranted.add(p.getUniqueId());
+                } else if (!flyGranted.contains(p.getUniqueId())) {
+                    flyGranted.add(p.getUniqueId());
+                }
+            } else if (flyGranted.remove(p.getUniqueId())) {
+                // забираем только то, что выдали сами в лобби
+                p.setAllowFlight(false);
+                p.setFlying(false);
             }
         }
     }
+
+    /** Кому полёт выдали мы в лобби: только им его и забираем при выходе из лобби. */
+    private final java.util.Set<java.util.UUID> flyGranted = new java.util.HashSet<java.util.UUID>();
 }
