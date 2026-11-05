@@ -212,6 +212,8 @@ final class Integrations {
         ProfileService profiles = AlleyPlugin.getInstance().getService(ProfileService.class);
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (!p.hasPermission(FLY_PERMISSION)) continue;
+            // на дорожке fastbridge полёт не нужен: им управляет сам режим (просмотр реплея)
+            if (p.getWorld().getName().equals(FastBridge.WORLD)) continue;
             GameMode gm = p.getGameMode();
             if (gm == GameMode.CREATIVE || gm == GameMode.SPECTATOR) continue;
             Profile pr = profiles.getProfile(p.getUniqueId());

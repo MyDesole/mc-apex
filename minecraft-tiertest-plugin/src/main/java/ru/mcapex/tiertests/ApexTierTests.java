@@ -75,15 +75,56 @@ public class ApexTierTests extends JavaPlugin implements Listener {
         }, 40L, every);
         new Integrations(this).start();
         hub = new Hub(this);
-        fastBridge = new FastBridge(this);
+        fastBridge = new FastBridge(this, new java.util.function.Consumer<org.bukkit.entity.Player>() {
+            public void accept(org.bukkit.entity.Player p) {
+                hub.toHub(p);
+            }
+        });
         fastBridge.start();
         hub.start();
         new TabGuard(this).start();
+        startAlleyGate();
         getLogger().info("ApexTierTests включён: " + getConfig().getString("api.url"));
     }
 
     private Hub hub;
     private FastBridge fastBridge;
+
+    /**
+     * Alley работает только в лобби дуэлей и в дуэлях: зона - миры из alley.zone-worlds
+     * (по умолчанию pr_lobby, pr_*, temporary_arena_world) и любой игрок в очереди или матче,
+     * в каком бы мире он ни был. Вне зоны Alley не получает события и не рисует скорборд.
+     */
+    private void startAlleyGate() {
+        org.bukkit.plugin.Plugin alley = Bukkit.getPluginManager().getPlugin("Alley");
+        if (alley == null || !getConfig().getBoolean("alley.gate", true)) return;
+        List<String> patterns = getConfig().getStringList("alley.zone-worlds");
+        if (patterns.isEmpty()) patterns = Arrays.asList("pr_lobby", "pr_*", "temporary_arena_world");
+        final List<String> zone = patterns;
+        final java.util.function.Predicate<org.bukkit.World> zoneWorld = new java.util.function.Predicate<org.bukkit.World>() {
+            public boolean test(org.bukkit.World w) {
+                for (String p : zone) {
+                    if (p.endsWith("*") ? w.getName().startsWith(p.substring(0, p.length() - 1)) : w.getName().equals(p)) return true;
+                }
+                return false;
+            }
+        };
+        java.util.function.Predicate<Player> inZone = new java.util.function.Predicate<Player>() {
+            public boolean test(Player p) {
+                if (zoneWorld.test(p.getWorld())) return true;
+                // очередь, матч, FFA, наблюдение и прочее - где бы игрок ни был
+                try {
+                    dev.revere.alley.core.profile.Profile pr = dev.revere.alley.AlleyPlugin.getInstance()
+                            .getService(dev.revere.alley.core.profile.ProfileService.class).getProfile(p.getUniqueId());
+                    return pr == null || pr.getState() != dev.revere.alley.core.profile.enums.ProfileState.LOBBY;
+                } catch (Throwable t) {
+                    return true;
+                }
+            }
+        };
+        int n = new AlleyGate(this, alley, inZone, zoneWorld).start();
+        getLogger().info("AlleyGate: Alley работает только в " + zone + "; обработчиков под контролем: " + n);
+    }
 
     Hub hub() {
         return hub;
