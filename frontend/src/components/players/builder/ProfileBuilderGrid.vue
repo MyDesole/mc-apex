@@ -22,6 +22,7 @@ import ProfileBlockSettings from '@/components/players/builder/ProfileBlockSetti
 import ProfileStudioPanel from '@/components/players/builder/ProfileStudioPanel.vue'
 import ProfileStudioMobile from '@/components/players/builder/ProfileStudioMobile.vue'
 import StudioIcon from '@/components/players/builder/StudioIcon.vue'
+import { isBlankBlock } from '@/utils/blankBlock.js'
 import { useTryOn } from '@/composables/players/useTryOn.js'
 import {
   BLOCK_TYPES, WIDTHS, COLORS,
@@ -553,15 +554,30 @@ const gridEl = ref(null)
 const masonry = computed(() => currentPage.value.flow !== 'rows')
 
 let resizeObserver = null
+// Содержимое блоков приходит с сервера позже: следим за разметкой, чтобы пустота пересчитывалась
+let mutationObserver = null
 let queued = false
 const phone = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(max-width: 760px)') : null
 // На телефоне студия упрощённая (ProfileStudioMobile)
 const isPhone = ref(!!phone?.matches)
 
+/*
+ * Пустые блоки (сезоны без сезонов, аспекты без данных) помечаем, а CSS
+ * прячет их у гостей. В студии они остаются на месте: владельцу надо их
+ * видеть, чтобы настроить или убрать.
+ */
+function markBlankBlocks(grid) {
+  grid.querySelectorAll(':scope > .pb-block').forEach((el) => {
+    el.classList.toggle('pb-block--blank', isBlankBlock(el))
+  })
+}
+
 function packBlocks() {
   queued = false
   const grid = gridEl.value
   if (!grid) return
+
+  markBlankBlocks(grid)
 
   const blocks = grid.querySelectorAll(':scope > .pb-block, :scope > .pb-empty')
   const active = masonry.value && !phone?.matches && !(props.editing && device.value === 'phone')
@@ -604,6 +620,10 @@ function onPhoneChange() {
 
 onMounted(() => {
   if (typeof ResizeObserver !== 'undefined') resizeObserver = new ResizeObserver(schedulePack)
+  if (typeof MutationObserver !== 'undefined' && gridEl.value) {
+    mutationObserver = new MutationObserver(schedulePack)
+    mutationObserver.observe(gridEl.value, { childList: true, subtree: true, characterData: true })
+  }
   phone?.addEventListener?.('change', schedulePack)
   phone?.addEventListener?.('change', onPhoneChange)
   window.addEventListener('keydown', onKey)
@@ -613,6 +633,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   resizeObserver?.disconnect()
+  mutationObserver?.disconnect()
   phone?.removeEventListener?.('change', schedulePack)
   phone?.removeEventListener?.('change', onPhoneChange)
   window.removeEventListener('keydown', onKey)

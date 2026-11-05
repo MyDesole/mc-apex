@@ -83,6 +83,11 @@
   z-index: 1;
 }
 
+/* Пустой блок у гостей не показываем (помечает ProfileBuilderGrid), в студии он виден */
+.pb:not(.pb--editing) .pb-block--blank {
+  display: none;
+}
+
 /* Внутри блока готовые секции профиля без своей рамки и отступов */
 .pb-block .profile-section,
 .pb-block .side-panel,
@@ -92,6 +97,14 @@
   background: none;
   border: 0;
   box-shadow: none;
+
+  /*
+   * Без своих отступов панель всё равно резала содержимое по краю
+   * (overflow: hidden у .side-panel): у засечных шрифтов срезалась засечка
+   * «Т» слева и стрелка «→» справа. Подложки у панели здесь нет, обрезать
+   * нечего: блок сам скругляет и обрезает всё по своему краю.
+   */
+  overflow: visible;
 }
 
 /*
@@ -163,22 +176,6 @@
   color: color-mix(in srgb, var(--accent-color, #8b5cf6) 25%, #fff);
 }
 
-/*
- * Заголовок блока стоит прямо в блоке, а не в его теле, поэтому слой узора
- * (.pb-block::before, position: absolute) рисовался поверх него и срезал
- * верх букв. Поднимаем заголовок над узором и страхуем высоту строки:
- * у шрифтов с высокими выносными элементами верх букв терялся.
- */
-.pb-block .block-title,
-.pb-block__title {
-  position: relative;
-  z-index: 2;
-
-  padding-top: 2px;
-  overflow: visible;
-
-  line-height: 1.4;
-}
 
 /* Выравнивание */
 .pb-align--center .pb-block__body { text-align: center; }
