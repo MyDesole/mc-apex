@@ -58,6 +58,7 @@ final class AlleyGate {
     private final Predicate<World> zoneWorld;
     private int wrapped;
     private boolean boardsOn = true;
+    private Predicate<Player> showable;
 
     // скорборд Alley (через рефлексию: у харнесса Alley нет)
     private Object assemble;
@@ -85,6 +86,12 @@ final class AlleyGate {
         return this;
     }
 
+    /** Кого игрок вне зоны Alley должен видеть (в 1.8 спрятанный игрок пропадает и из таба). */
+    AlleyGate keepVisible(Predicate<Player> showable) {
+        this.showable = showable;
+        return this;
+    }
+
     AlleyGate onlyListeners(Predicate<Object> filter) {
         this.listenerFilter = filter;
         return this;
@@ -92,6 +99,7 @@ final class AlleyGate {
 
     int start() {
         wrap();
+        if (showable != null) startVisibility();
         if (!boardsOn) return wrapped;
         bindBoards();
         Bukkit.getScheduler().runTaskTimer(host, new Runnable() {
@@ -193,6 +201,53 @@ final class AlleyGate {
         if (e instanceof org.bukkit.event.block.BlockEvent) return ((org.bukkit.event.block.BlockEvent) e).getBlock().getWorld();
         if (e instanceof org.bukkit.event.entity.EntityEvent) return ((org.bukkit.event.entity.EntityEvent) e).getEntity().getWorld();
         return null;
+    }
+
+    /* ----------------------------- видимость игроков ----------------------------- */
+
+    /**
+     * Alley прячет игроков друг от друга по состоянию их профилей (в лобби, в очереди, в матче). Вне его
+     * зоны это только мешает: новый игрок заходит и не видит других, а те не видят его, ни в мире,
+     * ни в табе. Поэтому тем, кто вне зоны, возвращаем всех, кого им можно показывать.
+     */
+    private void startVisibility() {
+        Bukkit.getScheduler().runTaskTimer(host, new Runnable() {
+            public void run() {
+                syncVisibility();
+            }
+        }, 40L, 20L);
+        Bukkit.getPluginManager().registerEvents(new org.bukkit.event.Listener() {
+            @org.bukkit.event.EventHandler
+            public void onJoin(org.bukkit.event.player.PlayerJoinEvent e) {
+                for (long delay : new long[]{10L, 40L, 100L}) {
+                    Bukkit.getScheduler().runTaskLater(host, new Runnable() {
+                        public void run() {
+                            syncVisibility();
+                        }
+                    }, delay);
+                }
+            }
+
+            @org.bukkit.event.EventHandler
+            public void onWorld(org.bukkit.event.player.PlayerChangedWorldEvent e) {
+                Bukkit.getScheduler().runTaskLater(host, new Runnable() {
+                    public void run() {
+                        syncVisibility();
+                    }
+                }, 5L);
+            }
+        }, host);
+    }
+
+    private void syncVisibility() {
+        List<Player> players = new ArrayList<Player>(Bukkit.getOnlinePlayers());
+        for (Player viewer : players) {
+            if (inZone.test(viewer)) continue;
+            for (Player target : players) {
+                if (target == viewer || viewer.canSee(target)) continue;
+                if (showable.test(target)) viewer.showPlayer(target);
+            }
+        }
     }
 
     /* ----------------------------- скорборд ----------------------------- */

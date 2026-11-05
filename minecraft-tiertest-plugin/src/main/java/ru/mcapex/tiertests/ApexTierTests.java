@@ -128,7 +128,24 @@ public class ApexTierTests extends JavaPlugin implements Listener {
                 }
             }
         };
-        int n = new AlleyGate(this, alley, inZone, zoneWorld).start();
+        // Кого показывать игрокам вне зоны: всех, кроме тех, кто сейчас в матче, FFA или наблюдает
+        java.util.function.Predicate<Player> showable = new java.util.function.Predicate<Player>() {
+            public boolean test(Player t) {
+                if (zoneWorld.test(t.getWorld())) {
+                    try {
+                        dev.revere.alley.core.profile.Profile pr = dev.revere.alley.AlleyPlugin.getInstance()
+                                .getService(dev.revere.alley.core.profile.ProfileService.class).getProfile(t.getUniqueId());
+                        dev.revere.alley.core.profile.enums.ProfileState st = pr == null ? null : pr.getState();
+                        return st == null || st == dev.revere.alley.core.profile.enums.ProfileState.LOBBY
+                                || st == dev.revere.alley.core.profile.enums.ProfileState.WAITING;
+                    } catch (Throwable ex) {
+                        return true;
+                    }
+                }
+                return true;
+            }
+        };
+        int n = new AlleyGate(this, alley, inZone, zoneWorld).keepVisible(showable).start();
         getLogger().info("AlleyGate: Alley работает только в " + zone + "; обработчиков под контролем: " + n);
 
         // BedWars защищает всё от строительства и вмешивается в клики там, где идёт не его игра.
