@@ -361,6 +361,10 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         boolean slow = tickCounter % 3 == 0;
         for (Sess s : sessions.values()) {
             Run r = s.run;
+            if (s.p.getGameMode() != GameMode.SURVIVAL && s.p.getGameMode() != GameMode.CREATIVE) {
+                debug("режим игры игрока " + s.p.getName() + " был " + s.p.getGameMode() + ", вернул SURVIVAL (в приключении блоки не ставятся)");
+                s.p.setGameMode(GameMode.SURVIVAL);
+            }
             if (r.finished) continue;
             if (r.frames.size() >= MAX_FRAMES) {
                 restart(s, "§cСлишком долго - попытка сброшена.");
@@ -510,7 +514,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         if (s == null || s.run.finished) return;
 
         if (a == Action.RIGHT_CLICK_BLOCK && holdingBlocks(p)) {
-            if (e.isCancelled()) debug("клик уже отменён до нас; слушатели клика: " + listeners(PlayerInteractEvent.getHandlerList()));
+            if (e.isCancelled()) debug("клик уже отменён до нас; режим игры " + p.getGameMode() + ", op=" + p.isOp() + "; слушатели клика: " + listeners(PlayerInteractEvent.getHandlerList()));
             allow(e);
             final Block target = e.getClickedBlock().getRelative(e.getBlockFace());
             Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
@@ -611,6 +615,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
                 && !intersectsPlayer(e.getPlayer(), e.getBlock());
         if (!ok) limitHint(e.getPlayer(), e.getBlock());
         e.setCancelled(!ok);
+        if (ok) e.setBuild(true);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
