@@ -79,6 +79,10 @@ final class Hub implements Listener, CommandExecutor {
                 l.add(SEP);
                 l.add("§fИгрок: §e" + p.getName());
                 l.add("§fТир: " + (tier.isEmpty() ? "§7без тира" : "§6" + tier));
+                String[] site = plugin.siteOf(p.getName());
+                String clan = site[0].isEmpty() ? "§7нет клана" : (site[1].isEmpty() ? "§b" : "§b[" + site[1] + "] ") + trimName(site[0], site[1]);
+                l.add("§fКлан: " + clan);
+                if (!site[2].isEmpty()) l.add("§fМонеты: §6" + site[2]);
                 l.add("§a ");
                 l.add("§fОнлайн: §a" + Bukkit.getOnlinePlayers().size());
                 if (bwLobby) {
@@ -89,13 +93,16 @@ final class Hub implements Listener, CommandExecutor {
                         if (w.startsWith("bw_") && !w.equals(bedwars.getWorld().getName())) playing++;
                     }
                     l.add("§fВ играх: §e" + playing);
-                    l.add("§fАрены: §7предметы в хотбаре");
-                } else {
-                    l.add("§fРежимы: §7компас в руке");
                 }
                 l.add("§7§m                      ");
                 l.add("§emc-apex.ru");
                 return l;
+            }
+
+            /** Название клана так, чтобы строка влезла в скорборд 1.8 (до 40 символов вместе с цветами). */
+            private String trimName(String name, String tag) {
+                int max = 20 - (tag.isEmpty() ? 0 : tag.length() + 3);
+                return name.length() > max ? name.substring(0, Math.max(1, max)) : name;
             }
 
             private boolean inBedwarsLobby(Player p) {

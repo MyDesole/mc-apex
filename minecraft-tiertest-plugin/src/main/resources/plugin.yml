@@ -18,6 +18,13 @@ commands:
     description: Вернуться в хаб (выбор лобби)
     usage: /hub
     aliases: [lobby, spawnhub]
+  practicemenu:
+    description: Меню практики
+    usage: /practicemenu
+    aliases: [pmenu]
+  l:
+    description: Выйти из очереди, матча или наблюдения (то же, что /leave)
+    usage: /l
   fastbridge:
     description: Тренировка быстрого моста и записи попыток
     usage: /fb [play | leave | top | replay [last|ник|id] [скорость]]

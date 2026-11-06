@@ -113,7 +113,6 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
     private final Map<UUID, String> lastReplay = new HashMap<UUID, String>();
     private final Map<UUID, Map<Integer, String>> menuRefs = new HashMap<UUID, Map<Integer, String>>();
     private boolean ghostSpawn;
-    private boolean warnedFallback;
     private int tickCounter;
     private BukkitTask sampler;
     private BukkitTask flusher;
@@ -232,6 +231,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         int maxX = -1;
         final List<double[]> frames = new ArrayList<double[]>();
         final List<int[]> blocks = new ArrayList<int[]>();
+        final List<int[]> clicks = new ArrayList<int[]>();
         final Set<String> placed = new HashSet<String>();
     }
 
@@ -362,7 +362,6 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         for (Sess s : sessions.values()) {
             Run r = s.run;
             if (s.p.getGameMode() != GameMode.SURVIVAL && s.p.getGameMode() != GameMode.CREATIVE) {
-                debug("режим игры игрока " + s.p.getName() + " был " + s.p.getGameMode() + ", вернул SURVIVAL (в приключении блоки не ставятся)");
                 s.p.setGameMode(GameMode.SURVIVAL);
             }
             if (r.finished) continue;
@@ -371,8 +370,28 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
                 continue;
             }
             Location l = s.p.getLocation();
-            int flags = (s.p.isSneaking() ? 1 : 0) | (s.p.isSprinting() ? 2 : 0);
-            r.frames.add(new double[]{System.currentTimeMillis() - r.recStart,
+            int flags = (s.p.isSneaking() ? Replay.SNEAK : 0) | (s.p.isSprinting() ? Replay.SPRINT : 0)
+                    | (s.p.isOnGround() ? 0 : Replay.AIR);
+            double nowT = System.currentTimeMillis() - r.recStart;
+            // клавиши движения выводим из смещения относительно взгляда
+            if (!r.frames.isEmpty()) {
+                double[] pv = r.frames.get(r.frames.size() - 1);
+                double dt = nowT - pv[0];
+                if (dt > 0) {
+                    double dx = l.getX() - pv[1], dz = (l.getZ() - s.lane * SPACING) - pv[3];
+                    double dist = Math.sqrt(dx * dx + dz * dz);
+                    if (dist / dt * 1000 > 0.4) {
+                        double yaw = Math.toRadians(l.getYaw());
+                        double fwd = (-Math.sin(yaw) * dx + Math.cos(yaw) * dz) / dist;
+                        double right = (-Math.cos(yaw) * dx - Math.sin(yaw) * dz) / dist;
+                        if (fwd > 0.35) flags |= Replay.KEY_W;
+                        if (fwd < -0.35) flags |= Replay.KEY_S;
+                        if (right > 0.35) flags |= Replay.KEY_D;
+                        if (right < -0.35) flags |= Replay.KEY_A;
+                    }
+                }
+            }
+            r.frames.add(new double[]{nowT,
                     l.getX(), l.getY() - FLOOR_Y, l.getZ() - s.lane * SPACING, l.getYaw(), l.getPitch(), flags});
             s.speed = s.speed * 0.5 + speedOf(r) * 0.5;
             long elapsed = r.timerStart >= 0 ? System.currentTimeMillis() - r.timerStart : 0;
@@ -474,21 +493,13 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         if (b.getY() > FLOOR_Y + maxHeight()) FbHud.actionBar(p, "§cВыше строить нельзя: максимум " + maxHeight() + " бл. над островком");
     }
 
-    private void allow(PlayerInteractEvent e) {
-        e.setCancelled(false);
-        e.setUseInteractedBlock(Event.Result.ALLOW);
-        e.setUseItemInHand(Event.Result.ALLOW);
-    }
-
     private boolean holdingBlocks(Player p) {
         ItemStack it = p.getItemInHand();
         return it != null && it.getType() == Material.SANDSTONE;
     }
 
     /**
-     * Клики. Alley в лобби отменяет почти всё, поэтому для игроков дорожки мы отменяем эту отмену,
-     * чтобы блоки ставились и ломались как в обычной игре. Если кто-то всё же заблокирует
-     * (например, отменит позже нас), через пару тиков ставим блок сами.
+     * Клики: только кнопки в хотбаре; блоки ставятся и ломаются штатно.
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInteract(PlayerInteractEvent e) {
@@ -512,96 +523,33 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
             }
         }
         if (s == null || s.run.finished) return;
-
-        if (a == Action.RIGHT_CLICK_BLOCK && holdingBlocks(p)) {
-            if (e.isCancelled()) debug("клик уже отменён до нас; режим игры " + p.getGameMode() + ", op=" + p.isOp() + "; слушатели клика: " + listeners(PlayerInteractEvent.getHandlerList()));
-            allow(e);
-            final Block target = e.getClickedBlock().getRelative(e.getBlockFace());
-            Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
-                public void run() {
-                    fallbackPlace(s, target);
-                }
-            }, 2L);
-        } else if (a == Action.LEFT_CLICK_BLOCK && s.run.placed.contains(key(e.getClickedBlock()))) {
-            allow(e);
-            final Block b = e.getClickedBlock();
-            Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
-                public void run() {
-                    if (sessions.get(p.getUniqueId()) == s && s.run.placed.contains(key(b)) && b.getType() != Material.AIR) {
-                        warnFallback();
-                        removeBlock(s, b);
-                    }
-                }
-            }, 3L);
+        if (right) {
+            int t = (int) (System.currentTimeMillis() - s.run.recStart);
+            // клиент машет рукой и при постановке блока: этот взмах не считаем ЛКМ
+            List<int[]> cl = s.run.clicks;
+            if (!cl.isEmpty()) {
+                int[] last = cl.get(cl.size() - 1);
+                if (last[1] == 1 && t - last[0] <= 80) cl.remove(cl.size() - 1);
+            }
+            cl.add(new int[]{t, 2});
+            lastRight.put(p.getUniqueId(), System.currentTimeMillis());
         }
     }
 
-    private int fallbackUsed;
-    private int debugLeft = 25;
+    private final Map<UUID, Long> lastRight = new HashMap<UUID, Long>();
 
-    /** Первые записи в логе о том, кто мешает штатной установке блоков (потом замолкает сам). */
-    private void debug(String msg) {
-        if (debugLeft <= 0) return;
-        debugLeft--;
-        plugin.getLogger().info("FastBridge[отладка]: " + msg);
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onSwing(org.bukkit.event.player.PlayerAnimationEvent e) {
+        Player p = e.getPlayer();
+        if (!p.getWorld().equals(world)) return;
+        Sess s = sessions.get(p.getUniqueId());
+        if (s == null || s.run.finished) return;
+        Long r = lastRight.get(p.getUniqueId());
+        if (r != null && System.currentTimeMillis() - r <= 80) return;
+        s.run.clicks.add(new int[]{(int) (System.currentTimeMillis() - s.run.recStart), 1});
     }
 
-    private String listeners(org.bukkit.event.HandlerList list) {
-        StringBuilder sb = new StringBuilder();
-        for (org.bukkit.plugin.RegisteredListener rl : list.getRegisteredListeners()) {
-            if (rl.getPlugin() == plugin) continue;
-            if (sb.length() > 0) sb.append(", ");
-            sb.append(rl.getPlugin().getName()).append(':').append(rl.getPriority());
-            if (sb.length() > 300) break;
-        }
-        return sb.toString();
-    }
-
-    /** Сколько раз пришлось ставить или ломать блок запасным путём (для проверки и логов). */
-    int fallbackUsed() {
-        return fallbackUsed;
-    }
-
-    private void warnFallback() {
-        fallbackUsed++;
-        if (!warnedFallback) {
-            warnedFallback = true;
-            plugin.getLogger().info("FastBridge: чужой плагин блокирует блоки на дорожке, включён запасной путь");
-        }
-    }
-
-    /** Блок так и не поставился штатно - ставим сами. */
-    private void fallbackPlace(Sess s, Block target) {
-        if (sessions.get(s.p.getUniqueId()) != s || s.run.finished) return;
-        if (target.getType() != Material.AIR || s.run.placed.contains(key(target)) || !inLane(s, target)) return;
-        if (intersectsPlayer(s.p, target)) return;
-        if (s.p.getEyeLocation().distance(target.getLocation().add(0.5, 0.5, 0.5)) > 6.5) return;
-        if (!holdingBlocks(s.p)) return;
-        warnFallback();
-        debug("запасной путь: поставил блок " + key(target) + " сам, игрок " + s.p.getName());
-        target.setTypeIdAndData(Material.SANDSTONE.getId(), (byte) 0, false);
-        record(s, target);
-        target.getWorld().playSound(target.getLocation(), Sound.DIG_STONE, 0.8f, 1f);
-    }
-
-    /**
-     * Перед установкой Bukkit спрашивает «можно ли строить здесь» (BlockCanBuildEvent), и плагины вроде BedWars
-     * отвечают «нет». Тогда клиент и сервер расходятся и блок «мигает». На дорожках отвечаем «да»:
-     * окончательно решает onPlace (дорожка, высота, не в самого себя).
-     */
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onCanBuild(BlockCanBuildEvent e) {
-        Block b = e.getBlock();
-        if (!b.getWorld().equals(world)) return;
-        int lane = Math.round((float) b.getZ() / SPACING);
-        if (lane < 0 || lane >= LANES) return;
-        if (!e.isBuildable()) debug("canBuild=false до нас; слушатели: " + listeners(BlockCanBuildEvent.getHandlerList()));
-        if (Math.abs(b.getZ() - lane * SPACING) <= HALF_WIDTH && b.getX() >= -2 && b.getX() <= ISLAND + FbMap.INF_LIMIT + ISLAND
-                && b.getY() >= FLOOR_Y - 2 && b.getY() <= FLOOR_Y + maxHeight()) {
-            e.setBuildable(true);
-        }
-    }
-
+    /** Установка блока - обычная, ванильная; мы только запрещаем лишнее (вне дорожки, выше лимита, в себя). */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlace(BlockPlaceEvent e) {
         if (!e.getBlock().getWorld().equals(world)) return;
@@ -610,12 +558,12 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
             if (e.getPlayer().getGameMode() != GameMode.CREATIVE) e.setCancelled(true);
             return;
         }
-        if (e.isCancelled()) debug("установка уже отменена до нас; слушатели: " + listeners(BlockPlaceEvent.getHandlerList()));
         boolean ok = !s.run.finished && inLane(s, e.getBlock()) && e.getBlock().getType() == Material.SANDSTONE
                 && !intersectsPlayer(e.getPlayer(), e.getBlock());
-        if (!ok) limitHint(e.getPlayer(), e.getBlock());
-        e.setCancelled(!ok);
-        if (ok) e.setBuild(true);
+        if (!ok) {
+            limitHint(e.getPlayer(), e.getBlock());
+            e.setCancelled(true);
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -751,6 +699,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         rep.timerStartMs = r.timerStart >= 0 ? r.timerStart - r.recStart : 0;
         rep.frames = r.frames.toArray(new double[r.frames.size()][]);
         rep.blocks = r.blocks.toArray(new int[r.blocks.size()][]);
+        rep.clicks = r.clicks.toArray(new int[r.clicks.size()][]);
         final String nick = s.p.getName();
         final Set<String> keep = new HashSet<String>(stats.recordReplays());
         keep.add(rep.id);
@@ -805,7 +754,8 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         boolean ended;
         double t;
         int blockIdx;
-        ArmorStand stand;
+        Ghost ghost;
+        int clickIdx;
         BukkitTask task;
         final List<int[]> shown = new ArrayList<int[]>();
         volatile List<String> hud = Collections.emptyList();
@@ -855,28 +805,15 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         boolean spawnStand() {
             Location at = spawn(lane);
             at.getChunk().load();
-            ghostSpawn = true;
             try {
-                stand = world.spawn(at, ArmorStand.class);
+                ghost = new Ghost(plugin, viewer, world, rep.player, rep.uuid);
+                ghost.spawn(at.getX(), at.getY(), at.getZ(), at.getYaw(), new ItemStack(Material.SANDSTONE));
             } catch (Throwable ex) {
-                plugin.getLogger().warning("FastBridge: призрак не создан: " + ex);
-                stand = null;
-            } finally {
-                ghostSpawn = false;
+                plugin.getLogger().warning("FastBridge: бот-игрок не создан: " + ex);
+                ghost = null;
+                return false;
             }
-            if (stand == null || !stand.isValid()) return false;
-            stand.setGravity(false);
-            stand.setBasePlate(false);
-            stand.setArms(true);
-            stand.setCustomName("§e" + rep.player);
-            stand.setCustomNameVisible(true);
-            ItemStack head = new ItemStack(Material.SKULL_ITEM, 1, (short) 3);
-            SkullMeta sm = (SkullMeta) head.getItemMeta();
-            sm.setOwner(rep.player);
-            head.setItemMeta(sm);
-            stand.setHelmet(head);
-            stand.setItemInHand(new ItemStack(Material.SANDSTONE));
-            stand.setRightArmPose(new EulerAngle(Math.toRadians(-60), 0, 0));
+            clickIdx = 0;
             return true;
         }
 
@@ -885,6 +822,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
             shown.clear();
             build(lane, map);
             blockIdx = 0;
+            clickIdx = 0;
             t = 0;
             ended = false;
             paused = false;
@@ -896,7 +834,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
                 cleanup(false);
                 return;
             }
-            if (stand == null || !stand.isValid()) {
+            if (ghost == null || !ghost.alive()) {
                 if (!spawnStand()) {
                     viewer.sendMessage("§cНе удалось показать призрака, запись закрыта.");
                     cleanup(true);
@@ -918,24 +856,34 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
                 }
             }
             double[] pose = rep.poseAt(t);
-            Location l = new Location(world, pose[0], FLOOR_Y + pose[1], lz + pose[2], (float) pose[3], 0f);
-            stand.teleport(l);
-            stand.setHeadPose(new EulerAngle(Math.toRadians(pose[4]), 0, 0));
+            int fl = (int) pose[5];
+            ghost.move(pose[0], FLOOR_Y + pose[1], lz + pose[2], (float) pose[3], (float) pose[4],
+                    (fl & Replay.SNEAK) != 0, (fl & Replay.SPRINT) != 0);
+            while (clickIdx < rep.clicks.length && rep.clicks[clickIdx][0] <= t) {
+                if (!paused && !ended) ghost.swing();
+                clickIdx++;
+            }
             if (!ended && t >= rep.duration() + 1200) {
                 ended = true;
                 viewer.sendMessage("§6Fastbridge: §7запись закончилась. «Сначала» - ещё раз, барьер - назад на дорожку.");
             }
-            if (ticks % 4 == 0) {
+            if (ticks % 2 == 0) {
                 long shownT = (long) Math.min(t, rep.duration());
-                int filled = rep.duration() == 0 ? 20 : (int) (20 * shownT / Math.max(1, rep.duration()));
-                StringBuilder bar = new StringBuilder("§a");
-                for (int i = 0; i < 20; i++) {
-                    if (i == filled) bar.append("§7");
-                    bar.append("|");
-                }
-                FbHud.actionBar(viewer, "§e" + rep.player + " §8| " + bar + " §8| §f" + fmt(shownT) + "/" + fmt(rep.duration())
-                        + " §8| §bx" + trim(speed()) + (paused ? " §c(пауза)" : ""));
+                FbHud.actionBar(viewer, keysLine(fl) + " §8| §fЛКМ §e" + rep.cps(t, 1) + " §8| §fПКМ §e" + rep.cps(t, 2)
+                        + " §8| §f" + fmt(shownT) + "/" + fmt(rep.duration()) + " §8| §bx" + trim(speed()) + (paused ? " §c(пауза)" : ""));
             }
+        }
+
+        private String key(boolean on, String name) {
+            return (on ? "§a§l" : "§8") + name;
+        }
+
+        /** Нажатые клавиши: W A S D, Shift, бег, прыжок (по смещению игрока; клавиши выводятся приблизительно). */
+        String keysLine(int fl) {
+            return key((fl & Replay.KEY_W) != 0, "W") + " " + key((fl & Replay.KEY_A) != 0, "A") + " "
+                    + key((fl & Replay.KEY_S) != 0, "S") + " " + key((fl & Replay.KEY_D) != 0, "D") + " §8| "
+                    + key((fl & Replay.SNEAK) != 0, "SHIFT") + " " + key((fl & Replay.SPRINT) != 0, "БЕГ") + " "
+                    + key((fl & Replay.AIR) != 0, "ПРЫЖОК");
         }
 
         void refreshHud() {
@@ -947,6 +895,13 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
             l.add("§fРезультат: §a" + fmtVal(map, rep.value));
             l.add("§fПрошло: §e" + fmt((long) Math.min(t, rep.duration())) + "/" + fmt(rep.duration()));
             l.add("§fСкорость: §bx" + trim(speed()) + (paused ? " §c||" : ""));
+            l.add("§a  ");
+            l.add("§fКПС ЛКМ: §e" + rep.cps(t, 1) + " §7(макс " + rep.maxCps(1) + ")");
+            l.add("§fКПС ПКМ: §e" + rep.cps(t, 2) + " §7(макс " + rep.maxCps(2) + ")");
+            l.add("§fСр. КПС: §e" + String.format("%.1f", rep.avgCps(1)).replace(',', '.') + " §7/ §e"
+                    + String.format("%.1f", rep.avgCps(2)).replace(',', '.'));
+            l.add("§fКликов: §e" + rep.total(1) + " §7/ §e" + rep.total(2));
+            l.add("§fБлоков: §e" + rep.blocks.length);
             l.add(SEP_BOTTOM);
             l.add("§emc-apex.ru");
             hud = Collections.unmodifiableList(l);
@@ -956,8 +911,8 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         void cleanup(boolean sendToHub) {
             if (task != null) task.cancel();
             task = null;
-            if (stand != null) stand.remove();
-            stand = null;
+            if (ghost != null) ghost.remove();
+            ghost = null;
             for (int[] c : shown) world.getBlockAt(c[0], c[1], c[2]).setType(Material.AIR);
             shown.clear();
             build(lane, map);

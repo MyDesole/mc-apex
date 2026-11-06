@@ -30,10 +30,54 @@ final class Replay {
     long created;
     /** Когда пошёл таймер (мс от начала записи). */
     long timerStartMs;
-    /** t, x, y, z, yaw, pitch, флаги (1 - присед, 2 - бег). */
+    /** t, x, y, z, yaw, pitch, флаги (см. SNEAK, SPRINT, KEY_*, AIR). */
     double[][] frames = new double[0][];
     /** t, x, y, z, id, data, 1 - поставил / 0 - сломал. */
     int[][] blocks = new int[0][];
+    /** t, тип клика (1 - ЛКМ, 2 - ПКМ). */
+    int[][] clicks = new int[0][];
+
+    /** Биты флагов кадра. */
+    static final int SNEAK = 1, SPRINT = 2, KEY_W = 4, KEY_A = 8, KEY_S = 16, KEY_D = 32, AIR = 64;
+
+    /** Кликов указанного типа за секунду, заканчивающуюся в момент t. */
+    int cps(double t, int type) {
+        int n = 0;
+        for (int[] c : clicks) if (c[1] == type && c[0] <= t && c[0] > t - 1000) n++;
+        return n;
+    }
+
+    int total(int type) {
+        int n = 0;
+        for (int[] c : clicks) if (c[1] == type) n++;
+        return n;
+    }
+
+    /** Максимум кликов за любую секунду. */
+    int maxCps(int type) {
+        int best = 0, lo = 0;
+        for (int i = 0; i < clicks.length; i++) {
+            if (clicks[i][1] != type) continue;
+            int n = 0;
+            for (int j = 0; j < clicks.length; j++) {
+                if (clicks[j][1] == type && clicks[j][0] <= clicks[i][0] && clicks[j][0] > clicks[i][0] - 1000) n++;
+            }
+            best = Math.max(best, n);
+        }
+        return best;
+    }
+
+    /** Среднее число кликов в секунду от первого клика до последнего. */
+    double avgCps(int type) {
+        int first = -1, last = -1, n = 0;
+        for (int[] c : clicks) {
+            if (c[1] != type) continue;
+            if (first < 0) first = c[0];
+            last = c[0];
+            n++;
+        }
+        return n < 2 || last <= first ? n : n * 1000.0 / (last - first);
+    }
 
     long duration() {
         return frames.length == 0 ? 0 : (long) frames[frames.length - 1][0];
@@ -94,6 +138,13 @@ final class Replay {
             bl.add(a);
         }
         o.add("blocks", bl);
+        JsonArray cl = new JsonArray();
+        for (int[] c : clicks) {
+            JsonArray a = new JsonArray();
+            for (int v : c) a.add(new JsonPrimitive(v));
+            cl.add(a);
+        }
+        o.add("clicks", cl);
         return o;
     }
 
@@ -122,6 +173,14 @@ final class Replay {
             int[] b = new int[7];
             for (int k = 0; k < 7 && k < a.size(); k++) b[k] = a.get(k).getAsInt();
             r.blocks[i] = b;
+        }
+        if (o.has("clicks")) {
+            JsonArray cl = o.getAsJsonArray("clicks");
+            r.clicks = new int[cl.size()][];
+            for (int i = 0; i < cl.size(); i++) {
+                JsonArray a = cl.get(i).getAsJsonArray();
+                r.clicks[i] = new int[]{a.get(0).getAsInt(), a.get(1).getAsInt()};
+            }
         }
         return r;
     }

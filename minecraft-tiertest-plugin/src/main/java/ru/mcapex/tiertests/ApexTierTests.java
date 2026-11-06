@@ -83,6 +83,7 @@ public class ApexTierTests extends JavaPlugin implements Listener {
         fastBridge.start();
         hub.start();
         new TabGuard(this).start();
+        new PracticeMenu(this).start();
         startAlleyGate();
         if (Bukkit.getPluginManager().getPlugin("BedWars1058") != null) new BwTeamSelect(this).start();
         if (new WorldTickFix(this).start()) getLogger().info("WorldTickFix: защита от падения при выгрузке миров включена");
@@ -91,6 +92,14 @@ public class ApexTierTests extends JavaPlugin implements Listener {
 
     private Hub hub;
     private FastBridge fastBridge;
+
+    private final Map<String, String[]> siteInfo = new ConcurrentHashMap<String, String[]>();
+
+    /** Клан игрока с сайта: {название, тег, монеты}; пустые строки, если нет данных. */
+    String[] siteOf(String nick) {
+        String[] s = siteInfo.get(nick.toLowerCase());
+        return s == null ? new String[]{"", "", ""} : s;
+    }
 
     /** Тир игрока с сайта (пусто, если неизвестен). */
     String tierOf(String nick) {
@@ -570,6 +579,10 @@ public class ApexTierTests extends JavaPlugin implements Listener {
                 String nick = o.get("nick").getAsString().toLowerCase();
                 String tier = o.get("tier").isJsonNull() ? "" : o.get("tier").getAsString();
                 tiers.put(nick, tier);
+                String clan = o.has("clan") && !o.get("clan").isJsonNull() ? o.get("clan").getAsString() : "";
+                String tag = o.has("clan_tag") && !o.get("clan_tag").isJsonNull() ? o.get("clan_tag").getAsString() : "";
+                String coins = o.has("coins") && !o.get("coins").isJsonNull() ? o.get("coins").getAsString() : "";
+                siteInfo.put(nick, new String[]{clan, tag, coins});
                 if (o.has("prefix") && !o.get("prefix").isJsonNull()) prefixes.put(nick, o.get("prefix").getAsString());
                 else prefixes.remove(nick);
             }
