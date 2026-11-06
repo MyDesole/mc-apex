@@ -168,7 +168,7 @@ public class ApexClanWars extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskAsynchronously(this, new Runnable() {
             public void run() {
                 try {
-                    JsonObject r = api.get("/clan-wars?leader=" + java.net.URLEncoder.encode(p.getName(), "UTF-8"));
+                    JsonObject r = api.get("/clan-wars?leader=" + java.net.URLEncoder.encode(p.getName(), "UTF-8") + (p.isOp() ? "&all=1" : ""));
                     final JsonArray arr = r.getAsJsonArray("wars");
                     Bukkit.getScheduler().runTask(ApexClanWars.this, new Runnable() {
                         public void run() {
@@ -262,6 +262,11 @@ public class ApexClanWars extends JavaPlugin implements Listener {
         if (s == null) return;
         s.ready = true;
         tellWar(w, "&a" + s.label() + " готов драться (" + p.getName() + ").");
+        if (p.isOp()) {
+            // оператору не нужно ждать вторую сторону
+            w.a.ready = true;
+            w.b.ready = true;
+        }
         if (w.a.ready && w.b.ready) {
             w.phase = Phase.SETUP;
             tellWar(w, "&6Оба клана готовы. Вызвавший клан выбирает, где играем.");
@@ -389,6 +394,10 @@ public class ApexClanWars extends JavaPlugin implements Listener {
         if (s == null) return;
         s.agreed = true;
         tellWar(w, "&a" + s.label() + " принял условия.");
+        if (p.isOp()) {
+            w.a.agreed = true;
+            w.b.agreed = true;
+        }
         if (w.a.agreed && w.b.agreed) begin(w);
     }
 
@@ -591,7 +600,7 @@ public class ApexClanWars extends JavaPlugin implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onCommand(PlayerCommandPreprocessEvent e) {
         String m = e.getMessage().toLowerCase(Locale.ROOT).trim();
-        if (bw != null && (m.equals("/leave") || m.equals("/lobby") || m.equals("/hub")) && bw.inArena(e.getPlayer())) {
+        if (bw != null && (m.equals("/leave") || m.equals("/l") || m.equals("/lobby") || m.equals("/hub")) && bw.inArena(e.getPlayer())) {
             e.setCancelled(true);
             e.getPlayer().performCommand("bw leave");
         }

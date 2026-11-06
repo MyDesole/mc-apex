@@ -68,6 +68,7 @@ final class Bw implements Listener {
     public void onJoin(PlayerJoinArenaEvent e) {
         if (!e.getArena().getArenaName().equalsIgnoreCase(arenaName)) return;
         Set<UUID> allowed = plugin.bwAllowed();
+        if (e.getPlayer() != null && e.getPlayer().isOp()) return;   // у оператора ограничений нет
         if (e.getPlayer() == null || !allowed.contains(e.getPlayer().getUniqueId())) {
             e.setCancelled(true);
             if (e.getPlayer() != null) e.getPlayer().sendMessage("§cЭта арена только для клановых войн.");
