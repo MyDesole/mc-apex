@@ -146,7 +146,7 @@ final class Hub implements Listener, CommandExecutor {
         p.setFoodLevel(20);
         p.setFireTicks(0);
         p.setFallDistance(0);
-        p.setGameMode(GameMode.ADVENTURE);
+        p.setGameMode(GameMode.SURVIVAL);
     }
 
     void toHub(Player p) {
@@ -191,15 +191,46 @@ final class Hub implements Listener, CommandExecutor {
         return true;
     }
 
+    /** Куда Alley переносит игрока при входе: запоминаем, подменяем на хаб на время обработки входа и возвращаем. */
+    private Location alleySpawn;
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onJoinFirst(PlayerJoinEvent e) {
+        try {
+            SpawnService spawn = AlleyPlugin.getInstance().getService(SpawnService.class);
+            alleySpawn = spawn.getLocation();
+            // Alley при входе сам отправляет игрока на свой спавн: пусть этот спавн будет хабом, и игрок сразу попадёт туда
+            if (hub != null) spawn.updateSpawnLocation(hub);
+        } catch (Throwable ex) {
+            alleySpawn = null;
+        }
+    }
+
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent e) {
         final Player p = e.getPlayer();
-        // после Alley, который сам переносит игрока в свой спавн
-        Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
-            public void run() {
-                if (p.isOnline()) toHub(p);
-            }
-        }, 25L);
+        try {
+            if (alleySpawn != null) AlleyPlugin.getInstance().getService(SpawnService.class).updateSpawnLocation(alleySpawn);
+        } catch (Throwable ignored) {
+        }
+        alleySpawn = null;
+        // сразу и ещё пару раз: если что-то в начале входа успело переставить игрока
+        toHub(p);
+        // Alley успевает выдать свои предметы лобби чуть позже: убираем их на 12-м и 25-м тике
+        for (long delay : new long[]{12L, 25L}) {
+            Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+                public void run() {
+                    if (p.isOnline() && inZone(p.getLocation())) toHub(p);
+                }
+            }, delay);
+        }
+    }
+
+    /** В хабе и лобби BedWars нельзя пользоваться блоками (двери, сундуки, кровати), предметы работают. */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onBlockUse(PlayerInteractEvent e) {
+        if (e.getClickedBlock() == null || e.getPlayer().getGameMode() == GameMode.CREATIVE) return;
+        if (inZone(e.getPlayer().getLocation())) e.setUseInteractedBlock(org.bukkit.event.Event.Result.DENY);
     }
 
     @EventHandler

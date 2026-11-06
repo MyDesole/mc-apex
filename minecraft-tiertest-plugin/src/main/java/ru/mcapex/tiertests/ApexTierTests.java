@@ -84,6 +84,7 @@ public class ApexTierTests extends JavaPlugin implements Listener {
         hub.start();
         new TabGuard(this).start();
         startAlleyGate();
+        if (Bukkit.getPluginManager().getPlugin("BedWars1058") != null) new BwTeamSelect(this).start();
         if (new WorldTickFix(this).start()) getLogger().info("WorldTickFix: защита от падения при выгрузке миров включена");
         getLogger().info("ApexTierTests включён: " + getConfig().getString("api.url"));
     }
