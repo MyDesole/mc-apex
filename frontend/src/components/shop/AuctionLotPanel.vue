@@ -732,9 +732,13 @@ onUnmounted(() => {
 @keyframes lp-pulse { 50% { box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.08); } }
 
 .lp__feed {
-  flex: 1;
+  /* 0px, а не 0%: процентная база в колонке с неизвестной высотой считается по содержимому,
+     и тогда окно растёт вместе с чатом вместо прокрутки */
+  flex: 1 1 0px;
   min-height: 0;
   height: 0;
+  max-height: 100%;
+  overscroll-behavior: contain;
 
   display: flex;
   flex-direction: column;
