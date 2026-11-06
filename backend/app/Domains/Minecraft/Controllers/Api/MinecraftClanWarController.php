@@ -27,6 +27,26 @@ class MinecraftClanWarController extends Controller
             'leader' => ['required', 'string', 'max:32'],
         ]);
 
+        // all=1 - запрос от оператора сервера: видит все принятые войны, без привязки к клану
+        if ($request->boolean('all')) {
+            $wars = ClanWar::query()
+                ->where('status', 'accepted')
+                ->with(['challenger.leader', 'opponent.leader'])
+                ->orderBy('scheduled_at')
+                ->limit(20)
+                ->get();
+
+            return response()->json([
+                'wars' => $wars->map(fn (ClanWar $war) => [
+                    'id' => $war->id,
+                    'scheduled_at' => $war->scheduled_at?->toIso8601String(),
+                    'my_side' => 'challenger',
+                    'challenger' => $this->clan($war->challenger),
+                    'opponent' => $this->clan($war->opponent),
+                ])->all(),
+            ]);
+        }
+
         $user = User::query()->where('minecraft_username', $data['leader'])->first();
         $member = $user?->clanMember;
 
