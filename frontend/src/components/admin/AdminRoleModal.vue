@@ -1,17 +1,22 @@
 <script setup>
 import { ref } from 'vue'
 import { adminApi } from '@/services/core/admin.js'
+import { useAuthStore } from '@/stores/core/auth.js'
 
 const props = defineProps({ user: Object })
 const emit = defineEmits(['close', 'updated'])
 
 const role = ref(props.user.role)
 const loading = ref(false)
+const auth = useAuthStore()
+// роль куратора видна и доступна только самому куратору
+const canPickCurator = auth.user?.role === 'curator'
 
 const roles = [
   { value: 'user', label: 'Пользователь', desc: 'Обычный игрок' },
   { value: 'media', label: 'Медийка', desc: 'Ютубер или стример: участвует в топах, особый вид профиля' },
   { value: 'tester', label: 'Тестер', desc: 'Проводит тир-тесты' },
+  { value: 'helper', label: 'Хелпер', desc: 'Помощник персонала: значок и префикс на сервере' },
   { value: 'bridge_tester', label: 'Бридж-тестер', desc: 'Проверяет виды бриджа' },
   { value: 'bridge_curator', label: 'Куратор бридж-теста', desc: 'Ведёт виды и подвиды бриджа' },
   { value: 'server_admin', label: 'Администратор сервера', desc: 'Доступ только к панели игрового сервера' },
@@ -40,7 +45,7 @@ async function submit() {
 
       <div class="body">
         <label
-            v-for="r in roles"
+            v-for="r in roles.filter(x => !x.onlyCurator || canPickCurator)"
             :key="r.value"
             class="role-option"
             :class="{ active: role === r.value }"

@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/core/auth.js'
 import AppIcon from '@/components/core/AppIcon.vue'
 
 const auth = useAuthStore()
-const isAdmin = computed(() => auth.user?.role === 'admin')
+const isAdmin = computed(() => ['admin', 'curator'].includes(auth.user?.role))
 
 const tab = ref('catalog')
 

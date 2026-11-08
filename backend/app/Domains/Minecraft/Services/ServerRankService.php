@@ -34,9 +34,10 @@ class ServerRankService
         // Персонал: тестер, медиа, модератор и админ следуют за ролью на сайте
         'tester' => ['name' => 'Тестер', 'kind' => 'staff', 'group' => 'tester', 'weight' => 60, 'prefix' => '&e&lᴛᴇꜱᴛᴇʀ', 'compact' => '&eᴛᴇꜱᴛᴇʀ', 'about' => 'Выдаётся роли «Тестер»', 'role' => 'tester'],
         'media' => ['name' => 'Медиа', 'kind' => 'staff', 'group' => 'media', 'weight' => 65, 'prefix' => '&5&lᴍᴇᴅɪᴀ', 'compact' => '&5ᴍᴇᴅɪᴀ', 'about' => 'Выдаётся роли «Медийка»', 'role' => 'media'],
-        'helper' => ['name' => 'Хелпер', 'kind' => 'staff', 'group' => 'helper', 'weight' => 70, 'prefix' => '&a&lʜᴇʟᴘᴇʀ', 'compact' => '&aʜᴇʟᴘᴇʀ', 'about' => 'Выдаётся вручную'],
+        'helper' => ['name' => 'Хелпер', 'kind' => 'staff', 'group' => 'helper', 'weight' => 70, 'prefix' => '&a&lʜᴇʟᴘᴇʀ', 'compact' => '&aʜᴇʟᴘᴇʀ', 'about' => 'Выдаётся роли «Хелпер»', 'role' => 'helper'],
         'moderator' => ['name' => 'Модератор', 'kind' => 'staff', 'group' => 'moderator', 'weight' => 80, 'prefix' => '&9&lᴍᴏᴅᴇʀ', 'compact' => '&9ᴍᴏᴅᴇʀ', 'about' => 'Выдаётся роли «Модератор»', 'role' => 'moderator'],
         'admin' => ['name' => 'Админ', 'kind' => 'staff', 'group' => 'admin', 'weight' => 100, 'prefix' => '&c&lᴀᴅᴍɪɴ', 'compact' => '&cᴀᴅᴍɪɴ', 'about' => 'Выдаётся роли «Администратор»', 'role' => 'admin'],
+        'curator' => ['name' => 'Куратор', 'kind' => 'staff', 'group' => 'curator', 'weight' => 120, 'prefix' => '&4&lᴄᴜʀᴀᴛᴏʀ', 'compact' => '&4ᴄᴜʀᴀᴛᴏʀ', 'about' => 'Выдаётся роли «Куратор»', 'role' => 'curator'],
     ];
 
     /** Срок по умолчанию в днях для быстрых кнопок админки. */

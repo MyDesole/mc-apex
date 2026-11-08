@@ -55,6 +55,8 @@ const roleLabels = {
   bridge_tester: 'Бридж-тестер',
   bridge_curator: 'Куратор бридж-теста',
   moderator: 'Модератор',
+  helper: 'Хелпер',
+  curator: 'Куратор',
   server_admin: 'Администратор сервера',
   admin: 'Администратор',
 }
@@ -84,7 +86,7 @@ onMounted(load)
         <option value="media">Медийки</option>
         <option value="bridge_tester">Бридж-тестеры</option>
         <option value="bridge_curator">Кураторы бриджа</option>
-        <option value="moderator">Модераторы</option>
+        <option value="moderator">Модераторы</option>`n        <option value="helper">Хелперы</option>`n        <option value="curator">Кураторы</option>
         <option value="admin">Администраторы</option>
       </select>
 

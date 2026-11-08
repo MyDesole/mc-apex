@@ -17,7 +17,7 @@ const FILTERS = [
 ]
 
 const ROLE_LABELS = {
-  user: 'игрок', media: 'медийка', tester: 'тестер', moderator: 'модератор',
+  user: 'игрок', media: 'медийка', tester: 'тестер', helper: 'хелпер', curator: 'куратор', moderator: 'модератор',
   admin: 'админ', server_admin: 'администратор сервера', bridge_tester: 'бридж-тестер', bridge_curator: 'бридж-куратор',
 }
 

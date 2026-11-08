@@ -63,7 +63,8 @@ export function useRealtimeNotifications() {
         channel.listen('.notification.created', (payload) => {
             unreadCount.value++
             latestNotification.value = payload
-            playSound('notification')
+            // вызов на клановую войну и призыв в бой звучат рогом и мечами, остальное обычным сигналом
+            playSound(String(payload?.type || '').startsWith('clan_war') ? 'war' : 'notification')
             newNotificationArrived.value = true
 
             setTimeout(() => {

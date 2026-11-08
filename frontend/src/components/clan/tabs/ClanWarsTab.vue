@@ -4,6 +4,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 
 import ClanWarCard from '@/components/clan/ClanWarCard.vue'
 import { clansApi } from '@/services/clan/clans.js'
+import { playSound } from '@/utils/sound.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 
 const props = defineProps({
@@ -212,6 +213,7 @@ async function submitChallenge() {
     })
 
     showChallenge.value = false
+    playSound('war')   // объявили войну: рог и мечи
 
     await load()
   } catch (e) {

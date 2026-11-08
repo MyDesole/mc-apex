@@ -12,7 +12,10 @@ class EnsureUserHasRole
     {
         $user = $request->user();
 
-        if (!$user || !in_array($user->role, $roles)) {
+        // Куратор стоит выше всех: проходит везде, где пускают администратора
+        $allowed = $user && (in_array($user->role, $roles) || ($user->role === 'curator' && in_array('admin', $roles)));
+
+        if (!$allowed) {
             abort(403, 'Недостаточно прав.');
         }
 

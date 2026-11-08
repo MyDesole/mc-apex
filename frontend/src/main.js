@@ -47,7 +47,11 @@ router.beforeEach((to) => {
         return { name: 'login', query: { redirect: to.fullPath } }
     }
 
-    if (to.meta.role && !to.meta.role.includes(auth.user?.role)) {
+    // куратор выше всех: проходит везде, где пускают администратора
+    const role = auth.user?.role
+    const roleOk = !to.meta.role || to.meta.role.includes(role) || (role === 'curator' && to.meta.role.includes('admin'))
+
+    if (!roleOk) {
         return { name: 'home' }
     }
 

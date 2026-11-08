@@ -200,6 +200,8 @@ const roleLabel = computed(() => {
     admin: 'Администратор',
     tester: 'Тестер',
     moderator: 'Модератор',
+    helper: 'Хелпер',
+    curator: 'Куратор',
     media: 'Медийка',
   }
 

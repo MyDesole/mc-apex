@@ -14,6 +14,14 @@ class RoleController extends Controller
         // нельзя менять свою роль (защита от слива прав)
         abort_if($user->id === $request->user()->id, 422, 'Нельзя менять свою роль.');
 
+        // Куратор выше всех: назначать куратора и менять роль куратора может только куратор
+        $newRole = $request->string('role')->toString();
+        abort_if(
+            ($newRole === 'curator' || $user->role === 'curator') && $request->user()->role !== 'curator',
+            403,
+            'Роль куратора выдаёт и меняет только куратор.'
+        );
+
         $from = $user->role;
         $user->update(['role' => $request->string('role')->toString()]);
 

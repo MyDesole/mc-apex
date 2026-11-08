@@ -133,6 +133,7 @@ const isAuthorMedia = computed(() => {
 })
 
 const authorRole = computed(() => {
+  if (author.value.role === 'curator') return 'CURATOR'
   if (author.value.role === 'admin') return 'ADMIN'
   if (author.value.role === 'moderator') return 'MOD'
   if (author.value.role === 'tester') return 'TESTER'

@@ -24,7 +24,7 @@ const sending = ref(false)
 const error = ref('')
 
 const isOwner = computed(() => auth.user?.id === props.owner.id)
-const isStaff = computed(() => ['admin', 'moderator'].includes(auth.user?.role))
+const isStaff = computed(() => ['curator', 'admin', 'moderator'].includes(auth.user?.role))
 
 async function load() {
   loading.value = true

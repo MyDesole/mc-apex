@@ -2,6 +2,7 @@
 import { prompt as promptDialog } from '@/utils/dialog.js'
 import { ref } from 'vue'
 import { clansApi } from '@/services/clan/clans.js'
+import { playSound } from '@/utils/sound.js'
 
 const props = defineProps({
   clan: Object,
@@ -21,6 +22,7 @@ async function challenge() {
     ...form.value,
     scheduled_at: form.value.scheduled_at || null,
   })
+  playSound('war')   // объявили войну: рог и мечи
   challenging.value = false
   form.value = { scheduled_at: '', notes: '' }
   emit('refresh')

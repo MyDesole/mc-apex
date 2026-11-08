@@ -44,7 +44,7 @@ const rarity = computed(() => PET_RARITY[traits.value?.rarity] ?? { label: 'Пи
 const mine = computed(() => auth.user?.id && props.lot.seller?.id === auth.user.id)
 const leading = computed(() => auth.user?.id && props.lot.leader?.id === auth.user.id)
 const active = computed(() => props.lot.status === 'active')
-const canModerate = computed(() => ['admin', 'moderator'].includes(auth.user?.role))
+const canModerate = computed(() => ['curator', 'admin', 'moderator'].includes(auth.user?.role))
 
 const msLeft = computed(() => new Date(props.lot.ends_at).getTime() - (props.now ?? clock.value))
 const timer = computed(() => {

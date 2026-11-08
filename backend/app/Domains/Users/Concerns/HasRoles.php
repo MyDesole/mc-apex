@@ -14,26 +14,26 @@ use Illuminate\Database\Eloquent\Builder;
 trait HasRoles
 {
     /** Персонал: права в жалобах, профилях, правке аккаунтов. */
-    public const STAFF_ROLES = ['admin', 'moderator', 'server_admin', 'tester', 'bridge_tester', 'bridge_curator'];
+    public const STAFF_ROLES = ['curator', 'admin', 'moderator', 'helper', 'server_admin', 'tester', 'bridge_tester', 'bridge_curator'];
 
     /**
      * Роли, которые не участвуют в рейтингах и топах. Тестеры, бридж-
      * тестеры и кураторы бриджа соревнуются наравне с игроками — так
      * решил владелец сайта.
      */
-    public const UNRANKED_ROLES = ['admin', 'moderator', 'server_admin'];
+    public const UNRANKED_ROLES = ['curator', 'admin', 'moderator', 'server_admin'];
 
     /** Роли, которым доступна админка. */
-    public const ADMIN_PANEL_ROLES = ['moderator', 'admin'];
+    public const ADMIN_PANEL_ROLES = ['moderator', 'admin', 'curator'];
 
     /**
      * Роли, которые управляют игровым сервером (панель «Сервер»).
      * Администратор сервера видит только этот раздел.
      */
-    public const SERVER_ROLES = ['admin', 'server_admin'];
+    public const SERVER_ROLES = ['curator', 'admin', 'server_admin'];
 
     /** Роли, которые могут проводить тир-тесты. */
-    public const TESTER_ROLES = ['tester', 'admin'];
+    public const TESTER_ROLES = ['tester', 'admin', 'curator'];
 
     /**
      * Роли, которые проверяют бридж-заявки.
@@ -41,26 +41,35 @@ trait HasRoles
      * Куратор здесь наравне с тестером: он тоже проводит тесты и, кроме
      * того, видит все проверки остальных тестеров.
      */
-    public const BRIDGE_TESTER_ROLES = ['bridge_tester', 'bridge_curator', 'admin'];
+    public const BRIDGE_TESTER_ROLES = ['bridge_tester', 'bridge_curator', 'admin', 'curator'];
 
     /** Роли, которые ведут каталог видов и подвидов бриджа. */
-    public const BRIDGE_CURATOR_ROLES = ['bridge_curator', 'admin'];
+    public const BRIDGE_CURATOR_ROLES = ['bridge_curator', 'admin', 'curator'];
 
     /** Человеческие названия ролей. */
     public const ROLE_LABELS = [
         'user' => 'Игрок',
         'media' => 'Медийка',
         'tester' => 'Тестер',
+        'helper' => 'Хелпер',
         'bridge_tester' => 'Бридж-тестер',
         'bridge_curator' => 'Куратор бридж-теста',
         'moderator' => 'Модератор',
         'server_admin' => 'Администратор сервера',
         'admin' => 'Администратор',
+        'curator' => 'Куратор',
     ];
 
+    /** Администратор: куратор стоит выше всех и имеет все права администратора. */
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return in_array($this->role, ['admin', 'curator'], true);
+    }
+
+    /** Куратор: высшая роль сайта, выдаёт и снимает роли администраторов. */
+    public function isCurator(): bool
+    {
+        return $this->role === 'curator';
     }
 
     public function isModerator(): bool

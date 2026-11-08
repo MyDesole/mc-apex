@@ -30,7 +30,7 @@ const emit = defineEmits(['close', 'changed', 'open'])
 
 const auth = useAuthStore()
 const router = useRouter()
-const isAdmin = computed(() => auth.user?.role === 'admin')
+const isAdmin = computed(() => ['admin', 'curator'].includes(auth.user?.role))
 
 const data = ref(null)
 const loading = ref(true)
@@ -38,7 +38,7 @@ const busy = ref(false)
 const modal = ref(null)
 
 const ROLE_LABELS = {
-  user: 'Игрок', media: 'Медийка', tester: 'Тестер', moderator: 'Модератор',
+  user: 'Игрок', media: 'Медийка', tester: 'Тестер', helper: 'Хелпер', curator: 'Куратор', moderator: 'Модератор',
   admin: 'Администратор', server_admin: 'Администратор сервера', bridge_tester: 'Бридж-тестер', bridge_curator: 'Бридж-куратор',
 }
 
@@ -57,7 +57,7 @@ const user = computed(() => data.value?.user)
 const isSelf = computed(() => user.value?.id === auth.user?.id)
 // Персонал меняет только админ, администратора — никто, кроме него самого
 const canModerate = computed(() =>
-    user.value && (isAdmin.value || (!isSelf.value && !['admin', 'moderator', 'tester', 'bridge_tester', 'bridge_curator'].includes(user.value.role))),
+    user.value && (isAdmin.value || (!isSelf.value && !['curator', 'admin', 'moderator', 'helper', 'tester', 'bridge_tester', 'bridge_curator'].includes(user.value.role))),
 )
 
 async function load() {
@@ -313,7 +313,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 
             <div v-if="canModerate" class="dossier__group">
               <span class="dossier__group-title">Модерация</span>
-              <template v-if="isAdmin && user.role !== 'admin'">
+              <template v-if="isAdmin && !['admin', 'curator'].includes(user.role)">
                 <button v-if="user.is_banned" type="button" class="kit-btn" :disabled="busy" @click="unban">Разбанить</button>
                 <span v-else class="dossier__inline">
                   <select v-model="banDays" class="kit-select" aria-label="Срок бана">
@@ -520,7 +520,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 
           <!-- Инвентарь: посмотреть и управлять -->
           <AdminDossierInventory
-              v-if="auth.user?.role === 'admin'"
+              v-if="['admin', 'curator'].includes(auth.user?.role)"
               :user-id="user.id"
               :username="user.username"
               :refresh-key="inventoryKey"

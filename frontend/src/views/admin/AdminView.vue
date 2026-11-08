@@ -43,11 +43,12 @@ const route = useRoute()
 const router = useRouter()
 
 const role = computed(() => auth.user?.role)
-const isAdmin = computed(() => role.value === 'admin')
+const isAdmin = computed(() => ['admin', 'curator'].includes(role.value))
 
 const ROLE_LABELS = {
   moderator: 'Модератор',
   admin: 'Администратор',
+  curator: 'Куратор',
 }
 
 /*
@@ -191,7 +192,7 @@ watch(tab, () => {
 })
 
 onMounted(() => {
-  if (!['moderator', 'admin'].includes(role.value)) {
+  if (!['moderator', 'admin', 'curator'].includes(role.value)) {
     router.push('/')
     return
   }
