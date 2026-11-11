@@ -176,6 +176,8 @@ class ClanService
             'my_clan_id' => $me?->clanMember?->clan_id,
             'application' => $me ? $this->pendingApplication($clan, $me) : null,
             'members_count' => $clan->members()->count(),
+            // Вместимость с учётом уровня: по ней фронтенд прячет «Подать заявку» в заполненном клане
+            'member_cap' => \App\Domains\Clan\Support\ClanLevel::memberCap($clan),
             'incoming_wars' => $this->wars($clan, 'opponent_clan_id'),
             'outgoing_wars' => $this->wars($clan, 'challenger_clan_id'),
         ];

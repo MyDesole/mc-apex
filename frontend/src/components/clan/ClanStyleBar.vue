@@ -17,10 +17,15 @@ const visible = computed(() => Boolean(style.value?.emblem || style.value?.motto
 
 const gradient = computed(() => {
   const t = style.value?.theme
-  return t ? `linear-gradient(90deg, ${t.from}55, ${t.to}22)` : 'rgba(255, 255, 255, 0.05)'
+  // Спокойный оттенок темы, без ярких градиентов — как остальные плашки сайта
+  return t ? `linear-gradient(90deg, ${t.from}2e, ${t.to}12)` : 'rgba(255, 255, 255, 0.03)'
 })
 
-const border = computed(() => style.value?.theme?.from ?? 'rgba(255, 255, 255, 0.15)')
+const border = computed(() => {
+  const t = style.value?.theme
+
+  return t ? `${t.from}88` : 'var(--border)'
+})
 </script>
 
 <template>
@@ -57,7 +62,7 @@ const border = computed(() => style.value?.theme?.from ?? 'rgba(255, 255, 255, 0
   padding: 3px 10px;
   gap: 6px;
   font-size: 12px;
-  border-radius: 999px;
+  border-radius: 4px;
 }
 
 .cstyle__label {

@@ -1,6 +1,6 @@
 .clan-page {
-  width: min(1040px, calc(100% - 32px));
-  margin: 28px auto 48px;
+  width: min(1000px, calc(100% - 40px));
+  margin: 40px auto;
 }
 
 .loading {
@@ -9,112 +9,47 @@
   color: var(--text-dim);
 }
 
-/* =========================================================
-   HERO
-   ========================================================= */
+/* === HEADER === */
 
 .clan-header {
   --c1: #7c3aed;
-  --c2: #06b6d4;
 
   position: relative;
   display: flex;
   flex-direction: column;
   gap: 22px;
-  padding: 34px 34px 26px;
-  margin-bottom: 26px;
+  padding: 28px;
+  margin-bottom: 28px;
   overflow: hidden;
   isolation: isolate;
-  background: #0d0d14;
-  border: 1px solid color-mix(in srgb, var(--c1) 55%, transparent);
-  border-radius: 14px;
-  box-shadow:
-      0 24px 70px -24px color-mix(in srgb, var(--c1) 70%, transparent),
-      0 0 0 1px rgba(255, 255, 255, 0.03) inset;
-  animation: heroIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  /* Едва заметный оттенок цвета клана — как в «Моём клане» */
+  background:
+      radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--c1) 16%, transparent), transparent 40%),
+      var(--bg-card);
 }
 
-@keyframes heroIn {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: none; }
-}
-
-/* Фон: градиент темы или обложка */
 .hero-bg {
   position: absolute;
   inset: 0;
-  z-index: -4;
-  background:
-      radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--c1) 60%, transparent), transparent 60%),
-      radial-gradient(110% 90% at 100% 100%, color-mix(in srgb, var(--c2) 50%, transparent), transparent 60%),
-      linear-gradient(135deg, #12121c, #0b0b12);
+  z-index: -1;
   background-size: cover;
   background-position: center;
 }
 
-.clan-header--cover .hero-bg {
-  filter: saturate(1.15);
-}
-
-.hero-shade {
+/* Обложка под тёмным слоем, чтобы текст читался */
+.hero-bg::after {
+  content: '';
   position: absolute;
   inset: 0;
-  z-index: -3;
-  background: linear-gradient(180deg, rgba(8, 8, 14, 0.35), rgba(8, 8, 14, 0.82));
-}
-
-.clan-header--cover .hero-shade {
-  background: linear-gradient(180deg, rgba(8, 8, 14, 0.55), rgba(8, 8, 14, 0.92));
-}
-
-/* Тонкая сетка в духе игры */
-.hero-grid {
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  opacity: 0.35;
-  background-image:
-      linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 34px 34px;
-  mask-image: radial-gradient(80% 100% at 50% 0%, #000, transparent 85%);
-}
-
-/* Плавающие световые пятна */
-.hero-orb {
-  position: absolute;
-  z-index: -1;
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
-  filter: blur(70px);
-  opacity: 0.45;
-  pointer-events: none;
-  animation: orbFloat 9s ease-in-out infinite;
-}
-
-.hero-orb--a {
-  top: -90px;
-  left: -60px;
-  background: var(--c1);
-}
-
-.hero-orb--b {
-  right: -80px;
-  bottom: -100px;
-  background: var(--c2);
-  animation-delay: -4s;
-}
-
-@keyframes orbFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(26px, 18px) scale(1.12); }
+  background: linear-gradient(rgba(13, 12, 17, 0.78), rgba(13, 12, 17, 0.92));
 }
 
 .hero-main {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 24px;
 }
 
 /* ---------- Герб ---------- */
@@ -122,22 +57,8 @@
 .crest {
   position: relative;
   flex-shrink: 0;
-  width: 132px;
-  height: 132px;
-}
-
-.crest__ring {
-  position: absolute;
-  inset: -8px;
-  border-radius: 24px;
-  background: conic-gradient(from 0deg, var(--c1), var(--c2), var(--c1));
-  filter: blur(0.5px);
-  opacity: 0.9;
-  animation: ringSpin 9s linear infinite;
-}
-
-@keyframes ringSpin {
-  to { transform: rotate(360deg); }
+  width: 96px;
+  height: 96px;
 }
 
 .banner {
@@ -147,13 +68,12 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-radius: 18px;
-  background: linear-gradient(135deg, var(--c1), var(--c2));
-  border: 3px solid #0d0d14;
+  border-radius: 6px;
+  border: 1px solid var(--border-hover);
+  background: var(--c1);
   color: #fff;
-  font-size: 56px;
-  font-weight: 900;
-  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+  font-size: 40px;
+  font-weight: 800;
 }
 
 .banner-img {
@@ -167,17 +87,17 @@
 
 .crest__emblem {
   position: absolute;
-  right: -12px;
-  bottom: -12px;
+  right: -8px;
+  bottom: -8px;
   display: grid;
   place-items: center;
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  background: #0d0d14;
-  border: 2px solid var(--c1);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
-  font-size: 24px;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-hover);
+  font-size: 17px;
+  line-height: 1;
 }
 
 /* ---------- Заголовок ---------- */
@@ -190,155 +110,139 @@
 .hero-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
+  gap: 6px;
   margin-bottom: 10px;
 }
 
 .chip {
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #e6e6f4;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-dim);
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  backdrop-filter: blur(6px);
 }
 
 .chip--level {
-  color: #fde68a;
-  border-color: rgba(250, 204, 21, 0.55);
-  background: rgba(250, 204, 21, 0.14);
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.3);
+  background: rgba(251, 191, 36, 0.08);
 }
 
 .chip--open {
-  color: #86efac;
-  border-color: rgba(34, 197, 94, 0.5);
-  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.3);
+  background: rgba(74, 222, 128, 0.08);
 }
 
 .chip--closed {
-  color: #fca5a5;
-  border-color: rgba(239, 68, 68, 0.5);
-  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.3);
+  background: rgba(248, 113, 113, 0.08);
 }
 
 .chip--fee {
-  color: #fde68a;
+  color: #fbbf24;
 }
 
 .clan-title h1 {
-  margin: 0 0 6px;
-  font-size: clamp(28px, 4.6vw, 46px);
-  line-height: 1.05;
-  font-weight: 900;
-  letter-spacing: -0.03em;
-  color: #fff;
-  text-shadow: 0 6px 30px rgba(0, 0, 0, 0.6);
+  margin: 0 0 8px;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
 }
 
 .tag {
-  margin-right: 6px;
-  color: color-mix(in srgb, var(--c1) 55%, #fff);
+  color: var(--accent-light);
+  margin-right: 4px;
 }
 
 .hero-motto {
   margin: 0 0 8px;
-  font-size: 17px;
+  color: var(--text);
+  font-size: 14px;
   font-style: italic;
-  color: #f4f4ff;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
 }
 
 .hero-desc {
-  margin: 0 0 8px;
-  max-width: 62ch;
-  color: #c9c9de;
-  font-size: 14px;
-  line-height: 1.55;
+  margin: 0 0 10px;
+  max-width: 64ch;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .hero-recruit {
   display: inline-block;
-  margin: 2px 0 0;
-  padding: 6px 12px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px dashed rgba(255, 255, 255, 0.25);
-  color: #ececf8;
+  margin: 0;
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
   font-size: 13px;
 }
 
 .min-rating-note {
   margin: 8px 0 0;
-  color: #fcd34d;
+  color: #fbbf24;
   font-size: 12px;
 }
 
 /* ---------- Статистика ---------- */
 
 .hero-stats {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
 }
 
 .stat {
-  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 14px 16px;
-  overflow: hidden;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  transition: transform 0.2s ease, border-color 0.2s ease;
-}
-
-.stat:hover {
-  transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--c1) 70%, transparent);
+  min-width: 70px;
 }
 
 .stat b {
-  font-size: 26px;
-  line-height: 1.1;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.5px;
 }
 
-.stat b.power { color: #c4b5fd; }
+.stat b.power { color: #a78bfa; }
 .stat b.win { color: #4ade80; }
 .stat b.loss { color: #f87171; }
 
 .stat span {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
+  font-size: 12px;
+  color: var(--text-muted);
   text-transform: uppercase;
-  color: #9a9ab8;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
 }
 
 .rate-bar {
   display: block;
-  height: 5px;
-  margin-top: 8px;
+  width: 100%;
+  height: 3px;
+  margin-top: 6px;
   overflow: hidden;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  background: var(--border);
 }
 
 .rate-bar u {
   display: block;
   height: 100%;
   text-decoration: none;
-  border-radius: 3px;
-  background: linear-gradient(90deg, #22c55e, #86efac);
+  background: #4ade80;
 }
 
 /* ---------- Низ шапки: соцсети и действия ---------- */
@@ -348,9 +252,7 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 14px;
-  padding-top: 18px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 12px;
 }
 
 .clan-socials {
@@ -363,11 +265,11 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 14px;
-  color: #d4d4e8;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 8px;
+  padding: 7px 12px;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 4px;
   font-size: 12px;
   font-weight: 700;
   text-decoration: none;
@@ -400,10 +302,10 @@
 
 .btn-apply,
 .btn-leave {
-  padding: 12px 22px;
-  border-radius: 9px;
+  padding: 11px 20px;
+  border-radius: 6px;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
   border: 0;
   transition: all 0.2s ease;
@@ -411,11 +313,11 @@
 }
 
 .btn-settings {
-  padding: 12px 20px;
-  color: #ececf8;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 9px;
+  padding: 11px 20px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -423,63 +325,56 @@
 }
 
 .btn-settings:hover {
-  border-color: var(--c1);
-  color: #fff;
-  background: color-mix(in srgb, var(--c1) 25%, transparent);
+  border-color: var(--accent);
+  color: var(--accent-light);
 }
 
 .btn-apply {
   color: #fff;
   text-decoration: none;
-  background: linear-gradient(135deg, var(--c1), var(--c2));
-  box-shadow: 0 10px 28px -10px var(--c1);
+  background: var(--accent);
 }
 
 .btn-apply:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.12);
+  background: var(--accent-light);
+  transform: translateY(-1px);
 }
 
 .btn-leave {
-  color: #c9c9de;
+  color: var(--text-dim);
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--border);
 }
 
 .btn-leave:hover {
   color: #f87171;
-  border-color: rgba(239, 68, 68, 0.5);
-  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.05);
 }
 
 .applied {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 12px 20px;
+  padding: 11px 20px;
   color: #fbbf24;
-  background: rgba(251, 191, 36, 0.12);
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  border-radius: 9px;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
 }
 
-/* =========================================================
-   TABS — «таблетки»
-   ========================================================= */
+/* === TABS === */
 
 .tabs {
   display: flex;
-  gap: 8px;
-  margin-bottom: 22px;
-  padding: 6px;
+  gap: 6px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
   overflow-x: auto;
   scrollbar-width: none;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border);
 }
 
 .tabs::-webkit-scrollbar {
@@ -490,27 +385,25 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  padding: 10px 22px;
+  padding: 12px 20px;
   color: var(--text-dim);
   background: transparent;
   border: 0;
-  border-radius: 9px;
+  border-bottom: 2px solid transparent;
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 14px;
   white-space: nowrap;
-  transition: color 0.2s ease, background 0.2s ease;
+  transition: color 0.2s ease, border-color 0.2s ease;
 }
 
 .tabs button:hover {
   color: var(--text);
-  background: rgba(255, 255, 255, 0.05);
 }
 
 .tabs button.active {
-  color: #fff;
-  background: linear-gradient(135deg, var(--c1, #7c3aed), var(--c2, #06b6d4));
-  box-shadow: 0 8px 22px -10px var(--c1, #7c3aed);
+  color: var(--text);
+  border-bottom-color: var(--accent);
 }
 
 .tab-badge {
@@ -523,7 +416,7 @@
   padding: 0 5px;
   background: #ef4444;
   color: #fff;
-  border-radius: 9px;
+  border-radius: 4px;
   font-size: 12px;
   font-weight: 800;
   line-height: 1;
@@ -531,39 +424,33 @@
 
 /* === АДАПТИВ === */
 
-@media (max-width: 860px) {
-  .hero-stats {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 700px) {
   .clan-header {
-    padding: 22px 18px 18px;
-    gap: 18px;
+    padding: 20px;
+    gap: 16px;
   }
 
   .hero-main {
     flex-direction: column;
     align-items: flex-start;
-    gap: 22px;
+    gap: 16px;
   }
 
   .crest {
-    width: 104px;
-    height: 104px;
+    width: 72px;
+    height: 72px;
   }
 
   .banner {
-    font-size: 44px;
+    font-size: 30px;
+  }
+
+  .clan-title h1 {
+    font-size: 20px;
   }
 
   .hero-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .stat b {
-    font-size: 22px;
+    gap: 18px;
   }
 
   .header-actions {
@@ -582,13 +469,5 @@
   .tabs button {
     padding: 10px 14px;
     font-size: 13px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-orb,
-  .crest__ring,
-  .clan-header {
-    animation: none;
   }
 }

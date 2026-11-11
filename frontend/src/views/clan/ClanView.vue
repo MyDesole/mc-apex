@@ -33,10 +33,27 @@ const heroVars = computed(() => {
   const t = clan.value?.style?.theme
   const base = clan.value?.banner_color || '#7c3aed'
 
-  return {
-    '--c1': t?.from || base,
-    '--c2': t?.to || '#06b6d4',
-  }
+  return { '--c1': t?.from || base }
+})
+
+/**
+ * Можно ли подать заявку: войти должен авторизованный игрок без клана, клан — открыт,
+ * в нём есть места, а рейтинг игрока не ниже порога. Остальное сервер всё равно проверит.
+ */
+const canApply = computed(() => {
+  if (!auth.isAuthenticated || !clan.value) return false
+  if (isMember.value || data.value?.application) return false
+  if (auth.user?.clan_member) return false
+  if (!clan.value.is_open || clan.value.is_banned) return false
+
+  const cap = data.value?.member_cap
+  if (cap && data.value?.members_count >= cap) return false
+
+  const min = Number(clan.value.min_rating || 0)
+  const mine = auth.user?.rating_points
+  if (min > 0 && mine !== undefined && mine !== null && Number(mine) < min) return false
+
+  return true
 })
 
 const winrate = computed(() => {
@@ -139,20 +156,16 @@ onMounted(load)
         :class="{ 'clan-header--cover': clan.cover_url }"
         :style="heroVars"
     >
-      <!-- Фон: обложка клана или градиент темы, поверх — свечение и сетка -->
+      <!-- Обложка клана — спокойным фоном под затемнением -->
       <div
+          v-if="clan.cover_url"
           class="hero-bg"
-          :style="clan.cover_url ? { backgroundImage: `url(${clan.cover_url})` } : null"
+          :style="{ backgroundImage: `url(${clan.cover_url})` }"
           aria-hidden="true"
       />
-      <div class="hero-shade" aria-hidden="true" />
-      <div class="hero-grid" aria-hidden="true" />
-      <div class="hero-orb hero-orb--a" aria-hidden="true" />
-      <div class="hero-orb hero-orb--b" aria-hidden="true" />
 
       <div class="hero-main">
         <div class="crest">
-          <span class="crest__ring" aria-hidden="true" />
           <div class="banner">
             <img
                 v-if="clan.avatar_url"
@@ -254,15 +267,14 @@ onMounted(load)
           Настройки
         </button>
 
+        <!-- Кнопка только тем, кто действительно может подать заявку -->
         <button
-            v-if="!isMember && !data.application"
+            v-if="canApply"
             class="btn-apply"
             @click="apply"
         >
           Подать заявку
         </button>
-
-
 
         <div v-else-if="data.application" class="applied">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
