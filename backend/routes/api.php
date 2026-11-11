@@ -677,6 +677,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{tierTest}', [TierTestController::class, 'update'])->whereNumber('tierTest');
     });
 
+    // Чат заявки: тестируемый ↔ тестер (первым пишет тестер)
+    Route::get('/tier-chat', [\App\Domains\Tiers\Controllers\TierTestChatController::class, 'active']);
+    Route::get('/tier-tests/{tierTest}/chat', [\App\Domains\Tiers\Controllers\TierTestChatController::class, 'show'])
+        ->whereNumber('tierTest');
+    Route::post('/tier-tests/{tierTest}/chat', [\App\Domains\Tiers\Controllers\TierTestChatController::class, 'send'])
+        ->whereNumber('tierTest')
+        ->middleware('throttle:30,1');
+
     /*
     |----------------------------------------------------------------------
     | РАСПИСАНИЕ ТЕСТЕРОВ (для записи игроком)
@@ -724,6 +732,12 @@ Route::middleware('auth:sanctum')->group(function () {
         // Заявки
         Route::post('/{clan}/apply', [ClanController::class, 'apply'])->whereNumber('clan');
         Route::get('/{clan}/applications', [ClanController::class, 'applications'])->whereNumber('clan');
+        // Приглашения: руководство зовёт игрока по нику
+        Route::get('/{clan}/invitations', [\App\Domains\Clan\Controllers\ClanInvitationController::class, 'index'])->whereNumber('clan');
+        Route::post('/{clan}/invitations', [\App\Domains\Clan\Controllers\ClanInvitationController::class, 'store'])
+            ->whereNumber('clan')->middleware('throttle:20,1');
+        Route::delete('/{clan}/invitations/{invitation}', [\App\Domains\Clan\Controllers\ClanInvitationController::class, 'cancel'])
+            ->whereNumber('clan')->whereNumber('invitation');
         Route::post('/{clan}/applications/{application}/accept', [ClanController::class, 'acceptApplication']);
         Route::post('/{clan}/applications/{application}/decline', [ClanController::class, 'declineApplication']);
 
@@ -765,6 +779,13 @@ Route::middleware('auth:sanctum')->group(function () {
     | КОММЕНТАРИИ К КЛАН-ПОСТАМ
     |----------------------------------------------------------------------
     */
+    // Мои приглашения в кланы
+    Route::get('/clan-invitations', [\App\Domains\Clan\Controllers\ClanInvitationController::class, 'mine']);
+    Route::post('/clan-invitations/{invitation}/accept', [\App\Domains\Clan\Controllers\ClanInvitationController::class, 'accept'])
+        ->whereNumber('invitation');
+    Route::post('/clan-invitations/{invitation}/decline', [\App\Domains\Clan\Controllers\ClanInvitationController::class, 'decline'])
+        ->whereNumber('invitation');
+
     Route::prefix('clans/{clan}/events/{event}/comments')->group(function () {
         Route::get('/', [ClanEventCommentController::class, 'index']);
         Route::post('/', [ClanEventCommentController::class, 'store']);
@@ -906,6 +927,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:moderator,admin')->prefix('admin')->group(function () {
         // Дашборд, счётчики меню, досье игрока
         Route::get('/dashboard', [\App\Domains\Moderation\Controllers\DashboardController::class, 'index']);
+        Route::get('/dashboard/live', [\App\Domains\Moderation\Controllers\DashboardController::class, 'live']);
         Route::get('/counters', [\App\Domains\Moderation\Controllers\DashboardController::class, 'counters']);
         Route::get('/users/{user}/dossier', [\App\Domains\Moderation\Controllers\DashboardController::class, 'dossier'])->whereNumber('user');
 
@@ -1172,6 +1194,13 @@ Route::middleware(['auth:sanctum', 'clan.member'])->prefix('my-clan')->group(fun
     Route::post('/checkin', [\App\Domains\Clan\Controllers\Api\MyClanController::class, 'checkIn'])->middleware('throttle:10,1');
     Route::put('/motd', [\App\Domains\Clan\Controllers\Api\MyClanController::class, 'updateMotd'])
         ->middleware(['clan.member:news', 'throttle:20,1']);
+
+    // Оформление клана (эмблема, тема, девиз, набор), бусты за казну, награды за цели недели
+    Route::get('/style', [\App\Domains\Clan\Controllers\Api\MyClanController::class, 'style']);
+    Route::put('/style', [\App\Domains\Clan\Controllers\Api\MyClanController::class, 'updateStyle'])->middleware('throttle:20,1');
+    Route::get('/boosts', [\App\Domains\Clan\Controllers\Api\MyClanController::class, 'boosts']);
+    Route::post('/boosts/{boost}', [\App\Domains\Clan\Controllers\Api\MyClanController::class, 'buyBoost'])->middleware('throttle:10,1');
+    Route::post('/goals/{goal}/claim', [\App\Domains\Clan\Controllers\Api\MyClanController::class, 'claimGoal'])->middleware('throttle:10,1');
 
     // Казна: участники скидываются, лидер тратит на клановые предметы
     Route::get('/treasury', [\App\Domains\Clan\Controllers\Api\MyClanController::class, 'treasury']);

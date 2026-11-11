@@ -38,6 +38,19 @@ class DashboardController extends Controller
         ]);
     }
 
+    /** Лёгкое обновление дашборда без перерисовки всего: лента событий, онлайн, состояние сервера. */
+    public function live(Request $request): JsonResponse
+    {
+        $isAdmin = $request->user()->isAdmin();
+
+        return response()->json([
+            'activity' => app(\App\Domains\Moderation\Services\AdminOverviewService::class)->activity(),
+            'online' => User::where('last_seen_at', '>=', now()->subMinutes(self::ONLINE_MINUTES))->count(),
+            'attention' => $this->attention(),
+            'system' => $isAdmin ? app(\App\Domains\Moderation\Services\SystemHealthService::class)->snapshot() : null,
+        ]);
+    }
+
     public function index(Request $request): JsonResponse
     {
         $isAdmin = $request->user()->isAdmin();
@@ -49,6 +62,11 @@ class DashboardController extends Controller
             'testers' => $this->testers(),
             'tests_by_day' => $this->testsByDay(),
             'economy' => $isAdmin ? $this->economy() : null,
+            // Лента событий и динамика — для всего персонала; техсостояние сервера — только админу
+            'activity' => app(\App\Domains\Moderation\Services\AdminOverviewService::class)->activity(),
+            'growth' => app(\App\Domains\Moderation\Services\AdminOverviewService::class)->growth(),
+            'totals' => app(\App\Domains\Moderation\Services\AdminOverviewService::class)->totals(),
+            'system' => $isAdmin ? app(\App\Domains\Moderation\Services\SystemHealthService::class)->snapshot() : null,
             'recent_actions' => ModerationLog::query()
                 ->with(['actor:id,username', 'target:id,username'])
                 ->latest('created_at')

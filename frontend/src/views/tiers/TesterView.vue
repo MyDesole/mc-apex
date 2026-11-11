@@ -1,8 +1,10 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/core/auth.js'
 import { testerApi } from '@/services/tiers/tester.js'
+import { tierChatApi } from '@/services/tiers/tierChat.js'
+import TierTestChat from '@/components/tiers/TierTestChat.vue'
 import TesterTierTestModal from '@/components/tiers/tester/TesterTierTestModal.vue'
 import AppIcon from '@/components/core/AppIcon.vue'
 import TabTransition from '@/components/core/TabTransition.vue'
@@ -128,6 +130,35 @@ function priorityLabel(test) {
   return 'Приоритетная заявка'
 }
 
+// Чаты с тестируемыми: сколько непрочитанного по каждой заявке
+const chatUnread = ref({})
+const chatTest = ref(null)
+let chatTimer = null
+
+async function pollChats() {
+  if (document.hidden) return
+
+  try {
+    const { chats } = await tierChatApi.active()
+    const next = {}
+
+    for (const c of chats ?? []) {
+      if (c.role === 'tester') next[c.tier_test_id] = c.unread
+    }
+
+    chatUnread.value = next
+  } catch {
+    // Следующий опрос поправит
+  }
+}
+
+function closeChat() {
+  chatTest.value = null
+  pollChats()
+}
+
+onBeforeUnmount(() => clearInterval(chatTimer))
+
 onMounted(() => {
   if (!isTester.value) {
     loading.value = false
@@ -135,6 +166,8 @@ onMounted(() => {
   }
 
   load()
+  pollChats()
+  chatTimer = setInterval(pollChats, 15000)
 })
 </script>
 
@@ -598,6 +631,18 @@ onMounted(() => {
 
           </div>
 
+          <!-- Чат с тестируемым: только для заявок, которые я веду -->
+          <button
+              v-if="isMine(test)"
+              type="button"
+              class="btn-chat"
+              :class="{ 'btn-chat--unread': chatUnread[test.id] }"
+              @click="chatTest = test"
+          >
+            Чат
+            <span v-if="chatUnread[test.id]" class="btn-chat__badge">{{ chatUnread[test.id] }}</span>
+          </button>
+
           <!-- Action -->
           <button
               type="button"
@@ -621,6 +666,17 @@ onMounted(() => {
     </TabTransition>
 
 
+    <!-- ================= ЧАТ С ТЕСТИРУЕМЫМ ================= -->
+
+    <div v-if="chatTest" class="chat-modal" @click.self="closeChat">
+      <div class="chat-modal__box">
+        <button type="button" class="chat-modal__close" aria-label="Закрыть" @click="closeChat">
+          ×
+        </button>
+        <TierTestChat :test-id="chatTest.id" @unread-cleared="chatUnread[chatTest.id] = 0" />
+      </div>
+    </div>
+
     <!-- ================= MODAL ================= -->
 
     <TesterTierTestModal
@@ -635,4 +691,5 @@ onMounted(() => {
 
 <style scoped>
 @import "@/views/tiers/TesterView.css";
+@import "@/views/tiers/TesterChat.css";
 </style>

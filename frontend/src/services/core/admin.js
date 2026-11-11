@@ -5,6 +5,10 @@ export const adminApi = {
     dashboard() {
         return api.get('/admin/dashboard')
     },
+    // Живое обновление дашборда: лента событий, онлайн, состояние сервера
+    dashboardLive() {
+        return api.get('/admin/dashboard/live')
+    },
     counters() {
         return api.get('/admin/counters')
     },

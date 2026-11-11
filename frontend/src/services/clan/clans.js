@@ -98,6 +98,26 @@ export const clansApi = {
     },
 
 
+    // Приглашения: руководство зовёт игрока, игрок отвечает
+    invitations(clanId) {
+        return api.get(`/clans/${clanId}/invitations`)
+    },
+    invite(clanId, username, message = null) {
+        return api.post(`/clans/${clanId}/invitations`, { username, message })
+    },
+    cancelInvitation(clanId, invitationId) {
+        return api.delete(`/clans/${clanId}/invitations/${invitationId}`)
+    },
+    myInvitations() {
+        return api.get('/clan-invitations')
+    },
+    acceptInvitation(id) {
+        return api.post(`/clan-invitations/${id}/accept`)
+    },
+    declineInvitation(id) {
+        return api.post(`/clan-invitations/${id}/decline`)
+    },
+
     war(warId) {
         return api.get(`/wars/${warId}`)
     },

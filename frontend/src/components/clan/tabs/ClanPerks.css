@@ -1,0 +1,88 @@
+/* Цели с наградой, герои недели, бусты */
+.goal__reward {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+.goal__claimed {
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.goals__message {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: #c4b5fd;
+}
+
+.heroes__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 28px 28px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.hero--gold {
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.04));
+  border: 1px solid rgba(251, 191, 36, 0.4);
+}
+
+.hero--donor {
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.18), rgba(34, 197, 94, 0.03));
+}
+
+.hero__medal {
+  font-size: 20px;
+  text-align: center;
+}
+
+.hero__name {
+  font-weight: 700;
+}
+
+.boosts__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.boost {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.boost > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.boost--on {
+  border-color: rgba(250, 204, 21, 0.6);
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.14), transparent);
+  box-shadow: 0 0 18px -6px rgba(250, 204, 21, 0.6);
+}
+
+.boost__until {
+  color: #fde047;
+  font-size: 12px;
+  font-weight: 700;
+}

@@ -292,6 +292,13 @@ class ClanService
             $this->abortUnprocessable('Клан закрыт для вступления.');
         }
 
+        // Порог набора: клан просит минимум очков рейтинга. По приглашению порог не действует.
+        if ((int) $clan->min_rating > 0 && (int) $user->rating_points < (int) $clan->min_rating) {
+            $this->abortUnprocessable(
+                "Клан принимает игроков от {$clan->min_rating} очков рейтинга. У вас {$user->rating_points}."
+            );
+        }
+
         $existing = ClanApplication::where('clan_id', $clan->id)
             ->where('user_id', $user->id)
             ->first();

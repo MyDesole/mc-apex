@@ -1,0 +1,166 @@
+.ttchat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 320px;
+  background: rgba(14, 14, 22, 0.98);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.ttchat__head {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.35);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(6, 182, 212, 0.1));
+}
+
+.ttchat__who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ttchat__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #6b7280;
+  flex: none;
+}
+
+.ttchat__dot.is-on {
+  background: #22c55e;
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
+  animation: ttchatPulse 1.8s infinite;
+}
+
+@keyframes ttchatPulse {
+  70% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+.ttchat__title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #f4f4ff;
+}
+
+.ttchat__sub {
+  font-size: 12px;
+  color: #a5a5c0;
+}
+
+.ttchat__list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ttchat__hint {
+  margin: auto;
+  max-width: 260px;
+  text-align: center;
+  color: #a5a5c0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ttchat__msg {
+  display: flex;
+}
+
+.ttchat__msg.is-mine {
+  justify-content: flex-end;
+}
+
+.ttchat__bubble {
+  max-width: 82%;
+  padding: 8px 11px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #ececf8;
+}
+
+.is-mine .ttchat__bubble {
+  background: rgba(124, 58, 237, 0.4);
+}
+
+.ttchat__name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #c4b5fd;
+  margin-bottom: 2px;
+}
+
+.ttchat__text {
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ttchat__time {
+  font-size: 10px;
+  color: #8b8ba7;
+  text-align: right;
+  margin-top: 2px;
+}
+
+.ttchat__error {
+  margin: 0;
+  padding: 6px 14px;
+  font-size: 12px;
+  color: #fca5a5;
+}
+
+.ttchat__lock {
+  margin: 0;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: #fcd34d;
+  background: rgba(245, 158, 11, 0.12);
+  border-top: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.ttchat__form {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ttchat__input {
+  flex: 1;
+  resize: none;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f4f4ff;
+  font: inherit;
+  font-size: 14px;
+}
+
+.ttchat__input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ttchat__send {
+  align-self: stretch;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #7c3aed, #06b6d4);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ttchat__send:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

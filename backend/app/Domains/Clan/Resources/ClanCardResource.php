@@ -44,6 +44,8 @@ class ClanCardResource extends JsonResource
             'highlight_color' => $clan->highlight_color,
             'highlight_effect' => $clan->highlight_effect,
             'members_count' => (int) ($clan->members_count ?? 0),
+            // Эмблема, тема, девиз и «кого ищем» — карточка в списке красится ими
+            'style' => \App\Domains\Clan\Support\ClanStyle::payload($clan),
             'leader' => $clan->relationLoaded('leader') && $clan->leader
                 ? new UserCardResource($clan->leader)
                 : null,

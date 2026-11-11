@@ -17,6 +17,8 @@ class Clan extends Model
         'highlight_color', 'highlight_effect', 'socials', 'max_members',
         'is_banned', 'ban_reason',
         'motd', 'motd_updated_at', 'motd_by',
+        // Оформление и набор (см. ClanStyle)
+        'motto', 'emblem', 'theme', 'tag_color', 'recruit_text', 'min_rating',
     ];
 
     // Объявление клана — только для своих: в публичной карточке его нет
@@ -30,6 +32,10 @@ class Clan extends Model
         'is_banned' => 'boolean',
         'socials' => 'array',
         'motd_updated_at' => 'datetime',
+        'min_rating' => 'integer',
+        'bonus_xp' => 'integer',
+        'xp_boost_until' => 'datetime',
+        'coin_boost_until' => 'datetime',
     ];
 
     /**
@@ -97,7 +103,13 @@ class Clan extends Model
         return $this->cover_path ? asset('storage/' . $this->cover_path) : null;
     }
 
-    protected $appends = ['avatar_url', 'cover_url'];
+    protected $appends = ['avatar_url', 'cover_url', 'style'];
+
+    /** Оформление клана (эмблема, тема, девиз) одним объектом для фронтенда. */
+    public function getStyleAttribute(): array
+    {
+        return \App\Domains\Clan\Support\ClanStyle::payload($this);
+    }
 
 
     /**

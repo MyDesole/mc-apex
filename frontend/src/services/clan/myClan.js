@@ -23,6 +23,27 @@ export const myClanApi = {
         return api.put('/my-clan/motd', { text })
     },
 
+    /** Оформление клана: текущее и каталог (что открыто на уровне клана). */
+    style() {
+        return api.get('/my-clan/style')
+    },
+    updateStyle(payload) {
+        return api.put('/my-clan/style', payload)
+    },
+
+    /** Бусты за казну. */
+    boosts() {
+        return api.get('/my-clan/boosts')
+    },
+    buyBoost(key) {
+        return api.post(`/my-clan/boosts/${key}`)
+    },
+
+    /** Награда в казну за выполненную цель недели. */
+    claimGoal(goal) {
+        return api.post(`/my-clan/goals/${goal}/claim`)
+    },
+
     /** Казна: баланс, вкладчики, история. */
     treasury() {
         return api.get('/my-clan/treasury')

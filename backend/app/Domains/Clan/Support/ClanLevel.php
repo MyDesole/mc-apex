@@ -79,8 +79,10 @@ final class ClanLevel
     /** Пересчитать опыт и уровень клана по фактическим данным. */
     public static function sync(Clan $clan): Clan
     {
+        // bonus_xp — опыт от бустов: хранится числом, потому что считать его из отметок задним числом нельзя
         $xp = ClanCheckin::where('clan_id', $clan->id)->count() * self::XP_PER_CHECKIN
-            + (int) $clan->wins * self::XP_PER_WIN;
+            + (int) $clan->wins * self::XP_PER_WIN
+            + (int) $clan->bonus_xp;
 
         $level = self::levelFor($xp);
 

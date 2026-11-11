@@ -112,6 +112,111 @@ class MyClanController extends Controller
         return response()->json($treasury->overview($request->user()->clanMember->clan));
     }
 
+    /* ----------------------------- Оформление, бусты, цели ----------------------------- */
+
+    /** Оформление клана: текущие значения и каталог (что открыто на уровне клана). */
+    public function style(Request $request): JsonResponse
+    {
+        $clan = $request->user()->clanMember->clan;
+        $level = (int) (\App\Domains\Clan\Support\ClanLevel::sync($clan)->level ?: 1);
+
+        return response()->json([
+            'level' => $level,
+            'current' => \App\Domains\Clan\Support\ClanStyle::payload($clan),
+            'catalog' => \App\Domains\Clan\Support\ClanStyle::catalog($level),
+        ]);
+    }
+
+    /** Сохранить оформление и набор: только лидер. */
+    public function updateStyle(Request $request): JsonResponse
+    {
+        $membership = $request->user()->clanMember;
+        abort_unless($membership->role === 'leader', 403, 'Оформление клана меняет только лидер.');
+
+        $clan = $membership->clan;
+
+        $data = $request->validate([
+            'motto' => ['nullable', 'string', 'max:' . \App\Domains\Clan\Support\ClanStyle::MOTTO_MAX],
+            'emblem' => ['nullable', 'string', \Illuminate\Validation\Rule::in(array_keys(\App\Domains\Clan\Support\ClanStyle::EMBLEMS))],
+            'theme' => ['nullable', 'string', \Illuminate\Validation\Rule::in(array_keys(\App\Domains\Clan\Support\ClanStyle::THEMES))],
+            'tag_color' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'recruit_text' => ['nullable', 'string', 'max:' . \App\Domains\Clan\Support\ClanStyle::RECRUIT_MAX],
+            'min_rating' => ['nullable', 'integer', 'min:0', 'max:100000'],
+        ], [
+            'tag_color.regex' => 'Цвет тега — в формате #RRGGBB.',
+        ]);
+
+        $level = (int) ($clan->level ?: 1);
+        $locked = \App\Domains\Clan\Support\ClanStyle::locked($data, $level);
+
+        if ($locked) {
+            throw \Illuminate\Validation\ValidationException::withMessages(array_map(fn ($m) => [$m], $locked));
+        }
+
+        $clean = [];
+        foreach (['motto', 'emblem', 'theme', 'tag_color', 'recruit_text'] as $field) {
+            if (array_key_exists($field, $data)) {
+                $value = is_string($data[$field]) ? trim($data[$field]) : $data[$field];
+                $clean[$field] = $value === '' ? null : $value;
+            }
+        }
+
+        if (array_key_exists('min_rating', $data)) {
+            $clean['min_rating'] = (int) ($data['min_rating'] ?? 0);
+        }
+
+        $clan->update($clean);
+
+        return response()->json([
+            'current' => \App\Domains\Clan\Support\ClanStyle::payload($clan->fresh()),
+        ]);
+    }
+
+    /** Бусты за казну: каталог и действующие. */
+    public function boosts(Request $request, \App\Domains\Clan\Services\ClanBoostService $boosts): JsonResponse
+    {
+        $clan = $request->user()->clanMember->clan;
+
+        return response()->json(['boosts' => $boosts->state($clan), 'treasury' => (int) $clan->treasury]);
+    }
+
+    /** Купить буст из казны: только лидер. */
+    public function buyBoost(Request $request, string $boost, \App\Domains\Clan\Services\ClanBoostService $boosts): JsonResponse
+    {
+        $membership = $request->user()->clanMember;
+        abort_unless($membership->role === 'leader', 403, 'Бусты покупает только лидер.');
+
+        try {
+            $state = $boosts->buy($membership->clan, $request->user(), $boost);
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json([
+            'message' => 'Буст активирован для всего клана.',
+            'boosts' => $state,
+            'treasury' => (int) $membership->clan->fresh()->treasury,
+        ]);
+    }
+
+    /** Забрать награду за выполненную цель недели: лидер или офицер. */
+    public function claimGoal(Request $request, string $goal, ClanOverviewService $overview): JsonResponse
+    {
+        $membership = $request->user()->clanMember;
+        abort_unless(in_array($membership->role, ['leader', 'officer'], true), 403, 'Награду за цели забирает руководство клана.');
+
+        try {
+            $result = $overview->claimGoal($request->user(), $membership->clan, $goal);
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json([
+            'message' => "Награда получена: +{$result['coins']} ApexCoin в казну клана.",
+            ...$result,
+        ]);
+    }
+
     /** Взнос участника в казну. */
     public function donate(Request $request, ClanTreasuryService $treasury): JsonResponse
     {

@@ -1,0 +1,16 @@
+.style-hint {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #c9c9e0;
+}
+
+.style-hint__btn {
+  margin-left: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #c4b5fd;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}

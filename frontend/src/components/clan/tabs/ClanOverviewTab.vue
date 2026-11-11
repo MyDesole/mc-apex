@@ -10,6 +10,8 @@ import PlayerHead from '@/components/players/PlayerHead.vue'
 
 const props = defineProps({
   clan: { type: Object, required: true },
+  // Моя роль в клане: от неё зависит, кто забирает награды и покупает бусты
+  role: { type: String, default: 'member' },
 })
 
 // Переход на другую вкладку «Моего клана»
@@ -117,6 +119,43 @@ async function copyInvite() {
 
   linkCopied.value = true
   setTimeout(() => { linkCopied.value = false }, 2000)
+}
+
+// Награды за цели и бусты: руководство забирает награды, бусты покупает лидер
+const canClaim = computed(() => ['leader', 'officer'].includes(props.role))
+const claiming = ref('')
+const goalMessage = ref('')
+const buying = ref('')
+const boostMessage = ref('')
+
+async function claimGoal(goal) {
+  claiming.value = goal.id
+  goalMessage.value = ''
+
+  try {
+    const result = await myClanApi.claimGoal(goal.id)
+    goalMessage.value = result.message
+    await load()
+  } catch (e) {
+    goalMessage.value = e.message || 'Не удалось забрать награду.'
+  } finally {
+    claiming.value = ''
+  }
+}
+
+async function buyBoost(boost) {
+  buying.value = boost.key
+  boostMessage.value = ''
+
+  try {
+    const result = await myClanApi.buyBoost(boost.key)
+    boostMessage.value = result.message
+    await load()
+  } catch (e) {
+    boostMessage.value = e.message || 'Не удалось включить буст.'
+  } finally {
+    buying.value = ''
+  }
 }
 
 function goalPercent(goal) {
@@ -333,8 +372,75 @@ onMounted(load)
               <b>{{ goal.value }} / {{ goal.target }}</b>
             </div>
             <div class="bar bar--thin"><i :style="{ width: `${goalPercent(goal)}%` }" /></div>
+
+            <!-- Награда в казну: забирает руководство, один раз за неделю -->
+            <div class="goal__reward">
+              <span class="ov-muted">Награда: +{{ goal.reward }} ₳ в казну</span>
+              <span v-if="goal.claimed" class="goal__claimed">получена</span>
+              <button
+                  v-else-if="goal.done && canClaim"
+                  type="button"
+                  class="ov-button"
+                  :disabled="claiming === goal.id"
+                  @click="claimGoal(goal)"
+              >
+                {{ claiming === goal.id ? 'Забираем…' : 'Забрать награду' }}
+              </button>
+              <span v-else-if="goal.done" class="ov-muted">ждёт руководство</span>
+            </div>
           </div>
         </div>
+        <p v-if="goalMessage" class="goals__message">{{ goalMessage }}</p>
+      </section>
+
+      <!-- Герои недели -->
+      <section v-if="data.hero?.activity?.length || data.hero?.donor" class="ov-card heroes">
+        <div class="ov-card__head">
+          <span class="ov-kicker">Герои недели</span>
+          <span class="ov-muted">{{ resetsIn }}</span>
+        </div>
+        <div class="heroes__list">
+          <div v-for="(row, i) in data.hero.activity" :key="row.user.id" class="hero" :class="{ 'hero--gold': i === 0 }">
+            <span class="hero__medal">{{ ['🥇', '🥈', '🥉'][i] }}</span>
+            <PlayerHead :user="row.user" :size="28" />
+            <span class="hero__name">{{ row.user.username }}</span>
+            <b>{{ row.checkins }} отм.</b>
+          </div>
+          <div v-if="data.hero.donor" class="hero hero--donor">
+            <span class="hero__medal">💰</span>
+            <PlayerHead :user="data.hero.donor.user" :size="28" />
+            <span class="hero__name">{{ data.hero.donor.user.username }}</span>
+            <b>{{ data.hero.donor.amount }} ₳ в казну</b>
+          </div>
+        </div>
+      </section>
+
+      <!-- Бусты за казну -->
+      <section class="ov-card boosts">
+        <div class="ov-card__head">
+          <span class="ov-kicker">Бусты клана</span>
+          <span class="ov-muted">в казне {{ data.treasury }} ₳</span>
+        </div>
+        <div class="boosts__list">
+          <div v-for="b in data.boosts" :key="b.key" class="boost" :class="{ 'boost--on': b.active }">
+            <div>
+              <strong>{{ b.title }}</strong>
+              <span class="ov-muted">{{ b.text }}</span>
+              <span v-if="b.active" class="boost__until">действует до {{ formatDate(b.until) }}</span>
+            </div>
+            <button
+                v-if="role === 'leader'"
+                type="button"
+                class="ov-button"
+                :disabled="buying === b.key || data.treasury < b.price"
+                @click="buyBoost(b)"
+            >
+              {{ b.active ? 'Продлить' : 'Включить' }} · {{ b.price }} ₳ / {{ b.hours }} ч
+            </button>
+            <span v-else class="ov-muted">{{ b.price }} ₳ / {{ b.hours }} ч · покупает лидер</span>
+          </div>
+        </div>
+        <p v-if="boostMessage" class="goals__message">{{ boostMessage }}</p>
       </section>
 
       <div class="ov-row">
@@ -450,4 +556,5 @@ onMounted(load)
 
 <style scoped>
 @import "./ClanOverviewTab.css";
+@import "./ClanPerks.css";
 </style>

@@ -22,6 +22,9 @@
       </RouterLink>
     </div>
 
+    <!-- Приглашения в кланы: заметно, пока игрок на них не ответил -->
+    <ClanInvitesBanner />
+
     <!-- ============================================================
          ПОИСК И ФИЛЬТРЫ
          ============================================================ -->
@@ -183,6 +186,7 @@
             <span
                 v-if="clan.tag"
                 class="clan-tag"
+                :style="clan.style?.tag_color ? { color: clan.style.tag_color } : null"
             >
               [{{ clan.tag }}]
             </span>
@@ -214,6 +218,9 @@
           <p class="clan-description">
             {{ clan.description || 'Описание отсутствует' }}
           </p>
+
+          <!-- Эмблема, девиз и «кого ищем» из оформления клана -->
+          <ClanStyleBar :clan="clan" compact />
 
           <div class="clan-meta">
             <span>
@@ -309,6 +316,8 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { clansApi } from '@/services/clan/clans.js'
+import ClanInvitesBanner from '@/components/clan/ClanInvitesBanner.vue'
+import ClanStyleBar from '@/components/clan/ClanStyleBar.vue'
 
 const router = useRouter()
 const route = useRoute()

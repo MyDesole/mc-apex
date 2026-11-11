@@ -14,6 +14,8 @@ import TabTransition from '@/components/core/TabTransition.vue'
 import ClanEditModal from "@/components/clan/dialogs/ClanEditModal.vue";
 import PageState from '@/components/core/PageState.vue'
 import ShareToChatButton from '@/components/chat/ShareToChatButton.vue'
+import ClanStyleBar from '@/components/clan/ClanStyleBar.vue'
+import ClanInviteDialog from '@/components/clan/dialogs/ClanInviteDialog.vue'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -23,6 +25,7 @@ const loading = ref(true)
 const tab = ref('members')
 const applicationsCount = ref(0)
 const showEdit = ref(false)
+const showInvite = ref(false)
 
 const clan = computed(() => data.value?.clan)
 const isMember = computed(() => data.value?.is_member)
@@ -140,11 +143,19 @@ onMounted(load)
 
       <div class="clan-title">
         <h1>
-          <span class="tag">[{{ clan.tag }}]</span>
+          <span class="tag" :style="clan.style?.tag_color ? { color: clan.style.tag_color } : null">[{{ clan.tag }}]</span>
           {{ clan.name }}
         </h1>
 
         <p v-if="clan.description">{{ clan.description }}</p>
+
+        <!-- Эмблема, девиз и «кого ищем» -->
+        <ClanStyleBar :clan="clan" />
+
+        <!-- Порог набора: заявителю видно до подачи -->
+        <p v-if="!isMember && clan.min_rating > 0" class="min-rating-note">
+          Заявки принимаются от {{ clan.min_rating }} очков рейтинга. По приглашению — без порога.
+        </p>
 
         <div class="stats">
           <div class="stat">
@@ -187,6 +198,10 @@ onMounted(load)
       <div class="header-actions">
 
         <ShareToChatButton v-if="clan?.id" :path="`/clans/${clan.id}`" label="Поделиться" />
+
+        <button v-if="canManage" class="btn-settings" @click="showInvite = true">
+          Пригласить игрока
+        </button>
 
         <button v-if="isLeader" class="btn-settings" @click="showEdit = true">
           Настройки
@@ -307,6 +322,8 @@ onMounted(load)
         @close="showEdit = false"
         @updated="load"
     />
+
+    <ClanInviteDialog v-if="showInvite" :clan="clan" @close="showInvite = false" />
   </div>
 
   <PageState

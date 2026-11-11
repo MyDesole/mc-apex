@@ -7,12 +7,14 @@ use App\Domains\Clan\Models\Clan;
 use App\Domains\Clan\Models\ClanCheckin;
 use App\Domains\Clan\Models\ClanEvent;
 use App\Domains\Clan\Models\ClanForumTopic;
+use App\Domains\Clan\Models\ClanGoalClaim;
 use App\Domains\Clan\Models\ClanMember;
 use App\Domains\Clan\Models\ClanTreasuryTransaction;
 use App\Domains\Clan\Models\ClanWar;
 use App\Domains\Clan\Support\ClanLevel;
 use App\Domains\Users\Models\User;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use RuntimeException;
@@ -24,6 +26,9 @@ use RuntimeException;
 class ClanOverviewService
 {
     public const MOTD_MAX = 500;
+
+    /** ApexCoin в казну за каждую выполненную цель недели. */
+    public const GOAL_REWARDS = ['checkins' => 150, 'wins' => 300, 'treasury' => 100, 'forum' => 100];
 
     private const FEED_LIMIT = 15;
 
@@ -53,6 +58,8 @@ class ClanOverviewService
                 'today' => $todayCheckins->take(12)->map(fn (ClanCheckin $c) => $this->userCard($c->user))->filter()->values(),
             ],
             'goals' => $this->weeklyGoals($clan, $membersCount),
+            'hero' => $this->heroes($clan),
+            'boosts' => app(ClanBoostService::class)->state($clan),
             'top_members' => $this->topMembers($clan),
             'wars' => $this->upcomingWars($clan),
             'treasury' => (int) $clan->treasury,
@@ -79,6 +86,14 @@ class ClanOverviewService
         }
 
         $levelBefore = (int) ($clan->level ?: 1);
+
+        // Буст «Двойной опыт»: пока действует, отметка даёт ещё столько же опыта
+        $xpGain = ClanLevel::XP_PER_CHECKIN;
+        if ($clan->xp_boost_until && $clan->xp_boost_until->isFuture()) {
+            $clan->forceFill(['bonus_xp' => (int) $clan->bonus_xp + ClanLevel::XP_PER_CHECKIN])->saveQuietly();
+            $xpGain *= 2;
+        }
+
         ClanLevel::sync($clan);
 
         // Монеты в казну — по уровню до отметки. Только тем, кто в клане
@@ -89,12 +104,18 @@ class ClanOverviewService
 
         if ($joinedAt && $joinedAt->lte(now()->subDay())) {
             $coins = ClanLevel::checkinCoins($levelBefore);
+
+            // Буст «Двойная казна»
+            if ($clan->coin_boost_until && $clan->coin_boost_until->isFuture()) {
+                $coins *= 2;
+            }
+
             app(ClanTreasuryService::class)->reward($clan, $user, $coins, 'Отметка участника');
         }
 
         return [
             'streak' => $this->streak($user),
-            'xp' => ClanLevel::XP_PER_CHECKIN,
+            'xp' => $xpGain,
             'coins' => $coins,
             'level_up' => (int) $clan->level > $levelBefore,
             'level' => ClanLevel::progress($clan),
@@ -197,14 +218,112 @@ class ClanOverviewService
             ->where('created_at', '>=', $weekStart)
             ->count();
 
+        $claimed = ClanGoalClaim::where('clan_id', $clan->id)->where('week', $weekStart->toDateString())->pluck('goal')->all();
+
+        $items = [
+            ['id' => 'checkins', 'label' => 'Отметки участников', 'value' => $checkins, 'target' => max(10, $membersCount * 3)],
+            ['id' => 'wins', 'label' => 'Победа в клановой войне', 'value' => $wins, 'target' => 1],
+            ['id' => 'treasury', 'label' => 'Взносы в казну', 'value' => $donated, 'target' => 500],
+            ['id' => 'forum', 'label' => 'Новые темы на форуме', 'value' => $topics, 'target' => 3],
+        ];
+
+        // Награда в казну за выполненную цель: забирает руководство, один раз за неделю
+        $items = array_map(fn (array $goal) => [
+            ...$goal,
+            'reward' => self::GOAL_REWARDS[$goal['id']],
+            'done' => $goal['value'] >= $goal['target'],
+            'claimed' => in_array($goal['id'], $claimed, true),
+        ], $items);
+
         return [
             'resets_at' => $weekStart->copy()->addWeek()->toIso8601String(),
-            'items' => [
-                ['id' => 'checkins', 'label' => 'Отметки участников', 'value' => $checkins, 'target' => max(10, $membersCount * 3)],
-                ['id' => 'wins', 'label' => 'Победа в клановой войне', 'value' => $wins, 'target' => 1],
-                ['id' => 'treasury', 'label' => 'Взносы в казну', 'value' => $donated, 'target' => 500],
-                ['id' => 'forum', 'label' => 'Новые темы на форуме', 'value' => $topics, 'target' => 3],
-            ],
+            'items' => $items,
+        ];
+    }
+
+    /**
+     * Забрать награду за выполненную цель недели: монеты уходят в казну клана.
+     * Награда выдаётся один раз за неделю; повтор ловит уникальный индекс.
+     *
+     * @return array{coins: int, goal: string}
+     */
+    public function claimGoal(User $user, Clan $clan, string $goalId): array
+    {
+        $goals = collect($this->weeklyGoals($clan, $clan->members()->count())['items'])->keyBy('id');
+        $goal = $goals->get($goalId);
+
+        if (! $goal) {
+            throw new RuntimeException('Такой цели нет.');
+        }
+
+        if (! $goal['done']) {
+            throw new RuntimeException('Цель ещё не выполнена.');
+        }
+
+        if ($goal['claimed']) {
+            throw new RuntimeException('Награда за эту цель уже получена.');
+        }
+
+        $week = now()->startOfWeek()->toDateString();
+
+        try {
+            DB::transaction(function () use ($clan, $user, $goal, $week) {
+                ClanGoalClaim::create([
+                    'clan_id' => $clan->id,
+                    'week' => $week,
+                    'goal' => $goal['id'],
+                    'claimed_by' => $user->id,
+                    'coins' => $goal['reward'],
+                ]);
+
+                app(ClanTreasuryService::class)->reward($clan, $user, $goal['reward'], 'Награда за цель недели: ' . $goal['label']);
+            });
+        } catch (QueryException) {
+            throw new RuntimeException('Награда за эту цель уже получена.');
+        }
+
+        return ['coins' => $goal['reward'], 'goal' => $goal['id']];
+    }
+
+    /**
+     * Герои недели: кто больше всех отмечался за текущую неделю и кто больше всех
+     * скинул в казну. Победителя видит весь клан — повод быть активным.
+     */
+    private function heroes(Clan $clan): array
+    {
+        $weekStart = now()->startOfWeek();
+
+        $checkins = ClanCheckin::query()
+            ->where('clan_id', $clan->id)
+            ->where('day', '>=', $weekStart->toDateString())
+            ->selectRaw('user_id, COUNT(*) as total')
+            ->groupBy('user_id')
+            ->orderByDesc('total')
+            ->limit(3)
+            ->with('user:id,username,avatar,minecraft_username')
+            ->get();
+
+        $donors = ClanTreasuryTransaction::query()
+            ->where('clan_id', $clan->id)
+            ->where('type', ClanTreasuryTransaction::TYPE_DONATION)
+            ->where('created_at', '>=', $weekStart)
+            ->whereNotNull('user_id')
+            ->selectRaw('user_id, SUM(amount) as total')
+            ->groupBy('user_id')
+            ->orderByDesc('total')
+            ->limit(1)
+            ->with('user:id,username,avatar,minecraft_username')
+            ->first();
+
+        return [
+            'activity' => $checkins->map(fn ($row) => [
+                'user' => $this->userCard($row->user),
+                'checkins' => (int) $row->total,
+            ])->filter(fn ($r) => $r['user'])->values(),
+            'donor' => $donors && $donors->user ? [
+                'user' => $this->userCard($donors->user),
+                'amount' => (int) $donors->total,
+            ] : null,
         ];
     }
 

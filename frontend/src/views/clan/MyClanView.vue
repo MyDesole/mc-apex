@@ -16,6 +16,9 @@ import ClanResourcesTab from '@/components/clan/tabs/ClanResourcesTab.vue'
 import ClanTreasuryTab from '@/components/clan/tabs/ClanTreasuryTab.vue'
 import ClanEditModal from '@/components/clan/dialogs/ClanEditModal.vue'
 import TabTransition from '@/components/core/TabTransition.vue'
+import ClanStyleBar from '@/components/clan/ClanStyleBar.vue'
+import ClanStyleDialog from '@/components/clan/dialogs/ClanStyleDialog.vue'
+import ClanInviteDialog from '@/components/clan/dialogs/ClanInviteDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -28,6 +31,8 @@ const tab = ref(typeof route.query.tab === 'string' ? route.query.tab : 'overvie
 const leaving = ref(false)
 const leaveError = ref('')
 const showSettings = ref(false)
+const showStyle = ref(false)
+const showInvite = ref(false)
 
 const clan = computed(() => data.value?.clan)
 const permissions = computed(() => data.value?.my_permissions ?? {})
@@ -179,9 +184,15 @@ onMounted(load)
             <div class="identity-content">
 
               <h1 class="clan-name">
-                <span class="clan-tag">[{{ clan.tag }}]</span>
+                <span class="clan-tag" :style="clan.style?.tag_color ? { color: clan.style.tag_color } : null">[{{ clan.tag }}]</span>
                 {{ clan.name }}
               </h1>
+
+              <ClanStyleBar :clan="clan" />
+              <p v-if="isLeader && !clan.style?.emblem && !clan.style?.motto" class="style-hint">
+                Оформите клан: эмблема, тема и девиз видны всем в списке кланов.
+                <button type="button" class="style-hint__btn" @click="showStyle = true">Настроить</button>
+              </p>
 
               <div class="identity-meta">
                 <span
@@ -223,6 +234,24 @@ onMounted(load)
 
           <!-- Actions -->
           <div class="hero-actions">
+            <button
+                v-if="permissions.applications"
+                type="button"
+                class="action-button action-button--secondary"
+                @click="showInvite = true"
+            >
+              Пригласить
+            </button>
+
+            <button
+                v-if="isLeader"
+                type="button"
+                class="action-button action-button--secondary"
+                @click="showStyle = true"
+            >
+              Оформление
+            </button>
+
             <button
                 v-if="canEditClan"
                 type="button"
@@ -420,6 +449,19 @@ onMounted(load)
           @updated="refresh"
       />
 
+      <ClanStyleDialog
+          v-if="showStyle && clan"
+          :clan="clan"
+          @close="showStyle = false"
+          @saved="refresh"
+      />
+
+      <ClanInviteDialog
+          v-if="showInvite && clan"
+          :clan="clan"
+          @close="showInvite = false"
+      />
+
       <!-- Navigation -->
       <nav class="clan-tabs" role="tablist">
         <div class="tabs-scroll">
@@ -591,7 +633,7 @@ onMounted(load)
 
         <div class="content-body">
           <TabTransition :active="tab">
-            <ClanOverviewTab v-if="tab === 'overview'" :clan="clan" @go="tab = $event" />
+            <ClanOverviewTab v-if="tab === 'overview'" :clan="clan" :role="data?.my_role" @go="tab = $event" />
 
             <ClanForumTab v-else-if="tab === 'forum'" :permissions="permissions" :clan="clan" />
 
@@ -636,4 +678,5 @@ onMounted(load)
 
 <style scoped>
 @import "@/views/clan/MyClanView.css";
+@import "@/views/clan/MyClanStyleHint.css";
 </style>
