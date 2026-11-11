@@ -1,55 +1,106 @@
+/* Страница клана: раскладка и язык карточек — как у профиля игрока */
+
 .clan-page {
-  width: min(1000px, calc(100% - 40px));
-  margin: 40px auto;
+  --clan: #7c3aed;
+
+  width: min(1180px, calc(100% - 32px));
+  margin: 28px auto 56px;
 }
 
-.loading {
-  padding: 80px;
-  text-align: center;
-  color: var(--text-dim);
+.clan-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  align-items: start;
 }
 
-/* === HEADER === */
+.clan-col {
+  min-width: 0;
+}
 
-.clan-header {
-  --c1: #7c3aed;
+/* =========================================================
+   ШАПКА
+   ========================================================= */
 
+.hero {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-  padding: 28px;
-  margin-bottom: 28px;
   overflow: hidden;
   isolation: isolate;
+  padding: 22px 26px 0;
   border: 1px solid var(--border);
-  border-radius: 6px;
-  /* Едва заметный оттенок цвета клана — как в «Моём клане» */
+  border-radius: var(--radius, 6px);
   background:
-      radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--c1) 16%, transparent), transparent 40%),
-      var(--bg-card);
+      radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--clan) 22%, transparent), transparent 46%),
+      linear-gradient(180deg, color-mix(in srgb, var(--clan) 6%, var(--bg-card)), var(--bg-card));
 }
 
-.hero-bg {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background-size: cover;
-  background-position: center;
-}
-
-/* Обложка под тёмным слоем, чтобы текст читался */
-.hero-bg::after {
+/* Полоса цвета клана по низу шапки — как у профиля */
+.hero::after {
   content: '';
   position: absolute;
-  inset: 0;
-  background: linear-gradient(rgba(13, 12, 17, 0.78), rgba(13, 12, 17, 0.92));
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--clan), color-mix(in srgb, var(--clan) 20%, transparent));
 }
 
-.hero-main {
+.hero__cover {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.22;
+}
+
+.hero__watermark {
+  position: absolute;
+  right: -10px;
+  bottom: -38px;
+  z-index: -1;
+  font-family: var(--font-display);
+  font-size: 170px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: color-mix(in srgb, var(--clan) 22%, transparent);
+  opacity: 0.35;
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.hero__top {
   display: flex;
   align-items: center;
-  gap: 24px;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.hero__rank {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.hero__rank--top {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+.hero__body {
+  display: flex;
+  align-items: center;
+  gap: 26px;
 }
 
 /* ---------- Герб ---------- */
@@ -57,321 +108,297 @@
 .crest {
   position: relative;
   flex-shrink: 0;
-  width: 96px;
-  height: 96px;
+  width: 112px;
+  height: 112px;
 }
 
-.banner {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.crest__img {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
-  border-radius: 6px;
-  border: 1px solid var(--border-hover);
-  background: var(--c1);
+  border-radius: 50%;
+  background: var(--clan);
+  border: 3px solid var(--bg-card);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--clan) 70%, transparent);
   color: #fff;
-  font-size: 40px;
+  font-family: var(--font-display);
+  font-size: 44px;
   font-weight: 800;
 }
 
-.banner-img {
-  position: absolute;
-  inset: 0;
+.crest__img img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
 }
 
 .crest__emblem {
   position: absolute;
-  right: -8px;
-  bottom: -8px;
+  right: 0;
+  bottom: 0;
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
   background: var(--bg-card);
-  border: 1px solid var(--border-hover);
+  border: 2px solid color-mix(in srgb, var(--clan) 70%, transparent);
   font-size: 17px;
   line-height: 1;
 }
 
 /* ---------- Заголовок ---------- */
 
-.clan-title {
-  flex: 1;
+.hero__title {
   min-width: 0;
 }
 
-.hero-chips {
+.hero__tag {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--accent-light);
+  letter-spacing: 0.02em;
+}
+
+.hero__title h1 {
+  margin: 2px 0 6px;
+  font-family: var(--font-display);
+  font-size: clamp(26px, 4vw, 40px);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.hero__motto {
+  margin: 0 0 12px;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hero__chips {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 10px;
 }
 
 .chip {
-  padding: 3px 8px;
-  border-radius: 4px;
+  padding: 4px 9px;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
   color: var(--text-dim);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .chip--level {
   color: #fbbf24;
   border-color: rgba(251, 191, 36, 0.3);
   background: rgba(251, 191, 36, 0.08);
+  font-weight: 800;
 }
 
 .chip--open {
   color: #4ade80;
   border-color: rgba(74, 222, 128, 0.3);
-  background: rgba(74, 222, 128, 0.08);
+  background: rgba(74, 222, 128, 0.07);
 }
 
 .chip--closed {
   color: #f87171;
   border-color: rgba(248, 113, 113, 0.3);
-  background: rgba(248, 113, 113, 0.08);
+  background: rgba(248, 113, 113, 0.07);
 }
 
 .chip--fee {
   color: #fbbf24;
 }
 
-.clan-title h1 {
-  margin: 0 0 8px;
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: -0.5px;
+/* ---------- Опыт: сегментированная полоса как XP в Minecraft ---------- */
+
+.xp {
+  margin-top: 22px;
 }
 
-.tag {
-  color: var(--accent-light);
-  margin-right: 4px;
-}
-
-.hero-motto {
-  margin: 0 0 8px;
-  color: var(--text);
-  font-size: 14px;
-  font-style: italic;
-}
-
-.hero-desc {
-  margin: 0 0 10px;
-  max-width: 64ch;
-  color: var(--text-dim);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.hero-recruit {
-  display: inline-block;
-  margin: 0;
-  padding: 5px 10px;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--text);
-  font-size: 13px;
-}
-
-.min-rating-note {
-  margin: 8px 0 0;
-  color: #fbbf24;
-  font-size: 12px;
-}
-
-/* ---------- Статистика ---------- */
-
-.hero-stats {
+.xp__row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 28px;
-  padding-top: 18px;
-  border-top: 1px solid var(--border);
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  min-width: 70px;
-}
-
-.stat b {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--text);
-  letter-spacing: -0.5px;
-}
-
-.stat b.power { color: #a78bfa; }
-.stat b.win { color: #4ade80; }
-.stat b.loss { color: #f87171; }
-
-.stat span {
-  font-size: 12px;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
   color: var(--text-muted);
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
-.rate-bar {
-  display: block;
-  width: 100%;
-  height: 3px;
-  margin-top: 6px;
+.xp__bar {
+  position: relative;
+  height: 8px;
   overflow: hidden;
   border-radius: 2px;
-  background: var(--border);
+  background: #0b0a0f;
+  border: 1px solid var(--border);
 }
 
-.rate-bar u {
+.xp__bar i {
   display: block;
   height: 100%;
-  text-decoration: none;
-  background: #4ade80;
+  background: linear-gradient(180deg, #a3e635, #4d7c0f);
+  transition: width 0.6s ease;
 }
 
-/* ---------- Низ шапки: соцсети и действия ---------- */
-
-.hero-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
+/* Деления поверх полосы */
+.xp__bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(90deg, transparent calc(100% - 2px), #0b0a0f 0);
+  background-size: 5.55% 100%;
+  pointer-events: none;
 }
 
-.clan-socials {
+/* ---------- Действия ---------- */
+
+.hero__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  padding: 18px 0 20px;
 }
 
-.social-link {
+.btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 12px;
-  color: var(--text-dim);
-  background: rgba(255, 255, 255, 0.03);
+  padding: 10px 16px;
   border: 1px solid var(--border);
-  border-radius: 4px;
-  font-size: 12px;
+  border-radius: var(--radius, 6px);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
   font-weight: 700;
   text-decoration: none;
-  transition: all 0.2s ease;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
 }
 
-.social-link:hover {
-  transform: translateY(-1px);
+.btn:hover {
+  border-color: var(--border-hover);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.btn--main {
+  border-color: var(--accent);
+  background: var(--accent);
   color: #fff;
 }
 
-.social-link.discord:hover { background: #5865f2; border-color: #5865f2; }
-.social-link.telegram:hover { background: #229ed9; border-color: #229ed9; }
-.social-link.youtube:hover { background: #ff0000; border-color: #ff0000; }
-.social-link.vk:hover { background: #0077ff; border-color: #0077ff; }
-.social-link.website:hover { background: var(--accent); border-color: var(--accent); }
-
-.social-label {
-  line-height: 1;
+.btn--main:hover {
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
 }
 
-/* === ACTIONS === */
+.btn--wait {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.3);
+  background: rgba(251, 191, 36, 0.08);
+  cursor: default;
+}
 
-.header-actions {
-  display: flex;
-  flex-wrap: wrap;
+.btn--ghost {
+  background: transparent;
+  color: var(--text-dim);
+}
+
+.btn--ghost:hover {
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+/* =========================================================
+   ПЛИТКИ
+   ========================================================= */
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
-  margin-left: auto;
+  margin: 14px 0;
 }
 
-.btn-apply,
-.btn-leave {
-  padding: 11px 20px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  border: 0;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.btn-settings {
-  padding: 11px 20px;
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.04);
+.tile {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  align-items: center;
+  padding: 14px;
   border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
+  border-radius: var(--radius, 6px);
+  background: var(--bg-card);
 }
 
-.btn-settings:hover {
-  border-color: var(--accent);
+.tile__icon {
+  grid-row: 1 / 3;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius, 6px);
+  background: var(--accent-soft);
   color: var(--accent-light);
 }
 
-.btn-apply {
-  color: #fff;
-  text-decoration: none;
-  background: var(--accent);
+.tile b {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
-.btn-apply:hover {
-  background: var(--accent-light);
-  transform: translateY(-1px);
+.tile b small {
+  color: var(--text-muted);
+  font-size: 12px;
 }
 
-.btn-leave {
-  color: var(--text-dim);
-  background: transparent;
-  border: 1px solid var(--border);
+.tile b em {
+  font-style: normal;
 }
 
-.btn-leave:hover {
-  color: #f87171;
-  border-color: rgba(239, 68, 68, 0.3);
-  background: rgba(239, 68, 68, 0.05);
-}
-
-.applied {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 11px 20px;
-  color: #fbbf24;
-  background: rgba(251, 191, 36, 0.1);
-  border: 1px solid rgba(251, 191, 36, 0.2);
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 700;
+.tile span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-/* === TABS === */
+.tile b .tile__sep {
+  margin: 0 4px;
+}
+
+.win { color: #4ade80; }
+.loss { color: #f87171; }
+
+/* =========================================================
+   ВКЛАДКИ
+   ========================================================= */
 
 .tabs {
   display: flex;
-  gap: 6px;
-  margin-bottom: 20px;
+  gap: 4px;
+  margin-bottom: 16px;
   border-bottom: 1px solid var(--border);
   overflow-x: auto;
   scrollbar-width: none;
@@ -382,19 +409,20 @@
 }
 
 .tabs button {
-  position: relative;
   display: inline-flex;
   align-items: center;
-  padding: 12px 20px;
+  gap: 7px;
+  padding: 12px 16px;
   color: var(--text-dim);
   background: transparent;
   border: 0;
   border-bottom: 2px solid transparent;
-  cursor: pointer;
-  font-weight: 600;
+  font: inherit;
   font-size: 14px;
+  font-weight: 600;
   white-space: nowrap;
-  transition: color 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
 }
 
 .tabs button:hover {
@@ -403,71 +431,345 @@
 
 .tabs button.active {
   color: var(--text);
-  border-bottom-color: var(--accent);
+  border-bottom-color: var(--clan);
 }
 
-.tab-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.tabs__count {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.tabs__badge {
   min-width: 18px;
-  height: 18px;
-  margin-left: 8px;
-  padding: 0 5px;
+  padding: 1px 5px;
+  border-radius: 4px;
   background: #ef4444;
   color: #fff;
-  border-radius: 4px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
-  line-height: 1;
+  text-align: center;
 }
 
-/* === АДАПТИВ === */
+/* =========================================================
+   БОКОВАЯ КОЛОНКА
+   ========================================================= */
 
-@media (max-width: 700px) {
-  .clan-header {
-    padding: 20px;
-    gap: 16px;
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 76px;
+}
+
+.card {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 6px);
+  background: var(--bg-card);
+}
+
+.card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.card__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.card__head .card__title {
+  margin: 0;
+}
+
+.count {
+  padding: 1px 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.card__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-light);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.card__more {
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.card__btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 6px);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--accent-light);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ---------- Лидер ---------- */
+
+.leader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 6px);
+  background: rgba(255, 255, 255, 0.02);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.2s;
+}
+
+.leader:hover {
+  border-color: var(--border-hover);
+}
+
+.leader__info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.leader__info b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leader__info small {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.leader__crown {
+  color: #fbbf24;
+}
+
+.dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.dot--on {
+  background: #4ade80;
+}
+
+/* ---------- Состав ---------- */
+
+.roster {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.roster__item {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 6px);
+  background: rgba(255, 255, 255, 0.02);
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.roster__item:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-hover);
+}
+
+.roster__item--leader {
+  border-color: rgba(251, 191, 36, 0.55);
+}
+
+.roster__item--officer {
+  border-color: color-mix(in srgb, var(--clan) 60%, transparent);
+}
+
+.roster__online {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #4ade80;
+  border: 2px solid var(--bg-card);
+}
+
+/* ---------- Трофеи ---------- */
+
+.trophies {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trophy {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 6px);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.trophy__icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: var(--radius, 6px);
+  background: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+}
+
+.trophy__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.trophy__text b {
+  font-size: 13px;
+}
+
+.trophy__text small {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.trophy__ok {
+  color: #4ade80;
+}
+
+.trophy--locked {
+  opacity: 0.45;
+}
+
+.trophy--locked .trophy__icon {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+}
+
+/* ---------- Соцсети ---------- */
+
+.socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.social {
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.social:hover {
+  color: #fff;
+}
+
+.social.discord:hover { background: #5865f2; border-color: #5865f2; }
+.social.telegram:hover { background: #229ed9; border-color: #229ed9; }
+.social.youtube:hover { background: #ff0000; border-color: #ff0000; }
+.social.vk:hover { background: #0077ff; border-color: #0077ff; }
+.social.website:hover { background: var(--accent); border-color: var(--accent); }
+
+/* =========================================================
+   АДАПТИВ
+   ========================================================= */
+
+@media (max-width: 1020px) {
+  .clan-layout {
+    grid-template-columns: 1fr;
   }
 
-  .hero-main {
+  .side {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .hero {
+    padding: 18px 16px 0;
+  }
+
+  .hero__body {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
   }
 
   .crest {
-    width: 72px;
-    height: 72px;
+    width: 84px;
+    height: 84px;
   }
 
-  .banner {
-    font-size: 30px;
+  .crest__img {
+    font-size: 32px;
   }
 
-  .clan-title h1 {
-    font-size: 20px;
+  .hero__watermark {
+    font-size: 110px;
   }
 
-  .hero-stats {
-    gap: 18px;
-  }
-
-  .header-actions {
-    width: 100%;
-    margin-left: 0;
-  }
-
-  .btn-apply,
-  .btn-leave,
-  .applied {
-    flex: 1;
-    justify-content: center;
-    text-align: center;
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .tabs button {
-    padding: 10px 14px;
+    padding: 10px 12px;
     font-size: 13px;
   }
 }

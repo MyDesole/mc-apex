@@ -1,0 +1,111 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.toolbar__search {
+  flex: 1 1 200px;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 6px);
+  background: var(--bg-card);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.toolbar__search:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.toolbar__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.toolbar__chips button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 6px);
+  background: var(--bg-card);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toolbar__chips button b {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.toolbar__chips button.on {
+  border-color: var(--clan, var(--accent));
+  color: var(--text);
+}
+
+.toolbar__chips .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
+}
+
+.toolbar__sort {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 6px);
+  background: var(--bg-card);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.empty {
+  padding: 18px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius, 6px);
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.member-head {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.member-online {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #4ade80;
+  border: 2px solid var(--bg-card);
+}
+
+.member-title {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent-light);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.member-card--leader {
+  border-color: rgba(251, 191, 36, 0.35) !important;
+}

@@ -690,10 +690,16 @@
 
 .avatar-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
   gap: 5px;
 
   margin-top: 7px;
+}
+
+/* Кнопки под аватаром — одной ширины, столбиком, а не «лесенкой» */
+.avatar-actions .small-action {
+  width: 100%;
 }
 
 .small-action {

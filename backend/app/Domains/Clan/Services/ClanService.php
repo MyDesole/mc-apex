@@ -164,9 +164,10 @@ class ClanService
     public function view(Clan $clan, ?User $me): array
     {
         $clan->load([
-            'leader:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,name_icon',
+            // minecraft_username и custom_skin_at — для голов скинов на странице клана
+            'leader:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,name_icon,minecraft_username,custom_skin_at,rating_points,last_seen_at',
             // rating_points и role — для вклада участника (ClanMember::contribution)
-            'members.user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,name_icon,rating_points,role',
+            'members.user:id,username,avatar,tier,bridge_primary,bridge_rank_id,profile_mode,name_effect,chat_bubble,profile_title,name_icon,rating_points,role,minecraft_username,custom_skin_at,last_seen_at',
             'events.author:id,username,avatar',
         ]);
 
@@ -178,6 +179,8 @@ class ClanService
             'members_count' => $clan->members()->count(),
             // Вместимость с учётом уровня: по ней фронтенд прячет «Подать заявку» в заполненном клане
             'member_cap' => \App\Domains\Clan\Support\ClanLevel::memberCap($clan),
+            // Витрина: уровень, место в рейтинге, форма в войнах, активность, трофеи
+            'showcase' => app(ClanShowcaseService::class)->build($clan),
             'incoming_wars' => $this->wars($clan, 'opponent_clan_id'),
             'outgoing_wars' => $this->wars($clan, 'challenger_clan_id'),
         ];

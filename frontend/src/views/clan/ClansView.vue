@@ -125,8 +125,35 @@
         v-else-if="clans.length"
         class="clans-list"
     >
+      <!-- Пьедестал: три сильнейших клана крупными карточками -->
+      <div v-if="showPodium" class="podium">
+        <RouterLink
+            v-for="(clan, i) in podium"
+            :key="clan.id"
+            :to="`/clans/${clan.id}`"
+            class="podium__card"
+            :class="`podium__card--${i + 1}`"
+            :style="{ '--clan': clan.style?.theme?.from || clan.banner_color || '#7c3aed' }"
+        >
+          <span class="podium__place">{{ i + 1 }}</span>
+          <span class="podium__crest">
+            <img v-if="clan.avatar_url" :src="clan.avatar_url" :alt="clan.name" />
+            <template v-else>{{ clan.tag?.charAt(0) }}</template>
+            <i v-if="clan.style?.emblem" class="podium__emblem">{{ clan.style.emblem.glyph }}</i>
+          </span>
+          <span class="podium__tag" :style="clan.style?.tag_color ? { color: clan.style.tag_color } : null">[{{ clan.tag }}]</span>
+          <strong class="podium__name">{{ clan.name }}</strong>
+          <span v-if="clan.style?.motto" class="podium__motto">{{ clan.style.motto }}</span>
+          <span class="podium__stats">
+            <span><b>{{ clan.power || 0 }}</b>сила</span>
+            <span><b>{{ clan.members_count || 0 }}</b>состав</span>
+            <span><b>{{ clan.level || 1 }}</b>уровень</span>
+          </span>
+        </RouterLink>
+      </div>
+
       <article
-          v-for="clan in clans"
+          v-for="clan in listed"
           :key="clan.id"
           class="clan-row"
           :class="rowClasses(clan)"
@@ -155,6 +182,9 @@
              ======================================================== -->
 
         <div class="clan-avatar-wrap">
+          <!-- Место в текущей сортировке -->
+          <span class="clan-pos" :class="{ 'clan-pos--top': clan.position <= 3 }">{{ clan.position }}</span>
+
           <div class="clan-avatar">
             <img
                 v-if="clan.avatar_url"
@@ -362,6 +392,11 @@ const isFiltered = computed(() =>
 )
 
 const hasMore = computed(() => page.value < lastPage.value)
+
+// Пьедестал — только в «чистом» рейтинге по силе: с фильтрами тройка лидеров не та
+const showPodium = computed(() => !isFiltered.value && filters.sort === 'power' && clans.value.length >= 3)
+const podium = computed(() => (showPodium.value ? clans.value.slice(0, 3) : []))
+const listed = computed(() => (showPodium.value ? clans.value.slice(3) : clans.value))
 
 function queryParams(pageNumber) {
   const params = { page: pageNumber, sort: filters.sort }
@@ -627,6 +662,7 @@ const rowStyle = (clan) => {
 
 <style scoped>
 @import "@/views/clan/ClansView.css";
+@import "@/views/clan/ClansPodium.css";
 
 /* ---------- Поиск и фильтры ---------- */
 
