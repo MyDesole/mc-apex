@@ -14,7 +14,6 @@ import TabTransition from '@/components/core/TabTransition.vue'
 import ClanEditModal from "@/components/clan/dialogs/ClanEditModal.vue";
 import PageState from '@/components/core/PageState.vue'
 import ShareToChatButton from '@/components/chat/ShareToChatButton.vue'
-import ClanStyleBar from '@/components/clan/ClanStyleBar.vue'
 import ClanInviteDialog from '@/components/clan/dialogs/ClanInviteDialog.vue'
 
 const route = useRoute()
@@ -28,6 +27,24 @@ const showEdit = ref(false)
 const showInvite = ref(false)
 
 const clan = computed(() => data.value?.clan)
+
+// Цвета шапки: тема клана, а без неё — цвет баннера
+const heroVars = computed(() => {
+  const t = clan.value?.style?.theme
+  const base = clan.value?.banner_color || '#7c3aed'
+
+  return {
+    '--c1': t?.from || base,
+    '--c2': t?.to || '#06b6d4',
+  }
+})
+
+const winrate = computed(() => {
+  const w = Number(clan.value?.wins || 0)
+  const l = Number(clan.value?.losses || 0)
+
+  return w + l === 0 ? 0 : Math.round((w / (w + l)) * 100)
+})
 const isMember = computed(() => data.value?.is_member)
 const isLeader = computed(() => clan.value?.leader_id === auth.user?.id)
 
@@ -119,62 +136,92 @@ onMounted(load)
     <!-- HEADER -->
     <header
         class="clan-header"
-        :style="clan.cover_url ? {
-        backgroundImage: `linear-gradient(rgba(10,10,15,0.75), rgba(10,10,15,0.9)), url(${clan.cover_url})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-    } : {}"
+        :class="{ 'clan-header--cover': clan.cover_url }"
+        :style="heroVars"
     >
+      <!-- Фон: обложка клана или градиент темы, поверх — свечение и сетка -->
       <div
-          class="banner"
-          :style="{
-            background: clan.banner_color,
-            boxShadow: `0 8px 30px ${clan.banner_color}50`,
-        }"
-      >
-        <img
-            v-if="clan.avatar_url"
-            :src="clan.avatar_url"
-            alt=""
-            class="banner-img"
-        />
-        <template v-else>{{ clan.tag?.charAt(0) }}</template>
+          class="hero-bg"
+          :style="clan.cover_url ? { backgroundImage: `url(${clan.cover_url})` } : null"
+          aria-hidden="true"
+      />
+      <div class="hero-shade" aria-hidden="true" />
+      <div class="hero-grid" aria-hidden="true" />
+      <div class="hero-orb hero-orb--a" aria-hidden="true" />
+      <div class="hero-orb hero-orb--b" aria-hidden="true" />
+
+      <div class="hero-main">
+        <div class="crest">
+          <span class="crest__ring" aria-hidden="true" />
+          <div class="banner">
+            <img
+                v-if="clan.avatar_url"
+                :src="clan.avatar_url"
+                alt=""
+                class="banner-img"
+            />
+            <template v-else>{{ clan.tag?.charAt(0) }}</template>
+          </div>
+          <span v-if="clan.style?.emblem" class="crest__emblem" :title="clan.style.emblem.title">
+            {{ clan.style.emblem.glyph }}
+          </span>
+        </div>
+
+        <div class="clan-title">
+          <div class="hero-chips">
+            <span class="chip chip--level">Уровень {{ clan.level || 1 }}</span>
+            <span class="chip" :class="clan.is_open ? 'chip--open' : 'chip--closed'">
+              {{ clan.is_open ? 'Открытый набор' : 'Закрытый набор' }}
+            </span>
+            <span v-if="clan.entry_fee > 0" class="chip chip--fee">Вход: {{ clan.entry_fee }} ₳</span>
+          </div>
+
+          <h1>
+            <span class="tag" :style="clan.style?.tag_color ? { color: clan.style.tag_color } : null">[{{ clan.tag }}]</span>
+            {{ clan.name }}
+          </h1>
+
+          <p v-if="clan.style?.motto" class="hero-motto">«{{ clan.style.motto }}»</p>
+          <p v-if="clan.description" class="hero-desc">{{ clan.description }}</p>
+
+          <!-- «Кого ищем» -->
+          <p v-if="clan.style?.recruit_text" class="hero-recruit">
+            🔎 {{ clan.style.recruit_text }}
+          </p>
+
+          <!-- Порог набора: заявителю видно до подачи -->
+          <p v-if="!isMember && clan.min_rating > 0" class="min-rating-note">
+            Заявки принимаются от {{ clan.min_rating }} очков рейтинга. По приглашению — без порога.
+          </p>
+        </div>
       </div>
 
-      <div class="clan-title">
-        <h1>
-          <span class="tag" :style="clan.style?.tag_color ? { color: clan.style.tag_color } : null">[{{ clan.tag }}]</span>
-          {{ clan.name }}
-        </h1>
-
-        <p v-if="clan.description">{{ clan.description }}</p>
-
-        <!-- Эмблема, девиз и «кого ищем» -->
-        <ClanStyleBar :clan="clan" />
-
-        <!-- Порог набора: заявителю видно до подачи -->
-        <p v-if="!isMember && clan.min_rating > 0" class="min-rating-note">
-          Заявки принимаются от {{ clan.min_rating }} очков рейтинга. По приглашению — без порога.
-        </p>
-
-        <div class="stats">
-          <div class="stat">
-            <b class="power">{{ clan.power }}</b>
-            <span>сила</span>
-          </div>
-          <div class="stat">
-            <b>{{ data.members_count }}</b>
-            <span>участников</span>
-          </div>
-          <div class="stat">
-            <b class="win">{{ clan.wins }}</b>
-            <span>побед</span>
-          </div>
-          <div class="stat">
-            <b class="loss">{{ clan.losses }}</b>
-            <span>поражений</span>
-          </div>
+      <div class="hero-stats">
+        <div class="stat stat--power">
+          <b class="power">{{ clan.power }}</b>
+          <span>сила</span>
         </div>
+        <div class="stat">
+          <b>{{ data.members_count }}</b>
+          <span>участников</span>
+        </div>
+        <div class="stat">
+          <b class="win">{{ clan.wins }}</b>
+          <span>побед</span>
+        </div>
+        <div class="stat">
+          <b class="loss">{{ clan.losses }}</b>
+          <span>поражений</span>
+        </div>
+        <div class="stat stat--rate">
+          <b>{{ winrate }}%</b>
+          <span>винрейт</span>
+          <i class="rate-bar"><u :style="{ width: `${winrate}%` }" /></i>
+        </div>
+      </div>
+
+      <div class="hero-bottom">
+        <div class="hero-bottom__left">
 
         <div v-if="hasSocials" class="clan-socials">
           <!-- «@канал» и ссылки без https превращаем в рабочие ссылки -->
@@ -240,6 +287,7 @@ onMounted(load)
         >
           Покинуть клан
         </button>
+      </div>
       </div>
     </header>
 

@@ -26,6 +26,7 @@ const border = computed(() => style.value?.theme?.from ?? 'rgba(255, 255, 255, 0
 <template>
   <div v-if="visible" class="cstyle" :class="{ 'cstyle--compact': compact }" :style="{ background: gradient, borderColor: border }">
     <span v-if="style.emblem" class="cstyle__emblem" :title="style.emblem.title">{{ style.emblem.glyph }}</span>
+    <span v-if="style.emblem && compact && !style.motto" class="cstyle__label">{{ style.emblem.title }}</span>
     <span v-if="style.motto" class="cstyle__motto">«{{ style.motto }}»</span>
     <span v-if="!compact && style.recruit_text" class="cstyle__recruit">
       🔎 {{ style.recruit_text }}
@@ -47,9 +48,22 @@ const border = computed(() => style.value?.theme?.from ?? 'rgba(255, 255, 255, 0
   line-height: 1.35;
 }
 
+/* В списке — компактная «плашка» по размеру содержимого, а не полоса на всю ширину */
 .cstyle--compact {
-  padding: 4px 9px;
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  margin: 2px 0;
+  padding: 3px 10px;
+  gap: 6px;
   font-size: 12px;
+  border-radius: 999px;
+}
+
+.cstyle__label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #e6e6f4;
 }
 
 .cstyle__emblem {
@@ -58,7 +72,7 @@ const border = computed(() => style.value?.theme?.from ?? 'rgba(255, 255, 255, 0
 }
 
 .cstyle--compact .cstyle__emblem {
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .cstyle__motto {
