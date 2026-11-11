@@ -63,21 +63,15 @@ class TierTestChatService
 
         $query = TierTestMessage::query()
             ->where('tier_test_id', $test->id)
-            ->with('user:id,username,avatar')
-            ->orderBy('id');
+            ->with('user:id,username,avatar');
 
         if ($afterId > 0) {
-            $query->where('id', '>', $afterId);
+            $messages = $query->where('id', '>', $afterId)->orderBy('id')->get();
         } else {
-            // Последние сообщения, но в хронологическом порядке
-            $query->whereIn('id', TierTestMessage::query()
-                ->where('tier_test_id', $test->id)
-                ->orderByDesc('id')
-                ->limit(self::HISTORY_LIMIT)
-                ->select('id'));
+            // Последние сообщения, но в хронологическом порядке. Подзапрос с LIMIT внутри IN
+            // MySQL не поддерживает — берём «с конца» и разворачиваем в PHP.
+            $messages = $query->orderByDesc('id')->limit(self::HISTORY_LIMIT)->get()->reverse()->values();
         }
-
-        $messages = $query->get();
 
         // Открыв чат, участник «прочитал» всё, что написал собеседник
         if ($role !== 'observer') {
