@@ -60,6 +60,8 @@
 
 body {
   min-height: 100vh;
+  /* Длинные ники, названия и ссылки переносятся, а не раздвигают страницу */
+  overflow-wrap: break-word;
   color: var(--color-text);
   background: var(--color-background);
   transition:

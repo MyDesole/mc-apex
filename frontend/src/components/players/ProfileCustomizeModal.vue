@@ -1,4 +1,5 @@
 <script setup>
+import { notifyError } from '@/utils/toast.js'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 import MinecraftLinkBlock from '@/components/minecraft/MinecraftLinkBlock.vue'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
@@ -205,6 +206,7 @@ async function loadAchievements() {
     myAchievements.value = (data.achievements ?? []).filter((a) => a.earned)
   } catch (e) {
     console.error(e)
+    notifyError(e, 'Не удалось загрузить оформление. Закройте окно и откройте снова.')
   } finally {
     achievementsLoading.value = false
   }
@@ -228,6 +230,7 @@ async function loadOwned() {
     )
   } catch (e) {
     console.error('Не удалось загрузить инвентарь косметики', e)
+    notifyError(e, 'Не удалось загрузить оформление. Закройте окно и откройте снова.')
   } finally {
     shopLoading.value = false
   }
@@ -243,6 +246,7 @@ async function loadOwned() {
     )
   } catch (e) {
     console.error('Не удалось загрузить каталог', e)
+    notifyError(e, 'Не удалось загрузить оформление. Закройте окно и откройте снова.')
   }
 }
 

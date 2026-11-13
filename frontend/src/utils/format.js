@@ -50,6 +50,24 @@ export function formatDayMonth(value) {
   })
 }
 
+/**
+ * Форма слова по числу: plural(1, 'участник', 'участника', 'участников').
+ *
+ * @param {number} n число
+ * @param {string} one форма для 1, 21, 31…
+ * @param {string} few форма для 2–4, 22–24…
+ * @param {string} many форма для 0, 5–20, 25–30…
+ */
+export function plural(n, one, few, many) {
+  const mod10 = Math.abs(n) % 10
+  const mod100 = Math.abs(n) % 100
+
+  if (mod10 === 1 && mod100 !== 11) return one
+  if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return few
+
+  return many
+}
+
 /** Количество дней словами: 1 день, 2 дня, 5 дней */
 export function pluralDays(n) {
   const mod10 = n % 10

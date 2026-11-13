@@ -114,6 +114,9 @@ async function load() {
 
   try {
     await refresh()
+  } catch {
+    // Не в клане (или клан распущен) — здесь показывать нечего
+    router.replace('/clans')
   } finally {
     loading.value = false
   }

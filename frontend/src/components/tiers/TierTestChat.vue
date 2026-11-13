@@ -80,7 +80,7 @@ async function send() {
 
     scrollDown()
   } catch (e) {
-    error.value = e.response?.data?.message || e.message || 'Не отправилось.'
+    error.value = e.message || 'Сообщение не отправилось. Попробуйте ещё раз.'
     // Правила могли поменяться (тестер отпустил заявку) — обновим состояние
     load(false)
   } finally {

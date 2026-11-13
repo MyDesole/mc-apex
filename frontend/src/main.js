@@ -26,23 +26,51 @@ import { useAuthStore } from '@/stores/core/auth.js'
 import { initSentry, setSentryUser } from '@/sentry.js'
 import { unlockSoundOnFirstGesture } from '@/utils/sound.js'
 import { watch } from 'vue'
+import { isApiError, notifyError } from '@/utils/toast.js'
 
 const app = createApp(App)
 
 initSentry(app, router)
 
+/*
+ * Страховка от «молчаливых» сбоев. Если страница не обработала ошибку
+ * сама, игрок всё равно узнаёт, что случилось, а не смотрит на пустой
+ * блок или кнопку, которая «не нажимается».
+ * Ставится после Sentry: его обработчик сохраняем и вызываем первым.
+ */
+const reportError = app.config.errorHandler
+
+app.config.errorHandler = (error, instance, info) => {
+    if (reportError) reportError(error, instance, info)
+    else console.error(error)
+
+    notifyError(error)
+}
+
+window.addEventListener('unhandledrejection', (event) => {
+    // Только ответы API: у них готовый понятный текст. Чужие промисы
+    // (расширения браузера, плеер) игроку показывать незачем.
+    if (isApiError(event.reason)) notifyError(event.reason)
+})
+
 const pinia = createPinia()
 
 app.use(pinia)
-app.use(router)
 
 const auth = useAuthStore(pinia)
 
-await auth.fetchMe()
+// Кто вошёл, выясняется один раз; проверка доступа ждёт ответа
+const authReady = auth.fetchMe()
 
-watch(() => auth.user?.id, () => setSentryUser(auth.user), { immediate: true })
+/*
+ * Проверка доступа ставится ДО app.use(router): роутер начинает первый
+ * переход сразу при подключении. Раньше она добавлялась после ожидания
+ * fetchMe и первый переход пропускала: по прямой ссылке гость открывал
+ * /admin и /profile (пустые страницы с ошибками), а вошедший — /register.
+ */
+router.beforeEach(async (to) => {
+    await authReady
 
-router.beforeEach((to) => {
     if (to.meta.auth && !auth.isAuthenticated) {
         return { name: 'login', query: { redirect: to.fullPath } }
     }
@@ -59,6 +87,12 @@ router.beforeEach((to) => {
         return { name: 'home' }
     }
 })
+
+app.use(router)
+
+await authReady
+
+watch(() => auth.user?.id, () => setSentryUser(auth.user), { immediate: true })
 
 app.mount('#app')
 

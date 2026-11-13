@@ -56,5 +56,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(function ($request, $e) {
             return $request->is('api/*') || $request->expectsJson();
         });
+
+        // Ошибки API — по-русски и без внутренностей (имён классов, «Server Error»)
+        $exceptions->render(fn (\Throwable $e, \Illuminate\Http\Request $request) => \App\Http\Responses\ApiErrorRenderer::render($e, $request));
     })
     ->create();

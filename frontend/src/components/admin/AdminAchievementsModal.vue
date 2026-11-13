@@ -1,4 +1,5 @@
 <script setup>
+import { notifyError } from '@/utils/toast.js'
 import { computed, onMounted, ref } from 'vue'
 import { adminApi } from '@/services/core/admin.js'
 import AchievementBadge from '@/components/achievements/AchievementBadge.vue'
@@ -46,6 +47,7 @@ async function load() {
   } catch (e) {
     error.value = e?.message || 'Не удалось загрузить ачивки'
     console.error(e)
+    notifyError(e, 'Не удалось загрузить ачивки игрока.')
   } finally {
     loading.value = false
   }

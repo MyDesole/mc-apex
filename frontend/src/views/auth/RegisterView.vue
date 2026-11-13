@@ -1,4 +1,5 @@
 <script setup>
+import { formError } from '@/services/core/errors.js'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/core/auth.js'
@@ -55,7 +56,7 @@ async function sendCode() {
     step.value = 2
   } catch (e) {
     fieldErrors.value = e.errors || {}
-    error.value = e.message || 'Не удалось отправить код.'
+    error.value = formError(e, ['email', 'code', 'username', 'password'], 'Не удалось отправить код.')
   }
 }
 
@@ -69,7 +70,7 @@ async function verifyCode() {
     step.value = 3
   } catch (e) {
     fieldErrors.value = e.errors || {}
-    error.value = e.message || 'Не удалось подтвердить код.'
+    error.value = formError(e, ['email', 'code', 'username', 'password'], 'Не удалось подтвердить код.')
   }
 }
 
@@ -87,7 +88,7 @@ async function submit() {
     router.push('/')
   } catch (e) {
     fieldErrors.value = e.errors || {}
-    error.value = e.message || 'Не удалось создать аккаунт.'
+    error.value = formError(e, ['email', 'code', 'username', 'password'], 'Не удалось создать аккаунт.')
   }
 }
 

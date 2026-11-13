@@ -343,6 +343,7 @@
 </template>
 
 <script setup>
+import { notifyError } from '@/utils/toast.js'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { clansApi } from '@/services/clan/clans.js'
@@ -525,9 +526,8 @@ const loadClans = async () => {
     console.error('Failed to load clans:', err)
 
     error.value =
-        err?.response?.data?.message ||
         err?.message ||
-        'Произошла ошибка при загрузке.'
+        'Не удалось загрузить кланы. Обновите страницу.'
   } finally {
     if (id === requestId) loading.value = false
   }
@@ -550,6 +550,7 @@ async function loadMore() {
     lastPage.value = response?.last_page ?? lastPage.value
   } catch (err) {
     console.error('Failed to load more clans:', err)
+    notifyError(err, 'Не удалось загрузить ещё кланы. Попробуйте ещё раз.')
   } finally {
     loadingMore.value = false
   }

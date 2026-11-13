@@ -1,5 +1,7 @@
 import { isUpdateStatus, startMaintenance } from '@/services/core/maintenance.js'
 
+import { NETWORK_ERROR, humanError } from '@/services/core/errors.js'
+
 const API_URL = '/api'
 
 function getCookie(name) {
@@ -69,11 +71,21 @@ async function request(url, options = {}) {
     // поэтому mode, cursor и фильтры до сервера не доходили
     const { params, ...fetchOptions } = options
 
-    const response = await fetch(`${API_URL}${url}${buildQuery(params)}`, {
-        credentials: 'include',
-        ...fetchOptions,
-        headers,
-    })
+    let response
+
+    try {
+        response = await fetch(`${API_URL}${url}${buildQuery(params)}`, {
+            credentials: 'include',
+            ...fetchOptions,
+            headers,
+        })
+    } catch (e) {
+        // Отменённый запрос — не ошибка сети: пусть вызывающий сам решит
+        if (e?.name === 'AbortError') throw e
+
+        // fetch бросает «Failed to fetch» — игроку это ни о чём не говорит
+        throw { status: 0, message: NETWORK_ERROR, errors: {}, data: {} }
+    }
 
     const data = await response.json().catch(() => ({}))
 
@@ -83,7 +95,7 @@ async function request(url, options = {}) {
 
         throw {
             status: response.status,
-            message: data.message || 'Произошла ошибка.',
+            message: humanError(response.status, data),
             errors: data.errors || {},
             // Весь ответ: в нём бывают подсказки (например, сколько не хватает монет)
             data,

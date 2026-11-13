@@ -693,6 +693,8 @@ function fmt(n) {
 
 @media (max-width: 640px) {
   .gc-dock { right: 10px; bottom: 78px; }
+  /* Плашка «Пройди тир-тест» занимает низ экрана: кнопка встаёт над ней */
+  body:has(.tier-banner) .gc-dock:not(.is-open) { bottom: 164px; }
   /* Над нижней кнопкой сайта по центру */
   .gc-tip--sheet { bottom: 70px; }
   .gc-dock.is-open { left: 10px; }

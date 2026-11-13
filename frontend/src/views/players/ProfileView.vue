@@ -1,4 +1,5 @@
 <script setup>
+import { notifyError } from '@/utils/toast.js'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -124,6 +125,7 @@ async function loadRecommendations() {
         'Не удалось загрузить профиль:',
         e,
     )
+    notifyError(e, 'Не удалось загрузить профиль. Обновите страницу.')
 
     recommendations.value = []
   }

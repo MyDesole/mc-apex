@@ -1,4 +1,5 @@
 <script setup>
+import { notifyError } from '@/utils/toast.js'
 import { rankLabel } from '@/utils/playerStyling.js'
 import PageLoader from '@/components/core/PageLoader.vue'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
@@ -50,6 +51,7 @@ async function load() {
     members.value = Array.isArray(data?.clan?.members) ? data.clan.members : []
   } catch (e) {
     console.error('Не удалось загрузить участников клана:', e)
+    notifyError(e, 'Не удалось загрузить участников клана. Обновите страницу.')
     members.value = []
   } finally {
     loading.value = false

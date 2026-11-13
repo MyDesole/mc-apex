@@ -35,20 +35,22 @@ async function loadPlayer() {
   try {
     const params = { page: page.value }
     if (kit.value) params.kit = kit.value
-    data.value = (await duelsApi.player(playerId.value, params)).data
+    data.value = await duelsApi.player(playerId.value, params)
   } catch (e) {
-    error.value = e.response?.data?.message || 'Не удалось загрузить дуэли.'
+    error.value = e.status === 404 ? 'Игрок не найден. Проверьте ссылку.' : (e.message || 'Не удалось загрузить дуэли. Обновите страницу.')
   } finally {
     loading.value = false
   }
 }
 
 async function loadClans() {
-  clans.value = (await duelsApi.clans()).data.clans
+  clans.value = (await duelsApi.clans()).clans ?? []
 }
 
 async function loadOnline() {
-  online.value = (await duelsApi.online()).data
+  const fresh = await duelsApi.online()
+
+  online.value = { count: fresh.count ?? 0, players: fresh.players ?? [] }
 }
 
 function pickKit(value) {

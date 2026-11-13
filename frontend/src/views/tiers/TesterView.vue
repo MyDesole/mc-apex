@@ -172,7 +172,6 @@ onMounted(() => {
 </script>
 
 <template>
-  <!-- ACCESS DENIED -->
   <div v-if="!isTester" class="denied">
     <div class="denied__glow"></div>
 
@@ -195,7 +194,6 @@ onMounted(() => {
     </RouterLink>
   </div>
 
-  <!-- TESTER PAGE -->
   <main v-else class="tester-page">
 
     <!-- ================= HEADER ================= -->

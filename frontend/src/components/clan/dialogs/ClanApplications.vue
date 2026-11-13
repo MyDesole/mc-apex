@@ -1,4 +1,5 @@
 <script setup>
+import { notifyError } from '@/utils/toast.js'
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { clansApi } from '@/services/clan/clans.js'
@@ -22,6 +23,7 @@ async function load() {
     applications.value = data.applications || []
   } catch (e) {
     console.error(e)
+    notifyError(e, 'Не удалось загрузить заявки. Обновите страницу.')
   } finally {
     loading.value = false
   }

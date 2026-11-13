@@ -69,6 +69,7 @@
 
 .review-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 7px;
 
   margin-bottom: 16px;

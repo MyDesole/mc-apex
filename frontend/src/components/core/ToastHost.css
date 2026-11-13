@@ -1,0 +1,85 @@
+.toasts {
+  position: fixed;
+  top: 76px;
+  right: 18px;
+  /* Выше диалогов: ошибка действия из открытого окна должна быть видна */
+  z-index: 3500;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(380px, calc(100vw - 24px));
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 12px 12px 14px;
+  color: var(--text, #e2e2e8);
+  background: var(--bg-card, #12121a);
+  border: 1px solid var(--border, #22222e);
+  border-left: 3px solid var(--accent, #8b5cf6);
+  border-radius: var(--radius, 6px);
+  font-size: 14px;
+  line-height: 1.45;
+  pointer-events: auto;
+}
+
+.toast--error {
+  border-left-color: #ef4444;
+}
+
+.toast--success {
+  border-left-color: #22c55e;
+}
+
+.toast__text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.toast__close {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  color: var(--text-dim, #8888a0);
+  background: transparent;
+  border: 0;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.toast__close:hover {
+  color: var(--text, #e2e2e8);
+}
+
+.toast-enter-active,
+.toast-leave-active {
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+@media (max-width: 600px) {
+  .toasts {
+    top: 64px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-enter-active,
+  .toast-leave-active {
+    transition: none;
+  }
+}

@@ -1,4 +1,6 @@
 <script setup>
+import { plural } from '@/utils/format.js'
+import { notifyError } from '@/utils/toast.js'
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { homeApi } from '@/services/players/home.js'
@@ -115,6 +117,7 @@ onMounted(async () => {
     news.value = data.news ?? []
   } catch (error) {
     console.error('Failed to load home page:', error)
+    notifyError(error, 'Не удалось загрузить главную. Обновите страницу.')
   } finally {
     loading.value = false
   }
@@ -466,7 +469,7 @@ onMounted(async () => {
                   <span class="rank-row__tag">[{{ clan.tag }}]</span>
                   {{ clan.name }}
                   <small>
-                    {{ clan.members_count ?? 0 }} участников ·
+                    {{ clan.members_count ?? 0 }} {{ plural(clan.members_count ?? 0, 'участник', 'участника', 'участников') }} ·
                     лидер {{ clan.leader?.username || '—' }}
                   </small>
                 </span>

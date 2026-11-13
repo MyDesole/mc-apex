@@ -544,6 +544,8 @@
   font-size: 14px;
   line-height: 1.65;
   white-space: pre-line;
+  /* Длинная ссылка или слово без пробелов не должны раздвигать страницу */
+  overflow-wrap: anywhere;
 }
 
 .tp-empty {

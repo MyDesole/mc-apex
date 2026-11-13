@@ -1,4 +1,5 @@
 <script setup>
+import { notifyError } from '@/utils/toast.js'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/core/auth.js'
@@ -163,6 +164,7 @@ async function load() {
     setUnreadCount(unread.value)
   } catch (e) {
     console.error(e)
+    notifyError(e, 'Не удалось обновить уведомления. Попробуйте ещё раз.')
   } finally {
     loading.value = false
   }
@@ -259,6 +261,7 @@ async function open(notification) {
     await load()
   } catch (e) {
     console.error(e)
+    notifyError(e, 'Не удалось обновить уведомления. Попробуйте ещё раз.')
   } finally {
     openingId.value = null
   }
@@ -284,6 +287,7 @@ async function markAll() {
     await load()
   } catch (e) {
     console.error(e)
+    notifyError(e, 'Не удалось обновить уведомления. Попробуйте ещё раз.')
   } finally {
     markingAll.value = false
   }

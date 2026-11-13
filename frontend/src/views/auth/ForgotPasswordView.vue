@@ -1,4 +1,5 @@
 <script setup>
+import { formError } from '@/services/core/errors.js'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/core/auth.js'
@@ -19,7 +20,7 @@ async function submit() {
     router.push({ name: 'reset-password', query: { email: email.value } })
   } catch (e) {
     fieldErrors.value = e.errors || {}
-    error.value = e.message || 'Не удалось отправить код.'
+    error.value = formError(e, ['email'], 'Не удалось отправить код.')
   }
 }
 </script>

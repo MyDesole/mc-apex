@@ -1,4 +1,5 @@
 <script setup>
+import { notifyError } from '@/utils/toast.js'
 import PageLoader from '@/components/core/PageLoader.vue'
 import { confirm as confirmDialog } from '@/utils/dialog.js'
 import { computed, onMounted, ref } from 'vue'
@@ -51,6 +52,7 @@ async function load() {
     resources.value = data.data ?? []
   } catch (e) {
     console.error(e)
+    notifyError(e, 'Не удалось загрузить материалы клана. Обновите страницу.')
     resources.value = []
   } finally {
     loading.value = false

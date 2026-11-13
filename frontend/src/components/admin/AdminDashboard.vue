@@ -482,6 +482,11 @@ onBeforeUnmount(() => clearInterval(liveTimer))
   gap: 16px;
 }
 
+/* Без этого карточка растягивается по содержимому и вылезает за экран телефона */
+.dash__grid > * {
+  min-width: 0;
+}
+
 .dash__wide {
   grid-column: 1 / -1;
 }
@@ -521,6 +526,7 @@ onBeforeUnmount(() => clearInterval(liveTimer))
 
 .bars__item {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -748,6 +754,7 @@ onBeforeUnmount(() => clearInterval(liveTimer))
 
 .dash__tabs {
   display: inline-flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin-left: 12px;
 }
@@ -814,6 +821,15 @@ onBeforeUnmount(() => clearInterval(liveTimer))
 
   .bars__label {
     display: none;
+  }
+
+  .bars {
+    gap: 3px;
+  }
+
+  .dash__tabs {
+    display: flex;
+    margin: 8px 0 0;
   }
 
   .actions li {

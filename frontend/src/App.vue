@@ -1,6 +1,7 @@
 <script setup>
 import AppLayout from '@/layouts/AppLayout.vue'
 import DialogHost from '@/components/core/DialogHost.vue'
+import ToastHost from '@/components/core/ToastHost.vue'
 import MaintenanceOverlay from '@/components/core/MaintenanceOverlay.vue'
 import WinterDecor from '@/components/core/WinterDecor.vue'
 import TierChatDock from '@/components/tiers/TierChatDock.vue'
@@ -20,4 +21,7 @@ import TierChatDock from '@/components/tiers/TierChatDock.vue'
 
   <!-- Единое окно диалогов вместо встроенных alert/confirm/prompt -->
   <DialogHost />
+
+  <!-- Всплывающие сообщения об ошибках и успехе -->
+  <ToastHost />
 </template>

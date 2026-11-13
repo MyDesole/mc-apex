@@ -1,4 +1,5 @@
 <script setup>
+import { notifyError } from '@/utils/toast.js'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { api } from '@/services/core/api.js'
@@ -82,6 +83,7 @@ async function load() {
     hasMore.value = Boolean(data.has_more)
   } catch (e) {
     console.error(e)
+    notifyError(e, 'Не удалось загрузить игроков. Обновите страницу.')
     players.value = []
   } finally {
     loading.value = false
@@ -112,6 +114,7 @@ async function loadMore() {
     renderLimit.value += RENDER_STEP
   } catch (e) {
     console.error(e)
+    notifyError(e, 'Не удалось загрузить игроков. Обновите страницу.')
   } finally {
     loadingMore.value = false
   }

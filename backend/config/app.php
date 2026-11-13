@@ -78,7 +78,9 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    // Сайт только русский: локаль не берётся из .env, чтобы забытый
+    // APP_LOCALE=en не вернул игрокам «The name field is required.»
+    'locale' => 'ru',
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 

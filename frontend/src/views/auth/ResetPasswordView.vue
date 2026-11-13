@@ -1,4 +1,5 @@
 <script setup>
+import { formError } from '@/services/core/errors.js'
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/core/auth.js'
@@ -32,7 +33,7 @@ async function submit() {
     setTimeout(() => router.push('/login'), 1200)
   } catch (e) {
     fieldErrors.value = e.errors || {}
-    error.value = e.message || 'Не удалось сбросить пароль.'
+    error.value = formError(e, ['email', 'code', 'password'], 'Не удалось сбросить пароль.')
   }
 }
 </script>
