@@ -1,0 +1,136 @@
+name: Minecraft
+run-name: Minecraft · ${{ inputs.action }} · ${{ inputs.source_ref }} · ${{ inputs.plugins }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'build = build and stage without restart; deploy = build, backup and restart'
+        type: choice
+        options: [build, deploy, status, rollback]
+        default: build
+      source_ref:
+        description: 'Branch, tag or commit containing Minecraft sources'
+        default: design/minecraft-style
+        required: true
+      plugins:
+        description: 'Plugins to build and deploy'
+        type: choice
+        options: [all, clanwars, tiertests, auth, skins]
+        default: all
+      rollback_sha:
+        description: 'For rollback: full source SHA of the deployment to undo'
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: minecraft-production
+  cancel-in-progress: false
+
+jobs:
+  minecraft:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: minecraft-production
+    steps:
+      - name: Configure restricted SSH access
+        env:
+          KEY: ${{ secrets.MC_SSH_KEY }}
+          HOST_KEY: ${{ secrets.MC_KNOWN_HOSTS }}
+          HOST: ${{ secrets.MC_HOST }}
+        run: |
+          set -euo pipefail
+          test -n "$KEY" && test -n "$HOST_KEY" && test -n "$HOST"
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/minecraft
+          chmod 600 ~/.ssh/minecraft
+          printf '%s\n' "$HOST_KEY" > ~/.ssh/known_hosts
+          printf 'Host minecraft-ci\n  HostName %s\n  User minecraft-ci\n  IdentityFile ~/.ssh/minecraft\n  IdentitiesOnly yes\n  StrictHostKeyChecking yes\n  BatchMode yes\n  ConnectTimeout 15\n' "$HOST" > ~/.ssh/config
+
+      - name: Server status
+        if: inputs.action == 'status'
+        run: ssh minecraft-ci status | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Roll back plugin binaries
+        if: inputs.action == 'rollback'
+        env:
+          SHA: ${{ inputs.rollback_sha }}
+        run: |
+          [[ "$SHA" =~ ^[a-f0-9]{40}$ ]]
+          ssh minecraft-ci "rollback $SHA" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/checkout@v4
+        if: inputs.action == 'build' || inputs.action == 'deploy'
+        with:
+          ref: ${{ inputs.source_ref }}
+          persist-credentials: false
+
+      - uses: actions/setup-java@v4
+        if: inputs.action == 'build' || inputs.action == 'deploy'
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download exact server APIs
+        if: inputs.action == 'build' || inputs.action == 'deploy'
+        run: |
+          mkdir -p "$RUNNER_TEMP/mc-libs" "$RUNNER_TEMP/mc-output"
+          ssh minecraft-ci deps | tar -x -C "$RUNNER_TEMP/mc-libs"
+
+      - name: Build selected plugins
+        if: inputs.action == 'build' || inputs.action == 'deploy'
+        env:
+          SELECTED: ${{ inputs.plugins }}
+        run: |
+          set -euo pipefail
+          export LIBS="$RUNNER_TEMP/mc-libs"
+          export BW="$LIBS/bw.jar" PL="$LIBS/ProtocolLib.jar"
+          if [[ "$SELECTED" == all || "$SELECTED" == clanwars ]]; then
+            bash minecraft-clanwar-plugin/build.sh
+            cp minecraft-clanwar-plugin/target/ApexClanWars.jar "$RUNNER_TEMP/mc-output/"
+          fi
+          if [[ "$SELECTED" == all || "$SELECTED" == tiertests ]]; then
+            bash minecraft-tiertest-plugin/build.sh
+            cp minecraft-tiertest-plugin/target/ApexTierTests.jar "$RUNNER_TEMP/mc-output/"
+          fi
+          if [[ "$SELECTED" == all || "$SELECTED" == auth || "$SELECTED" == skins ]]; then
+            mvn -B install:install-file -Dfile="$LIBS/Spigot.jar" -DgroupId=org.spigotmc -DartifactId=spigot-api -Dversion=1.8.8-R0.1-SNAPSHOT -Dpackaging=jar -DgeneratePom=true
+            mvn -B install:install-file -Dfile="$PL" -DgroupId=com.comphenix.protocol -DartifactId=ProtocolLib -Dversion=5.4.0 -Dpackaging=jar -DgeneratePom=true
+          fi
+          if [[ "$SELECTED" == all || "$SELECTED" == auth ]]; then
+            mvn -B -nsu -f minecraft-plugin/pom.xml package
+            cp minecraft-plugin/target/ApexAuth-1.0.0.jar "$RUNNER_TEMP/mc-output/ApexAuth.jar"
+          fi
+          if [[ "$SELECTED" == all || "$SELECTED" == skins ]]; then
+            mvn -B -nsu -f minecraft-skin-plugin/pom.xml package
+            cp minecraft-skin-plugin/target/ApexSkins-1.0.0.jar "$RUNNER_TEMP/mc-output/ApexSkins.jar"
+          fi
+          cd "$RUNNER_TEMP/mc-output"
+          sha256sum *.jar | tee "$RUNNER_TEMP/checksums.txt"
+          tar -czf "$RUNNER_TEMP/minecraft.tar.gz" *.jar
+
+      - uses: actions/upload-artifact@v4
+        if: inputs.action == 'build' || inputs.action == 'deploy'
+        with:
+          name: minecraft-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/mc-output/*.jar
+            ${{ runner.temp }}/checksums.txt
+          retention-days: 30
+
+      - name: Stage release without touching running server
+        if: inputs.action == 'build' || inputs.action == 'deploy'
+        run: |
+          SHA=$(git rev-parse HEAD)
+          ssh minecraft-ci "stage $SHA" < "$RUNNER_TEMP/minecraft.tar.gz"
+          printf 'Source SHA: `%s`\n\nUse this SHA to undo this deployment with rollback.\n' "$SHA" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Back up, deploy and restart
+        if: inputs.action == 'deploy'
+        run: ssh minecraft-ci "deploy $(git rev-parse HEAD)" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove SSH credentials
+        if: always()
+        run: rm -f ~/.ssh/minecraft

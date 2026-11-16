@@ -1,0 +1,120 @@
+#!/usr/bin/python3
+"""Root-owned, fixed-command interface for Minecraft Actions."""
+import fcntl, io, json, os, pathlib, re, shutil, subprocess, sys, tarfile, time, zipfile
+
+ROOT = pathlib.Path('/opt/minecraft/ci')
+SERVER = pathlib.Path('/opt/minecraft/server')
+PANEL = SERVER / 'apex-panel.sh'
+TARGETS = {'ApexClanWars.jar': 'ApexClanWars.jar', 'ApexTierTests.jar': 'ApexTierTests-Tactics.jar', 'ApexAuth.jar': 'ApexAuth.jar', 'ApexSkins.jar': 'ApexSkins.jar'}
+
+def run(*args):
+    subprocess.run(args, check=True)
+
+def panel(action):
+    run('bash', str(PANEL), action)
+
+def healthy():
+    import socket
+    for _ in range(120):
+        try:
+            with socket.create_connection(('127.0.0.1', 25565), timeout=1):
+                return
+        except OSError:
+            time.sleep(2)
+    raise RuntimeError('Minecraft port did not open within 240 seconds')
+
+def install(source):
+    for name, target in TARGETS.items():
+        if (source / name).is_file():
+            dest = SERVER / 'plugins' / target
+            shutil.copyfile(source / name, str(dest) + '.ci-new')
+            os.replace(str(dest) + '.ci-new', dest)
+
+def main():
+    command = sys.argv[1] if len(sys.argv) == 2 else ''
+    args = command.split()
+    if args == ['status']:
+        panel('status')
+        for p in sorted((ROOT / 'releases').glob('*')):
+            print('release=' + p.name)
+        return
+    if args == ['deps']:
+        with tarfile.open(fileobj=sys.stdout.buffer, mode='w|') as archive:
+            for path, name in [(SERVER/'WindSpigot-2.1.4.jar', 'Spigot.jar'), (SERVER/'plugins/Alley-2.2.15-BedFightFix-v3.jar', 'Alley.jar'), (SERVER/'plugins/BedWars1058.jar', 'bw.jar'), (SERVER/'plugins/ProtocolLib.jar', 'ProtocolLib.jar')]:
+                archive.add(path, arcname=name, recursive=False)
+        return
+    if len(args) != 2 or args[0] not in ('stage', 'deploy', 'rollback') or not re.fullmatch(r'[a-f0-9]{40}', args[1]):
+        raise ValueError('Allowed: status, deps, stage SHA, deploy SHA, rollback SHA')
+    action, sha = args
+    ROOT.mkdir(mode=0o700, exist_ok=True)
+    with (ROOT/'lock').open('w') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        release = ROOT/'releases'/sha
+        if action == 'stage':
+            data = sys.stdin.buffer.read(32 * 1024 * 1024 + 1)
+            if len(data) > 32 * 1024 * 1024:
+                raise ValueError('Artifact exceeds 32 MiB')
+            with tarfile.open(fileobj=io.BytesIO(data), mode='r:gz') as archive:
+                members = archive.getmembers()
+                if not members or len({m.name for m in members}) != len(members):
+                    raise ValueError('Empty or duplicate archive members')
+                files = {}
+                for member in members:
+                    if member.name not in TARGETS or not member.isfile() or member.size > 16*1024*1024:
+                        raise ValueError('Only supported plugin JAR files are accepted')
+                    payload = archive.extractfile(member).read()
+                    with zipfile.ZipFile(io.BytesIO(payload)) as jar:
+                        if 'plugin.yml' not in jar.namelist():
+                            raise ValueError('Missing plugin.yml')
+                    files[member.name] = payload
+            if release.exists():
+                if {p.name:p.read_bytes() for p in release.iterdir()} != files:
+                    if (ROOT/'backups'/sha).exists():
+                        raise ValueError('Deployed release is immutable; use a new commit')
+                    shutil.rmtree(release)
+            release.mkdir(parents=True, mode=0o700, exist_ok=True)
+            for name, payload in files.items():
+                (release/name).write_bytes(payload)
+            print('Staged ' + sha + '; server unchanged')
+            return
+        backup = ROOT/'backups'/sha
+        if action == 'deploy':
+            if not release.is_dir() or backup.exists():
+                raise ValueError('Release missing or already deployed; use a new commit')
+            # Exact rollback requires one existing target for each uploaded plugin.
+            for name in TARGETS:
+                if (release/name).exists() and not (SERVER/'plugins'/TARGETS[name]).is_file():
+                    raise ValueError('Installed plugin target missing: ' + TARGETS[name])
+            panel('stop')
+            try:
+                backup.mkdir(parents=True, mode=0o700)
+                for name in TARGETS:
+                    if (release/name).exists():
+                        shutil.copy2(SERVER/'plugins'/TARGETS[name], backup/name)
+                with tarfile.open(backup/'server.tar.gz', 'w:gz') as archive:
+                    archive.add(SERVER, arcname='server')
+                install(release)
+                panel('start')
+                healthy()
+            except Exception:
+                panel('stop')
+                install(backup)
+                panel('start')
+                raise
+        else:
+            if not (backup/'server.tar.gz').is_file():
+                raise ValueError('No complete backup for this deployment')
+            panel('stop')
+            try:
+                install(backup)
+            finally:
+                panel('start')
+            healthy()
+        print(action + ' completed: ' + sha)
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as error:
+        print(str(error), file=sys.stderr)
+        sys.exit(1)
