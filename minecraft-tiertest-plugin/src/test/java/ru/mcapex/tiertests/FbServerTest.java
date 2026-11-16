@@ -71,6 +71,9 @@ public final class FbServerTest extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskLater(this,()->{
             try {
                 FbPerks profiles=(FbPerks)field(fb,"perks");check(profiles.favorite(owner.getUniqueId(),id),"favorite command persists ownership-checked replay");
+                Object watch=((Map<?,?>)field(fb,"watches")).get(owner.getUniqueId());
+                call(fb,"backToTraining",new Class<?>[]{FastBridge.Watch.class},watch);
+                check(((FastBridge.Sess)((Map<?,?>)field(fb,"sessions")).get(owner.getUniqueId())).personal,"return from private replay stays private");
                 owner.performCommand("fb history");check(owner.getOpenInventory().getTitle().contains("история"),"history menu opens");owner.closeInventory();
                 owner.performCommand("fb public");check(owner.canSee(outsider)&&outsider.canSee(owner),"visibility restored after private exit");
                 getLogger().info("FB_TEST_PASS "+checks+" live Bukkit integration checks");

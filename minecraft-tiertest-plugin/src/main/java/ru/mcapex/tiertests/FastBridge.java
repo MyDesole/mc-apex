@@ -1068,8 +1068,9 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
     /** Закрыть запись, но остаться в режиме: игрок снова на своей дорожке. */
     private void backToTraining(Watch w) {
         Player p = w.viewer;
+        boolean personal = w.rep.personal && perks.privateAllowed(rank(p));
         w.cleanup(false);
-        if (p.isOnline()) join(p);
+        if (p.isOnline()) join(p, personal);
     }
 
     private boolean buttonWatch(Watch w, String name) {
