@@ -76,6 +76,7 @@ public final class FbServerTest extends JavaPlugin implements Listener {
                 check(((FastBridge.Sess)((Map<?,?>)field(fb,"sessions")).get(owner.getUniqueId())).personal,"return from private replay stays private");
                 owner.performCommand("fb history");check(owner.getOpenInventory().getTitle().contains("история"),"history menu opens");owner.closeInventory();
                 owner.performCommand("fb public");check(owner.canSee(outsider)&&outsider.canSee(owner),"visibility restored after private exit");
+                BattleStyleServerChecks.run(this,(BattleStyle)field(fb,"battleStyle"),owner,outsider);
                 getLogger().info("FB_TEST_PASS "+checks+" live Bukkit integration checks");
             } catch(Throwable error){fail(error);}
         },10);

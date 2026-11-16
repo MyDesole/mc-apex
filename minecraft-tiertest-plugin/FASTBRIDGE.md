@@ -7,8 +7,8 @@
 
 Репозиторий содержит не все исходники установленного ApexTierTests.
 Поэтому новый релиз собирается поверх точной копии рабочего JAR, заменяя только
-FastBridge, Replay, FbPerks и их вложенные классы. Остальные классы, команды,
-ресурсы и существующие возможности доната сохраняются побайтно.
+FastBridge, Replay, FbPerks, BattleStyle и их вложенные классы. Остальные классы, команды,
+ресурсы и существующие возможности доната сохраняются побайтно, кроме добавления /style в plugin.yml.
 
 ```bash
 # LIBS содержит Spigot.jar (ядро сервера) и Alley.jar.
@@ -18,7 +18,7 @@ BASE_JAR=/path/to/ApexTierTests-Tactics.jar bash minecraft-tiertest-plugin/test-
 BASE_JAR=/path/to/ApexTierTests-Tactics.jar SERVER_TEST=1 SERVER_JAR=/path/to/WindSpigot.jar bash minecraft-tiertest-plugin/test-fastbridge.sh
 ```
 
-В GitHub Actions Minecraft выбрать `source_ref=feature/fastbridge-perks`,
+В GitHub Actions Minecraft выбрать `source_ref=feature/battle-styles`,
 `plugins=tiertests`. Зависимости и базовый JAR скачиваются с сервера.
 Если базовый JAR изменился после сборки, выкладка отказывается его перетирать:
 нужна повторная сборка. В META-INF/apex-fastbridge-release.json записан его SHA256.
@@ -28,3 +28,6 @@ BASE_JAR=/path/to/ApexTierTests-Tactics.jar SERVER_TEST=1 SERVER_JAR=/path/to/Wi
 совместимость старых реплеев; отдельный WindSpigot и два клиента проверяют вход
 на дорожки, запрет телепортации, видимость, пресеты, финиш, приватный реплей и GUI.
 Тестовый плагин и миры создаются только в target/server-test-*, не на проде.
+
+Стиль боя: `/style` или кнопка в `/perks`; бесплатный opt-out: `/style toggle`.
+Подробности и каталог — раздел 17.23 книги и руководство.
