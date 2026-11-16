@@ -11,13 +11,13 @@ on:
         default: build
       source_ref:
         description: 'Branch, tag or commit containing Minecraft sources'
-        default: design/minecraft-style
+        default: feature/fastbridge-perks
         required: true
       plugins:
         description: 'Plugins to build and deploy'
         type: choice
         options: [all, clanwars, tiertests, auth, skins]
-        default: all
+        default: tiertests
       rollback_sha:
         description: 'For rollback: full source SHA of the deployment to undo'
         required: false
@@ -106,7 +106,11 @@ jobs:
             cp minecraft-clanwar-plugin/target/ApexClanWars.jar "$RUNNER_TEMP/mc-output/"
           fi
           if [[ "$SELECTED" == all || "$SELECTED" == tiertests ]]; then
-            bash minecraft-tiertest-plugin/build.sh
+            if [[ -f minecraft-tiertest-plugin/build-fastbridge-patch.sh ]]; then
+              BASE_JAR="$LIBS/ApexTierTests-base.jar" bash minecraft-tiertest-plugin/build-fastbridge-patch.sh
+            else
+              bash minecraft-tiertest-plugin/build.sh
+            fi
             cp minecraft-tiertest-plugin/target/ApexTierTests.jar "$RUNNER_TEMP/mc-output/"
           fi
           if [[ "$SELECTED" == all || "$SELECTED" == auth || "$SELECTED" == skins ]]; then

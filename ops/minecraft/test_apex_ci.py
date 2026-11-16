@@ -64,6 +64,44 @@ class StageTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.invoke('stage ' + self.sha, artifact('ApexSkins.jar'))
 
+    def test_patch_rejects_changed_baseline_before_stopping_server(self):
+        import zipfile, json
+        server = self.root/'server'
+        (server/'plugins').mkdir(parents=True)
+        (server/'plugins/ApexTierTests-Tactics.jar').write_bytes(b'changed')
+        release = self.root/'releases'/self.sha
+        release.mkdir(parents=True)
+        with zipfile.ZipFile(release/'ApexTierTests.jar', 'w') as jar:
+            jar.writestr('META-INF/apex-fastbridge-release.json', json.dumps({'baseline_sha256': '0'*64}))
+        with patch.object(ci, 'SERVER', server), patch.object(ci, 'ROOT', self.root), patch.object(ci.sys, 'argv', ['apex-ci', 'deploy '+self.sha]), patch.object(ci, 'panel') as panel:
+            with self.assertRaisesRegex(ValueError, 'changed since build'):
+                ci.main()
+            panel.assert_not_called()
+
+    def test_deploy_and_rollback_preserve_world_progress(self):
+        import hashlib, zipfile, json
+        server = self.root/'server'
+        (server/'plugins').mkdir(parents=True)
+        installed = server/'plugins/ApexTierTests-Tactics.jar'
+        installed.write_bytes(b'old plugin')
+        world = server/'world.txt'
+        world.write_text('before')
+        release = self.root/'releases'/self.sha
+        release.mkdir(parents=True)
+        with zipfile.ZipFile(release/'ApexTierTests.jar', 'w') as jar:
+            jar.writestr('META-INF/apex-fastbridge-release.json', json.dumps({'baseline_sha256': hashlib.sha256(b'old plugin').hexdigest()}))
+        with patch.object(ci, 'SERVER', server), patch.object(ci, 'ROOT', self.root), patch.object(ci, 'panel') as panel, patch.object(ci, 'healthy'):
+            with patch.object(ci.sys, 'argv', ['apex-ci', 'deploy '+self.sha]):
+                ci.main()
+            self.assertEqual(installed.read_bytes(), (release/'ApexTierTests.jar').read_bytes())
+            self.assertTrue((self.root/'backups'/self.sha/'server.tar.gz').is_file())
+            world.write_text('player progress after deploy')
+            with patch.object(ci.sys, 'argv', ['apex-ci', 'rollback '+self.sha]):
+                ci.main()
+            self.assertEqual(installed.read_bytes(), b'old plugin')
+            self.assertEqual(world.read_text(), 'player progress after deploy')
+            self.assertEqual([c.args[0] for c in panel.call_args_list], ['stop','start','stop','start'])
+
 
 if __name__ == '__main__':
     unittest.main()

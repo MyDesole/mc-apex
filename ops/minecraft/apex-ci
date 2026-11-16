@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """Root-owned, fixed-command interface for Minecraft Actions."""
-import fcntl, io, json, os, pathlib, re, shutil, subprocess, sys, tarfile, time, zipfile
+import fcntl, hashlib, io, json, os, pathlib, re, shutil, subprocess, sys, tarfile, time, zipfile
 
 ROOT = pathlib.Path('/opt/minecraft/ci')
 SERVER = pathlib.Path('/opt/minecraft/server')
@@ -40,7 +40,7 @@ def main():
         return
     if args == ['deps']:
         with tarfile.open(fileobj=sys.stdout.buffer, mode='w|') as archive:
-            for path, name in [(SERVER/'WindSpigot-2.1.4.jar', 'Spigot.jar'), (SERVER/'plugins/Alley-2.2.15-BedFightFix-v3.jar', 'Alley.jar'), (SERVER/'plugins/BedWars1058.jar', 'bw.jar'), (SERVER/'plugins/ProtocolLib.jar', 'ProtocolLib.jar')]:
+            for path, name in [(SERVER/'WindSpigot-2.1.4.jar', 'Spigot.jar'), (SERVER/'plugins/Alley-2.2.15-BedFightFix-v3.jar', 'Alley.jar'), (SERVER/'plugins/BedWars1058.jar', 'bw.jar'), (SERVER/'plugins/ProtocolLib.jar', 'ProtocolLib.jar'), (SERVER/'plugins/ApexTierTests-Tactics.jar', 'ApexTierTests-base.jar')]:
                 archive.add(path, arcname=name, recursive=False)
         return
     if len(args) != 2 or args[0] not in ('stage', 'deploy', 'rollback') or not re.fullmatch(r'[a-f0-9]{40}', args[1]):
@@ -85,6 +85,14 @@ def main():
             for name in TARGETS:
                 if (release/name).exists() and not (SERVER/'plugins'/TARGETS[name]).is_file():
                     raise ValueError('Installed plugin target missing: ' + TARGETS[name])
+            tier = release/'ApexTierTests.jar'
+            if tier.is_file():
+                with zipfile.ZipFile(tier) as jar:
+                    if 'META-INF/apex-fastbridge-release.json' in jar.namelist():
+                        expected = json.loads(jar.read('META-INF/apex-fastbridge-release.json'))['baseline_sha256']
+                        actual = hashlib.sha256((SERVER/'plugins'/TARGETS['ApexTierTests.jar']).read_bytes()).hexdigest()
+                        if expected != actual:
+                            raise ValueError('Installed plugin changed since build; rebuild the FastBridge patch before deploy')
             panel('stop')
             try:
                 backup.mkdir(parents=True, mode=0o700)
