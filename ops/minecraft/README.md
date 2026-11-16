@@ -21,7 +21,7 @@ Workflow запускается из `main`; `source_ref` выбирает ве�
 а явный выбор `auth`/`skins` завершится понятной ошибкой, пока исходники не будут
 закоммичены и отправлены в выбранную ветку. Исключённые файлы автоматически
 не публикуются.
-`source_ref` по умолчанию — `feature/fastbridge-perks`. Для воспроизводимой выкладки
+`source_ref` по умолчанию — `feature/battle-styles`. Для воспроизводимой выкладки
 лучше указать точный SHA проверенного коммита. Форма Run workflow требует запуска
 именно workflow из `main`, даже если исходники выбраны из другой ветки.
 
@@ -85,7 +85,7 @@ python3 -m unittest discover -s ops/minecraft -p 'test_*.py' -v
 
 ## FastBridge-патч
 
-Ветка `feature/fastbridge-perks` содержит `build-fastbridge-patch.sh`.
+Ветка `feature/battle-styles` содержит `build-fastbridge-patch.sh`.
 Workflow автоматически собирает только классы FastBridge поверх установленного
 ApexTierTests: остальные функции сохраняются. По умолчанию выбран `tiertests`.
 Базовый JAR скачивается с сервера; его SHA256 записан внутри артефакта.

@@ -11,7 +11,7 @@ on:
         default: build
       source_ref:
         description: 'Branch, tag or commit containing Minecraft sources'
-        default: feature/fastbridge-perks
+        default: feature/battle-styles
         required: true
       plugins:
         description: 'Plugins to build and deploy'
