@@ -40,10 +40,10 @@ final class BattleStyleServerChecks {
         check(style.selected(id,0,"victory").equals("none"),"expiry suppresses formerly equipped FX");
         check(new BattleStyle(plugin).selected(id,rank,"victory").equals("aurora"),"settings persisted immediately");
         style.toggle(id);check(!new BattleStyle(plugin).visible(id),"free opt-out persists");style.toggle(id);
-        owner.performCommand("style");check(owner.getOpenInventory().getTitle().equals(BattleStyle.TITLE),"style command opens menu");
+        owner.performCommand("style");check(owner.getOpenInventory().getTitle().equals(field(style,"TITLE")),"style command opens menu");
         check(owner.getOpenInventory().getTopInventory().getItem(15).getType()==Material.COAL,"locked rank shown in menu");owner.closeInventory();
-        Inventory donor=Bukkit.createInventory(null,27,BattleStyle.DONOR_TITLE);owner.openInventory(donor);
-        check(donor.getItem(22)!=null&&BattleStyle.ENTRY.equals(donor.getItem(22).getItemMeta().getDisplayName()),"perks menu gains style entry");owner.closeInventory();
+        Inventory donor=Bukkit.createInventory(null,27,String.valueOf(field(style,"DONOR_TITLE")));owner.openInventory(donor);
+        check(donor.getItem(22)!=null&&field(style,"ENTRY").equals(donor.getItem(22).getItemMeta().getDisplayName()),"perks menu gains style entry");owner.closeInventory();
         List<UUID> winners=Collections.singletonList(id),losers=Collections.singletonList(other.getUniqueId());
         final IArena arena=(IArena)Proxy.newProxyInstance(IArena.class.getClassLoader(),new Class<?>[]{IArena.class},(self,m,args)->{
             if(m.getName().equals("getPlayers"))return Arrays.asList(owner,other);

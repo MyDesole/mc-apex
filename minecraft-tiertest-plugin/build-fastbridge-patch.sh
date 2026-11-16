@@ -8,8 +8,8 @@ BASE_JAR=${BASE_JAR:-$LIBS/ApexTierTests-base.jar}
 test -f "$BASE_JAR" || { echo 'Set BASE_JAR to the installed ApexTierTests JAR' >&2; exit 1; }
 mkdir -p target/fastbridge-classes
 javac --release 8 -proc:none -nowarn -encoding UTF-8 -sourcepath /nonexistent \
-  -cp "$BASE_JAR:$LIBS/Spigot.jar:$LIBS/Alley.jar:${BW:-$HOME/work/bw1058/bw.jar}" -d target/fastbridge-classes \
-  src/main/java/ru/mcapex/tiertests/{FastBridge,Replay,FbPerks,BattleStyle,BattleStyleAlley,BattleStyleBw}.java
+  -cp "$BASE_JAR:$LIBS/Spigot.jar:$LIBS/Alley.jar:${BW:-$HOME/work/bw1058/bw.jar}:${PL:-$HOME/work/protocollib.jar}" -d target/fastbridge-classes \
+  src/main/java/ru/mcapex/tiertests/{FastBridge,Replay,FbPerks,BattleStyle,BattleStyleAlley,BattleStyleBw,ApexUi,ApexUiPackets}.java
 export BASE_JAR
 python3 - <<'PY'
 from pathlib import Path
@@ -31,3 +31,6 @@ with zipfile.ZipFile(baseline) as source, zipfile.ZipFile('target/ApexTierTests.
  for name,data in overlay.items():output.writestr(name,data)
 print('OK target/ApexTierTests.jar; baseline SHA256='+manifest['baseline_sha256'])
 PY
+
+python3 ../ops/theme/apex_theme.py target/ApexTierTests.jar target/ApexTierTests-themed.jar > target/theme-changes.json
+mv target/ApexTierTests-themed.jar target/ApexTierTests.jar

@@ -42,7 +42,7 @@ public final class FbServerTest extends JavaPlugin implements Listener {
         Map<UUID,FastBridge.Sess> sessions=(Map<UUID,FastBridge.Sess>)field(fb,"sessions");
         check(!sessions.get(outsider.getUniqueId()).personal,"default rank cannot open private session");
         owner.performCommand("fb block wool"); owner.performCommand("fb effect flame"); owner.performCommand("fb settings");
-        check(owner.getOpenInventory().getTitle().contains("настройки"),"settings menu opens");
+        check(owner.getOpenInventory().getTitle().toLowerCase(java.util.Locale.ROOT).contains("настройки"),"settings menu opens");
         check(owner.getOpenInventory().getTopInventory().getItem(10).getType()==Material.WOOL,"selected material displayed");owner.closeInventory();
         owner.performCommand("fb preset save test");owner.performCommand("fb block clay");owner.performCommand("fb preset load test");
         check(owner.getInventory().getItem(0).getType()==Material.WOOL,"preset restores block kit");
@@ -74,9 +74,10 @@ public final class FbServerTest extends JavaPlugin implements Listener {
                 Object watch=((Map<?,?>)field(fb,"watches")).get(owner.getUniqueId());
                 call(fb,"backToTraining",new Class<?>[]{FastBridge.Watch.class},watch);
                 check(((FastBridge.Sess)((Map<?,?>)field(fb,"sessions")).get(owner.getUniqueId())).personal,"return from private replay stays private");
-                owner.performCommand("fb history");check(owner.getOpenInventory().getTitle().contains("история"),"history menu opens");owner.closeInventory();
+                owner.performCommand("fb history");check(owner.getOpenInventory().getTitle().toLowerCase(java.util.Locale.ROOT).contains("история"),"history menu opens");owner.closeInventory();
                 owner.performCommand("fb public");check(owner.canSee(outsider)&&outsider.canSee(owner),"visibility restored after private exit");
                 BattleStyleServerChecks.run(this,(BattleStyle)field(fb,"battleStyle"),owner,outsider);
+                ApexUiServerChecks.run(this,(ApexUi)field(fb,"apexUi"),owner);
                 getLogger().info("FB_TEST_PASS "+checks+" live Bukkit integration checks");
             } catch(Throwable error){fail(error);}
         },10);

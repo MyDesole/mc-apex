@@ -18,7 +18,7 @@ BASE_JAR=/path/to/ApexTierTests-Tactics.jar bash minecraft-tiertest-plugin/test-
 BASE_JAR=/path/to/ApexTierTests-Tactics.jar SERVER_TEST=1 SERVER_JAR=/path/to/WindSpigot.jar bash minecraft-tiertest-plugin/test-fastbridge.sh
 ```
 
-В GitHub Actions Minecraft выбрать `source_ref=feature/battle-styles`,
+В GitHub Actions Minecraft выбрать `source_ref=feature/apex-ui`,
 `plugins=tiertests`. Зависимости и базовый JAR скачиваются с сервера.
 Если базовый JAR изменился после сборки, выкладка отказывается его перетирать:
 нужна повторная сборка. В META-INF/apex-fastbridge-release.json записан его SHA256.
@@ -31,3 +31,5 @@ BASE_JAR=/path/to/ApexTierTests-Tactics.jar SERVER_TEST=1 SERVER_JAR=/path/to/Wi
 
 Стиль боя: `/style` или кнопка в `/perks`; бесплатный opt-out: `/style toggle`.
 Подробности и каталог — раздел 17.23 книги и руководство.
+
+APEX Violet: единая тема GUI, скорбордов, TAB и MOTD. Заголовки сторонних меню меняются через ProtocolLib только на клиенте. Инструменты генерации и безопасной установки — ops/theme; справочник — раздел 17.24 книги.

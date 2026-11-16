@@ -116,6 +116,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
     private File replayDir;
     private FbPerks perks;
     private BattleStyle battleStyle;
+    private ApexUi apexUi;
     private final ExecutorService replayWriter = Executors.newSingleThreadExecutor();
     private final Map<UUID, Set<UUID>> hidden = new HashMap<UUID, Set<UUID>>();
     private final Map<UUID, Long> replayRequests = new HashMap<UUID, Long>();
@@ -169,6 +170,8 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         plugin.getCommand("fastbridge").setExecutor(this);
         battleStyle = new BattleStyle(plugin);
         battleStyle.start();
+        apexUi = new ApexUi(plugin);
+        apexUi.start();
         sampler = Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
             public void run() {
                 sample();
@@ -185,6 +188,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
 
     void stop() {
         if (world == null) return;
+        if (apexUi != null) apexUi.stop();
         if (battleStyle != null) battleStyle.stop();
         for (Sess s : new ArrayList<Sess>(sessions.values())) detach(s, false);
         for (Watch w : new ArrayList<Watch>(watches.values())) w.cleanup(false);
