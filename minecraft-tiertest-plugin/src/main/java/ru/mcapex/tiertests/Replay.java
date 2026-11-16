@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
  */
 final class Replay {
     /** Имя файла: дата_ник_карта_результат.json. Ник может содержать подчёркивания, поэтому разбираем с обоих концов. */
-    static final Pattern FILE = Pattern.compile("^(\\d{8}-\\d{6})_(.+?)(?:_(16|24|32|64|inf))?_(\\d+)\\.json$");
+    static final Pattern FILE = Pattern.compile("^(\\d{8}-\\d{6}(?:\\d{3})?)_(.+?)(?:_(16|24|32|64|inf))?_(\\d+)\\.json$");
 
     String id;
     String player;
@@ -28,6 +28,8 @@ final class Replay {
     /** Результат: время в мс для конечных карт, дистанция в блоках для бесконечной. */
     long value;
     long created;
+    boolean personal;
+    String material = "SANDSTONE";
     /** Когда пошёл таймер (мс от начала записи). */
     long timerStartMs;
     /** t, x, y, z, yaw, pitch, флаги (см. SNEAK, SPRINT, KEY_*, AIR). */
@@ -55,14 +57,13 @@ final class Replay {
 
     /** Максимум кликов за любую секунду. */
     int maxCps(int type) {
-        int best = 0, lo = 0;
+        int best = 0, lo = 0, count = 0;
         for (int i = 0; i < clicks.length; i++) {
-            if (clicks[i][1] != type) continue;
-            int n = 0;
-            for (int j = 0; j < clicks.length; j++) {
-                if (clicks[j][1] == type && clicks[j][0] <= clicks[i][0] && clicks[j][0] > clicks[i][0] - 1000) n++;
+            while (lo < i && clicks[lo][0] <= clicks[i][0] - 1000) {
+                if (clicks[lo++][1] == type) count--;
             }
-            best = Math.max(best, n);
+            if (clicks[i][1] == type) count++;
+            best = Math.max(best, count);
         }
         return best;
     }
@@ -116,7 +117,9 @@ final class Replay {
 
     JsonObject toJson() {
         JsonObject o = new JsonObject();
-        o.addProperty("v", 2);
+        o.addProperty("v", 3);
+        o.addProperty("private", personal);
+        o.addProperty("material", material);
         o.addProperty("id", id);
         o.addProperty("player", player);
         o.addProperty("uuid", uuid);
@@ -156,6 +159,8 @@ final class Replay {
         // v1 писал time_ms без карты: считаем, что это 32 блока
         r.map = str(o, "map", "32");
         r.value = o.has("value") ? o.get("value").getAsLong() : o.has("time_ms") ? o.get("time_ms").getAsLong() : 0;
+        r.personal = o.has("private") && o.get("private").getAsBoolean();
+        r.material = str(o, "material", "SANDSTONE");
         r.created = o.has("created") ? o.get("created").getAsLong() : 0;
         r.timerStartMs = o.has("timer_start_ms") ? o.get("timer_start_ms").getAsLong() : 0;
         JsonArray fr = o.getAsJsonArray("frames");
@@ -190,12 +195,11 @@ final class Replay {
     }
 
     void write(File f) throws IOException {
-        FileWriter w = new FileWriter(f);
-        try {
-            w.write(toJson().toString());
-        } finally {
-            w.close();
-        }
+        File temp = new File(f.getParentFile(), f.getName() + ".tmp");
+        java.io.Writer w = new java.io.OutputStreamWriter(new java.io.FileOutputStream(temp), "UTF-8");
+        try { w.write(toJson().toString()); } finally { w.close(); }
+        try { java.nio.file.Files.move(temp.toPath(), f.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE); }
+        catch (java.nio.file.AtomicMoveNotSupportedException e) { java.nio.file.Files.move(temp.toPath(), f.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING); }
     }
 
     static Replay read(File f) throws IOException {
