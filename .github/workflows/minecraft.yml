@@ -87,6 +87,20 @@ jobs:
           set -euo pipefail
           export LIBS="$RUNNER_TEMP/mc-libs"
           export BW="$LIBS/bw.jar" PL="$LIBS/ProtocolLib.jar"
+          for pair in 'auth:minecraft-plugin' 'skins:minecraft-skin-plugin'; do
+            kind=${pair%%:*}
+            directory=${pair#*:}
+            if [[ ! -f "$directory/pom.xml" ]]; then
+              if [[ "$SELECTED" == "$kind" ]]; then
+                echo "::error::$directory sources are missing from this source_ref. Commit and push them first."
+                exit 1
+              fi
+              if [[ "$SELECTED" == all ]]; then
+                echo "::warning::Skipping $kind: sources are not in this source_ref"
+                echo "Skipped $kind: sources are not in this source_ref." >> "$GITHUB_STEP_SUMMARY"
+              fi
+            fi
+          done
           if [[ "$SELECTED" == all || "$SELECTED" == clanwars ]]; then
             bash minecraft-clanwar-plugin/build.sh
             cp minecraft-clanwar-plugin/target/ApexClanWars.jar "$RUNNER_TEMP/mc-output/"
@@ -99,11 +113,11 @@ jobs:
             mvn -B install:install-file -Dfile="$LIBS/Spigot.jar" -DgroupId=org.spigotmc -DartifactId=spigot-api -Dversion=1.8.8-R0.1-SNAPSHOT -Dpackaging=jar -DgeneratePom=true
             mvn -B install:install-file -Dfile="$PL" -DgroupId=com.comphenix.protocol -DartifactId=ProtocolLib -Dversion=5.4.0 -Dpackaging=jar -DgeneratePom=true
           fi
-          if [[ "$SELECTED" == all || "$SELECTED" == auth ]]; then
+          if [[ -f minecraft-plugin/pom.xml && ( "$SELECTED" == all || "$SELECTED" == auth ) ]]; then
             mvn -B -nsu -f minecraft-plugin/pom.xml package
             cp minecraft-plugin/target/ApexAuth-1.0.0.jar "$RUNNER_TEMP/mc-output/ApexAuth.jar"
           fi
-          if [[ "$SELECTED" == all || "$SELECTED" == skins ]]; then
+          if [[ -f minecraft-skin-plugin/pom.xml && ( "$SELECTED" == all || "$SELECTED" == skins ) ]]; then
             mvn -B -nsu -f minecraft-skin-plugin/pom.xml package
             cp minecraft-skin-plugin/target/ApexSkins-1.0.0.jar "$RUNNER_TEMP/mc-output/ApexSkins.jar"
           fi
