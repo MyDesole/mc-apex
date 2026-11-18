@@ -21,16 +21,23 @@ final class FbMapCameraServerChecks {
                 for(int x=5;x<5+map.gap;x++) h.check(w.getBlockAt(x,70,0).getType()==Material.AIR,"exact empty gap " + map + " at " + x);
             } else h.check(w.getBlockAt(69,70,0).getType()==Material.AIR,"endless has no finish");
         }
-        h.call(h.fb,"build",new Class<?>[]{int.class,FbMap.class,String.class},0,FbMap.B16,"legacy");
-        h.check(w.getBlockAt(2,70,0).getType()==Material.QUARTZ_BLOCK,"old replay quartz start");
-        h.check(w.getBlockAt(21,70,0).getType()==Material.EMERALD_BLOCK,"old replay emerald finish");
-        h.check(w.getBlockAt(2,69,0).getType()==Material.AIR,"new island removed for legacy");
+        w.getBlockAt(100,91,900).setType(Material.QUARTZ_BLOCK);
+        w.getBlockAt(-319,84,-638).setType(Material.EMERALD_BLOCK);
+        World other=Bukkit.getWorlds().get(0);other.getBlockAt(5,90,5).setType(Material.QUARTZ_BLOCK);
+        FbIslands islands=(FbIslands)h.field(h.fb,"islands");
+        h.check(islands.removeLegacyPlatforms(w)==2,"cleanup scans outside lane footprint and negative coordinates");
+        h.check(w.getBlockAt(100,91,900).getType()==Material.AIR && w.getBlockAt(-319,84,-638).getType()==Material.AIR,"all legacy platform types removed");
+        h.check(other.getBlockAt(5,90,5).getType()==Material.QUARTZ_BLOCK,"cleanup isolated to FastBridge world");
+        other.getBlockAt(5,90,5).setType(Material.AIR);
+        for (FbMap map: FbMap.values()) for(int dz=-1;dz<=1;dz++)
+            h.check(islands.finishPlate(map,5+map.gap+2,1,dz)==!map.endless(),"only configured finite-map gold plates accepted " + map);
+        h.check(!islands.finishPlate(FbMap.B32,37,1,0),"island edge is not finish");
         h.call(h.fb,"build",new Class<?>[]{int.class,FbMap.class},0,FbMap.B32);
         h.check(w.getBlockAt(21,70,0).getType()==Material.AIR,"old finish removed when map changes");
         h.check(w.getBlockAt(37,70,0).getType().isSolid(),"new finish rebuilt");
         Replay old = new Replay();old.frames=new double[][]{{0,2.5,1,0.5,-90,0,0}};
         JsonObject json=old.toJson();json.remove("layout");json.addProperty("v",1);
-        h.check(Replay.fromJson(json).layout.equals("legacy"),"old records default to original geometry");
+        h.check(Replay.fromJson(json).layout.equals("legacy"),"old records retain source layout metadata");
         old.layout=FbIslands.AKINA;
         h.check(Replay.fromJson(old.toJson()).layout.equals(FbIslands.AKINA),"new layout round-trip");
         h.check(FbCamera.packet(4321).a==4321,"camera packet targets exact entity");
@@ -61,7 +68,8 @@ final class FbMapCameraServerChecks {
         h.call(h.fb,"startWatch",new Class<?>[]{Player.class,Replay.class,double.class},owner,legacy,1.0);
         FastBridge.Watch watch=(FastBridge.Watch)((Map<?,?>)h.field(h.fb,"watches")).get(owner.getUniqueId());
         h.check(watch!=null && watch.rep.layout.equals("legacy"),"legacy file opens full replay session");
-        h.check(owner.getWorld().getBlockAt(2,70,watch.lane*30).getType()==Material.QUARTZ_BLOCK,"legacy session uses original platforms");
+        h.check(owner.getWorld().getBlockAt(2,70,watch.lane*30).getType()!=Material.QUARTZ_BLOCK,"legacy replay cannot recreate quartz platforms");
+        h.check(owner.getWorld().getBlockAt(5+watch.map.gap,70,watch.lane*30).getType()!=Material.EMERALD_BLOCK,"legacy replay cannot recreate emerald platforms");
         owner.performCommand("fb camera first");h.check(watch.firstPerson,"legacy first-person available");
         h.check(owner.teleport(Bukkit.getWorlds().get(0).getSpawnLocation()),"external world teleport succeeds");
         h.check(!watch.firstPerson && !((Map<?,?>)h.field(h.fb,"watches")).containsKey(owner.getUniqueId()),"world change cleans target and camera");

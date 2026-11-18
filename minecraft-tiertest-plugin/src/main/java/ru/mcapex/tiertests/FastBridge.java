@@ -114,6 +114,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
     private World world;
     private FbStats stats;
     private FbStats legacyStats;
+    private FbStats islandStats;
     private FbIslands islands;
     private FbHud hud;
     private File replayDir;
@@ -150,7 +151,8 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         replayDir.mkdirs();
         perks = new FbPerks(plugin.getDataFolder(), plugin.getLogger());
         legacyStats = new FbStats(new File(plugin.getDataFolder(), "fastbridge-stats.yml"), plugin.getLogger());
-        stats = new FbStats(new File(plugin.getDataFolder(), "fastbridge-akina-v1-stats.yml"), plugin.getLogger());
+        islandStats = new FbStats(new File(plugin.getDataFolder(), "fastbridge-akina-v1-stats.yml"), plugin.getLogger());
+        stats = new FbStats(new File(plugin.getDataFolder(), "fastbridge-akina-plates-v1-stats.yml"), plugin.getLogger());
         islands = new FbIslands(plugin);
 
         world = Bukkit.getWorld(WORLD);
@@ -166,6 +168,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         world.setGameRuleValue("doDaylightCycle", "false");
         world.setGameRuleValue("doMobSpawning", "false");
         world.setSpawnFlags(false, false);
+        islands.removeLegacyPlatforms(world);
         for (int i = 0; i < LANES; i++) build(i, FbMap.B32);
 
         hud = new FbHud(plugin.getLogger(), this);
@@ -224,11 +227,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
     /* ============================== дорожки ============================== */
 
     private void build(int lane, FbMap map) {
-        build(lane, map, FbIslands.AKINA);
-    }
-
-    private void build(int lane, FbMap map, String layout) {
-        islands.build(world, lane, map, layout);
+        islands.build(world, lane, map);
     }
 
     private int endX(FbMap map) {
@@ -321,8 +320,8 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         refreshHud(s);
         refreshVisibility();
         if (personal) p.sendMessage("§dПриватная дорожка: без зрителей и общего рейтинга. Реплеи доступны только тебе.");
-        p.sendMessage("§7Akina: отдельный рейтинг. Старые рекорды: §f/fb oldtop§7; записи сохранены.");
-        p.sendMessage("§6Fastbridge: §7карта §f" + s.map.title + "§7. Построй мост до зелёного островка, таймер пойдёт с первого блока.");
+        p.sendMessage("§7Akina: финиш на золотых плитах. Старые рекорды: §f/fb oldtop§7; записи сохранены.");
+        p.sendMessage("§6Fastbridge: §7карта §f" + s.map.title + "§7. Построй мост и нажми золотую плиту на финише. Таймер — с первого блока.");
         p.sendMessage("§7Предметы: §bкарта§7, §dреплеи§7, §eзаново§7, §cвыход§7. Команды: §f/fb help");
     }
 
@@ -564,6 +563,19 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         final Sess s = sessions.get(p.getUniqueId());
         Watch w = watches.get(p.getUniqueId());
         Action a = e.getAction();
+        if (a == Action.PHYSICAL && s != null && !s.run.finished && s.run.timerStart >= 0) {
+            Block plate = e.getClickedBlock();
+            if (plate != null && plate.getWorld().equals(world) && plate.getType() == Material.GOLD_PLATE
+                    && islands.finishPlate(s.map, plate.getX(), plate.getY() - FLOOR_Y, plate.getZ() - s.lane * SPACING)) {
+                e.setCancelled(false);
+                Location at = p.getLocation();
+                int flags = (p.isSneaking() ? Replay.SNEAK : 0) | (p.isSprinting() ? Replay.SPRINT : 0) | (p.isOnGround() ? 0 : Replay.AIR);
+                s.run.frames.add(new double[]{System.currentTimeMillis() - s.run.recStart, at.getX(), at.getY() - FLOOR_Y,
+                        at.getZ() - s.lane * SPACING, at.getYaw(), at.getPitch(), flags});
+                finishRun(s, System.currentTimeMillis() - s.run.timerStart, false);
+            }
+            return;
+        }
         boolean right = a == Action.RIGHT_CLICK_AIR || a == Action.RIGHT_CLICK_BLOCK;
         ItemStack it = e.getItem();
         String name = it != null && it.hasItemMeta() && it.getItemMeta().hasDisplayName() ? it.getItemMeta().getDisplayName() : null;
@@ -705,10 +717,8 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         if (s.run.timerStart < 0) return;
         if (s.map.endless()) {
             if (to.getX() >= endX(s.map)) finishRun(s, Math.max(0, s.run.maxX - ISLAND + 1), true);
-        } else if (to.getX() >= endX(s.map) && to.getX() <= endX(s.map) + ISLAND && Math.abs(to.getZ() - lz) <= 3
-                && to.getY() >= FLOOR_Y + 0.9 && to.getY() <= FLOOR_Y + 2) {
-            finishRun(s, System.currentTimeMillis() - s.run.timerStart, false);
         }
+        // Finite maps finish only on their own gold pressure plates (Action.PHYSICAL).
     }
 
     private void fell(Sess s) {
@@ -766,6 +776,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         rep.personal = s.personal;
         rep.material = blockType(s.p).name();
         rep.layout = FbIslands.AKINA;
+        rep.finishRule = "gold-plate";
         if (s.personal) { perks.markPrivate(rep.id, s.p.getUniqueId()); perks.flush(); }
         rep.timerStartMs = r.timerStart >= 0 ? r.timerStart - r.recStart : 0;
         rep.frames = r.frames.toArray(new double[r.frames.size()][]);
@@ -774,6 +785,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         final String nick = s.p.getName();
         final Set<String> keep = new HashSet<String>(stats.recordReplays());
         keep.addAll(legacyStats.recordReplays());
+        keep.addAll(islandStats.recordReplays());
         keep.add(rep.id);
         final int retentionRank = rank(s.p);
         replayWriter.submit(new Runnable() {
@@ -853,7 +865,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
 
         boolean begin() {
             int lz = lane * SPACING;
-            build(lane, map, rep.layout);
+            build(lane, map);
             viewer.setGameMode(GameMode.ADVENTURE);
             viewer.getInventory().clear();
             viewer.getInventory().setArmorContents(null);
@@ -921,7 +933,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         void again() {
             for (int[] c : shown) world.getBlockAt(c[0], c[1], c[2]).setType(Material.AIR);
             shown.clear();
-            build(lane, map, rep.layout);
+            build(lane, map);
             blockIdx = 0;
             clickIdx = 0;
             t = 0;
@@ -1030,7 +1042,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
             ghost = null;
             for (int[] c : shown) world.getBlockAt(c[0], c[1], c[2]).setType(Material.AIR);
             shown.clear();
-            build(lane, map, rep.layout);
+            build(lane, map);
             watches.remove(viewer.getUniqueId());
             refreshVisibility();
             if (laneOwner[lane] == this) laneOwner[lane] = null;
@@ -1565,10 +1577,13 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
             else p.sendMessage("§7/fb camera [first|free]");
         } else if (sub.equals("oldtop")) {
             FbMap m = a.length > 1 ? FbMap.of(a[1]) : null;
-            p.sendMessage("§6Fastbridge: старые платформы, архивный топ §f" + (m != null ? m.title : "32 блока"));
-            List<String[]> rows = legacyStats.top(m != null ? m : FbMap.B32, 10);
-            if (rows.isEmpty()) p.sendMessage("§7В архивном топе пока нет записей.");
-            for (int i = 0; i < rows.size(); i++) p.sendMessage("§e" + (i + 1) + ". §f" + rows.get(i)[0] + " §7— §a" + fmtVal(m != null ? m : FbMap.B32, Long.parseLong(rows.get(i)[1])));
+            FbMap selected = m != null ? m : FbMap.B32;
+            for (int archive = 0; archive < 2; archive++) {
+                p.sendMessage("§6Архив " + (archive == 0 ? "Akina: финиш у края острова" : "прежних платформ") + ": §f" + selected.title);
+                List<String[]> rows = (archive == 0 ? islandStats : legacyStats).top(selected, 10);
+                if (rows.isEmpty()) p.sendMessage("§7В этом архиве пока нет записей.");
+                for (int i = 0; i < rows.size(); i++) p.sendMessage("§e" + (i + 1) + ". §f" + rows.get(i)[0] + " §7— §a" + fmtVal(selected, Long.parseLong(rows.get(i)[1])));
+            }
         } else if (sub.equals("play") || sub.equals("join")) {
             join(p);
         } else if (sub.equals("leave") || sub.equals("exit")) {
