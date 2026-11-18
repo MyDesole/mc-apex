@@ -8,7 +8,7 @@ let route, auth
 vi.mock('vue-router', () => ({ useRoute: () => route, useRouter: () => ({ replace: mocked.replace }), RouterLink: { props: ['to'], template: '<a><slot /></a>' } }))
 vi.mock('@/stores/core/auth.js', () => ({ useAuthStore: () => auth }))
 vi.mock('@/services/minecraft/duels.js', () => ({ duelsApi: mocked }))
-vi.mock('@/components/core/ServerAddress.vue', () => ({ default: { template: '<button>mc-apex.ru</button>' } }))
+vi.mock('@/services/site/site.js', () => ({ siteApi: { serverStatus: () => Promise.resolve({ online: true, players: 2, address: '168.113.181.145' }) } }))
 const page = (winner = 'Alice') => ({ duels: [{ id: 1, winner, loser: 'Bob', kit: 'sumo', ranked: false, duration_seconds: 12, played_at: '2026-11-18T12:00:00Z' }], meta: { current_page: 1, last_page: 1, total: 1 } })
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r }); return { promise, resolve } }
 beforeEach(() => {
@@ -19,6 +19,7 @@ describe('история игровых режимов', () => {
   it('показывает гостю серверные матчи без запроса undefined-аккаунта', async () => {
     const w = mount(DuelsView); await flushPromises()
     expect(w.text()).toContain('Alice'); expect(mocked.player).not.toHaveBeenCalled()
+    expect(w.get('.server-address code').text()).toBe('168.113.181.145')
     await w.findAll('.mode-history__controls button')[1].trigger('click'); await flushPromises()
     expect(w.text()).toContain('Войди в аккаунт'); expect(mocked.player).not.toHaveBeenCalled(); w.unmount()
   })

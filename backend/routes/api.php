@@ -226,6 +226,8 @@ Route::middleware('minecraft.server')->prefix('minecraft')->group(function () {
     Route::post('/admin/lookup', [MinecraftServerController::class, 'lookup']);
     Route::post('/admin/unlink', [MinecraftServerController::class, 'unlink']);
 
+    Route::post('/modes/snapshot', [\App\Domains\Minecraft\Controllers\Api\MinecraftModesController::class, 'store'])->middleware('throttle:10,1');
+
     // Итоги дуэлей Alley, очередь выдач лобби-покупок и список онлайна
     Route::post('/duels', [\App\Domains\Minecraft\Controllers\Api\MinecraftIntegrationController::class, 'storeDuel']);
     Route::get('/grants', [\App\Domains\Minecraft\Controllers\Api\MinecraftIntegrationController::class, 'grants']);
@@ -242,6 +244,7 @@ Route::prefix('mod')->group(function () {
 });
 
 // Данные сервера для сайта: дуэли игрока, топ кланов по дуэлям, кто в игре
+Route::get('/minecraft/modes/{mode}', [\App\Domains\Minecraft\Controllers\Api\MinecraftModesController::class, 'show'])->whereIn('mode', ['bedwars', 'fastbridge'])->middleware('throttle:60,1');
 Route::get('/players/{user}/duels', [\App\Domains\Minecraft\Controllers\Api\MinecraftStatsController::class, 'playerDuels'])
     ->middleware('throttle:60,1');
 Route::get('/minecraft/duels/recent', [\App\Domains\Minecraft\Controllers\Api\MinecraftStatsController::class, 'recent'])->middleware('throttle:60,1');

@@ -31,6 +31,7 @@ public final class ApexSocial extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(layouts,this);
         Bukkit.getPluginManager().registerEvents(games,this);
         games.installRewardShield();
+        new ModePublisher(this).start();
         Bukkit.getScheduler().runTaskTimer(this,()->{
             for(Player p:Bukkit.getOnlinePlayers()){
                 boolean hub=mainHub(p)&&idle(p)&&authenticated(p);
@@ -48,7 +49,7 @@ public final class ApexSocial extends JavaPlugin implements Listener {
     static Profile profile(Player p){return AlleyPlugin.getInstance().getService(ProfileService.class).getProfile(p.getUniqueId());}
     static boolean idle(Player p){
         Profile pr=profile(p);
-        return pr!=null&&pr.getState()==ProfileState.LOBBY&&pr.getMatch()==null
+        return lobbyWorld(p)&&pr!=null&&pr.getState()==ProfileState.LOBBY&&pr.getMatch()==null
             &&com.andrei1058.bedwars.arena.Arena.getArenaByPlayer(p)==null;
     }
     static boolean authenticated(Player p){
@@ -63,6 +64,14 @@ public final class ApexSocial extends JavaPlugin implements Listener {
         Plugin owner=Bukkit.getPluginManager().getPlugin("ApexTierTests");
         String location=owner instanceof JavaPlugin?((JavaPlugin)owner).getConfig().getString("hub.hub","world:0:64:0"):"world:0:64:0";
         return p.getWorld().getName().equals(location.split(":",2)[0]);
+    }
+    static boolean lobbyWorld(Player p){
+        Plugin owner=Bukkit.getPluginManager().getPlugin("ApexTierTests");
+        if(owner instanceof JavaPlugin)for(String key:new String[]{"hub.hub","hub.duels","hub.bedwars"}){
+            String location=((JavaPlugin)owner).getConfig().getString(key);
+            if(location!=null&&p.getWorld().getName().equals(location.split(":",2)[0]))return true;
+        }
+        return mainHub(p);
     }
     static ItemStack item(Material material,String name,String... lore){
         ItemStack i=new ItemStack(material);ItemMeta m=i.getItemMeta();m.setDisplayName(name);m.setLore(Arrays.asList(lore));i.setItemMeta(m);return i;

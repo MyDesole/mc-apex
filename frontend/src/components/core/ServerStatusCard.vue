@@ -46,7 +46,7 @@ onUnmounted(() => clearInterval(timer))
         <span class="server-card__dot" :class="{ 'server-card__dot--on': status.online }" />
         <div>
           <strong>{{ status.online ? 'Сервер работает' : 'Сервер не отвечает' }}</strong>
-          <span v-if="status.online">{{ status.players }} из {{ status.max }} игроков онлайн</span>
+          <span v-if="status.online">{{ status.players }}{{ status.max > 0 ? ` из ${status.max}` : '' }} игроков онлайн</span>
           <span v-else>Возможно, идёт перезапуск — загляните через пару минут.</span>
         </div>
       </div>

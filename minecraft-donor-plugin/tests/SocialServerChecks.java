@@ -51,6 +51,7 @@ public final class SocialServerChecks {
             check(social.games.sessions.isEmpty(),"all private members removed after close");
             rank.setPermission("apex.donor.apex",false);owner.recalculatePermissions();
             social.games.command(owner,new String[]{"create","duel",kit.getName()});check(social.games.sessions.isEmpty(),"expired rank cannot create host session");
+            snapshots();
             runner.getLogger().info("SOCIAL_TEST_PASS "+checks+" live native integration checks");stage=99;
         }
     }
@@ -84,6 +85,9 @@ public final class SocialServerChecks {
         check(social.layouts.data.getInt("players."+owner.getUniqueId()+"."+kit.getName()+".active")==0,"expired rank restores basic layout");
         check(social.layouts.data.contains("players."+owner.getUniqueId()+"."+kit.getName()+".slots.1"),"expired rank retains saved paid profile");
         owner.closeInventory();rank.setPermission("apex.donor.apex",true);owner.recalculatePermissions();
+        Location lobby=owner.getLocation();owner.teleport(new Location(Bukkit.getWorld("world_nether"),0.5,80,0.5));
+        check(!ApexSocial.ready(owner),"training/foreign world is never treated as idle lobby");
+        social.games.command(owner,new String[]{"create","duel",kit.getName()});check(social.games.sessions.isEmpty(),"cannot pull active training player into private match");owner.teleport(lobby);
         World w=owner.getWorld();for(int x=-25;x<=25;x++)for(int z=-25;z<=25;z++)w.getBlockAt(x,64,z).setType(Material.SANDSTONE);
         SharedArena a=new SharedArena("social-test",new Location(w,-25,60,-25),new Location(w,25,90,25));a.setPos1(new Location(w,-5.5,65,0.5));a.setPos2(new Location(w,5.5,65,0.5));a.setDisplayName("Social test");a.setEnabled(true);a.setKits(Arrays.asList(kit.getName()));a.setCenter(new Location(w,0,65,0));AlleyPlugin.getInstance().getService(ArenaService.class).registerNewArena(a);
         social.games.command(guest,new String[]{"create","duel",kit.getName()});check(social.games.sessions.isEmpty(),"guest cannot host private game");
@@ -114,6 +118,7 @@ public final class SocialServerChecks {
         check(com.andrei1058.bedwars.BedWars.getStatsManager().get(owner.getUniqueId()).getBedsDestroyed()==beds+1,"ordinary BW still updates native persistent stats");
         beforeStats=stats();xp=levels().getCurrentXp(owner);money=com.andrei1058.bedwars.BedWars.getEconomy().getMoney(owner);
         social.games.command(owner,new String[]{"create","bw","bw_amazon"});check(social.games.privateArena(bw),"empty native map reserved");
+        ModePublisher.Capture hidden=new ModePublisher(social).capture();check(hidden.bw.getAsJsonArray("arenas").size()==0,"private BW arena never appears in public website snapshot");
         check(!bw.addPlayer(other,true),"uninvited native arena join rejected");
         check(!other.teleport(bw.getWorld().getSpawnLocation()),"outsider teleport into private world rejected");
         nativeRewards(bedEvent());check(stats().equals(beforeStats),"private bed event suppresses persistent counters");
@@ -129,5 +134,18 @@ public final class SocialServerChecks {
             if(timer!=null){java.lang.reflect.Field task=timer.getClass().getDeclaredField("task");task.setAccessible(true);org.bukkit.scheduler.BukkitTask t=(org.bukkit.scheduler.BukkitTask)task.get(timer);check(t==null||!Bukkit.getScheduler().isQueued(t.getTaskId()),"periodic reward timer cancelled: "+name);}
         }
         social.games.command(guest,new String[]{"leave"});
+    }
+    static void snapshots()throws Exception{
+        org.bukkit.plugin.Plugin tier=Bukkit.getPluginManager().getPlugin("ApexTierTests");java.lang.reflect.Method method=tier.getClass().getDeclaredMethod("fastBridge");method.setAccessible(true);Object fb=method.invoke(tier);
+        org.bukkit.configuration.file.YamlConfiguration yml=(org.bukkit.configuration.file.YamlConfiguration)ModePublisher.field(ModePublisher.field(fb,"stats"),"yml");String path="players."+owner.getUniqueId();
+        yml.set(path+".name",owner.getName());yml.set(path+".maps.32.best",2345L);yml.set(path+".maps.32.attempts",Arrays.asList(System.currentTimeMillis()));
+        org.bukkit.configuration.file.YamlConfiguration profiles=(org.bukkit.configuration.file.YamlConfiguration)ModePublisher.field(ModePublisher.field(fb,"perks"),"data");
+        Map<String,Object> pub=new HashMap<>();pub.put("map","32");pub.put("at",System.currentTimeMillis());pub.put("outcome","финиш");pub.put("elapsed",2345L);pub.put("value",2345L);pub.put("private",false);
+        Map<String,Object> secret=new HashMap<>(pub);secret.put("private",true);secret.put("outcome","PRIVATE_SENTINEL");profiles.set(path+".history",Arrays.asList(secret,pub));
+        ModePublisher publisher=new ModePublisher(social);ModePublisher.Capture capture=publisher.capture();publisher.complete(capture);
+        com.google.gson.JsonObject stats=capture.body.getAsJsonObject("fastbridge");check(stats.getAsJsonObject("tables").getAsJsonArray("current").get(0).getAsJsonObject().get("best").getAsLong()==2345L,"publisher reads current gold-plate record");
+        check(stats.getAsJsonArray("history").size()==1&&!capture.body.toString().contains("PRIVATE_SENTINEL"),"private FB history never leaves native server");
+        check(stats.getAsJsonArray("history").get(0).getAsJsonObject().get("public").getAsBoolean(),"public history is explicitly marked");
+        runner.getDataFolder().mkdirs();java.nio.file.Files.write(new java.io.File(runner.getDataFolder(),"native-mode-snapshot.json").toPath(),capture.body.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 }

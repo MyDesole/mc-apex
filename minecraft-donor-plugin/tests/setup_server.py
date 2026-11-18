@@ -34,8 +34,11 @@ public final class AuthStub extends org.bukkit.plugin.java.JavaPlugin {
 (src/'TierStub.java').write_text('''package ru.mcapex.social.test;
 public final class TierStub extends org.bukkit.plugin.java.JavaPlugin {
  public static class Hub {public org.bukkit.Location hub,bedwars;}
- public static class Bridge {public org.bukkit.World world;public java.util.Map<java.util.UUID,Object> sessions=new java.util.HashMap<>(),watches=new java.util.HashMap<>();}
- public Hub hub(){return null;}public Bridge fastBridge(){return null;}
+ public static class Stats {public org.bukkit.configuration.file.YamlConfiguration yml=new org.bukkit.configuration.file.YamlConfiguration();}
+ public static class Perks {public org.bukkit.configuration.file.YamlConfiguration data=new org.bukkit.configuration.file.YamlConfiguration();}
+ public static class Bridge {public org.bukkit.World world;public java.util.Map<java.util.UUID,Object> sessions=new java.util.HashMap<>(),watches=new java.util.HashMap<>();public Stats stats=new Stats(),islandStats=new Stats(),legacyStats=new Stats();public Perks perks=new Perks();}
+ public static class Api {public com.google.gson.JsonObject post(String path,com.google.gson.JsonObject data){return new com.google.gson.JsonObject();}}
+ final Bridge bridge=new Bridge();public Hub hub(){return null;}public Bridge fastBridge(){return bridge;}public Api api(){return new Api();}
  public void onEnable(){getDataFolder().mkdirs();org.bukkit.configuration.file.YamlConfiguration y=new org.bukkit.configuration.file.YamlConfiguration();String[] ranks={"vip","mvp","mvp_plus","apex","legend"};for(String r:ranks){y.set("limits."+r+".presets",2);y.set("limits."+r+".replays",80);y.set("limits."+r+".days",30);}try{y.save(new java.io.File(getDataFolder(),"fastbridge-perks.yml"));}catch(Exception e){throw new RuntimeException(e);}}
 }''')
 (src/'TestBoot.java').write_text('''package ru.mcapex.social.test;
