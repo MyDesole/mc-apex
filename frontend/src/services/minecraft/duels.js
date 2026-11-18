@@ -2,6 +2,7 @@ import { api } from '@/services/core/api.js'
 
 /** Дуэли и онлайн с игрового сервера. */
 export const duelsApi = {
+  recent(params = {}) { return api.get('/minecraft/duels/recent', { params }) },
   /** История и статистика игрока по режимам. */
   player(id, params = {}) {
     return api.get(`/players/${encodeURIComponent(id)}/duels`, { params })

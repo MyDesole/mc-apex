@@ -5,6 +5,7 @@ namespace App\Domains\Minecraft\Controllers\Api;
 use App\Domains\Minecraft\Models\MinecraftGrant;
 use App\Domains\Minecraft\Services\MinecraftDuelService;
 use App\Domains\Minecraft\Services\MinecraftGrantService;
+use App\Domains\Minecraft\Services\ServerPrefixService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,8 +22,7 @@ class MinecraftIntegrationController extends Controller
     public function __construct(
         private readonly MinecraftDuelService $duels,
         private readonly MinecraftGrantService $grants,
-    ) {
-    }
+    ) {}
 
     public function storeDuel(Request $request): JsonResponse
     {
@@ -33,6 +33,7 @@ class MinecraftIntegrationController extends Controller
             'loser' => ['required', 'string', 'max:32', 'different:winner'],
             'duration_seconds' => ['nullable', 'integer', 'min:0', 'max:86400'],
             'ranked' => ['nullable', 'boolean'],
+            'played_at' => ['nullable', 'date', 'before_or_equal:'.now()->addMinutes(5)->toIso8601String()],
         ]);
 
         $duel = $this->duels->record($data);
@@ -86,7 +87,7 @@ class MinecraftIntegrationController extends Controller
         Cache::put(self::ONLINE_KEY, $nicks, now()->addSeconds(120));
 
         if ($joined) {
-            app(\App\Domains\Minecraft\Services\ServerPrefixService::class)->onJoin($joined);
+            app(ServerPrefixService::class)->onJoin($joined);
         }
 
         return response()->json(['ok' => true, 'count' => count($nicks)]);

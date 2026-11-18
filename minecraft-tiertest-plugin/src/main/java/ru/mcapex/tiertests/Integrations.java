@@ -3,6 +3,14 @@ package ru.mcapex.tiertests;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.nio.charset.StandardCharsets;
+import java.util.Set;
+import java.util.Collections;
+import java.util.concurrent.ConcurrentHashMap;
 import dev.revere.alley.AlleyPlugin;
 import dev.revere.alley.core.profile.Profile;
 import dev.revere.alley.core.profile.ProfileService;
@@ -33,7 +41,7 @@ final class Integrations {
 
     private final ApexTierTests plugin;
     private final Map<Match, Tracked> tracked = new HashMap<Match, Tracked>();
-    private final ConcurrentLinkedQueue<JsonObject> unsent = new ConcurrentLinkedQueue<JsonObject>();
+    private final DuelOutbox outbox;
     private boolean grantsBusy;
     private int tick;
 
@@ -49,10 +57,12 @@ final class Integrations {
         long startedAt = System.currentTimeMillis();
         String winner;
         String loser;
+        long finishedAt;
     }
 
     Integrations(ApexTierTests plugin) {
         this.plugin = plugin;
+        this.outbox = new DuelOutbox(new File(plugin.getDataFolder(), "website-duel-outbox"), task -> Bukkit.getScheduler().runTaskAsynchronously(plugin, task), body -> plugin.api().post("/duels", body));
     }
 
     void start() {
@@ -65,7 +75,7 @@ final class Integrations {
                     if (tick % 2 == 0) syncFly();
                     if (tick % 30 == 0) sendPresence();
                     if (tick % 15 == 0) fetchGrants();
-                    if (tick % 30 == 0) flushUnsent();
+                    if (tick % 5 == 0) flushUnsent();
                 } catch (Throwable t) {
                     plugin.getLogger().warning("Интеграции: " + t);
                 }
@@ -79,7 +89,7 @@ final class Integrations {
         List<Match> live = AlleyPlugin.getInstance().getService(MatchService.class).getMatches();
 
         for (Match m : live) {
-            if (!(m instanceof DefaultMatch)) continue;
+            if (!(m instanceof DefaultMatch) || !m.isAffectStatistics() || m.isTeamMatch()) { tracked.remove(m); continue; }
             List<GameParticipant<MatchGamePlayer>> parts = m.getParticipants();
             if (parts.size() != 2 || parts.get(0).getPlayerSize() != 1 || parts.get(1).getPlayerSize() != 1) continue;
 
@@ -94,11 +104,13 @@ final class Integrations {
                 t.aId = pa.getUuid();
                 t.bId = pb.getUuid();
                 t.ranked = m.isRanked();
+                if (m.getStartTime() > 0) t.startedAt = m.getStartTime();
                 tracked.put(m, t);
             }
 
             GameParticipant<MatchGamePlayer> w = ((DefaultMatch) m).getWinner();
-            if (w != null) {
+            if (w != null && t.winner == null) {
+                t.finishedAt = m.getEndTime() > 0 ? m.getEndTime() : System.currentTimeMillis();
                 boolean aWon = w.containsPlayer(t.aId);
                 t.winner = aWon ? t.a : t.b;
                 t.loser = aWon ? t.b : t.a;
@@ -108,37 +120,22 @@ final class Integrations {
         for (Iterator<Map.Entry<Match, Tracked>> it = tracked.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry<Match, Tracked> e = it.next();
             if (live.contains(e.getKey())) continue;
-            it.remove();
             Tracked t = e.getValue();
-            if (t.winner == null) continue; // ничья или матч отменён - в историю не идёт
+            if (t.winner == null) { it.remove(); continue; } // ничья или матч отменён - в историю не идёт
             JsonObject body = new JsonObject();
             body.addProperty("match_key", t.key);
             body.addProperty("kit", t.kit);
             body.addProperty("winner", t.winner);
             body.addProperty("loser", t.loser);
-            body.addProperty("duration_seconds", (int) ((System.currentTimeMillis() - t.startedAt) / 1000L));
+            body.addProperty("duration_seconds", (int) Math.max(0, ((t.finishedAt > 0 ? t.finishedAt : System.currentTimeMillis()) - t.startedAt) / 1000L));
             body.addProperty("ranked", t.ranked);
-            postDuel(body);
+            body.addProperty("played_at", java.time.Instant.ofEpochMilli(t.finishedAt > 0 ? t.finishedAt : System.currentTimeMillis()).toString());
+            if (outbox.offer(body)) it.remove();
+            else plugin.getLogger().severe("Не удалось сохранить итог дуэли; запись остаётся в памяти для повторной попытки");
         }
     }
 
-    private void postDuel(final JsonObject body) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
-            public void run() {
-                try {
-                    plugin.api().post("/duels", body);
-                } catch (Exception ex) {
-                    // match_key делает повторную отправку безопасной
-                    unsent.add(body);
-                }
-            }
-        });
-    }
-
-    private void flushUnsent() {
-        JsonObject body;
-        while ((body = unsent.poll()) != null) postDuel(body);
-    }
+    private void flushUnsent() { outbox.flush(); }
 
     /* ---------- Онлайн ---------- */
 

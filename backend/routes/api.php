@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Players\Controllers\Api\DonorShowcaseController;
 use App\Domains\Players\Controllers\Api\ProfileRecommendationController;
 use App\Domains\Players\Controllers\HomeController;
 use App\Domains\Players\Controllers\PlayerController;
@@ -99,6 +100,9 @@ Route::get('/shop/priority-candidates', [ShopController::class, 'priorityCandida
 Route::get('/shop/inventory', [ShopController::class, 'inventory'])
     ->middleware('auth:sanctum');
 Route::get('/shop/{shopItem}', [ShopController::class, 'show'])->whereNumber('shopItem');
+
+// Личная витрина донатера: опубликованное оформление видно всем
+Route::get('/players/{user}/showcase', [DonorShowcaseController::class, 'show'])->whereNumber('user')->middleware('throttle:60,1');
 
 // Гостевая книга профиля: читать могут все
 Route::get('/players/{user}/guestbook', [\App\Domains\Players\Controllers\Api\ProfileBuilderController::class, 'guestbook'])
@@ -240,6 +244,7 @@ Route::prefix('mod')->group(function () {
 // Данные сервера для сайта: дуэли игрока, топ кланов по дуэлям, кто в игре
 Route::get('/players/{user}/duels', [\App\Domains\Minecraft\Controllers\Api\MinecraftStatsController::class, 'playerDuels'])
     ->middleware('throttle:60,1');
+Route::get('/minecraft/duels/recent', [\App\Domains\Minecraft\Controllers\Api\MinecraftStatsController::class, 'recent'])->middleware('throttle:60,1');
 Route::get('/minecraft/clan-duels', [\App\Domains\Minecraft\Controllers\Api\MinecraftStatsController::class, 'clanBoard'])
     ->middleware('throttle:60,1');
 Route::get('/minecraft/online', [\App\Domains\Minecraft\Controllers\Api\MinecraftStatsController::class, 'online'])
@@ -301,6 +306,8 @@ Route::middleware('auth:sanctum')->group(function () {
     |----------------------------------------------------------------------
     */
     Route::prefix('players/me')->group(function () {
+        Route::put('/showcase', [DonorShowcaseController::class, 'update'])->middleware('throttle:30,1');
+        Route::delete('/showcase', [DonorShowcaseController::class, 'destroy'])->middleware('throttle:30,1');
         Route::match(['put', 'post'], '/', [PlayerController::class, 'updateMe']);
         Route::match(['put', 'post'], '/profile', [PlayerController::class, 'updateProfile']);
 

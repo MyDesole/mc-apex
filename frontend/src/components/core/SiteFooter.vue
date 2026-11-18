@@ -70,7 +70,8 @@ onMounted(async () => {
         <h3>Сообщество</h3>
         <RouterLink to="/players">Рейтинг</RouterLink>
         <RouterLink to="/clans">Кланы</RouterLink>
-        <RouterLink to="/tournaments">Турниры</RouterLink>
+        <RouterLink to="/duels">Дуэли, BW и FB</RouterLink>
+      <RouterLink to="/tournaments">Турниры</RouterLink>
         <RouterLink to="/forum">Форум</RouterLink>
       </nav>
 

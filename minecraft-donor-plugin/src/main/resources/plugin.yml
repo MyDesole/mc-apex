@@ -1,0 +1,11 @@
+name: ApexSocial
+version: 1.0.0
+main: ru.mcapex.social.ApexSocial
+depend: [ApexAuth, ApexTierTests, Alley, BedWars1058]
+commands:
+  privileges:
+    description: Информация обо всех привилегиях
+  layouts:
+    description: Сохранённые раскладки дуэлей
+  private:
+    description: Приватные матчи без статистики и наград

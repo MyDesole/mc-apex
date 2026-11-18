@@ -92,6 +92,7 @@ watch(mobileMenuOpen, (open) => open && loadCaseStatus())
 
 /** Мобильное меню: разделы сайта плитками. */
 const MOBILE_SECTIONS = [
+  { to: '/duels', label: 'Режимы', icon: 'M4 4l16 16M20 4L4 20M3 16l5 5M16 3l5 5' },
   { to: '/', label: 'Главная', icon: 'M3 11 12 3l9 8M5 9.5V21h5v-6h4v6h5V9.5' },
   { to: '/players', label: 'Рейтинг', icon: 'M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM17 5h3a2 2 0 0 1 0 4h-3M7 5H4a2 2 0 0 0 0 4h3' },
   { to: '/clans', label: 'Кланы', icon: 'M12 2 3 6v6c0 5 3.8 9.3 9 10 5.2-.7 9-5 9-10V6l-9-4Z' },
@@ -286,6 +287,8 @@ watch(mobileMenuOpen, (open) => {
             <span class="nav-icon">✉</span>
             <span>Форум</span>
           </RouterLink>
+
+          <RouterLink to="/duels" class="nav-link"><span class="nav-icon">⚔</span><span>Режимы</span></RouterLink>
 
           <RouterLink to="/tournaments" class="nav-link">
             <span class="nav-icon">♛</span>

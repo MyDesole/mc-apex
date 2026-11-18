@@ -60,14 +60,14 @@ const router = createRouter({
     // Короткая ссылка для плагина на сервере: сразу окно привязки ника
     {
       path: '/link-minecraft',
-      redirect: (to) => ({ path: '/profile', query: to.query.nick ? { nick: to.query.nick } : {} }),
+      redirect: (to) => ({ name: 'profile', query: to.query.nick ? { nick: to.query.nick } : {} }),
     },
     { path: '/players', name: 'players', component: PlayersView, meta: { title: 'Игроки', auth: true } },
     { path: '/players/:id', name: 'player', component: PlayerView, meta: { title: 'Профиль игрока', auth: true } },
     // Каноничная красивая ссылка на профиль: /user/Ник (или /user/3)
     { path: '/user/:id', name: 'user', component: PlayerView, meta: { title: 'Профиль игрока', auth: true } },
     // История дуэлей с Minecraft-сервера: своя и чужая
-    { path: '/duels/:id?', name: 'duels', component: () => import('@/views/minecraft/DuelsView.vue'), meta: { title: 'Дуэли', auth: true } },
+    { path: '/duels/:id?', name: 'duels', component: () => import('@/views/minecraft/DuelsView.vue'), meta: { title: 'Дуэли, BedWars и FastBridge' } },
     { path: '/achievements', name: 'achievements', component: () => import('@/views/achievements/AchievementsView.vue'), meta: { title: 'Ачивки', auth: true } },
     // Сравнение двух игроков: /compare?a=Ник&b=Ник
     { path: '/compare', name: 'compare', component: () => import('@/views/players/CompareView.vue'), meta: { title: 'Сравнение игроков', auth: true } },

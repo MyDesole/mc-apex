@@ -14,12 +14,11 @@ use Illuminate\Support\Facades\DB;
 /** Публичные данные с сервера для сайта: история дуэлей, топ кланов, онлайн. */
 class MinecraftStatsController extends Controller
 {
-    public function __construct(private readonly MinecraftDuelService $duels)
-    {
-    }
+    public function __construct(private readonly MinecraftDuelService $duels) {}
 
     public function playerDuels(Request $request, User $user): JsonResponse
     {
+        $request->validate(['kit' => ['nullable', 'string', 'max:48'], 'page' => ['sometimes', 'integer', 'min:1']]);
         $kit = $request->query('kit');
         $page = $this->duels->history($user, is_string($kit) && $kit !== '' ? $kit : null);
 
@@ -39,6 +38,23 @@ class MinecraftStatsController extends Controller
                 'opponent_user_id' => $d->winner_user_id === $user->id ? $d->loser_user_id : $d->winner_user_id,
                 'duration_seconds' => $d->duration_seconds,
                 'ranked' => $d->ranked,
+                'played_at' => $d->played_at?->toIso8601String(),
+            ])->all(),
+            'meta' => ['current_page' => $page->currentPage(), 'last_page' => $page->lastPage(), 'total' => $page->total()],
+        ]);
+    }
+
+    public function recent(Request $request): JsonResponse
+    {
+        $data = $request->validate(['kit' => ['nullable', 'string', 'max:48'], 'page' => ['sometimes', 'integer', 'min:1']]);
+        $page = MinecraftDuel::query()->when($data['kit'] ?? null, fn ($q, $kit) => $q->where('kit', mb_strtolower($kit)))
+            ->orderByDesc('played_at')->orderByDesc('id')->paginate(20);
+
+        return response()->json([
+            'duels' => collect($page->items())->map(fn (MinecraftDuel $d) => [
+                'id' => $d->id, 'kit' => $d->kit, 'winner' => $d->winner_name, 'loser' => $d->loser_name,
+                'winner_user_id' => $d->winner_user_id, 'loser_user_id' => $d->loser_user_id,
+                'duration_seconds' => $d->duration_seconds, 'ranked' => $d->ranked,
                 'played_at' => $d->played_at?->toIso8601String(),
             ])->all(),
             'meta' => ['current_page' => $page->currentPage(), 'last_page' => $page->lastPage(), 'total' => $page->total()],

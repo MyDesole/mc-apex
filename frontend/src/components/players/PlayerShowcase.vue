@@ -11,6 +11,7 @@ import MinecraftSkinViewer from '@/components/minecraft/MinecraftSkinViewer.vue'
 import PlayerCardModal from '@/components/players/PlayerCardModal.vue'
 import BrandCube from '@/components/core/BrandCube.vue'
 import { guessSkinModel, loadSkin, readSkinFile } from '@/utils/minecraftSkin.js'
+import DonorShowcase from '@/components/players/DonorShowcase.vue'
 import { api } from '@/services/core/api.js'
 import { useAuthStore } from '@/stores/core/auth.js'
 
@@ -290,6 +291,8 @@ async function copyNickname() {
         :rank="rank"
     />
   </section>
+  <RouterLink class="showcase-duels-link" :to="`/duels/${user.id}`">История дуэлей →</RouterLink>
+  <DonorShowcase :user-id="user.id" :is-me="isMe" />
 </template>
 
 <style scoped>

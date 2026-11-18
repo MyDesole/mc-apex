@@ -16,6 +16,8 @@ class MinecraftDuel extends Model
 
     protected $casts = [
         'ranked' => 'boolean',
+        'winner_user_id' => 'integer',
+        'loser_user_id' => 'integer',
         'duration_seconds' => 'integer',
         'played_at' => 'datetime',
     ];
