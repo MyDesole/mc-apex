@@ -54,7 +54,26 @@ final class ModePublisher {
             PlayerStats stats=BedWars.getRemoteDatabase().fetchStats(id);if(stats!=null){JsonObject row=bwPlayer(stats);if(row!=null)c.players.put(id,row);}
         }
         JsonArray players=new JsonArray();for(JsonObject row:c.players.values())players.add(row);c.bw.add("players",players);
+        c.body.add("duels",duelCounters());
     }
+    // Native cumulative queue statistics survive restarts; old per-match details do not.
+    JsonObject duelCounters(){
+        JsonObject out=new JsonObject();JsonArray players=new JsonArray();
+        dev.revere.alley.core.profile.ProfileService profiles=dev.revere.alley.AlleyPlugin.getInstance().getService(dev.revere.alley.core.profile.ProfileService.class);
+        com.mongodb.client.MongoCollection<org.bson.Document> collection=profiles.getCollection();
+        out.addProperty("configured",collection!=null);
+        if(collection!=null)try(com.mongodb.client.MongoCursor<org.bson.Document> cursor=collection.find().projection(new org.bson.Document("uuid",1).append("name",1).append("profileData.unrankedWins",1).append("profileData.unrankedLosses",1).append("profileData.rankedWins",1).append("profileData.rankedLosses",1)).limit(10000).iterator()){
+            while(cursor.hasNext()){
+                org.bson.Document p=cursor.next();String name=p.getString("name"),uuid=p.getString("uuid");
+                if(name==null||uuid==null||!name.matches("[A-Za-z0-9_]{3,16}"))continue;
+                org.bson.Document data=(org.bson.Document)p.get("profileData");if(data==null)continue;
+                int wins=number(data,"unrankedWins")+number(data,"rankedWins"),losses=number(data,"unrankedLosses")+number(data,"rankedLosses");
+                if(wins+losses==0)continue;JsonObject row=new JsonObject();row.addProperty("uuid",uuid);row.addProperty("name",name);row.addProperty("wins",wins);row.addProperty("losses",losses);players.add(row);
+            }
+        }
+        out.add("players",players);return out;
+    }
+    static int number(org.bson.Document data,String key){Object value=data.get(key);return value instanceof Number?Math.max(0,((Number)value).intValue()):0;}
     static JsonObject bwPlayer(PlayerStats s){
         if(s.getName()==null||!s.getName().matches("[A-Za-z0-9_]{3,16}"))return null;
         if(s.getGamesPlayed()+s.getWins()+s.getLosses()+s.getKills()+s.getFinalKills()+s.getBedsDestroyed()==0)return null;

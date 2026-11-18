@@ -89,7 +89,7 @@ final class Integrations {
         List<Match> live = AlleyPlugin.getInstance().getService(MatchService.class).getMatches();
 
         for (Match m : live) {
-            if (!(m instanceof DefaultMatch) || !m.isAffectStatistics() || m.isTeamMatch()) { tracked.remove(m); continue; }
+            if (!(m instanceof DefaultMatch) || m.isTeamMatch() || privateDuel(m)) { tracked.remove(m); continue; }
             List<GameParticipant<MatchGamePlayer>> parts = m.getParticipants();
             if (parts.size() != 2 || parts.get(0).getPlayerSize() != 1 || parts.get(1).getPlayerSize() != 1) continue;
 
@@ -108,19 +108,14 @@ final class Integrations {
                 tracked.put(m, t);
             }
 
-            GameParticipant<MatchGamePlayer> w = ((DefaultMatch) m).getWinner();
-            if (w != null && t.winner == null) {
-                t.finishedAt = m.getEndTime() > 0 ? m.getEndTime() : System.currentTimeMillis();
-                boolean aWon = w.containsPlayer(t.aId);
-                t.winner = aWon ? t.a : t.b;
-                t.loser = aWon ? t.b : t.a;
-            }
+            captureWinner(m,t);
         }
 
         for (Iterator<Map.Entry<Match, Tracked>> it = tracked.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry<Match, Tracked> e = it.next();
             if (live.contains(e.getKey())) continue;
             Tracked t = e.getValue();
+            captureWinner(e.getKey(),t);
             if (t.winner == null) { it.remove(); continue; } // ничья или матч отменён - в историю не идёт
             JsonObject body = new JsonObject();
             body.addProperty("match_key", t.key);
@@ -133,6 +128,24 @@ final class Integrations {
             if (outbox.offer(body)) it.remove();
             else plugin.getLogger().severe("Не удалось сохранить итог дуэли; запись остаётся в памяти для повторной попытки");
         }
+    }
+
+    // A native invitation also has affectStatistics=false; only explicit private sessions are hidden.
+    private boolean privateDuel(Match match) {
+        org.bukkit.plugin.Plugin social=Bukkit.getPluginManager().getPlugin("ApexSocial");
+        if(social==null||!social.isEnabled())return false;
+        try{return Boolean.TRUE.equals(social.getClass().getMethod("isPrivateDuel",Object.class).invoke(social,match));}
+        catch(Exception ex){return !match.isAffectStatistics();}
+    }
+
+    private void captureWinner(Match match,Tracked t) {
+        if(t.winner!=null||!(match instanceof DefaultMatch)||match.getEndTime()<=0)return;
+        if(match.getState()!=dev.revere.alley.feature.match.MatchState.ENDING_MATCH)return;
+        GameParticipant<MatchGamePlayer> w=((DefaultMatch)match).getWinner();
+        if(w==null)return;
+        t.finishedAt=match.getEndTime();
+        boolean aWon=w.containsPlayer(t.aId);
+        t.winner=aWon?t.a:t.b;t.loser=aWon?t.b:t.a;
     }
 
     private void flushUnsent() { outbox.flush(); }

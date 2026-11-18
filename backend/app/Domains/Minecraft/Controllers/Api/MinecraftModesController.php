@@ -15,6 +15,14 @@ class MinecraftModesController extends Controller
     public function store(Request $request): JsonResponse
     {
         $rules = [
+            'duels' => ['sometimes', 'array:configured,players'],
+            'duels.configured' => ['required_with:duels', 'boolean'],
+            'duels.players' => ['present_with:duels', 'array', 'max:10000'],
+            'duels.players.*' => ['array:uuid,name,wins,losses'],
+            'duels.players.*.uuid' => ['required', 'uuid'],
+            'duels.players.*.name' => ['required', 'regex:/^[A-Za-z0-9_]{3,16}$/'],
+            'duels.players.*.wins' => ['required', 'integer', 'min:0', 'max:2147483647'],
+            'duels.players.*.losses' => ['required', 'integer', 'min:0', 'max:2147483647'],
             'captured_at' => ['required', 'date', 'before_or_equal:'.now()->addMinutes(5)->toIso8601String()],
             'bedwars' => ['required', 'array:configured,players,arenas,online'],
             'bedwars.configured' => ['required', 'boolean'],

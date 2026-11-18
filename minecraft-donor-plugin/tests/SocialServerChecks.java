@@ -102,7 +102,8 @@ public final class SocialServerChecks {
         check(ApexSocial.profile(other).getMatch()==null,"outsider not pulled into duel");
         java.lang.reflect.Method process=DefaultMatch.class.getDeclaredMethod("processStatistics",dev.revere.alley.feature.match.model.GameParticipant.class,dev.revere.alley.feature.match.model.GameParticipant.class);process.setAccessible(true);process.invoke(match,match.getParticipantA(),match.getParticipantB());
         check(wins(owner)==wins&&losses(guest)==losses&&ApexSocial.profile(owner).getProfileData().getCoins()==coins,"native results do not award private stats/coins");
-        match.setWinner(match.getParticipantA());match.setLoser(match.getParticipantB());social.games.command(owner,new String[]{"leave"});
+        checks+=ru.mcapex.tiertests.IntegrationHistoryChecks.run(match,()->social.privateDuels.remove(match));
+        social.games.command(owner,new String[]{"leave"});
     }
     static int wins(Player p){return ApexSocial.profile(p).getProfileData().getUnrankedKitData().values().stream().mapToInt(d->d.getWins()).sum();}
     static int losses(Player p){return ApexSocial.profile(p).getProfileData().getUnrankedKitData().values().stream().mapToInt(d->d.getLosses()).sum();}

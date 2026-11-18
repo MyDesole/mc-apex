@@ -126,6 +126,25 @@ class MinecraftDuelService
         return $first ? $n : -$n;
     }
 
+    /** Native queue counters, separate from the website's saved match list. */
+    public function serverStats(User $user): ?array
+    {
+        if (! $user->minecraft_uuid) {
+            return null;
+        }
+        $snapshot = DB::table('minecraft_mode_snapshots')->where('mode', 'duels')->first();
+        if (! $snapshot) {
+            return null;
+        }
+        $data = json_decode($snapshot->data, true);
+        $player = collect($data['players'] ?? [])->first(fn ($p) => strcasecmp($p['uuid'], $user->minecraft_uuid) === 0);
+        if (! $player) {
+            return null;
+        }
+
+        return ['source' => 'native_queue', 'updated_at' => $data['captured_at'], 'total' => $this->row(null, $player['wins'], $player['losses'], 0)];
+    }
+
     /** Топ кланов по победам в дуэлях их участников. */
     public function clanLeaderboard(int $limit = 20): array
     {

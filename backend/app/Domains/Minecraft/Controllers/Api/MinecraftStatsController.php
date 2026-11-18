@@ -30,6 +30,7 @@ class MinecraftStatsController extends Controller
                 'online' => $this->isOnline($user),
             ],
             'stats' => $this->duels->stats($user),
+            'server_stats' => $this->duels->serverStats($user),
             'duels' => collect($page->items())->map(fn (MinecraftDuel $d) => [
                 'id' => $d->id,
                 'kit' => $d->kit,

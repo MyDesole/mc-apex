@@ -11,8 +11,8 @@ class MinecraftModesService
     public function store(array $payload): void
     {
         DB::transaction(function () use ($payload): void {
-            foreach (['bedwars', 'fastbridge'] as $mode) {
-                if (! $payload[$mode]['configured']) {
+            foreach (['bedwars', 'fastbridge', 'duels'] as $mode) {
+                if (! ($payload[$mode]['configured'] ?? false)) {
                     continue;
                 }
                 $table = DB::table('minecraft_mode_snapshots');

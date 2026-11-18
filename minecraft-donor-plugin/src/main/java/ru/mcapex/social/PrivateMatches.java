@@ -114,7 +114,7 @@ final class PrivateMatches implements Listener {
                 Player a=members.get(0),b=members.get(1);
                 AlleyPlugin.getInstance().getService(MatchService.class).createAndStartMatch(k,selected,new GameParticipant<>(new MatchGamePlayer(a.getUniqueId(),a.getName())),new GameParticipant<>(new MatchGamePlayer(b.getUniqueId(),b.getName())),false,false,false);
                 s.duel=ApexSocial.profile(p).getMatch();
-                if(s.duel==null)throw new IllegalStateException("Match not created");s.duel.setAffectStatistics(false);
+                if(s.duel==null)throw new IllegalStateException("Match not created");s.duel.setAffectStatistics(false);plugin.privateDuels.add(s.duel);
             }
         }catch(Exception ex){
             if(s.bw==null&&s.duel==null)s.duel=ApexSocial.profile(p).getMatch();

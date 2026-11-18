@@ -33,6 +33,19 @@ class MinecraftModeSnapshotsTest extends TestCase
         return ['captured_at' => now()->toIso8601String(), 'bedwars' => ['configured' => true, 'online' => 0, 'players' => [$bw(self::ALICE, 'Alice', 8), $bw(self::BOB, 'Bob', 2)], 'arenas' => [['id' => 'amazon', 'name' => 'Amazon', 'teams' => 8, 'team_size' => 2, 'players' => 0, 'max_players' => 16, 'state' => 'waiting']]], 'fastbridge' => ['configured' => true, 'online' => 0, 'tables' => ['current' => [$fb(self::ALICE, 'Alice', '32', 2000), $fb(self::BOB, 'Bob', '32', 1500), $fb(self::ALICE, 'Alice', 'inf', 100), $fb(self::BOB, 'Bob', 'inf', 200)], 'islands' => [$fb(self::ALICE, 'Alice', '32', 1000)], 'classic' => []], 'history' => [$history(self::ALICE, 'AliceFinish'), $history(self::BOB, 'BobFinish')]]];
     }
 
+    public function test_native_queue_counters_do_not_invent_old_match_details(): void
+    {
+        $owner = User::factory()->create(['minecraft_username' => 'Alice', 'minecraft_uuid' => self::ALICE]);
+        $other = User::factory()->create(['minecraft_username' => 'Other', 'minecraft_uuid' => self::BOB]);
+        $body = $this->snapshot();
+        $body['duels'] = ['configured' => true, 'players' => [['uuid' => self::ALICE, 'name' => 'Alice', 'wins' => 19, 'losses' => 21]]];
+        $this->postJson('/api/minecraft/modes/snapshot', $body, $this->headers)->assertOk();
+        $this->getJson('/api/players/'.$owner->id.'/duels')->assertOk()->assertJsonPath('server_stats.total.games', 40)->assertJsonPath('server_stats.total.wins', 19)->assertJsonPath('meta.total', 0)->assertJsonCount(0, 'duels');
+        $this->getJson('/api/players/'.$other->id.'/duels')->assertOk()->assertJsonPath('server_stats', null);
+        $body['duels']['players'] = [];
+        $this->postJson('/api/minecraft/modes/snapshot', $body, $this->headers)->assertOk();
+    }
+
     public function test_only_server_can_write_and_empty_native_tables_are_valid(): void
     {
         $body = $this->snapshot();

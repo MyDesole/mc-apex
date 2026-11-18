@@ -5,7 +5,7 @@ config=root/'plugins/BedWars1058/config.yml'
 if config.exists():config.write_text(config.read_text().replace('serverType: MULTIARENA','serverType: SHARED').replace('game-restart: 45','game-restart: 8'))
 cp=':'.join(str(p) for p in [root/'server.jar',r/'work/Alley.jar',r/'work/BedWars.jar',r/'minecraft-donor-plugin/target/ApexSocial.jar'])
 classes=r/'minecraft-donor-plugin/target/test-classes';classes.mkdir(exist_ok=True)
-subprocess.run([jdk+'javac','--release','8','-encoding','UTF-8','-cp',cp,'-d',str(classes),str(pathlib.Path(__file__).with_name('SocialServerChecks.java'))],check=True)
+subprocess.run([jdk+'javac','--release','8','-encoding','UTF-8','-cp',cp,'-d',str(classes),*[str(p) for p in pathlib.Path(__file__).parent.glob('*.java')],*[str(p) for p in pathlib.Path(__file__).with_name('support').glob('*.java')],str(r/'minecraft-tiertest-plugin/src/main/java/ru/mcapex/tiertests/Integrations.java'),str(r/'minecraft-tiertest-plugin/src/main/java/ru/mcapex/tiertests/DuelOutbox.java')],check=True)
 with zipfile.ZipFile(r/'minecraft-donor-plugin/target/ApexSocial.jar') as source,zipfile.ZipFile(root/'plugins/ApexSocial.jar','w',zipfile.ZIP_DEFLATED) as dest:
  for entry in source.infolist():dest.writestr(entry,source.read(entry.filename))
  for f in classes.rglob('*.class'):dest.write(f,str(f.relative_to(classes)))

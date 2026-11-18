@@ -21,6 +21,8 @@ public final class ApexSocial extends JavaPlugin implements Listener {
     static final String[] LABELS={"Игрок","VIP","MVP","MVP+","APEX","LEGEND"};
     static final int[] LAYOUTS={0,2,3,5,8,12};
     static final String MARK="§0apex:privileges";
+    final Set<Object> privateDuels=Collections.newSetFromMap(new WeakHashMap<Object,Boolean>());
+    public boolean isPrivateDuel(Object match){return privateDuels.contains(match);}
     Layouts layouts;
     PrivateMatches games;
 
