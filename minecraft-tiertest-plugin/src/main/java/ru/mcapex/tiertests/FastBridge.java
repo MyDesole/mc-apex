@@ -106,12 +106,15 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
     private static final String W_PAUSE = "§aПауза / дальше §7(ПКМ)";
     private static final String W_FAST = "§eБыстрее §7(ПКМ)";
     private static final String W_AGAIN = "§bСначала §7(ПКМ)";
+    private static final String W_CAMERA = "§bКамера: первое лицо / свободная §7(ПКМ)";
     private static final String W_BACK = "§cНазад к тренировке §7(ПКМ)";
 
     private final JavaPlugin plugin;
     private final Consumer<Player> toHub;
     private World world;
     private FbStats stats;
+    private FbStats legacyStats;
+    private FbIslands islands;
     private FbHud hud;
     private File replayDir;
     private FbPerks perks;
@@ -146,7 +149,9 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         replayDir = new File(plugin.getDataFolder(), "replays");
         replayDir.mkdirs();
         perks = new FbPerks(plugin.getDataFolder(), plugin.getLogger());
-        stats = new FbStats(new File(plugin.getDataFolder(), "fastbridge-stats.yml"), plugin.getLogger());
+        legacyStats = new FbStats(new File(plugin.getDataFolder(), "fastbridge-stats.yml"), plugin.getLogger());
+        stats = new FbStats(new File(plugin.getDataFolder(), "fastbridge-akina-v1-stats.yml"), plugin.getLogger());
+        islands = new FbIslands(plugin);
 
         world = Bukkit.getWorld(WORLD);
         if (world == null) {
@@ -219,17 +224,11 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
     /* ============================== дорожки ============================== */
 
     private void build(int lane, FbMap map) {
-        int lz = lane * SPACING;
-        // чистим всю полосу под любую карту, затем рисуем нужные островки
-        for (int x = ISLAND; x < ISLAND + 64 + ISLAND + 2; x++) {
-            for (int dz = -2; dz <= 2; dz++) world.getBlockAt(x, FLOOR_Y, lz + dz).setType(Material.AIR);
-        }
-        for (int dx = 0; dx < ISLAND; dx++) {
-            for (int dz = -2; dz <= 2; dz++) {
-                world.getBlockAt(dx, FLOOR_Y, lz + dz).setType(Material.QUARTZ_BLOCK);
-                if (!map.endless()) world.getBlockAt(ISLAND + map.gap + dx, FLOOR_Y, lz + dz).setType(Material.EMERALD_BLOCK);
-            }
-        }
+        build(lane, map, FbIslands.AKINA);
+    }
+
+    private void build(int lane, FbMap map, String layout) {
+        islands.build(world, lane, map, layout);
     }
 
     private int endX(FbMap map) {
@@ -322,6 +321,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         refreshHud(s);
         refreshVisibility();
         if (personal) p.sendMessage("§dПриватная дорожка: без зрителей и общего рейтинга. Реплеи доступны только тебе.");
+        p.sendMessage("§7Akina: отдельный рейтинг. Старые рекорды: §f/fb oldtop§7; записи сохранены.");
         p.sendMessage("§6Fastbridge: §7карта §f" + s.map.title + "§7. Построй мост до зелёного островка, таймер пойдёт с первого блока.");
         p.sendMessage("§7Предметы: §bкарта§7, §dреплеи§7, §eзаново§7, §cвыход§7. Команды: §f/fb help");
     }
@@ -530,7 +530,8 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
 
     private boolean inLane(Sess s, Block b) {
         int lz = s.lane * SPACING;
-        return b.getWorld().equals(world) && Math.abs(b.getZ() - lz) <= HALF_WIDTH
+        return b.getWorld().equals(world) && !islands.protectedBlock(s.map, b.getX(), b.getY() - FLOOR_Y, b.getZ() - lz)
+                && Math.abs(b.getZ() - lz) <= HALF_WIDTH
                 && b.getX() >= -2 && b.getX() <= endX(s.map) + ISLAND + 2
                 && b.getY() >= FLOOR_Y - 2 && b.getY() <= FLOOR_Y + maxHeight();
     }
@@ -687,6 +688,11 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
     @EventHandler
     public void onMove(PlayerMoveEvent e) {
         if (!guardPrivate(e)) return;
+        Watch watch = watches.get(e.getPlayer().getUniqueId());
+        if (watch != null && watch.firstPerson && !(e instanceof PlayerTeleportEvent)) {
+            e.setTo(e.getFrom());
+            return;
+        }
         Sess s = sessions.get(e.getPlayer().getUniqueId());
         if (s == null || s.run.finished) return;
         Location to = e.getTo();
@@ -759,6 +765,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         rep.created = System.currentTimeMillis();
         rep.personal = s.personal;
         rep.material = blockType(s.p).name();
+        rep.layout = FbIslands.AKINA;
         if (s.personal) { perks.markPrivate(rep.id, s.p.getUniqueId()); perks.flush(); }
         rep.timerStartMs = r.timerStart >= 0 ? r.timerStart - r.recStart : 0;
         rep.frames = r.frames.toArray(new double[r.frames.size()][]);
@@ -766,6 +773,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         rep.clicks = r.clicks.toArray(new int[r.clicks.size()][]);
         final String nick = s.p.getName();
         final Set<String> keep = new HashSet<String>(stats.recordReplays());
+        keep.addAll(legacyStats.recordReplays());
         keep.add(rep.id);
         final int retentionRank = rank(s.p);
         replayWriter.submit(new Runnable() {
@@ -817,6 +825,8 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         int speedIdx;
         boolean paused;
         boolean ended;
+        boolean firstPerson;
+        Location freePosition;
         double t;
         int blockIdx;
         Ghost ghost;
@@ -843,13 +853,14 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
 
         boolean begin() {
             int lz = lane * SPACING;
-            build(lane, map);
+            build(lane, map, rep.layout);
             viewer.setGameMode(GameMode.ADVENTURE);
             viewer.getInventory().clear();
             viewer.getInventory().setArmorContents(null);
             viewer.getInventory().setItem(0, item(Material.STICK, 0, W_SLOW, "§7Скорость меньше"));
             viewer.getInventory().setItem(1, item(Material.REDSTONE_TORCH_ON, 0, W_PAUSE, "§7Пауза и продолжить"));
             viewer.getInventory().setItem(2, item(Material.BLAZE_ROD, 0, W_FAST, "§7Скорость больше"));
+            viewer.getInventory().setItem(3, item(Material.COMPASS, 0, W_CAMERA, "§7Или /fb camera [first|free]"));
             viewer.getInventory().setItem(4, item(Material.EYE_OF_ENDER, 0, W_AGAIN, "§7Проиграть заново"));
             viewer.getInventory().setItem(6, item(Material.NETHER_STAR, 0, W_FAVORITE, "§7Закрепить свою запись от удаления"));
             viewer.getInventory().setItem(8, item(Material.BARRIER, 0, W_BACK, "§7Закрыть запись и вернуться на дорожку"));
@@ -880,13 +891,37 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
                 return false;
             }
             clickIdx = 0;
+            if (firstPerson) FbCamera.attach(viewer, ghost.id());
             return true;
+        }
+
+        void setFirstPerson(boolean on) {
+            if (on == firstPerson) return;
+            if (on && ended) {
+                viewer.sendMessage("§7Запись закончилась. Нажми «Сначала», затем включи камеру.");
+                return;
+            }
+            if (on && (ghost == null || !ghost.alive())) return;
+            if (on) {
+                freePosition = viewer.getLocation().clone();
+                firstPerson = true;
+                FbCamera.attach(viewer, ghost.id());
+            } else {
+                firstPerson = false;
+                if (viewer.isOnline()) {
+                    FbCamera.reset(viewer);
+                    if (freePosition != null && viewer.getWorld().equals(world)) viewer.teleport(freePosition);
+                }
+                freePosition = null;
+            }
+            viewer.sendMessage(on ? "§bКамера: от первого лица. §7/fb camera free — свободный вид."
+                    : "§bКамера: свободный вид.");
         }
 
         void again() {
             for (int[] c : shown) world.getBlockAt(c[0], c[1], c[2]).setType(Material.AIR);
             shown.clear();
-            build(lane, map);
+            build(lane, map, rep.layout);
             blockIdx = 0;
             clickIdx = 0;
             t = 0;
@@ -908,6 +943,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
                 }
             }
             if (!paused && !ended) t += 50 * speed();
+            if (!viewer.getWorld().equals(world)) { cleanup(false); return; }
             int lz = lane * SPACING;
             // блоки до текущего момента
             while (blockIdx < rep.blocks.length && rep.blocks[blockIdx][0] <= t) {
@@ -925,12 +961,21 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
             int fl = (int) pose[5];
             ghost.move(pose[0], FLOOR_Y + pose[1], lz + pose[2], (float) pose[3], (float) pose[4],
                     (fl & Replay.SNEAK) != 0, (fl & Replay.SPRINT) != 0);
+            if (firstPerson) {
+                // Keep chunks around the camera loaded, including long/endless recordings.
+                Location anchor = new Location(world, pose[0], FLOOR_Y + pose[1] + 3, lz + pose[2]);
+                if (viewer.getLocation().distanceSquared(anchor) > 64) {
+                    if (!viewer.teleport(anchor)) { setFirstPerson(false); }
+                    else FbCamera.attach(viewer, ghost.id());
+                }
+            }
             while (clickIdx < rep.clicks.length && rep.clicks[clickIdx][0] <= t) {
                 if (!paused && !ended) ghost.swing();
                 clickIdx++;
             }
             if (!ended && t >= rep.duration() + 1200) {
                 ended = true;
+                setFirstPerson(false);
                 viewer.sendMessage("§6Fastbridge: §7запись закончилась. «Сначала» - ещё раз, барьер - назад на дорожку.");
             }
             if (ticks % 2 == 0) {
@@ -975,13 +1020,17 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         }
 
         void cleanup(boolean sendToHub) {
+            // Reset before destroying the target, even on world changes and disable.
+            if (viewer.isOnline()) FbCamera.reset(viewer);
+            firstPerson = false;
+            freePosition = null;
             if (task != null) task.cancel();
             task = null;
             if (ghost != null) ghost.remove();
             ghost = null;
             for (int[] c : shown) world.getBlockAt(c[0], c[1], c[2]).setType(Material.AIR);
             shown.clear();
-            build(lane, map);
+            build(lane, map, rep.layout);
             watches.remove(viewer.getUniqueId());
             refreshVisibility();
             if (laneOwner[lane] == this) laneOwner[lane] = null;
@@ -1078,7 +1127,9 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
     }
 
     private boolean buttonWatch(Watch w, String name) {
-        if (name.equals(W_FAVORITE)) {
+        if (name.equals(W_CAMERA)) {
+            w.setFirstPerson(!w.firstPerson);
+        } else if (name.equals(W_FAVORITE)) {
             favorite(w.viewer, w.rep.id);
         } else if (name.equals(W_SLOW)) {
             w.speedIdx = Math.max(0, w.speedIdx - 1);
@@ -1505,7 +1556,20 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         String sub = a.length == 0 ? "play" : a[0].toLowerCase();
         replayRequests.remove(p.getUniqueId());
         if (perksCommand(p, sub, a)) return true;
-        if (sub.equals("play") || sub.equals("join")) {
+        if (sub.equals("camera")) {
+            Watch watch = watches.get(p.getUniqueId());
+            if (watch == null) p.sendMessage("§7Сначала открой запись: §f/fb replay");
+            else if (a.length < 2) watch.setFirstPerson(!watch.firstPerson);
+            else if (a[1].equalsIgnoreCase("first")) watch.setFirstPerson(true);
+            else if (a[1].equalsIgnoreCase("free")) watch.setFirstPerson(false);
+            else p.sendMessage("§7/fb camera [first|free]");
+        } else if (sub.equals("oldtop")) {
+            FbMap m = a.length > 1 ? FbMap.of(a[1]) : null;
+            p.sendMessage("§6Fastbridge: старые платформы, архивный топ §f" + (m != null ? m.title : "32 блока"));
+            List<String[]> rows = legacyStats.top(m != null ? m : FbMap.B32, 10);
+            if (rows.isEmpty()) p.sendMessage("§7В архивном топе пока нет записей.");
+            for (int i = 0; i < rows.size(); i++) p.sendMessage("§e" + (i + 1) + ". §f" + rows.get(i)[0] + " §7— §a" + fmtVal(m != null ? m : FbMap.B32, Long.parseLong(rows.get(i)[1])));
+        } else if (sub.equals("play") || sub.equals("join")) {
             join(p);
         } else if (sub.equals("leave") || sub.equals("exit")) {
             leave(p);
@@ -1528,6 +1592,7 @@ final class FastBridge implements Listener, CommandExecutor, FbHud.Source {
         } else if (sub.equals("replay") || sub.equals("watch")) {
             replayCommand(p, a);
         } else {
+            p.sendMessage("§6Камера реплея: §f/fb camera [first|free]§7. Архивный рейтинг: §f/fb oldtop [карта]");
             p.sendMessage("§6Новые функции: §f/fb settings, /fb preset, /fb favorites, /fb history, /fb private, /fb public");
             p.sendMessage("§6Fastbridge: §f/fb §7- играть, §f/fb map [16|24|32|64|inf]§7, §f/fb top [карта]§7,");
             p.sendMessage("§f/fb replays [ник] §7- список записей, §f/fb replay [last|best|ник|id] [скорость] §7- смотреть, §f/fb leave");

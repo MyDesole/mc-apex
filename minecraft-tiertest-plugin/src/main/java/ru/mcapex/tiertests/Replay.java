@@ -30,6 +30,8 @@ final class Replay {
     long created;
     boolean personal;
     String material = "SANDSTONE";
+    /** Missing in old files: replay those on the original quartz platforms. */
+    String layout = "legacy";
     /** Когда пошёл таймер (мс от начала записи). */
     long timerStartMs;
     /** t, x, y, z, yaw, pitch, флаги (см. SNEAK, SPRINT, KEY_*, AIR). */
@@ -117,7 +119,8 @@ final class Replay {
 
     JsonObject toJson() {
         JsonObject o = new JsonObject();
-        o.addProperty("v", 3);
+        o.addProperty("v", 4);
+        o.addProperty("layout", layout);
         o.addProperty("private", personal);
         o.addProperty("material", material);
         o.addProperty("id", id);
@@ -161,6 +164,7 @@ final class Replay {
         r.value = o.has("value") ? o.get("value").getAsLong() : o.has("time_ms") ? o.get("time_ms").getAsLong() : 0;
         r.personal = o.has("private") && o.get("private").getAsBoolean();
         r.material = str(o, "material", "SANDSTONE");
+        r.layout = str(o, "layout", "legacy");
         r.created = o.has("created") ? o.get("created").getAsLong() : 0;
         r.timerStartMs = o.has("timer_start_ms") ? o.get("timer_start_ms").getAsLong() : 0;
         JsonArray fr = o.getAsJsonArray("frames");

@@ -31,6 +31,7 @@ public final class FbServerTest extends JavaPlugin implements Listener {
     @SuppressWarnings("unchecked") void first()throws Exception {
         Player owner=Bukkit.getPlayerExact("FBTestOwner"), outsider=Bukkit.getPlayerExact("FBTestOther");
         check(owner!=null&&outsider!=null,"both test clients connected");
+        FbMapCameraServerChecks.maps(this);
         owner.addAttachment(this,"apex.donor.apex",true);
         call(fb,"join",new Class<?>[]{Player.class,boolean.class},owner,true);
         fb.join(outsider);
@@ -62,11 +63,12 @@ public final class FbServerTest extends JavaPlugin implements Listener {
     @SuppressWarnings("unchecked") void second(Player owner,Player outsider,String id)throws Exception {
         File file=new File((File)field(fb,"replayDir"),id+".json");
         check(file.isFile(),"replay writer completed");Replay rep=Replay.read(file);
-        check(rep.personal&&rep.material.equals("WOOL"),"private/material metadata persisted");
+        check(rep.personal&&rep.material.equals("WOOL")&&rep.layout.equals(FbIslands.AKINA),"private/material metadata persisted");
         call(fb,"startWatch",new Class<?>[]{Player.class,Replay.class,double.class},outsider,rep,1.0);
         Map<UUID,?> watches=(Map<UUID,?>)field(fb,"watches");check(!watches.containsKey(outsider.getUniqueId()),"private replay denied to outsider");
         call(fb,"startWatch",new Class<?>[]{Player.class,Replay.class,double.class},owner,rep,1.0);
         check(watches.containsKey(owner.getUniqueId()),"owner can view private replay and ghost spawns");
+        FbMapCameraServerChecks.camera(this,owner);
         owner.performCommand("fb favorite "+id);
         Bukkit.getScheduler().runTaskLater(this,()->{
             try {
@@ -74,9 +76,11 @@ public final class FbServerTest extends JavaPlugin implements Listener {
                 Object watch=((Map<?,?>)field(fb,"watches")).get(owner.getUniqueId());
                 call(fb,"backToTraining",new Class<?>[]{FastBridge.Watch.class},watch);
                 check(((FastBridge.Sess)((Map<?,?>)field(fb,"sessions")).get(owner.getUniqueId())).personal,"return from private replay stays private");
+                check(!((FastBridge.Watch)watch).firstPerson,"cleanup releases camera state");
                 owner.performCommand("fb history");check(owner.getOpenInventory().getTitle().contains("история"),"history menu opens");owner.closeInventory();
                 owner.performCommand("fb public");check(owner.canSee(outsider)&&outsider.canSee(owner),"visibility restored after private exit");
                 BattleStyleServerChecks.run(this,(BattleStyle)field(fb,"battleStyle"),owner,outsider);
+                FbMapCameraServerChecks.legacyAndExit(this,owner,rep);
                 getLogger().info("FB_TEST_PASS "+checks+" live Bukkit integration checks");
             } catch(Throwable error){fail(error);}
         },10);

@@ -29,11 +29,12 @@ root=Path(os.environ['TEST_ROOT'])
 with zipfile.ZipFile(root/'plugins/FbServerTest.jar','w') as z:
  z.writestr('plugin.yml','name: ApexTierTests\nversion: test\nmain: ru.mcapex.tiertests.FbServerTest\ncommands:\n  fastbridge:\n    aliases: [fb]\n  style:\n    usage: /style\n')
  for p in Path('target/fastbridge-classes').rglob('*.class'):
-  if any(p.name.startswith(n) for n in ('FastBridge','FbPerks','FbStats','FbHud','FbMap','Replay','Ghost','BattleStyle')):z.write(p,p.relative_to('target/fastbridge-classes'))
+  if any(p.name.startswith(n) for n in ('FastBridge','FbPerks','FbStats','FbHud','FbMap','Replay','Ghost','BattleStyle','FbIslands','FbCamera')):z.write(p,p.relative_to('target/fastbridge-classes'))
+ z.write('src/main/resources/fastbridge/akina-v1.blocks','fastbridge/akina-v1.blocks')
  with zipfile.ZipFile(os.environ['BASE_JAR']) as baseline:
   for entry in baseline.infolist():
-   if any(entry.filename.split('/')[-1].startswith(n) for n in ('FbStats','FbHud','FbMap','Ghost','BattleStyle')):z.writestr(entry,baseline.read(entry.filename))
- for pattern in ('FbServerTest*.class','BattleStyleServerChecks*.class'):
+   if any(entry.filename.split('/')[-1].startswith(n) for n in ('FbPerks','FbStats','FbHud','FbMap','Ghost','BattleStyle')):z.writestr(entry,baseline.read(entry.filename))
+ for pattern in ('FbServerTest*.class','BattleStyleServerChecks*.class','FbMapCameraServerChecks*.class'):
   for p in Path('target/tests').rglob(pattern):z.write(p,p.relative_to('target/tests'))
  for archive in (Path(os.environ['LIBS'])/'Alley.jar',Path(os.environ['BW'])):
   with zipfile.ZipFile(archive) as api:

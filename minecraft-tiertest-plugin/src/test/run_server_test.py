@@ -17,6 +17,15 @@ def readvar(s):
   value|=(b[0]&127)<<(7*i)
   if not b[0]&128:return value
  raise ValueError('varint')
+camera_packets={}
+entity_ids={}
+def decode_var(data,at=0):
+ value=0
+ for i in range(5):
+  b=data[at+i];value|=(b&127)<<(7*i)
+  if not b&128:return value
+ raise ValueError("varint")
+
 def client(name):
  try:
   s=socket.create_connection(('127.0.0.1',25595),timeout=10);s.settimeout(2)
@@ -36,6 +45,8 @@ def client(name):
     playing=True
     pass
    elif playing and data[0]==0:send(s,bytes(data))
+   elif playing and data[0]==1:entity_ids[name]=struct.unpack(">i",data[1:5])[0]
+   elif playing and data[0]==0x43:camera_packets.setdefault(name,[]).append(decode_var(data,1))
  except (EOFError,OSError):pass
 log=(ROOT/'test-console.log').open('w')
 java=shutil.which('java')
@@ -50,6 +61,12 @@ try:
    started=True
    for name in ('FBTestOwner','FBTestOther'):threading.Thread(target=client,args=(name,),daemon=True).start()
   if 'FB_TEST_PASS' in text:
+   time.sleep(0.3)
+   packets=camera_packets.get('FBTestOwner',[])
+   own=entity_ids.get('FBTestOwner')
+   assert own is not None and any(n!=own for n in packets),('missing attach camera packet',packets,own)
+   assert packets[-1]==own,('camera not reset after cleanup',packets,own)
+   print('CAMERA_WIRE_PASS attach + reset verified on protocol 47 socket:',packets)
    print(next(line for line in text.splitlines() if 'FB_TEST_PASS' in line));break
   if p.poll() is not None:raise RuntimeError('Test server exited early')
  else:raise RuntimeError('Test server timeout')
