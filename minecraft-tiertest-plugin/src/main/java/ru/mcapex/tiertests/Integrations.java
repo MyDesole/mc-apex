@@ -56,6 +56,7 @@ final class Integrations {
     }
 
     void start() {
+        AdmissionGuard.register(plugin);
         Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
             public void run() {
                 tick++;

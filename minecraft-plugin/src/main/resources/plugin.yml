@@ -1,0 +1,21 @@
+name: ApexAuth
+version: 1.0.0
+main: ru.mcapex.auth.ApexAuthPlugin
+author: Apex
+description: Привязка игроков к сайту mc-apex.ru и вход по паролю сайта
+website: https://mc-apex.ru
+load: STARTUP
+
+commands:
+  apexauth:
+    description: Управление привязкой к сайту
+    usage: /apexauth reload|test|whois|unlink
+    permission: apexauth.admin
+
+permissions:
+  apexauth.admin:
+    description: Перезагрузка настроек и принудительная привязка
+    default: op
+  apexauth.bypass:
+    description: Вход без проверки пароля (для тестеров и админов)
+    default: op

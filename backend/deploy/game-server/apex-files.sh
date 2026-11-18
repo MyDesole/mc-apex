@@ -32,6 +32,11 @@ resolve() {
     esac
 }
 
+protected_auth() {
+    case "$DIR/plugins/ApexAuth.jar" in "$1"|"$1"/*) return 0 ;; esac
+    return 1
+}
+
 is_text_name() {
     local ext="${1##*.}"
     ext=$(printf '%s' "$ext" | tr 'A-Z' 'a-z')
@@ -122,6 +127,7 @@ case "${1:-}" in
   put-new)
     # Загрузка файла: только новый путь или перезапись с бэкапом, любые байты
     P=$(resolve "${2:-}") || fail "bad-path"
+    protected_auth "$P" && fail "protected-auth"
     [ "$P" = "$DIR" ] && fail "bad-path"
     [ -d "$P" ] && fail "is-dir"
     mkdir -p "$(dirname "$P")" || fail "mkdir-failed"
@@ -148,12 +154,15 @@ case "${1:-}" in
     A=$(resolve "${2:-}") || fail "bad-path"
     B=$(resolve "${3:-}") || fail "bad-path"
     [ "$A" = "$DIR" ] || [ "$B" = "$DIR" ] && fail "bad-path"
+    protected_auth "$A" && fail "protected-auth"
+    protected_auth "$B" && fail "protected-auth"
     [ -e "$A" ] || fail "not-found"
     [ -e "$B" ] && fail "exists"
     mkdir -p "$(dirname "$B")" && mv -- "$A" "$B" && echo "moved"
     ;;
   trash)
     P=$(resolve "${2:-}") || fail "bad-path"
+    protected_auth "$P" && fail "protected-auth"
     [ "$P" = "$DIR" ] && fail "bad-path"
     [ -e "$P" ] || fail "not-found"
     D="$TRASH/$(date +%Y%m%d-%H%M%S)/$(dirname "${2}")"
