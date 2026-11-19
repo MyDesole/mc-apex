@@ -1,0 +1,14 @@
+name: ApexBuildWorlds
+version: 1.0.0
+main: ru.mcapex.buildworlds.BuildWorlds
+depend: [ApexAuth, ApexTierTests, Alley]
+softdepend: [MultiWorld, Essentials, WorldEdit, FastAsyncWorldEdit, LuckPerms, GrimAC]
+commands:
+  buildmap:
+    description: Закрытые строительные миры для администраторов
+    usage: /buildmap <stickfight|fireballfight|thebridge|exit|setspawn>
+    permission: apex.buildworlds.admin
+permissions:
+  apex.buildworlds.admin:
+    description: Вход и строительство в закрытых мирах карт
+    default: op
