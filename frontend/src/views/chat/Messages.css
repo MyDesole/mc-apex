@@ -4310,3 +4310,27 @@ opacity: 0.35;
 .conv__meta { padding-top: 2px; }
 .msg__meta { margin: 6px 0 -2px 12px; }
 .msg__actions { background: var(--bg-card); }
+
+/* Search belongs to its panel; it never floats outside the messenger. */
+.chat-search-slot { min-height: 0; overflow: hidden; }
+.chat-search-slot--people { flex: 1; display: flex; flex-direction: column; }
+.chat-search-slot--messages { flex: 0 0 auto; max-height: min(260px, 40%); display: flex; flex-direction: column; border-bottom: 1px solid var(--border); }
+.search-dropdown.search-dropdown--inline { position: static; display: flex; flex-direction: column; flex: 1; width: 100%; min-height: 0; max-width: none; max-height: none; border: 0; border-radius: 0; background: var(--bg-card); box-shadow: none; transform: none; }
+.search-dropdown--inline .search-dropdown__head { display: flex; align-items: center; gap: 8px; padding: 12px 16px; flex-shrink: 0; }
+.search-dropdown--inline .search-input-wrap { flex: 1; min-width: 0; }
+.search-dropdown--inline .search-body { flex: 1; min-height: 0; max-height: none; overflow-y: auto; }
+.search-panel-close { display: grid; place-items: center; width: 32px; height: 32px; flex-shrink: 0; color: var(--text-muted); background: transparent; border: 0; border-radius: 6px; cursor: pointer; }
+.search-panel-close:hover { color: var(--text); background: rgba(151, 122, 211, .12); }
+.chat__edit-bar { display: flex; align-items: center; gap: 12px; margin: 0 0 10px; padding: 2px 4px 2px 12px; color: #bca4e6; border-left: 2px solid #a78bfa; }
+.chat__edit-bar > div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.chat__edit-bar strong { font-size: 12px; font-weight: 600; }
+.chat__edit-bar span { font-size: 11px; color: var(--text-muted); }
+.chat__edit-bar button { width: 32px; height: 32px; color: var(--text-muted); background: transparent; border: 0; cursor: pointer; }
+.msg { align-items: flex-start; }
+.msg__avatar { margin-top: 8px; }
+.msg__actions { align-self: flex-start; margin-top: 8px; }
+.msg--editing .msg__bubble { outline: 1px solid #a78bfa; }
+
+.chat-search-slot--messages .search-dropdown { flex: 0 1 auto; }
+.chat-search-slot--messages .search-body { flex: 0 1 auto; max-height: 180px; }
+.chat-search-slot--messages .search-hint { padding: 20px 16px; }

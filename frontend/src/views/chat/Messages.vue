@@ -509,6 +509,7 @@ let openRequest = 0
 
 async function openConversation(id) {
   const request = ++openRequest
+  if (searchOpen.value && searchMode.value === 'messages') closeSearch()
 
   loadingChat.value = true
   error.value = ''
@@ -693,6 +694,7 @@ function onMessagesScroll() {
 // ============================================
 
 async function sendMessage() {
+  if (editingId.value) return saveEdit()
   if (sending.value || loadingChat.value || attachInput.value?.uploading) return
 
   const conversationId = activeConversation.value?.id
@@ -942,32 +944,41 @@ async function sendSticker(pack, id) {
 
 const editingId = ref(null)
 const editingBody = ref('')
+const savingEdit = ref(false)
+const composerText = computed({
+  get: () => editingId.value ? editingBody.value : body.value,
+  set: value => { if (editingId.value) editingBody.value = value; else body.value = value },
+})
 
 function startEdit(message) {
-  if (!canEdit(message, auth.user?.id)) return
-
+  if (!canEdit(message, auth.user?.id) || savingEdit.value) return
+  saveDraftNow()
+  clearReply()
+  composerExtras.value = false
   editingId.value = message.id
   editingBody.value = message.body || ''
+  nextTick(() => { autoGrow(); inputEl.value?.focus() })
 }
 
 function cancelEdit() {
   editingId.value = null
   editingBody.value = ''
+  nextTick(autoGrow)
 }
 
-async function saveEdit(message) {
+async function saveEdit() {
+  const id = editingId.value
+  const conversationId = activeConversation.value?.id
+  if (!id || savingEdit.value || !editingBody.value.trim()) return
+  savingEdit.value = true
   try {
-    const data = await chatApi.updateMessage(
-        message.id,
-        editingBody.value,
-    )
-
+    const data = await chatApi.updateMessage(id, editingBody.value.trim())
     replaceMessage(data.message)
-
-    cancelEdit()
+    if (editingId.value === id && activeConversation.value?.id === conversationId) cancelEdit()
   } catch (e) {
-    error.value =
-        e.message || 'Не удалось сохранить изменения'
+    error.value = e.message || 'Не удалось сохранить изменения'
+  } finally {
+    savingEdit.value = false
   }
 }
 
@@ -1279,6 +1290,7 @@ function unpin() {
 const replyTo = ref(null)
 
 function setReply(message) {
+  cancelEdit()
   replyTo.value = message
 
   nextTick(() => {
@@ -1595,90 +1607,28 @@ const searchResults = ref({
 const searchMode = ref('people')
 
 /** Идёт ли поиск по сообщениям. */
-const messageSearchLoading = ref(false)
 const searchLoading = ref(false)
 
-const searchWrapEl = ref(null)
-const dropdownPos = ref({
-  top: 0,
-  right: 0,
-})
-
+const searchInputEl = ref(null)
 let searchTimer = null
-
-function computeDropdownPosition() {
-  if (!searchWrapEl.value) return
-
-  const rect =
-      searchWrapEl.value.getBoundingClientRect()
-
-  dropdownPos.value = {
-    top: rect.bottom + 8,
-    right:
-        window.innerWidth -
-        rect.right -
-        8,
-  }
-}
+let searchRequest = 0
 
 async function runSearch(query) {
+  const request = ++searchRequest
+  const mode = searchMode.value
+  const conversationId = activeConversation.value?.id
+  if (!searchOpen.value) return
   searchLoading.value = true
-
   try {
-    if (searchMode.value === 'messages') {
-      await runMessageSearch(query)
-      searchResults.value = { ...searchResults.value, users: [], clans: [] }
-
-      return
-    }
-
-    searchResults.value.messages = []
-
-    const data = await chatApi.search(query)
-
-    searchResults.value = {
-      users: data.users ?? [],
-      clans: data.clans ?? [],
-      messages: [],
-    }
+    const data = mode === 'messages'
+      ? (query.trim().length >= 2 && conversationId ? await chatApi.searchMessages(conversationId, query) : { messages: [] })
+      : await chatApi.search(query)
+    if (request !== searchRequest || !searchOpen.value || mode !== searchMode.value || (mode === 'messages' && activeConversation.value?.id !== conversationId)) return
+    searchResults.value = { users: data.users ?? [], clans: data.clans ?? [], messages: data.messages ?? [] }
   } catch {
-    searchResults.value = {
-      users: [],
-      clans: [],
-      messages: [],
-    }
+    if (request === searchRequest) searchResults.value = { users: [], clans: [], messages: [] }
   } finally {
-    searchLoading.value = false
-  }
-}
-
-/** Переключение режима поиска. */
-function setSearchMode(mode) {
-  if (searchMode.value === mode) return
-
-  searchMode.value = mode
-
-  runSearch(searchQuery.value)
-}
-
-/** Ищет по тексту сообщений в текущем диалоге. */
-async function runMessageSearch(query) {
-  if (!activeConversation.value || query.trim().length < 2) {
-    searchResults.value.messages = []
-
-    return
-  }
-
-  messageSearchLoading.value = true
-
-  try {
-    const data = await chatApi.searchMessages(activeConversation.value.id, query)
-
-    searchResults.value.messages = data.messages ?? []
-  } catch {
-    searchResults.value.messages = []
-  } finally {
-    messageSearchLoading.value = false
+    if (request === searchRequest) searchLoading.value = false
   }
 }
 
@@ -1695,15 +1645,13 @@ async function openFoundMessage(message) {
   await scrollToMessage(message.id)
 }
 
-function toggleSearch() {
-  searchOpen.value = !searchOpen.value
-
-  if (searchOpen.value) {
-    computeDropdownPosition()
-    runSearch('')
-  } else {
-    resetSearch()
-  }
+function openSearch(mode) {
+  if (searchOpen.value && searchMode.value === mode) { closeSearch(); return }
+  resetSearch()
+  searchMode.value = mode
+  searchOpen.value = true
+  runSearch('')
+  nextTick(() => searchInputEl.value?.focus())
 }
 
 function closeSearch() {
@@ -1712,6 +1660,7 @@ function closeSearch() {
 }
 
 function resetSearch() {
+  ++searchRequest
   clearTimeout(searchTimer)
 
   searchQuery.value = ''
@@ -1728,6 +1677,8 @@ function resetSearch() {
 
 watch(searchQuery, q => {
   clearTimeout(searchTimer)
+  ++searchRequest
+  if (!searchOpen.value) return
 
   const query = q.trim()
 
@@ -1736,7 +1687,11 @@ watch(searchQuery, q => {
     return
   }
 
-  if (query.length < 2) return
+  if (query.length < 2) {
+    searchResults.value = { users: [], clans: [], messages: [] }
+    searchLoading.value = false
+    return
+  }
 
   searchTimer = setTimeout(
       () => runSearch(query),
@@ -1984,17 +1939,6 @@ function onClickOutsideSearch(e) {
   if (!e.target.closest('.chat__form')) composerExtras.value = false
   if (showGift.value && !e.target.closest('.chat-gift')) showGift.value = false
 
-  if (!searchOpen.value) return
-  if (e.target.closest('.search-dropdown')) return
-  if (e.target.closest('.conversations__search-wrap')) return
-
-  closeSearch()
-}
-
-function onResizeOrScroll() {
-  if (searchOpen.value) {
-    computeDropdownPosition()
-  }
 }
 
 /*
@@ -2069,16 +2013,7 @@ onMounted(() => {
       onClickOutsideSearch,
   )
 
-  window.addEventListener(
-      'resize',
-      onResizeOrScroll,
-  )
 
-  window.addEventListener(
-      'scroll',
-      onResizeOrScroll,
-      true,
-  )
 })
 
 onUnmounted(() => {
@@ -2090,16 +2025,7 @@ onUnmounted(() => {
       onClickOutsideSearch,
   )
 
-  window.removeEventListener(
-      'resize',
-      onResizeOrScroll,
-  )
 
-  window.removeEventListener(
-      'scroll',
-      onResizeOrScroll,
-      true,
-  )
 
   clearTimeout(searchTimer)
   clearTimeout(forwardTimer)
@@ -2160,8 +2086,8 @@ onUnmounted(() => {
         </div>
       </header>
 
-      <div ref="searchWrapEl" class="conversations__search-wrap conversations__find">
-        <button type="button" class="conversations__find-button" :aria-expanded="searchOpen" aria-label="Найти игрока или клан" @click.stop="toggleSearch">
+      <div v-show="!(searchOpen && searchMode === 'people')" class="conversations__search-wrap conversations__find">
+        <button type="button" class="conversations__find-button" :aria-expanded="searchOpen && searchMode === 'people'" aria-label="Найти игрока или клан" @click.stop="openSearch('people')">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
           <span>Найти игрока или клан</span>
         </button>
@@ -2212,8 +2138,10 @@ onUnmounted(() => {
         </button>
       </div>
 
+      <div id="chat-people-search" v-show="searchOpen && searchMode === 'people'" class="chat-search-slot chat-search-slot--people"></div>
+
       <!-- Фильтры списка -->
-      <div v-if="!loadingList && conversations.length" class="conv-filters">
+      <div v-if="!loadingList && conversations.length && !(searchOpen && searchMode === 'people')" class="conv-filters">
         <button
             v-for="f in CONV_FILTERS"
             :key="f.id"
@@ -2232,7 +2160,7 @@ onUnmounted(() => {
       </p>
 
       <ul
-          v-if="!loadingList && conversations.length"
+          v-if="!loadingList && conversations.length && !(searchOpen && searchMode === 'people')"
           class="conversations__list scroll-thin"
       >
         <li
@@ -2579,8 +2507,13 @@ onUnmounted(() => {
             </svg>
           </button>
 
+          <button type="button" class="chat__head-btn" aria-label="Поиск по сообщениям" title="Поиск по сообщениям" :aria-expanded="searchOpen && searchMode === 'messages'" @click.stop="openSearch('messages')">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+          </button>
           <div class="chat__head-accent"></div>
         </header>
+
+        <div id="chat-message-search" v-show="searchOpen && searchMode === 'messages'" class="chat-search-slot chat-search-slot--messages"></div>
 
         <!-- Закреплённое сообщение: клик — перейти к нему -->
         <div v-if="activeConversation?.pinned_message" class="chat__pinned">
@@ -2697,6 +2630,7 @@ onUnmounted(() => {
                 'msg--mine':
                   m.user?.id === auth.user?.id,
                 'msg--gift': m.kind === 'gift',
+                'msg--editing': editingId === m.id,
               }"
                 @touchstart.passive="
                 onMsgTouchStart($event, m)
@@ -2854,45 +2788,7 @@ onUnmounted(() => {
                     </template>
                   </div>
 
-                  <div
-                      v-if="editingId === m.id"
-                      class="msg__edit"
-                  >
-                    <textarea
-                        v-model="editingBody"
-                        class="msg__edit-input"
-                        rows="3"
-                        maxlength="5000"
-                        @keydown.esc.prevent="cancelEdit"
-                        @keydown.enter.ctrl.prevent="saveEdit(m)"
-                    />
-
-                    <div class="msg__edit-actions">
-                      <button
-                          type="button"
-                          class="msg__edit-btn"
-                          @click="cancelEdit"
-                      >
-                        Отмена
-                      </button>
-
-                      <button
-                          type="button"
-                          class="
-                          msg__edit-btn
-                          msg__edit-btn--primary
-                        "
-                          @click="saveEdit(m)"
-                      >
-                        Сохранить
-                      </button>
-                    </div>
-                  </div>
-
-                  <div
-                      v-else
-                      class="msg__content"
-                  >
+                  <div class="msg__content">
                     <span v-if="parseSticker(m.body) || bodyWithoutCards(m)" class="msg__text">
                       <!-- Стикер из магазина: картинка вместо текста-метки -->
                       <ChatSticker v-if="parseSticker(m.body)" :sticker="parseSticker(m.body)" />
@@ -3207,6 +3103,11 @@ onUnmounted(() => {
         <!-- FOOTER -->
 
         <footer class="chat__footer">
+          <div v-if="editingId" class="chat__edit-bar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m16 3 5 5-13 13H3v-5zM14 5l5 5"/></svg>
+            <div><strong>Редактирование сообщения</strong><span>Enter — сохранить · Esc — отменить</span></div>
+            <button type="button" aria-label="Отменить редактирование" @click="cancelEdit">✕</button>
+          </div>
           <!-- Новые сообщения ниже, а лента прокручена вверх -->
           <button
               v-if="!atBottom && messages.length"
@@ -3309,7 +3210,7 @@ onUnmounted(() => {
                 class="chat__more"
                 aria-label="Вложения, стикеры и подарки"
                 :aria-expanded="composerExtras"
-                :disabled="loadingChat"
+                :disabled="loadingChat || !!editingId"
                 @click="composerExtras = !composerExtras"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
@@ -3407,9 +3308,9 @@ onUnmounted(() => {
 
             <textarea
                 ref="inputEl"
-                v-model="body"
+                v-model="composerText"
                 class="chat__input"
-                :disabled="loadingChat"
+                :disabled="loadingChat || (savingEdit && !!editingId)"
                 aria-label="Сообщение"
                 placeholder="Написать сообщение..."
                 maxlength="5000"
@@ -3417,12 +3318,13 @@ onUnmounted(() => {
                 @input="onBodyInput"
                 @paste="onPaste"
                 @keydown.enter.exact="onComposerEnter"
+                @keydown.esc.prevent="cancelEdit"
             />
 
             <!-- Поле пустое — вместо отправки микрофон, как в мессенджерах -->
             <ChatVoiceRecorder
                 :key="activeConversation.id"
-                v-if="!body.trim() && !pendingAttachments.length"
+                v-if="!editingId && !body.trim() && !pendingAttachments.length"
                 :disabled="loadingChat || voiceSending || sending"
                 @recorded="sendVoice"
                 @error="(message) => (error = message)"
@@ -3434,11 +3336,12 @@ onUnmounted(() => {
                 class="chat__send"
                 type="submit"
                 :disabled="
-                sending || loadingChat || attachInput?.uploading ||
-                (!body.trim() &&
-                  !pendingAttachments.length)
+                sending || loadingChat || (savingEdit && !!editingId) || attachInput?.uploading ||
+                (!composerText.trim() &&
+                  (editingId || !pendingAttachments.length))
               "
-                :title="
+                :aria-label="editingId ? 'Сохранить изменения' : 'Отправить'"
+                :title="editingId ? 'Сохранить изменения' :
                 pendingAttachments.length &&
                 !body.trim()
                   ? 'Отправить файлы'
@@ -3455,8 +3358,10 @@ onUnmounted(() => {
                   stroke-linecap="round"
                   stroke-linejoin="round"
               >
-                <path d="M22 2 11 13" />
+                <path v-if="editingId" d="m5 12 4 4L19 6" />
+                <path v-else d="M22 2 11 13" />
                 <path
+                    v-if="!editingId"
                     d="M22 2l-7 20-4-9-9-4 20-7z"
                 />
               </svg>
@@ -3470,15 +3375,11 @@ onUnmounted(() => {
          SEARCH
          ========================================== -->
 
-    <Teleport to="body">
+    <Teleport defer :to="searchMode === 'messages' && activeConversation ? '#chat-message-search' : '#chat-people-search'">
       <Transition name="search-fade">
         <div
             v-if="searchOpen"
-            class="search-dropdown"
-            :style="{
-            top: dropdownPos.top + 'px',
-            right: dropdownPos.right + 'px',
-          }"
+            class="search-dropdown search-dropdown--inline"
             @click.stop
         >
           <div class="search-dropdown__head">
@@ -3506,38 +3407,17 @@ onUnmounted(() => {
                         ? 'Поиск в этом диалоге...'
                         : 'Игрок или клан...'
                   "
-                  autofocus
+                  ref="searchInputEl"
+                  @keydown.esc.prevent="closeSearch"
               />
             </div>
 
-            <!-- Режим поиска: по людям или по сообщениям текущего диалога -->
-            <div
-                v-if="activeConversation"
-                class="search-tabs"
-            >
-              <button
-                  type="button"
-                  class="search-tab"
-                  :class="{ 'search-tab--active': searchMode === 'people' }"
-                  @click="setSearchMode('people')"
-              >
-                Люди
-              </button>
-
-              <button
-                  type="button"
-                  class="search-tab"
-                  :class="{ 'search-tab--active': searchMode === 'messages' }"
-                  @click="setSearchMode('messages')"
-              >
-                Сообщения
-              </button>
-            </div>
+            <button type="button" class="search-panel-close" aria-label="Закрыть поиск" @click="closeSearch">✕</button>
           </div>
 
           <div class="search-body scroll-thin">
             <div
-                v-if="searchLoading || messageSearchLoading"
+                v-if="searchLoading"
                 class="search-hint"
             >
               Поиск...
@@ -3742,7 +3622,7 @@ onUnmounted(() => {
               <div
                   v-if="
                   searchMode === 'messages'
-                    ? (messageSearchLoading
+                    ? (searchLoading
                         ? false
                         : !searchResults.messages.length)
                     : (!searchResults.users.length &&
