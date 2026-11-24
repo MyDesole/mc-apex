@@ -3,7 +3,6 @@
 namespace App\Domains\Auth\Services;
 
 use App\Domains\Auth\Models\EmailVerification;
-use App\Domains\Users\Models\User;
 use App\Support\Concerns\AbortsWithMessage;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -26,12 +25,15 @@ class EmailVerificationService
 
     private const CACHE_PREFIX = 'email_verified:';
 
+    public function __construct(private readonly RegistrationEmailPolicy $emailPolicy) {}
+
     /**
      * Создать код и «отправить» его на почту.
      * Возвращает код, чтобы вызывающий мог отправить письмо.
      */
     public function issueCode(string $email): string
     {
+        $this->emailPolicy->assertAllowed($email);
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         EmailVerification::updateOrCreate(
@@ -51,6 +53,7 @@ class EmailVerificationService
      */
     public function verifyCode(string $email, string $code): string
     {
+        $this->emailPolicy->assertAllowed($email);
         $verification = EmailVerification::where('email', $email)->first();
 
         if (! $verification || $verification->code !== $code) {
@@ -66,7 +69,7 @@ class EmailVerificationService
         $token = Str::random(64);
 
         Cache::put(
-            self::CACHE_PREFIX . $token,
+            self::CACHE_PREFIX.$token,
             $email,
             now()->addMinutes(self::TOKEN_TTL_MINUTES)
         );
@@ -79,11 +82,13 @@ class EmailVerificationService
      */
     public function consumeToken(string $token): string
     {
-        $email = Cache::pull(self::CACHE_PREFIX . $token);
+        $email = Cache::pull(self::CACHE_PREFIX.$token);
 
         if (! $email) {
             $this->invalid('verification_token', 'Сессия подтверждения email истекла. Начните заново.');
         }
+
+        $this->emailPolicy->assertAllowed($email);
 
         return $email;
     }
