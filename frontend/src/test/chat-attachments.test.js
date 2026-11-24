@@ -107,3 +107,14 @@ describe('Прикрепление файлов в чате', () => {
     expect(wrapper.text()).toMatch(/больше 12 МБ/i)
   })
 })
+
+it('does not emit an uploaded file after its conversation has unmounted', async () => {
+  let resolve
+  chatApi.uploadMany.mockReturnValueOnce(new Promise(r => { resolve = r }))
+  const wrapper = mount(ChatAttachmentsInput, { props: { modelValue: [], max: 10 } })
+  const pending = wrapper.vm.addFiles([new File(['x'], 'shot.png', { type: 'image/png' })])
+  wrapper.unmount()
+  resolve(ATTACHMENTS)
+  await pending
+  expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+})

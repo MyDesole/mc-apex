@@ -193,3 +193,54 @@ describe('Запасной опрос сообщений', () => {
     expect(onUnmounted).toHaveBeenCalled()
   })
 })
+
+describe('Polling lifecycle and backlog', () => {
+  it('does not request in a hidden tab', async () => {
+    show.mockClear()
+    const poll = useMessagePolling(ref(7), ref([]))
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' })
+    try {
+      await poll.refresh()
+      expect(show).not.toHaveBeenCalled()
+    } finally {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' })
+      poll.stop()
+    }
+  })
+
+  it('waits for the initial history load', async () => {
+    show.mockClear()
+    const poll = useMessagePolling(ref(7), ref([]), { enabled: () => false })
+    await poll.refresh()
+    expect(show).not.toHaveBeenCalled()
+    poll.stop()
+  })
+
+  it('catches up consecutive pages without skipping the middle', async () => {
+    show.mockReset()
+    show.mockResolvedValueOnce({ messages: [{ id: 11 }], has_more: true, newest_id: 11 })
+      .mockResolvedValueOnce({ messages: [{ id: 12 }], has_more: false, newest_id: 12 })
+    const messages = ref([{ id: 10 }])
+    const poll = useMessagePolling(ref(7), messages)
+    await poll.refresh()
+    expect(messages.value.map(m => m.id)).toEqual([10, 11, 12])
+    expect(show).toHaveBeenNthCalledWith(2, 7, expect.objectContaining({ afterId: 11, messagesOnly: true }))
+    poll.stop()
+  })
+
+  it('ignores an old response even after switching away and back', async () => {
+    let resolve
+    show.mockReturnValueOnce(new Promise(r => { resolve = r }))
+    const id = ref(7)
+    const messages = ref([{ id: 10 }])
+    const poll = useMessagePolling(id, messages)
+    const pending = poll.refresh()
+    id.value = 8
+    id.value = 7
+    messages.value = [{ id: 20 }]
+    resolve({ messages: [{ id: 11 }] })
+    await pending
+    expect(messages.value.map(m => m.id)).toEqual([20])
+    poll.stop()
+  })
+})

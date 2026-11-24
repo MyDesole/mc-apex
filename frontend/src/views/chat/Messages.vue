@@ -1,6 +1,6 @@
 <script setup>
 import { confirm as confirmDialog } from '@/utils/dialog.js'
-import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue'
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch, nextTick } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { chatApi } from '@/services/chat/chat.js'
 import { useAuthStore } from '@/stores/core/auth.js'
@@ -20,10 +20,10 @@ import ChatLinkCard from '@/components/chat/ChatLinkCard.vue'
 import LinkifiedText from '@/components/core/LinkifiedText.vue'
 import ChatVoicePlayer from '@/components/chat/ChatVoicePlayer.vue'
 import ChatVoiceRecorder from '@/components/chat/ChatVoiceRecorder.vue'
-import ChatGiftPanel from '@/components/chat/ChatGiftPanel.vue'
-import ChatGroupModal from '@/components/chat/ChatGroupModal.vue'
+const ChatGiftPanel = defineAsyncComponent(() => import('@/components/chat/ChatGiftPanel.vue'))
+const ChatGroupModal = defineAsyncComponent(() => import('@/components/chat/ChatGroupModal.vue'))
 import PixelSprite from '@/components/shop/PixelSprite.vue'
-import ImageLightbox from '@/components/core/ImageLightbox.vue'
+const ImageLightbox = defineAsyncComponent(() => import('@/components/core/ImageLightbox.vue'))
 import { filesFromClipboard, useFileDrop } from '@/composables/core/useFileDrop.js'
 import { previewText, bodyWithoutCards, canEdit, withMine, conversationTime, readDrafts, writeDraft } from '@/utils/chatPreview.js'
 
@@ -90,7 +90,9 @@ useMessagePolling(
        * мёртвом сокете у собеседника не вставала галочка, а у себя висел
        * счётчик непрочитанных.
        */
+      enabled: () => !loadingChat.value,
       onNew(added) {
+        for (const message of added) bumpConversation(message.conversation_id, message)
         const fromOthers = added.filter((m) => m.user?.id !== auth.user?.id)
 
         if (!fromOthers.length) return
@@ -336,7 +338,7 @@ let readPending = false
 function markActiveRead() {
   const id = activeConversation.value?.id
 
-  if (!id) return
+  if (!id || loadingChat.value) return
 
   if (document.visibilityState !== 'visible') {
     readPending = true
@@ -375,6 +377,7 @@ const drafts = ref(readDrafts())
 /** Какому диалогу принадлежит текст в поле. */
 let draftOwner = null
 let draftTimer = null
+const attachmentDrafts = new Map()
 
 function saveDraftNow() {
   clearTimeout(draftTimer)
@@ -384,7 +387,9 @@ function saveDraftNow() {
 
 function switchDraft(id) {
   saveDraftNow()
+  if (draftOwner) attachmentDrafts.set(draftOwner, [...pendingAttachments.value])
   draftOwner = id
+  pendingAttachments.value = id ? (attachmentDrafts.get(id) ?? []) : []
   body.value = id ? (drafts.value[id] ?? '') : ''
   nextTick(autoGrow)
 }
@@ -432,6 +437,7 @@ function applyShare() {
 // ============================================
 
 const pendingAttachments = ref([])
+const composerExtras = ref(false)
 
 // Выбор файлов: кнопка-скрепка в поле ввода открывает его
 const attachInput = ref(null)
@@ -468,7 +474,11 @@ function openImage(message, file) {
 // ЗАГРУЗКА ДИАЛОГОВ
 // ============================================
 
+let listInFlight = false
+
 async function loadConversations(silent = false) {
+  if (listInFlight) return
+  listInFlight = true
   if (!silent) loadingList.value = true
 
   try {
@@ -477,6 +487,7 @@ async function loadConversations(silent = false) {
   } catch (e) {
     if (!silent) error.value = e.message || 'Не удалось загрузить диалоги'
   } finally {
+    listInFlight = false
     loadingList.value = false
   }
 }
@@ -508,14 +519,23 @@ async function openConversation(id) {
   lastReadAt.value = restReads
 
   if (draftOwner !== id) switchDraft(id)
+  clearTimeout(markTimer)
+  activeConversation.value = conversations.value.find(c => c.id === id) ?? { id, type: 'direct', users: [] }
+  messages.value = []
+  firstUnreadId.value = null
+  loadingOlder.value = false
 
   showGift.value = false
+  composerExtras.value = false
+  stickerPanel.value = false
+  editingId.value = null
+  lastTypingSentAt = 0
   newBelow.value = 0
   // Пока диалог грузится и ставится, догрузка старых не нужна
   anchor = 'bottom'
 
   try {
-    const data = await chatApi.show(id, { limit: 40 })
+    const data = await chatApi.show(id, { limit: 40, markRead: document.visibilityState === 'visible' })
 
     // Игрок успел открыть другой диалог — этот ответ устарел
     if (request !== openRequest) return
@@ -523,6 +543,7 @@ async function openConversation(id) {
     activeConversation.value = data.conversation
     messages.value = data.messages ?? []
     firstUnreadId.value = data.first_unread_id ?? null
+    if (document.visibilityState !== 'visible') readPending = true
 
     /*
      * Ленту показываем сразу, до прокрутки. Раньше индикатор загрузки
@@ -569,7 +590,10 @@ async function openConversation(id) {
     applyAnchor()
     requestAnimationFrame(applyAnchor)
   } catch (e) {
-    if (request === openRequest) error.value = e.message || 'Не удалось открыть диалог'
+    if (request === openRequest) {
+      error.value = e.message || 'Не удалось открыть диалог'
+      activeConversation.value = null
+    }
   } finally {
     if (request === openRequest) loadingChat.value = false
   }
@@ -601,6 +625,7 @@ async function loadOlder() {
       beforeId: oldestId.value,
       limit: 40,
       markRead: false,
+      messagesOnly: true,
     })
 
     // Пока грузили историю, открыли другой диалог
@@ -668,6 +693,10 @@ function onMessagesScroll() {
 // ============================================
 
 async function sendMessage() {
+  if (sending.value || loadingChat.value || attachInput.value?.uploading) return
+
+  const conversationId = activeConversation.value?.id
+  const request = openRequest
   const text = body.value.trim()
   const attachmentIds = pendingAttachments.value.map(a => a.id)
 
@@ -692,22 +721,30 @@ async function sendMessage() {
 
   try {
     const data = await chatApi.send(
-        activeConversation.value.id,
+        conversationId,
         text,
         replyId,
         attachmentIds,
     )
 
-    await pushOwnMessage(data.message)
+    await pushOwnMessage(data.message, conversationId)
   } catch (e) {
     error.value = e.message || 'Не удалось отправить'
 
-    body.value = text
-    saveDraftNow()
-    pendingAttachments.value = attachmentsBackup
-    replyTo.value = replyId
-        ? messages.value.find(m => m.id === replyId)
-        : null
+    const currentText = draftOwner === conversationId ? body.value : (drafts.value[conversationId] ?? '')
+    const restored = [text, currentText].filter(Boolean).join('\n')
+    drafts.value = writeDraft(drafts.value, conversationId, restored)
+    if (draftOwner === conversationId) {
+      body.value = restored
+      pendingAttachments.value = [...attachmentsBackup, ...pendingAttachments.value]
+      if (request === openRequest && !replyTo.value) {
+        replyTo.value = replyId ? messages.value.find(m => m.id === replyId) : null
+      }
+      nextTick(autoGrow)
+    } else {
+      attachmentDrafts.set(conversationId, [...attachmentsBackup, ...(attachmentDrafts.get(conversationId) ?? [])])
+      error.value = 'Сообщение не отправлено. Черновик сохранён в исходном диалоге.'
+    }
   } finally {
     sending.value = false
   }
@@ -719,7 +756,7 @@ async function sendMessage() {
  * Общая точка для текста, стикера, голосового и подарка: опрос мог уже
  * принести это сообщение, поэтому только через слияние.
  */
-async function pushOwnMessage(message, conversationId = activeConversation.value?.id) {
+async function pushOwnMessage(message, conversationId = message?.conversation_id ?? activeConversation.value?.id) {
   if (conversationId === activeConversation.value?.id) {
     messages.value = mergeMessages(messages.value, message).list
     renderLimit.value = RENDER_WINDOW
@@ -729,7 +766,7 @@ async function pushOwnMessage(message, conversationId = activeConversation.value
 
   bumpConversation(conversationId, message)
 
-  await scrollToBottom(true)
+  if (conversationId === activeConversation.value?.id) await scrollToBottom(true)
 }
 
 /** Диалог с новым сообщением — наверх списка, с новым превью. */
@@ -768,7 +805,7 @@ async function sendVoice({ blob, duration }) {
     const uploaded = await chatApi.uploadVoice(blob, duration)
     const data = await chatApi.send(conversationId, '', replyId, [uploaded.attachment.id])
 
-    replyTo.value = null
+    if (activeConversation.value?.id === conversationId) replyTo.value = null
     await pushOwnMessage(data.message, conversationId)
   } catch (e) {
     error.value = e.message || 'Не удалось отправить голосовое'
@@ -890,7 +927,7 @@ async function sendSticker(pack, id) {
   try {
     const data = await chatApi.send(conversationId, stickerToken(pack, id), replyTo.value?.id ?? null, [])
 
-    replyTo.value = null
+    if (activeConversation.value?.id === conversationId) replyTo.value = null
     await pushOwnMessage(data.message, conversationId)
   } catch (e) {
     error.value = e.message || 'Не удалось отправить стикер'
@@ -1092,6 +1129,8 @@ async function scrollToMessage(id) {
 }
 
 function closeChat() {
+  ++openRequest
+  loadingChat.value = false
   switchDraft(null)
 
   activeConversation.value = null
@@ -1118,6 +1157,12 @@ function closeChat() {
  * при удалении строк и поле не сжимается обратно. Растёт до предела,
  * заданного в CSS (max-height), дальше включается прокрутка.
  */
+function onComposerEnter(event) {
+  if (event.isComposing || event.keyCode === 229) return
+  event.preventDefault()
+  sendMessage()
+}
+
 function onBodyInput() {
   autoGrow()
   notifyTyping()
@@ -1178,7 +1223,7 @@ const unreadTotal = computed(() => conversations.value.reduce((sum, c) => sum + 
 const filteredConversations = computed(() => {
   const list = conversations.value.filter((c) => {
     if (convFilter.value === 'unread') return c.unread_count > 0
-    if (convFilter.value === 'direct') return c.type !== 'clan_message'
+    if (convFilter.value === 'direct') return c.type === 'direct'
     if (convFilter.value === 'clan') return c.type === 'clan_message'
     if (convFilter.value === 'favorites') return favorites.value.has(c.id)
     return true
@@ -1746,6 +1791,8 @@ watch(
       if (id) {
         openConversation(Number(id))
       } else {
+        ++openRequest
+        loadingChat.value = false
         switchDraft(null)
         activeConversation.value = null
         messages.value = []
@@ -1934,6 +1981,7 @@ watch(latestChange, (change) => {
 // ============================================
 
 function onClickOutsideSearch(e) {
+  if (!e.target.closest('.chat__form')) composerExtras.value = false
   if (showGift.value && !e.target.closest('.chat-gift')) showGift.value = false
 
   if (!searchOpen.value) return
@@ -1993,6 +2041,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  ++openRequest
   window.visualViewport?.removeEventListener('resize', onViewportChange)
   window.visualViewport?.removeEventListener('scroll', onViewportChange)
   document.removeEventListener('visibilitychange', onVisibility)
@@ -2098,6 +2147,7 @@ onUnmounted(() => {
               class="conversations__new"
               type="button"
               title="Новая беседа"
+              aria-label="Новая беседа"
               @click.stop="groupModal = 'create'"
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2119,6 +2169,7 @@ onUnmounted(() => {
                 ? 'Закрыть'
                 : 'Найти игрока или клан'
             "
+              aria-label="Найти игрока или клан"
               @click.stop="toggleSearch"
           >
             <svg
@@ -3276,6 +3327,7 @@ onUnmounted(() => {
               class="chat__attach-row"
           >
             <ChatAttachmentsInput
+                :key="activeConversation.id"
                 ref="attachInput"
                 v-model="pendingAttachments"
                 :max="10"
@@ -3288,6 +3340,17 @@ onUnmounted(() => {
               :class="{ 'is-recording': voiceRecording }"
               @submit.prevent="sendMessage"
           >
+            <button
+                type="button"
+                class="chat__more"
+                aria-label="Вложения, стикеры и подарки"
+                :aria-expanded="composerExtras"
+                :disabled="loadingChat"
+                @click="composerExtras = !composerExtras"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+            </button>
+            <div v-if="composerExtras" class="chat__extras">
             <!-- Скрепка: файлы до 12 МБ, до 10 штук -->
             <button
                 v-if="activeConversation"
@@ -3376,24 +3439,27 @@ onUnmounted(() => {
               />
             </div>
 
+            </div>
+
             <textarea
                 ref="inputEl"
                 v-model="body"
                 class="chat__input"
+                :disabled="loadingChat"
+                aria-label="Сообщение"
                 placeholder="Написать сообщение..."
                 maxlength="5000"
                 rows="1"
                 @input="onBodyInput"
                 @paste="onPaste"
-                @keydown.enter.exact.prevent="
-                sendMessage
-              "
+                @keydown.enter.exact="onComposerEnter"
             />
 
             <!-- Поле пустое — вместо отправки микрофон, как в мессенджерах -->
             <ChatVoiceRecorder
+                :key="activeConversation.id"
                 v-if="!body.trim() && !pendingAttachments.length"
-                :disabled="voiceSending || sending"
+                :disabled="loadingChat || voiceSending || sending"
                 @recorded="sendVoice"
                 @error="(message) => (error = message)"
                 @state="(on) => (voiceRecording = on)"
@@ -3404,7 +3470,7 @@ onUnmounted(() => {
                 class="chat__send"
                 type="submit"
                 :disabled="
-                sending ||
+                sending || loadingChat || attachInput?.uploading ||
                 (!body.trim() &&
                   !pendingAttachments.length)
               "

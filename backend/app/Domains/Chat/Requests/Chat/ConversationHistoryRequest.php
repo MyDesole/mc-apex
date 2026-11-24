@@ -13,6 +13,7 @@ class ConversationHistoryRequest extends BaseFormRequest
             'after_id' => ['nullable', 'integer', 'min:1'],
             'limit' => ['nullable', 'integer', 'min:1', 'max:100'],
             'mark_read' => ['nullable', 'boolean'],
+            'messages_only' => ['nullable', 'boolean'],
         ];
     }
 }

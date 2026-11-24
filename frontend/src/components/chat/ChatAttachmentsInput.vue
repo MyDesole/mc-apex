@@ -6,7 +6,7 @@
  * Сначала отправляем пачкой, а при отказе сервера разбираем её
  * по одному файлу, чтобы сохранить валидные вложения.
  */
-import { computed, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import { chatApi } from '@/services/chat/chat.js'
 
 const props = defineProps({
@@ -17,6 +17,8 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
+let disposed = false
+onUnmounted(() => { disposed = true })
 
 const fileInput = ref(null)
 
@@ -120,7 +122,7 @@ async function addFiles(picked) {
   try {
     const added = await uploadBatch(accepted)
 
-    emit('update:modelValue', [...files.value, ...added])
+    if (!disposed) emit('update:modelValue', [...files.value, ...added])
   } catch (e) {
     error.value = describeError(e)
   } finally {

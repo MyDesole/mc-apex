@@ -28,6 +28,8 @@ vi.mock('@/services/chat/chat.js', () => ({
   },
 }))
 
+vi.mock('@/echo.js', async () => ({ echoGeneration: (await import('vue')).ref(0), onEchoReset: () => () => {} }))
+
 import Messages from '@/views/chat/Messages.vue'
 import { chatApi } from '@/services/chat/chat.js'
 
@@ -49,7 +51,7 @@ function stubConversation() {
   }
 
   chatApi.conversations.mockResolvedValue({ conversations: [conversation] })
-  chatApi.show.mockResolvedValue({ conversation, messages: [] })
+  chatApi.show.mockImplementation(async (id) => ({ conversation: { ...conversation, id }, messages: [] }))
 }
 
 /** Монтирует страницу сообщений с активным диалогом. */
@@ -72,6 +74,77 @@ async function mountMessages() {
 
 describe('Поле ввода сообщения', () => {
   beforeEach(() => vi.clearAllMocks())
+
+  it('does not insert a pending send into another conversation', async () => {
+    const wrapper = await mountMessages()
+    let resolve
+    chatApi.send.mockReturnValue(new Promise(r => { resolve = r }))
+    await wrapper.find('textarea.chat__input').setValue('For chat one')
+    await wrapper.find('form.chat__form').trigger('submit')
+    await router.push('/messages/2')
+    await flushPromises()
+    resolve({ message: { id: 90, conversation_id: 1, body: 'For chat one', user: { id: 1 } } })
+    await flushPromises()
+    expect(wrapper.find('.chat__messages').text()).not.toContain('For chat one')
+    expect(chatApi.send).toHaveBeenCalledWith(1, 'For chat one', null, [])
+    wrapper.unmount()
+  })
+
+  it('restores a failed send to its original draft without replacing another draft', async () => {
+    const wrapper = await mountMessages()
+    let reject
+    chatApi.send.mockReturnValue(new Promise((_, r) => { reject = r }))
+    await wrapper.find('textarea.chat__input').setValue('Original text')
+    await wrapper.find('form.chat__form').trigger('submit')
+    await router.push('/messages/2')
+    await flushPromises()
+    await wrapper.find('textarea.chat__input').setValue('Second chat draft')
+    reject(new Error('Network unavailable'))
+    await flushPromises()
+    expect(wrapper.find('textarea.chat__input').element.value).toBe('Second chat draft')
+    await router.push('/messages/1')
+    await flushPromises()
+    expect(wrapper.find('textarea.chat__input').element.value).toBe('Original text')
+    wrapper.unmount()
+  })
+
+  it('ignores a late opening response after returning to the conversation list', async () => {
+    const wrapper = await mountMessages()
+    let resolve
+    chatApi.show.mockReturnValueOnce(new Promise(r => { resolve = r }))
+    await router.push('/messages/2')
+    await flushPromises()
+    await router.push('/messages')
+    await flushPromises()
+    resolve({ conversation: { id: 2, type: 'direct', users: [] }, messages: [] })
+    await flushPromises()
+    expect(wrapper.find('textarea.chat__input').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('blocks repeated submits while the previous message is pending', async () => {
+    const wrapper = await mountMessages()
+    let resolve
+    chatApi.send.mockReturnValue(new Promise(r => { resolve = r }))
+    await wrapper.find('textarea.chat__input').setValue('First')
+    await wrapper.find('form.chat__form').trigger('submit')
+    await wrapper.find('textarea.chat__input').setValue('Next draft')
+    await wrapper.find('form.chat__form').trigger('submit')
+    expect(chatApi.send).toHaveBeenCalledTimes(1)
+    resolve({ message: { id: 95, conversation_id: 1, body: 'First', user: { id: 1 } } })
+    await flushPromises()
+    expect(wrapper.find('textarea.chat__input').element.value).toBe('Next draft')
+    wrapper.unmount()
+  })
+
+  it('does not send Enter while composing text with an IME', async () => {
+    const wrapper = await mountMessages()
+    const field = wrapper.find('textarea.chat__input')
+    await field.setValue('Composing')
+    await field.trigger('keydown', { key: 'Enter', isComposing: true })
+    expect(chatApi.send).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
 
   it('подстраивает высоту под содержимое', async () => {
     const wrapper = await mountMessages()

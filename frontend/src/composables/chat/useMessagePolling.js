@@ -1,151 +1,100 @@
-/**
- * Запасной опрос сообщений.
- *
- * Соединение с Reverb иногда не восстанавливается, и тогда новые
- * сообщения не приходят до перезагрузки страницы. Чтобы чат работал
- * всегда, дополнительно опрашиваем сервер.
- *
- * Опрос редкий и дешёвый: один запрос раз в несколько секунд, только
- * пока открыт диалог. Если соединение живо, он ничего не меняет —
- * пришедшие по нему сообщения просто уже есть в списке.
- *
- * Забираем сообщения после самого свежего известного id, поэтому запрос
- * всегда маленький.
- */
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { chatApi } from '@/services/chat/chat.js'
 import { mergeMessages } from '@/utils/chatMessages.js'
 
-/**
- * Как часто проверять новые сообщения.
- *
- * Значение небольшое намеренно: это страховка на случай, когда
- * соединение с Reverb оборвалось. Сервер отвечает за десятые доли
- * секунды, а запрос узкий — только сообщения после последнего id.
- */
 const INTERVAL_MS = 2000
-
-/**
- * Пока сокет жив, опрос — лишь страховка от потерянного события: раз в
- * 15 секунд. Раньше он шёл каждые 2 секунды всегда, и каждый круг
- * тянул данные диалога целиком.
- */
 const LIVE_INTERVAL_MS = 15000
 
-/** Подключён ли сокет. Читаем напрямую: echo.js в тестах подменяется. */
 function socketAlive() {
   return window.Echo?.connector?.pusher?.connection?.state === 'connected'
 }
 
-/**
- * Опрашивает сервер, пока открыт диалог.
- *
- * @param {import('vue').Ref<number|null>} conversationId  текущий диалог
- * @param {import('vue').Ref<Array>} messages  список сообщений
- * @param {{ onNew?: (messages: Array) => void }} options
- */
+/** Incremental fallback; no background requests or full conversation reloads. */
 export function useMessagePolling(conversationId, messages, options = {}) {
   const polling = ref(false)
-
   let timer = null
+  let inFlight = false
+  let lastTickAt = 0
+  let generation = 0
+  let disposed = false
 
-  /** Самый свежий известный id в диалоге. */
-  function newestId() {
-    if (!messages.value.length) return null
-
-    return messages.value[messages.value.length - 1].id
+  function enabled() {
+    return !disposed && document.visibilityState !== 'hidden' && (options.enabled?.() ?? true)
   }
 
-  /** Идёт ли запрос: медленный ответ не должен накладываться на следующий круг. */
-  let inFlight = false
-
-  /** Когда был последний опрос. */
-  let lastTickAt = 0
-
-  /** Круг таймера: при живом сокете большинство кругов пропускаем. */
   function scheduledTick() {
     if (socketAlive() && Date.now() - lastTickAt < LIVE_INTERVAL_MS) return
-
     tick()
   }
 
   async function tick() {
     const id = conversationId.value
-
-    if (!id || inFlight) return
+    const request = generation
+    if (!id || inFlight || !enabled()) return
 
     lastTickAt = Date.now()
-
     inFlight = true
+    let afterId = messages.value.at(-1)?.id ?? null
 
     try {
-      const afterId = newestId()
+      // Drain a backlog in order, without waiting another timer interval per page.
+      for (let page = 0; page < 5; page++) {
+        const data = await chatApi.show(id, { afterId, limit: 50, markRead: false, messagesOnly: true })
+        if (request !== generation || conversationId.value !== id || !enabled()) return
 
-      const data = await chatApi.show(id, {
-        afterId,
-        limit: 50,
-        markRead: false,
-      })
+        const fresh = data.messages ?? []
+        if (!fresh.length) return
 
-      /*
-       * Пока шёл запрос, игрок мог открыть другой диалог: тогда ответ
-       * относится к старому, и дописывать его в новый нельзя.
-       */
-      if (conversationId.value !== id) return
+        const { list, added } = mergeMessages(messages.value, fresh)
+        messages.value = list
+        if (added.length) options.onNew?.(added)
 
-      const fresh = data.messages ?? []
-
-      if (!fresh.length) return
-
-      // Сообщение могло прийти и по сокету, и ответом на отправку
-      const { list, added } = mergeMessages(messages.value, fresh)
-
-      if (!added.length) return
-
-      messages.value = list
-
-      options.onNew?.(added)
+        const nextId = data.newest_id ?? fresh.at(-1)?.id
+        if (!afterId || !data.has_more || !nextId || nextId <= afterId) return
+        afterId = nextId
+      }
     } catch {
-      /* Сеть недоступна — попробуем на следующем круге */
+      // Retry at the next interval; keep the existing history on screen.
     } finally {
       inFlight = false
     }
   }
 
   function start() {
-    if (timer) return
-
+    if (timer || disposed) return
     polling.value = true
-
-    // Первый опрос сразу: вдруг соединение уже мертво
-    tick()
-
+    // Opening already loads history. Avoid racing it with an identical request.
     timer = setInterval(scheduledTick, INTERVAL_MS)
   }
 
   function stop() {
-    if (!timer) return
-
     clearInterval(timer)
     timer = null
     polling.value = false
+    generation++
   }
 
-  // Опрашиваем только когда открыт диалог
-  watch(
-      conversationId,
-      (id) => {
-        if (id) start()
-        else stop()
-      },
-      { immediate: true },
-  )
+  function onVisibility() {
+    if (document.visibilityState === 'visible') tick()
+  }
+
+  watch(conversationId, (id) => {
+    generation++
+    lastTickAt = 0
+    if (id) start()
+    else stop()
+  }, { immediate: true, flush: 'sync' })
 
   onMounted(() => {
     if (conversationId.value) start()
+    document.addEventListener('visibilitychange', onVisibility)
   })
 
-  onUnmounted(stop)
+  onUnmounted(() => {
+    disposed = true
+    stop()
+    document.removeEventListener('visibilitychange', onVisibility)
+  })
 
   return { polling, start, stop, refresh: tick }
 }

@@ -19,6 +19,7 @@ export const chatApi = {
         if (options.afterId) params.set('after_id', String(options.afterId))
         if (options.limit) params.set('limit', String(options.limit))
         if (options.markRead === false) params.set('mark_read', '0')
+        if (options.messagesOnly) params.set('messages_only', '1')
 
         const query = params.toString()
 

@@ -4,12 +4,12 @@ namespace App\Domains\Chat\Controllers\Api;
 
 use App\Domains\Chat\Events\ConversationChanged;
 use App\Domains\Chat\Events\MessageSent;
-use App\Domains\Chat\Services\ChatGroupService;
-use App\Domains\Users\Models\User;
 use App\Domains\Chat\Events\MessagesRead;
 use App\Domains\Chat\Events\UserTyping;
-use App\Http\Controllers\Controller;
-use App\Support\Broadcasting\SafeBroadcast;
+use App\Domains\Chat\Models\Conversation;
+use App\Domains\Chat\Models\Message;
+use App\Domains\Chat\Models\MessageAttachment;
+use App\Domains\Chat\Models\MessageReaction;
 use App\Domains\Chat\Requests\Chat\ConversationHistoryRequest;
 use App\Domains\Chat\Requests\Chat\ForwardMessageRequest;
 use App\Domains\Chat\Requests\Chat\SendMessageRequest;
@@ -17,14 +17,17 @@ use App\Domains\Chat\Requests\Chat\StartClanRequest;
 use App\Domains\Chat\Requests\Chat\StartDirectRequest;
 use App\Domains\Chat\Requests\Chat\UpdateMessageRequest;
 use App\Domains\Chat\Requests\Chat\UploadAttachmentRequest;
-use App\Http\Responses\ApiResponse;
-use App\Domains\Chat\Models\Conversation;
-use App\Domains\Chat\Models\Message;
-use App\Domains\Chat\Models\MessageAttachment;
-use App\Domains\Chat\Services\ChatService;
 use App\Domains\Chat\Resources\MessageResource;
+use App\Domains\Chat\Services\ChatGroupService;
+use App\Domains\Chat\Services\ChatService;
+use App\Domains\Users\Models\User;
+use App\Http\Controllers\Controller;
+use App\Http\Responses\ApiResponse;
+use App\Support\Broadcasting\SafeBroadcast;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 /**
  * Чат. Контроллер тонкий: принимает запрос, проверяет права, отдаёт результат.
@@ -36,8 +39,7 @@ class ChatController extends Controller
 
     public function __construct(
         private readonly ChatService $chat,
-    ) {
-    }
+    ) {}
 
     /* ----------------------------- Диалоги ----------------------------- */
 
@@ -62,6 +64,10 @@ class ChatController extends Controller
             limit: $request->integer('limit') ?: ChatService::PAGE_SIZE,
             markRead: $request->boolean('mark_read', true),
         );
+
+        if ($request->boolean('messages_only')) {
+            return response()->json($history);
+        }
 
         return response()->json([
             'conversation' => $this->chat->conversationPayload($conversation),
@@ -169,7 +175,7 @@ class ChatController extends Controller
     {
         $this->authorize('view', $message->conversation);
 
-        $data = $request->validate(['emoji' => ['required', 'string', \Illuminate\Validation\Rule::in(\App\Domains\Chat\Models\MessageReaction::EMOJI)]]);
+        $data = $request->validate(['emoji' => ['required', 'string', Rule::in(MessageReaction::EMOJI)]]);
 
         $reactions = $this->chat->toggleReaction($message, $request->user(), $data['emoji']);
 
@@ -207,7 +213,7 @@ class ChatController extends Controller
         $data = $request->validate([
             // Браузеры пишут по-разному: Chrome и Firefox — webm/ogg, Safari — mp4
             'file' => ['required', 'file', 'max:4096', 'mimetypes:audio/webm,video/webm,audio/ogg,application/ogg,audio/mp4,video/mp4,audio/x-m4a,audio/aac,audio/mpeg'],
-            'duration' => ['required', 'integer', 'min:1', 'max:' . ChatService::VOICE_MAX_SECONDS],
+            'duration' => ['required', 'integer', 'min:1', 'max:'.ChatService::VOICE_MAX_SECONDS],
         ], [
             'file.mimetypes' => 'Не удалось распознать запись — попробуй ещё раз.',
             'file.max' => 'Запись слишком большая.',
@@ -268,7 +274,7 @@ class ChatController extends Controller
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:64'],
-            'user_ids' => ['required', 'array', 'min:1', 'max:' . ChatGroupService::MAX_MEMBERS],
+            'user_ids' => ['required', 'array', 'min:1', 'max:'.ChatGroupService::MAX_MEMBERS],
             'user_ids.*' => ['integer'],
         ]);
 
@@ -286,7 +292,7 @@ class ChatController extends Controller
         $this->authorize('send', $conversation);
 
         $data = $request->validate([
-            'user_ids' => ['required', 'array', 'min:1', 'max:' . ChatGroupService::MAX_MEMBERS],
+            'user_ids' => ['required', 'array', 'min:1', 'max:'.ChatGroupService::MAX_MEMBERS],
             'user_ids.*' => ['integer'],
         ]);
 
@@ -374,7 +380,7 @@ class ChatController extends Controller
 
         $path = $this->chat->attachmentPath($attachment);
 
-        return \Illuminate\Support\Facades\Storage::disk('public')
+        return Storage::disk('public')
             ->download($path, $attachment->original_name);
     }
 
