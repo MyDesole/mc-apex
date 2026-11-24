@@ -2133,14 +2133,13 @@ onUnmounted(() => {
           <div>
             <h1>Сообщения</h1>
             <span class="conversations__subtitle">
-              Твои диалоги
+              Личные и групповые чаты
             </span>
           </div>
         </div>
 
         <div
-            ref="searchWrapEl"
-            class="conversations__search-wrap"
+            class="conversations__actions"
         >
           <!-- Новая групповая беседа с друзьями -->
           <button
@@ -2157,51 +2156,16 @@ onUnmounted(() => {
             </svg>
           </button>
 
-          <button
-              class="conversations__new"
-              :class="{
-              'conversations__new--active':
-                searchOpen,
-            }"
-              type="button"
-              :title="
-              searchOpen
-                ? 'Закрыть'
-                : 'Найти игрока или клан'
-            "
-              aria-label="Найти игрока или клан"
-              @click.stop="toggleSearch"
-          >
-            <svg
-                v-if="!searchOpen"
-                width="17"
-                height="17"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            >
-              <path d="M12 5v14M5 12h14" />
-            </svg>
 
-            <svg
-                v-else
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.4"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            >
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          </button>
         </div>
       </header>
+
+      <div ref="searchWrapEl" class="conversations__search-wrap conversations__find">
+        <button type="button" class="conversations__find-button" :aria-expanded="searchOpen" aria-label="Найти игрока или клан" @click.stop="toggleSearch">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+          <span>Найти игрока или клан</span>
+        </button>
+      </div>
 
       <div
           v-if="loadingList"
@@ -2235,7 +2199,7 @@ onUnmounted(() => {
         <strong>Пока тихо</strong>
         <span>
           Найди игрока или клан<br>
-          через кнопку «+».
+          через поиск выше.
         </span>
       </div>
 

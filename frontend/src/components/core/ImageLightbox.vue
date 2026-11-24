@@ -24,6 +24,32 @@ const index = ref(Math.min(Math.max(0, props.start), Math.max(0, props.images.le
 const scale = ref(1)
 const offset = ref({ x: 0, y: 0 })
 const loaded = ref(false)
+const stageEl = ref(null)
+const fitted = ref({ width: 0, height: 0 })
+let resizeObserver = null
+let previousOverflow = ''
+
+function fitImage() {
+  const stage = stageEl.value
+  const image = imgEl.value
+  if (!stage || !image?.naturalWidth || !image?.naturalHeight) return
+  const style = getComputedStyle(stage)
+  const width = stage.clientWidth - parseFloat(style.paddingLeft || 0) - parseFloat(style.paddingRight || 0)
+  const height = stage.clientHeight - parseFloat(style.paddingTop || 0) - parseFloat(style.paddingBottom || 0)
+  if (width <= 0 || height <= 0) return
+  const ratio = Math.min(width / image.naturalWidth, height / image.naturalHeight, 1)
+  fitted.value = { width: image.naturalWidth * ratio, height: image.naturalHeight * ratio }
+}
+
+function onImageLoad() {
+  fitImage()
+  loaded.value = true
+}
+
+function onResize() {
+  resetZoom()
+  fitImage()
+}
 
 // Идёт перетаскивание увеличенной картинки
 const panning = ref(false)
@@ -36,6 +62,8 @@ const many = computed(() => props.images.length > 1)
 const zoomed = computed(() => scale.value > 1.01)
 
 const imageStyle = computed(() => ({
+  width: fitted.value.width ? `${fitted.value.width}px` : undefined,
+  height: fitted.value.height ? `${fitted.value.height}px` : undefined,
   transform: `translate(${offset.value.x}px, ${offset.value.y}px) scale(${scale.value})`,
   cursor: zoomed.value ? (panning.value ? 'grabbing' : 'grab') : 'zoom-in',
   transition: panning.value ? 'none' : 'transform 0.18s ease',
@@ -55,6 +83,7 @@ function go(step) {
 watch(index, () => {
   resetZoom()
   loaded.value = false
+  fitted.value = { width: 0, height: 0 }
 })
 
 /* ----------------------------- Увеличение ----------------------------- */
@@ -196,13 +225,21 @@ const closeBtn = ref(null)
 
 onMounted(() => {
   window.addEventListener('keydown', onKey)
+  previousOverflow = document.body.style.overflow
   document.body.style.overflow = 'hidden'
+  window.addEventListener('resize', onResize)
+  if (typeof ResizeObserver !== 'undefined') {
+    resizeObserver = new ResizeObserver(onResize)
+    if (stageEl.value) resizeObserver.observe(stageEl.value)
+  }
   nextTick(() => closeBtn.value?.focus())
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKey)
-  document.body.style.overflow = ''
+  window.removeEventListener('resize', onResize)
+  resizeObserver?.disconnect()
+  document.body.style.overflow = previousOverflow
 })
 </script>
 
@@ -237,6 +274,7 @@ onBeforeUnmount(() => {
       </header>
 
       <div
+          ref="stageEl"
           class="lightbox__stage"
           @click.self="emit('close')"
           @wheel="onWheel"
@@ -256,7 +294,7 @@ onBeforeUnmount(() => {
             :alt="current.name"
             :style="imageStyle"
             draggable="false"
-            @load="loaded = true"
+            @load="onImageLoad"
             @error="loaded = true"
             @click.stop="onImageClick"
             @pointerdown="onPointerDown"
@@ -302,8 +340,10 @@ onBeforeUnmount(() => {
   inset: 0;
   z-index: 2000;
 
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  height: 100dvh;
+  overflow: hidden;
 
   color: #ede9f6;
 
@@ -367,8 +407,8 @@ onBeforeUnmount(() => {
   position: relative;
 
   display: grid;
-  flex: 1;
   place-items: center;
+  grid-template-rows: minmax(0, 1fr);
   min-height: 0;
   overflow: hidden;
   padding: 0 64px;
@@ -377,6 +417,9 @@ onBeforeUnmount(() => {
 }
 
 .lightbox__img {
+  display: block;
+  min-width: 0;
+  min-height: 0;
   max-width: 100%;
   max-height: 100%;
 

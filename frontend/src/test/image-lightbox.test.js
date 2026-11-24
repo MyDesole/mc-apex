@@ -62,3 +62,52 @@ describe('ImageLightbox', () => {
     expect(document.body.style.overflow).toBe('')
   })
 })
+
+describe('Image bounds', () => {
+  function dimensions(width, height, naturalWidth, naturalHeight) {
+    const stage = box().querySelector('.lightbox__stage')
+    const image = box().querySelector('.lightbox__img')
+    Object.defineProperties(stage, {
+      clientWidth: { configurable: true, value: width },
+      clientHeight: { configurable: true, value: height },
+    })
+    Object.defineProperties(image, {
+      naturalWidth: { configurable: true, value: naturalWidth },
+      naturalHeight: { configurable: true, value: naturalHeight },
+    })
+    stage.style.padding = '0px'
+    image.dispatchEvent(new Event('load'))
+    return image
+  }
+
+  it('fits a tall photo entirely within the available height', async () => {
+    open()
+    const image = dimensions(900, 600, 1800, 3000)
+    await nextTick()
+    expect(image.style.width).toBe('360px')
+    expect(image.style.height).toBe('600px')
+  })
+
+  it('fits a wide photo by width without stretching its proportions', async () => {
+    open()
+    const image = dimensions(900, 600, 4000, 1000)
+    await nextTick()
+    expect(image.style.width).toBe('900px')
+    expect(image.style.height).toBe('225px')
+  })
+
+  it('recalculates image size and resets zoom after a viewport resize', async () => {
+    open()
+    const image = dimensions(900, 600, 1800, 3000)
+    await nextTick()
+    image.click()
+    await nextTick()
+    expect(image.style.transform).toContain('scale(2.2)')
+    Object.defineProperty(box().querySelector('.lightbox__stage'), 'clientHeight', { configurable: true, value: 400 })
+    window.dispatchEvent(new Event('resize'))
+    await nextTick()
+    expect(image.style.width).toBe('240px')
+    expect(image.style.height).toBe('400px')
+    expect(image.style.transform).toContain('scale(1)')
+  })
+})
