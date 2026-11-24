@@ -4334,3 +4334,13 @@ opacity: 0.35;
 .chat-search-slot--messages .search-dropdown { flex: 0 1 auto; }
 .chat-search-slot--messages .search-body { flex: 0 1 auto; max-height: 180px; }
 .chat-search-slot--messages .search-hint { padding: 20px 16px; }
+
+/* Background belongs to the conversation canvas, never to message bubbles. */
+.chat__messages {
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse at 75% 15%, rgba(112, 79, 161, .055), transparent 65%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='none' stroke='%238e7bab' stroke-opacity='.085' stroke-width='1'%3E%3Cpath d='m22 23 9-5 9 5v10l-9 5-9-5zm0 0 9 5 9-5m-9 5v10M103 91l6-10 6 10 10 6-10 6-6 10-6-10-10-6z'/%3E%3Ccircle cx='112' cy='24' r='3'/%3E%3Cpath d='M31 115v8m-4-4h8M72 63l4 4-4 4-4-4z'/%3E%3C/g%3E%3C/svg%3E");
+}
+.msg__video { display: block; max-width: min(440px, 100%); width: 100%; max-height: 360px; object-fit: contain; border-radius: 8px; background: #08080c; }
+.chat-context-bar { display: flex; justify-content: space-between; gap: 8px; padding: 8px 16px; font-size: 12px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+.chat-context-bar button, .chat-context-next { color: #bfa7e8; background: var(--bg-card); border: 0; cursor: pointer; padding: 8px 12px; font: inherit; }
+.chat-context-next { flex-shrink: 0; font-size: 12px; }

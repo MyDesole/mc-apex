@@ -9,6 +9,7 @@ class ConversationHistoryRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
+            'around_id' => ['nullable', 'integer', 'min:1'],
             'before_id' => ['nullable', 'integer', 'min:1'],
             'after_id' => ['nullable', 'integer', 'min:1'],
             'limit' => ['nullable', 'integer', 'min:1', 'max:100'],

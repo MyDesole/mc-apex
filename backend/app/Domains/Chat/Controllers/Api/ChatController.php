@@ -55,6 +55,9 @@ class ChatController extends Controller
         $this->authorize('view', $conversation);
 
         $me = $request->user();
+        if ($request->filled('around_id')) {
+            return response()->json($this->chat->context($conversation, $me, $request->integer('around_id')));
+        }
 
         $history = $this->chat->history(
             conversation: $conversation,
@@ -76,6 +79,40 @@ class ChatController extends Controller
                 ->where('user_id', '!=', $me->id)
                 ->count(),
         ]);
+    }
+
+    public function attachments(Request $request, Conversation $conversation): JsonResponse
+    {
+        $this->authorize('view', $conversation);
+        $data = $request->validate([
+            'type' => ['nullable', 'in:all,image,video,voice,file'],
+            'before_id' => ['nullable', 'integer', 'min:1'],
+        ]);
+        $query = MessageAttachment::query()
+            ->whereHas('message', fn ($q) => $q->where('conversation_id', $conversation->id))
+            ->with('message.user:id,username');
+        match ($data['type'] ?? 'all') {
+            'image' => $query->where('is_image', true),
+            'voice' => $query->where('is_voice', true),
+            'video' => $query->where('is_voice', false)->where('mime', 'like', 'video/%'),
+            'file' => $query->where('is_image', false)->where('is_voice', false)->where('mime', 'not like', 'video/%'),
+            default => null,
+        };
+        if (! empty($data['before_id'])) {
+            $query->where('id', '<', $data['before_id']);
+        }
+        $items = $query->orderByDesc('id')->limit(41)->get();
+        $more = $items->count() > 40;
+        $items = $items->take(40);
+
+        return response()->json(['attachments' => $items->map(fn (MessageAttachment $a) => [
+            'id' => $a->id, 'message_id' => $a->message_id, 'name' => $a->original_name,
+            'url' => $a->url, 'size' => $a->human_size, 'mime' => $a->mime,
+            'is_image' => $a->is_image, 'is_voice' => $a->is_voice,
+            'is_video' => ! $a->is_voice && str_starts_with((string) $a->mime, 'video/'),
+            'duration' => $a->duration, 'created_at' => $a->created_at?->toIso8601String(),
+            'user' => $a->message->user ? ['id' => $a->message->user->id, 'username' => $a->message->user->username] : null,
+        ])->values(), 'has_more' => $more, 'next_cursor' => $more ? $items->last()->id : null]);
     }
 
     public function startDirect(StartDirectRequest $request): JsonResponse

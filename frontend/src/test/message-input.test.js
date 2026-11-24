@@ -218,6 +218,36 @@ describe('Поле ввода сообщения', () => {
     wrapper.unmount()
   })
 
+  it.each([false, true])('jumps to search results outside the visible window (remote: %s)', async remote => {
+    const target = { id: 10, conversation_id: 1, body: 'Old needle', snippet: 'Old needle', user: { id: 2, username: 'friend' } }
+    const history = Array.from({length:120}, (_,i)=>({id:i+1,conversation_id:1,body:`Message ${i}`,user:{id:2,username:'friend'}}))
+    if (!remote) history[9] = target
+    const wrapper = await mountMessages(remote ? history.slice(80) : history)
+    chatApi.searchMessages.mockResolvedValueOnce({messages:[target]})
+    await wrapper.find('[aria-label="Поиск по сообщениям"]').trigger('click')
+    vi.useFakeTimers({toFake:['setTimeout','clearTimeout']})
+    try {
+      await wrapper.find('input.search-input').setValue('needle')
+      await vi.advanceTimersByTimeAsync(400)
+      await flushPromises()
+    } finally { vi.useRealTimers() }
+    if (remote) chatApi.show.mockResolvedValueOnce({messages:[target],oldest_id:10,has_more:false,has_more_after:true})
+    await wrapper.find('.search-item--message').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('[data-message-id="10"]').exists()).toBe(true)
+    if (remote) expect(chatApi.show).toHaveBeenCalledWith(1, expect.objectContaining({aroundId:10,markRead:false}))
+    wrapper.unmount()
+  })
+
+  it('renders an attached video as a player instead of a download-only file', async () => {
+    const wrapper = await mountMessages([{id:50,conversation_id:1,body:'',user:{id:2,username:'friend'},attachments:[{id:8,name:'clip.mp4',url:'/clip.mp4',mime:'video/mp4',is_video:true}]}])
+    const video=wrapper.find('video.msg__video')
+    expect(video.exists()).toBe(true)
+    expect(video.attributes('controls')).toBeDefined()
+    expect(video.attributes('playsinline')).toBeDefined()
+    wrapper.unmount()
+  })
+
   it('подстраивает высоту под содержимое', async () => {
     const wrapper = await mountMessages()
     const field = wrapper.find('textarea.chat__input')

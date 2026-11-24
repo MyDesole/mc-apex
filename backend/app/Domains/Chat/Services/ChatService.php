@@ -161,6 +161,19 @@ class ChatService
         ];
     }
 
+    public function context(Conversation $conversation, User $me, int $messageId): array
+    {
+        $target = Message::where('conversation_id', $conversation->id)->findOrFail($messageId);
+        $before = $this->history($conversation, $me, beforeId: $messageId, limit: 20, markRead: false);
+        $after = $this->history($conversation, $me, afterId: $messageId, limit: 20, markRead: false);
+        $target->load(self::MESSAGE_RELATIONS);
+        $messages = [...$before['messages'], ...$this->presentMessages(collect([$target]), $me), ...$after['messages']];
+
+        return ['messages' => $messages, 'oldest_id' => $messages[0]['id'],
+            'newest_id' => $messages[array_key_last($messages)]['id'],
+            'has_more' => $before['has_more'], 'has_more_after' => $after['has_more']];
+    }
+
     /** Чужие сообщения, которые я ещё не прочитал. */
     private function unreadQuery(User $me)
     {

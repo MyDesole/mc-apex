@@ -5,7 +5,6 @@ namespace App\Domains\Chat\Resources;
 use App\Domains\Chat\Models\Message;
 use App\Domains\Chat\Models\MessageAttachment;
 use App\Domains\Chat\Services\ChatService;
-use App\Domains\Users\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -127,6 +126,8 @@ class MessageResource extends JsonResource
             'size' => $a->human_size,
             'is_image' => (bool) $a->is_image,
             'is_voice' => (bool) $a->is_voice,
+            'mime' => $a->mime,
+            'is_video' => ! $a->is_voice && str_starts_with((string) $a->mime, 'video/'),
             'duration' => $a->duration,
         ])->values()->all();
     }

@@ -15,6 +15,7 @@ export const chatApi = {
     show(id, options = {}) {
         const params = new URLSearchParams()
 
+        if (options.aroundId) params.set('around_id', String(options.aroundId))
         if (options.beforeId) params.set('before_id', String(options.beforeId))
         if (options.afterId) params.set('after_id', String(options.afterId))
         if (options.limit) params.set('limit', String(options.limit))
@@ -24,6 +25,12 @@ export const chatApi = {
         const query = params.toString()
 
         return api.get(`/chat/conversations/${id}${query ? '?' + query : ''}`)
+    },
+
+    attachments(id, type = 'all', beforeId = null) {
+        const params = new URLSearchParams({ type })
+        if (beforeId) params.set('before_id', String(beforeId))
+        return api.get(`/chat/conversations/${id}/attachments?${params}`)
     },
 
     // Создать/получить диалог с юзером

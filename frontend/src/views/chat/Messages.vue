@@ -27,6 +27,12 @@ const ImageLightbox = defineAsyncComponent(() => import('@/components/core/Image
 import { filesFromClipboard, useFileDrop } from '@/composables/core/useFileDrop.js'
 import { previewText, bodyWithoutCards, canEdit, withMine, conversationTime, readDrafts, writeDraft } from '@/utils/chatPreview.js'
 
+const ChatMediaPanel = defineAsyncComponent(() => import('@/components/chat/ChatMediaPanel.vue'))
+const mediaOpen = ref(false)
+const contextMode = ref(false)
+const hasMoreAfter = ref(false)
+const loadingNewer = ref(false)
+
 const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
@@ -90,7 +96,7 @@ useMessagePolling(
        * мёртвом сокете у собеседника не вставала галочка, а у себя висел
        * счётчик непрочитанных.
        */
-      enabled: () => !loadingChat.value,
+      enabled: () => !loadingChat.value && !contextMode.value,
       onNew(added) {
         for (const message of added) bumpConversation(message.conversation_id, message)
         const fromOthers = added.filter((m) => m.user?.id !== auth.user?.id)
@@ -323,6 +329,7 @@ function noteArrivals(count) {
 }
 
 function jumpToBottom() {
+  if (contextMode.value) return openConversation(activeConversation.value.id)
   newBelow.value = 0
   scrollToBottom(true)
 }
@@ -338,7 +345,7 @@ let readPending = false
 function markActiveRead() {
   const id = activeConversation.value?.id
 
-  if (!id || loadingChat.value) return
+  if (!id || loadingChat.value || contextMode.value) return
 
   if (document.visibilityState !== 'visible') {
     readPending = true
@@ -512,6 +519,9 @@ async function openConversation(id) {
   if (searchOpen.value && searchMode.value === 'messages') closeSearch()
 
   loadingChat.value = true
+  contextMode.value = false
+  hasMoreAfter.value = false
+  mediaOpen.value = false
   error.value = ''
 
   // Прочтения другого диалога не должны влиять на этот
@@ -620,6 +630,7 @@ async function loadOlder() {
   const topBefore = el?.scrollTop ?? 0
 
   const conversationId = activeConversation.value.id
+  const request = openRequest
 
   try {
     const data = await chatApi.show(conversationId, {
@@ -630,7 +641,7 @@ async function loadOlder() {
     })
 
     // Пока грузили историю, открыли другой диалог
-    if (activeConversation.value?.id !== conversationId) return
+    if (request !== openRequest || activeConversation.value?.id !== conversationId) return
 
     const older = data.messages ?? []
 
@@ -646,8 +657,10 @@ async function loadOlder() {
 
     hasMoreHistory.value = Boolean(data.has_more)
   } catch (e) {
+    if (request !== openRequest) return
     error.value = e.message || 'Не удалось загрузить историю'
   } finally {
+    if (request !== openRequest) return
     loadingOlder.value = false
 
     await nextTick()
@@ -759,6 +772,7 @@ async function sendMessage() {
  * принести это сообщение, поэтому только через слияние.
  */
 async function pushOwnMessage(message, conversationId = message?.conversation_id ?? activeConversation.value?.id) {
+  if (conversationId === activeConversation.value?.id && contextMode.value) await openConversation(conversationId)
   if (conversationId === activeConversation.value?.id) {
     messages.value = mergeMessages(messages.value, message).list
     renderLimit.value = RENDER_WINDOW
@@ -1020,8 +1034,7 @@ function replaceMessage(message) {
 async function goToMessage(id) {
   if (!id) return
 
-  await ensureMessageLoaded(id)
-  await scrollToMessage(id)
+  if (await ensureMessageLoaded(id)) await scrollToMessage(id)
 }
 
 /**
@@ -1089,30 +1102,53 @@ function smoothToBottom() {
  * @returns {Promise<boolean>} нашлось ли сообщение
  */
 async function ensureMessageLoaded(messageId) {
-  /* Уже в ленте — ничего делать не нужно */
-  const inList = () => messages.value.some((m) => m.id === messageId)
-
-  if (inList()) return true
-
-  /*
-   * Ограничение на число шагов: история может быть очень длинной, а
-   * бесконечная догрузка подвесила бы страницу.
-   */
-  const maxSteps = 20
-  let steps = 0
-
-  while (!inList() && hasMoreHistory.value && steps < maxSteps) {
-    const before = messages.value.length
-
-    await loadOlder()
-
-    steps++
-
-    /* История не выросла — дальше идти незачем */
-    if (messages.value.length === before) break
+  const conversationId = activeConversation.value?.id
+  let request = openRequest
+  const previousContext = contextMode.value
+  if (!conversationId) return false
+  releaseAnchor()
+  let index = messages.value.findIndex(m => m.id === messageId)
+  if (index < 0) {
+    request = ++openRequest
+    contextMode.value = true
+    loadingOlder.value = false
+    try {
+      const data = await chatApi.show(conversationId, { aroundId: messageId, markRead: false, messagesOnly: true })
+      if (request !== openRequest || activeConversation.value?.id !== conversationId) return false
+      contextMode.value = true
+      messages.value = data.messages ?? []
+      oldestId.value = data.oldest_id
+      hasMoreHistory.value = Boolean(data.has_more)
+      hasMoreAfter.value = Boolean(data.has_more_after)
+      firstUnreadId.value = null
+      index = messages.value.findIndex(m => m.id === messageId)
+    } catch (e) {
+      if (request === openRequest) {
+        contextMode.value = previousContext
+        error.value = e.message || 'Сообщение недоступно'
+      }
+      return false
+    }
   }
+  if (index < 0) return false
+  renderLimit.value = Math.max(RENDER_WINDOW, messages.value.length - index)
+  await nextTick()
+  return true
+}
 
-  return inList()
+async function loadNewer() {
+  if (!hasMoreAfter.value || loadingNewer.value) return
+  const id = activeConversation.value?.id
+  const request = openRequest
+  loadingNewer.value = true
+  try {
+    const data = await chatApi.show(id, { afterId: messages.value.at(-1)?.id, limit: 40, markRead: false, messagesOnly: true })
+    if (request !== openRequest) return
+    messages.value = mergeMessages(messages.value, data.messages ?? []).list
+    hasMoreAfter.value = Boolean(data.has_more)
+    renderLimit.value += (data.messages ?? []).length
+  } catch (e) { if (request === openRequest) error.value = e.message }
+  finally { loadingNewer.value = false }
 }
 
 async function scrollToMessage(id) {
@@ -1128,7 +1164,7 @@ async function scrollToMessage(id) {
 
   // Прокручиваем только ленту: scrollIntoView двигал ещё и саму страницу
   feed.scrollTo({
-    top: Math.max(0, el.offsetTop - (feed.clientHeight - el.offsetHeight) / 2),
+    top: Math.max(0, feed.scrollTop + el.getBoundingClientRect().top - feed.getBoundingClientRect().top - (feed.clientHeight - el.offsetHeight) / 2),
     behavior: 'smooth',
   })
 
@@ -1641,8 +1677,7 @@ async function runSearch(query) {
 async function openFoundMessage(message) {
   searchOpen.value = false
 
-  await ensureMessageLoaded(message.id)
-  await scrollToMessage(message.id)
+  if (await ensureMessageLoaded(message.id)) await scrollToMessage(message.id)
 }
 
 function openSearch(mode) {
@@ -1769,7 +1804,7 @@ watch(
       if (!newLen || newLen <= oldLen || !oldLen) return
 
       // Догрузка старых сверху — не новое сообщение
-      if (loadingOlder.value) return
+      if (loadingOlder.value || loadingChat.value || contextMode.value) return
 
       if (anchor !== 'bottom' && !isNearBottom()) return
 
@@ -1838,6 +1873,11 @@ watch(latestMessage, async message => {
       message.conversation_id ===
       activeConversation.value.id
   ) {
+    if (contextMode.value) {
+      bumpConversation(message.conversation_id, message)
+      if (!mine) noteArrivals(1)
+      return
+    }
     // Опрос мог принести его раньше сокета
     const { list, added } = mergeMessages(messages.value, message)
 
@@ -2510,10 +2550,16 @@ onUnmounted(() => {
           <button type="button" class="chat__head-btn" aria-label="Поиск по сообщениям" title="Поиск по сообщениям" :aria-expanded="searchOpen && searchMode === 'messages'" @click.stop="openSearch('messages')">
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
           </button>
+          <button type="button" class="chat__head-btn" aria-label="Вложения диалога" title="Фото, видео, голосовые и файлы" @click="mediaOpen = !mediaOpen">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m21 11-9 9a6 6 0 0 1-8-8l9-9a4 4 0 0 1 6 6l-9 9a2 2 0 0 1-3-3l8-8"/></svg>
+          </button>
           <div class="chat__head-accent"></div>
         </header>
 
         <div id="chat-message-search" v-show="searchOpen && searchMode === 'messages'" class="chat-search-slot chat-search-slot--messages"></div>
+
+        <ChatMediaPanel v-if="mediaOpen" :key="activeConversation.id" :conversation-id="activeConversation.id" @close="mediaOpen = false" @jump="id => { mediaOpen = false; goToMessage(id) }" />
+        <div v-if="contextMode" class="chat-context-bar"><span>Фрагмент истории</span><button type="button" @click="jumpToBottom">К последним сообщениям ↓</button></div>
 
         <!-- Закреплённое сообщение: клик — перейти к нему -->
         <div v-if="activeConversation?.pinned_message" class="chat__pinned">
@@ -2741,6 +2787,7 @@ onUnmounted(() => {
                     >
                       <ChatVoicePlayer v-if="file.is_voice" :file="file" />
 
+                      <video v-else-if="file.is_video || (file.mime?.startsWith('video/') && !file.is_voice)" class="msg__video" :src="file.url" controls playsinline preload="metadata" :aria-label="file.name"></video>
                       <button
                           v-else-if="file.is_image"
                           class="msg__image"
@@ -3084,6 +3131,8 @@ onUnmounted(() => {
             </small>
           </div>
         </div>
+
+        <button v-if="hasMoreAfter" class="chat-context-next" type="button" :disabled="loadingNewer" @click="loadNewer">{{ loadingNewer ? 'Загрузка…' : 'Загрузить следующие сообщения ↓' }}</button>
 
         <!-- Картинки сообщения: листание, увеличение, Esc -->
         <ImageLightbox

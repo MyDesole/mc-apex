@@ -337,6 +337,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::prefix('chat')->group(function () {
+        Route::get('/conversations/{conversation}/attachments', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'attachments']);
         Route::get('/conversations', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'index']);
         Route::get('/conversations/{conversation}', [\App\Domains\Chat\Controllers\Api\ChatController::class, 'show'])
             ->whereNumber('conversation');
