@@ -20,7 +20,6 @@ const auth = useAuthStore()
 const loading = ref(true)
 
 const hero = ref({})
-const statsData = ref({})
 const players = ref([])
 const clans = ref([])
 const news = ref([])
@@ -63,12 +62,6 @@ const restPlayers = computed(() => players.value.slice(3))
 const topClans = computed(() => clans.value.slice(0, 3))
 const restClans = computed(() => clans.value.slice(3))
 
-const stats = computed(() => [
-  { label: 'игроков', value: statsData.value.players ?? 0 },
-  { label: 'кланов', value: statsData.value.clans ?? 0 },
-  { label: 'турниров', value: statsData.value.tournaments ?? 0 },
-  { label: 'матчей', value: statsData.value.matches ?? 0 },
-])
 
 /** Очки общего рейтинга — по ним же отсортирован топ. */
 function playerScore(player) {
@@ -111,7 +104,6 @@ onMounted(async () => {
     const data = await homeApi.index()
 
     hero.value = data.hero ?? {}
-    statsData.value = data.stats_data ?? {}
     players.value = data.players ?? []
     clans.value = data.clans ?? []
     news.value = data.news ?? []
@@ -161,12 +153,6 @@ onMounted(async () => {
           </RouterLink>
         </div>
 
-        <dl v-if="!loading" class="hero__stats">
-          <div v-for="stat in stats" :key="stat.label">
-            <dt>{{ stat.label }}</dt>
-            <dd>{{ stat.value }}</dd>
-          </div>
-        </dl>
       </div>
 
       <aside class="hero__side">

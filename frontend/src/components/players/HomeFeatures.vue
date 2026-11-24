@@ -7,23 +7,21 @@ import { RouterLink } from 'vue-router'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
 
 const FEATURES = [
-  { sprite: 'crown', color: '#facc15', title: 'Тиры и рейтинг', text: 'Тестеры оценивают твою игру — получаешь тир от E до S и место в общем рейтинге.', to: '/rules' },
-  { sprite: 'warden', color: '#2dd4bf', title: 'Кланы и войны', text: 'Собери команду, отмечайся каждый день, качай уровень клана и вызывай соперников.', to: '/clans' },
-  { sprite: 'totem', color: '#4ade80', title: 'Турниры', text: 'Регулярные турниры с сеткой, трансляциями и призами в ApexCoin.', to: '/tournaments' },
-  { sprite: 'cat', color: '#fb923c', title: 'Питомцы', text: 'Уникальные питомцы с номером и чертами: окрас, фон, аксессуар. Корми, качай уровень.', to: '/shop' },
-  { sprite: 'flame', color: '#f97316', title: 'Аукцион', text: 'Торгуй питомцами со ставками в реальном времени и чатом у каждого лота.', to: '/auction' },
-  { sprite: 'diamond', color: '#22d3ee', title: 'Шахтёр', text: 'Мини-игра: копай вглубь за руду и монеты, но осторожно с TNT.', to: '/miner' },
-  { sprite: 'heart', color: '#f43f5e', title: 'Студия профиля', text: 'Собери профиль из блоков: шапка, шрифты, фоны, эффекты и косметика из магазина.', to: '/register' },
-  { sprite: 'skull', color: '#a78bfa', title: 'Сундуки и косметика', text: 'Бесплатный сундук каждый день, рамки, эффекты ника, бейджи и титулы.', to: '/cases' },
+  { sprite: 'crown', color: '#facc15', title: 'Тиры и рейтинг', text: 'Оценка игры и общий рейтинг.', to: '/rules' },
+  { sprite: 'warden', color: '#2dd4bf', title: 'Кланы и войны', text: 'Команды, развитие и клановые войны.', to: '/clans' },
+  { sprite: 'totem', color: '#4ade80', title: 'Турниры', text: 'Сетка матчей, результаты и призы.', to: '/tournaments' },
+  { sprite: 'cat', color: '#fb923c', title: 'Питомцы', text: 'Коллекция, уровни и уход.', to: '/shop' },
+  { sprite: 'flame', color: '#f97316', title: 'Аукцион', text: 'Покупка и продажа питомцев.', to: '/auction' },
+  { sprite: 'diamond', color: '#22d3ee', title: 'Шахтёр', text: 'Мини-игра с монетами и рекордами.', to: '/miner' },
+  { sprite: 'heart', color: '#f43f5e', title: 'Студия профиля', text: 'Внешний вид и оформление профиля.', to: '/register' },
+  { sprite: 'skull', color: '#a78bfa', title: 'Сундуки и косметика', text: 'Косметика и ежедневный сундук.', to: '/cases' },
 ]
 </script>
 
 <template>
   <section class="hf">
     <header class="hf__head">
-      <span class="hf__kicker">Что есть на APEX</span>
-      <h2>Не только рейтинг</h2>
-      <p>Тир-тесты, кланы и турниры — и вокруг них целый мир: питомцы, торги, мини-игры и профиль, который собираешь сам.</p>
+      <h2>Возможности APEX</h2>
     </header>
 
     <div class="hf__grid">
@@ -34,7 +32,7 @@ const FEATURES = [
           class="hf-card"
           :style="{ '--c': f.color }"
       >
-        <span class="hf-card__art"><PixelSprite :sprite="f.sprite" :size="30" anim="bounce" /></span>
+        <span class="hf-card__art"><PixelSprite :sprite="f.sprite" :size="24" /></span>
         <strong>{{ f.title }}</strong>
         <span>{{ f.text }}</span>
       </RouterLink>
@@ -117,4 +115,17 @@ const FEATURES = [
   .hf__grid { grid-template-columns: minmax(0, 1fr); }
   .hf__cta { flex-direction: column; align-items: stretch; text-align: center; }
 }
+
+.hf { gap:12px; }
+.hf__head h2 { margin:0; font-family:inherit; font-size:19px; font-weight:600; }
+.hf__grid { gap:0; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+.hf-card { display:grid; grid-template-columns:28px minmax(0,1fr); grid-template-areas:"art title" "art text"; align-content:center; gap:4px 9px; padding:14px 12px; background:var(--bg-card); border:0; border-right:1px solid var(--border); border-bottom:1px solid var(--border); border-radius:0; }
+.hf-card:hover { transform:none; background:rgba(151,122,211,.06); }
+.hf-card__art { grid-area:art; width:28px; height:32px; margin:0; background:transparent; border:0; }
+.hf-card strong { grid-area:title; font-size:12px; font-weight:500; }
+.hf-card > span:last-child { grid-area:text; font-size:11px; line-height:1.5; }
+.hf__cta { padding:10px 14px; background:transparent; border:1px solid var(--border); border-radius:7px; }
+.hf__cta p { color:var(--text-muted); font-size:12px; }
+.hf__cta .btn { padding:8px 12px; font-size:12px; }
+@media(max-width:560px) { .hf__grid { grid-template-columns:1fr 1fr; } .hf-card { padding:12px 10px; } .hf__cta { text-align:left; align-items:stretch; } }
 </style>

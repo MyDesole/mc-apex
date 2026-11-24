@@ -48,26 +48,7 @@ function until(iso) {
 const resetIn = computed(() => (data.value ? until(data.value.reset_at) : null))
 const minerWait = computed(() => (data.value?.miner?.cooldown_until ? until(data.value.miner.cooldown_until) : null))
 
-// Сколько дел готово прямо сейчас — в заголовок панели
-const ready = computed(() => {
-  const d = data.value
-  if (!d) return 0
-  let count = 0
-  d.pets.forEach((p) => { count += PET_ACTIONS.filter(([a]) => !p.done.includes(a)).length })
-  if (d.bonus?.available) count++
-  if (d.clan && !d.clan.checked_in) count++
-  if (d.chest.available) count++
-  if (!d.miner.active && !minerWait.value) count++
-  return count
-})
 
-function plural(n) {
-  const mod10 = n % 10
-  const mod100 = n % 100
-  if (mod10 === 1 && mod100 !== 11) return 'дело'
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'дела'
-  return 'дел'
-}
 
 const claiming = ref(false)
 const bonusNote = ref('')
@@ -99,13 +80,8 @@ onMounted(load)
   <section v-if="data" class="hd">
     <header class="hd__head">
       <div>
-        <span class="hd__kicker">Твоя панель</span>
-        <h2>С возвращением, {{ auth.user?.username }}</h2>
-        <p>
-          <template v-if="ready">Можно сделать прямо сейчас: <b>{{ ready }} {{ plural(ready) }}</b>.</template>
-          <template v-else>На сегодня всё сделано.</template>
-          Бонус, сундук, отметка в клане и забота о питомцах снова откроются через {{ resetIn }}.
-        </p>
+        <h2>Личный кабинет</h2>
+        <p>{{ auth.user?.username }}<span v-if="resetIn"> · обновление заданий через {{ resetIn }}</span></p>
       </div>
       <RouterLink to="/shop" class="hd__coins" title="Баланс ApexCoin">
         <AppIcon icon="coin" :size="16" />
@@ -130,7 +106,7 @@ onMounted(load)
               :style="{ '--rar': PET_RARITY[pet.traits?.rarity]?.color || '#a8a3b8' }"
           >
             <span class="hd-pet__sprite" :style="petModelStyle(pet.traits)">
-              <PixelSprite :sprite="spriteOf(pet)" :size="34" anim="bounce" />
+              <PixelSprite :sprite="spriteOf(pet)" :size="34" />
             </span>
             <span class="hd-pet__info">
               <strong>{{ pet.name || pet.traits?.model?.name || 'Питомец' }}</strong>
@@ -218,8 +194,10 @@ onMounted(load)
 
       <!-- Образ -->
       <article class="hd-card">
-        <h3><AppIcon icon="palette" :size="15" /> Надето сейчас</h3>
+        <h3><AppIcon icon="palette" :size="15" /> Профиль</h3>
 
+        <details class="hd-outfit">
+          <summary>Оформление <span>{{ data.equipped.length }} предметов</span></summary>
         <ul v-if="data.equipped.length" class="hd-worn">
           <li v-for="(item, i) in data.equipped.slice(0, 8)" :key="i" :style="{ '--r': RARITY_COLORS[item.rarity] || '#8b8b9e' }">
             <small>{{ TYPE_LABELS[item.type] || item.type }}</small>
@@ -227,6 +205,7 @@ onMounted(load)
           </li>
         </ul>
         <p v-else class="hd-card__empty">Ничего не надето — загляни в <RouterLink to="/inventory">инвентарь</RouterLink>.</p>
+        </details>
 
         <div class="hd-quick">
           <RouterLink to="/profile"><AppIcon icon="palette" :size="14" /> Студия</RouterLink>
@@ -488,4 +467,38 @@ onMounted(load)
   .hd__coins { align-self: flex-start; }
   .hd__grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Compact account panel; actions retain their original handlers and limits. */
+.hd { gap:12px; }
+.hd__head { align-items:center; }
+.hd__head h2 { margin:0 0 5px; font-family:inherit; font-size:19px; font-weight:600; line-height:1.3; }
+.hd__head p { font-size:12px; }
+.hd__coins { padding:7px 10px; color:var(--text); background:var(--bg-card); border-color:var(--border); border-radius:7px; font-size:14px; font-weight:600; }
+.hd__grid { grid-template-columns:minmax(0,1fr) minmax(0,1.35fr) minmax(0,.85fr); align-items:start; gap:12px; }
+.hd-card { padding:13px; gap:10px; border-radius:8px; }
+.hd-card h3 { font-family:inherit; font-size:12px; font-weight:600; letter-spacing:0; text-transform:none; }
+.hd-pet { padding:8px; gap:5px 9px; background:transparent; border:1px solid var(--border); border-radius:6px; }
+.hd-pet__sprite { width:38px; height:40px; }
+.hd-pet__info strong { font-size:12px; font-weight:500; }
+.hd-pet__info small { font-size:10px; font-weight:500; }
+.hd-act { width:26px; height:23px; border-radius:5px; border-color:rgba(160,150,180,.2); background:rgba(160,150,180,.05); }
+.hd-list { gap:1px; }
+.hd-list li { padding:5px 2px; gap:8px; border-radius:4px; }
+.hd-list__icon { width:26px; height:26px; background:transparent; }
+.hd-list__text strong { font-size:12px; font-weight:500; }
+.hd-list__text small { font-size:10px; }
+.hd-go { padding:5px 9px; color:#e9e2f5; background:#443456; border:1px solid #655078; border-radius:5px; font-size:10px; font-weight:500; }
+.hd-go:hover { background:#57436e; }
+.hd-go--ghost { color:var(--text-muted); background:transparent; border-color:var(--border); }
+.hd-wait { font-size:10px; font-weight:400; }
+.hd-outfit summary { display:flex; justify-content:space-between; gap:8px; padding:4px 0 10px; color:var(--text); font-size:12px; cursor:pointer; }
+.hd-outfit summary span { color:var(--text-muted); font-size:10px; }
+.hd-worn { margin:0 0 10px; gap:5px; }
+.hd-worn li { padding:6px; background:transparent; border-left:1px solid var(--border); }
+.hd-worn small { font-size:9px; font-weight:400; letter-spacing:0; text-transform:none; }
+.hd-worn span { font-size:11px; font-weight:400; }
+.hd-quick { gap:5px; margin-top:0; }
+.hd-quick a { min-height:30px; font-size:10px; font-weight:500; border-radius:5px; background:transparent; }
+@media(max-width:980px) { .hd__grid { grid-template-columns:1fr 1.3fr; } .hd__grid > .hd-card:last-child { grid-column:1/-1; } .hd-quick { grid-template-columns:repeat(4,1fr); } }
+@media(max-width:600px) { .hd__head { flex-direction:row; align-items:flex-start; text-align:left; } .hd__head > div { min-width:0; flex:1; } .hd__grid { grid-template-columns:1fr; } .hd__head h2 { font-size:17px; } .hd__head p { max-width:220px; line-height:1.5; } .hd__coins { font-size:12px; } }
 </style>
