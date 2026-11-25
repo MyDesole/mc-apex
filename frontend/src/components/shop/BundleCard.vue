@@ -42,13 +42,14 @@ const partlyOwned = computed(() => !props.bundle.owned && info.value.price_for_y
       :style="{ '--glow': look.glow, '--accent': look.accent }"
   >
     <div class="bundle__cover" :style="{ background: look.bg }">
-      <span class="bundle__rays"></span>
+      <img v-if="look.cover" class="bundle__art-cover" :src="look.cover" :alt="bundle.name" loading="lazy" decoding="async" />
+      <span v-else class="bundle__rays"></span>
       <!-- Премиум-набор: аватар в живой рамке набора; остальные — пиксель-арт -->
-      <span v-if="look.frame" class="bundle__avatar" :style="{ background: frameLook?.gradient || frameLook?.color }">
+      <span v-if="look.frame && !look.cover" class="bundle__avatar" :style="{ background: frameLook?.gradient || frameLook?.color }">
         <AvatarFrameDecor :frame="look.frame" :size="70" />
         <span class="bundle__avatar-inner">{{ initial }}</span>
       </span>
-      <span v-else class="bundle__hero">
+      <span v-else-if="!look.cover" class="bundle__hero">
         <PixelSprite :sprite="look.hero" :size="64" anim="bounce" />
       </span>
 
@@ -380,4 +381,6 @@ const partlyOwned = computed(() => !props.bundle.owned && info.value.price_for_y
     animation: none;
   }
 }
+
+.bundle__art-cover { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; image-rendering:auto; }
 </style>

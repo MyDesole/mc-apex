@@ -117,6 +117,10 @@ const PLANETS = [
       }"
       aria-hidden="true"
   >
+    <template v-if="kind === 'artwork'">
+      <img class="decor__artwork" :src="decor.image" alt="" loading="lazy" decoding="async" />
+      <span class="decor__artwork-glint"></span>
+    </template>
     <!-- Россыпь -->
     <template v-if="kind === 'scatter'">
       <span v-for="(item, i) in scatter" :key="i" class="decor__item" :style="item.style">
@@ -947,4 +951,9 @@ const PLANETS = [
     animation: none !important;
   }
 }
+
+.decor__artwork { position:absolute; width:148%; height:148%; left:-24%; top:-24%; max-width:none; object-fit:contain; image-rendering:auto; filter:drop-shadow(0 2px 5px #0008); }
+.decor__artwork-glint { position:absolute; inset:-12%; border:1px solid #dac6f4; border-radius:50%; mask-image:conic-gradient(transparent 0deg 290deg,#000 310deg,transparent 330deg); animation:noctis-orbit 14s linear infinite; opacity:.7; }
+@keyframes noctis-orbit { to { transform:rotate(360deg); } }
+@media(prefers-reduced-motion:reduce) { .decor__artwork-glint { animation:none; } }
 </style>

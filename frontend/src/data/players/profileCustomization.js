@@ -1,5 +1,6 @@
 export const AVATAR_FRAMES = [
     { id: 'default', name: 'Обычная', color: 'transparent', rarity: 'common' },
+    { id: 'noctis', name: 'Затмение', color: '#b9a0e4', gradient: 'linear-gradient(135deg, #cbd0dc, #39294d, #b9a0e4)', rarity: 'legendary', decor: { kind: 'artwork', image: '/images/cosmetics/noctis/frame.webp' } },
     { id: 'purple', name: 'Фиолетовая', color: '#7c3aed', rarity: 'common' },
     { id: 'cyan', name: 'Голубая', color: '#06b6d4', rarity: 'common' },
     { id: 'green', name: 'Зелёная', color: '#22c55e', rarity: 'common' },

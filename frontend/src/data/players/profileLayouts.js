@@ -9,6 +9,7 @@
  *   preview     — цвета мини-макета в карточке товара.
  */
 export const PROFILE_LAYOUTS = {
+    noctis: { name: 'Лунная обсерватория', arrangement: 'right', preview: { page: '#0a0811', card: '#17131f', side: '#201a2b', accent: '#c3acd9', line: '#ded5eb' } },
     nether_forge: {
         name: 'Адская кузня',
         arrangement: 'left',

@@ -5,6 +5,7 @@
 
 /** Сцены за 3D-скином в профиле. Оформление — CSS-класс showcase-stage--{id}. */
 export const SKIN_BACKDROPS = {
+    noctis: { name: 'Лунная обсерватория' },
     overworld: { name: 'Верхний мир' },
     ocean: { name: 'Океан' },
     nether: { name: 'Незер' },

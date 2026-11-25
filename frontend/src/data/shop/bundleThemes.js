@@ -3,6 +3,7 @@
  * Ключ — metadata.theme набора.
  */
 export const BUNDLE_THEMES = {
+    noctis: { bg: '#0b0812', glow: '#9c7bc4', accent: '#e1d4ed', frame: 'noctis', cover: '/images/cosmetics/noctis/cover.webp' },
     nether: {
         bg: 'radial-gradient(circle at 20% 110%, rgba(249,115,22,.55), transparent 55%), linear-gradient(160deg, #2a0a0a, #5b1010 55%, #1c0505)',
         glow: '#f97316',

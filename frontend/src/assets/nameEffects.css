@@ -180,3 +180,7 @@
     animation: none !important;
   }
 }
+
+.name-fx--noctis { background:linear-gradient(110deg,#ded6e9 15%,#b796d3 35%,#fff5e1 48%,#b796d3 61%,#ded6e9 80%); background-size:240% 100%; -webkit-background-clip:text; background-clip:text; color:transparent !important; -webkit-text-fill-color:transparent; animation:noctis-name 9s ease-in-out infinite; }
+@keyframes noctis-name { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
+@media(prefers-reduced-motion:reduce) { .name-fx--noctis { animation:none; } }

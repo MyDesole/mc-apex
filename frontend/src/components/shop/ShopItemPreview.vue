@@ -128,7 +128,7 @@ onMounted(async () => {
     <div
         v-else-if="layout"
         class="preview__page"
-        :class="`preview__page--${layout.arrangement}`"
+        :class="[`preview__page--${layout.arrangement}`, { 'preview__page--noctis': value === 'noctis' }]"
         :style="{
           '--lp-page': layout.preview.page,
           '--lp-card': layout.preview.card,
@@ -309,6 +309,7 @@ onMounted(async () => {
       <ProfileTitle :title="value" />
     </div>
 
+    <img v-else-if="item.type === 'bundle' && bundleLook.cover" class="preview__collection-art" :src="bundleLook.cover" :alt="item.name" loading="lazy" decoding="async" />
     <!-- Набор: тематический фон и состав пиксельными значками -->
     <div
         v-else-if="item.type === 'bundle'"
@@ -1197,4 +1198,7 @@ onMounted(async () => {
     animation: none !important;
   }
 }
+
+.preview__collection-art { width:100%; height:100%; object-fit:cover; image-rendering:auto; }
+.preview__page--noctis { background:linear-gradient(#100b1988,#100b19aa),url('/images/cosmetics/noctis/scene.webp') center/cover !important; }
 </style>

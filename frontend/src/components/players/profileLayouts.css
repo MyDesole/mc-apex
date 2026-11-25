@@ -1307,3 +1307,13 @@
     animation: none;
   }
 }
+
+.profile-layout.profile-layout--noctis {
+  --layout-page:#0a0811; --layout-accent:#c5aedf; --layout-edge:#86709566; --layout-radius:12px;
+  --bg-card:#14101deF; --text:#eee7f7; --text-muted:#b0a1c0; --border:#73627d55;
+  --layout-heading-font:var(--font-body);
+  background:linear-gradient(#09060d88,#0b0812e8),url('/images/cosmetics/noctis/scene.webp') center top/cover no-repeat;
+}
+.profile-layout--noctis .profile-header { background:linear-gradient(110deg,#181122e6,#22192d99) !important; border-bottom:1px solid #a88abe66; }
+.profile-layout--noctis .side-panel { background:#14101df2; }
+.profile-layout--noctis .section-heading h3 { letter-spacing:.025em; }

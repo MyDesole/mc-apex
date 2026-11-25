@@ -410,3 +410,9 @@
     animation: none;
   }
 }
+
+.mc-backdrop--noctis { background:#0b0812 url('/images/cosmetics/noctis/scene.webp') center/cover no-repeat; image-rendering:auto; }
+.mc-backdrop--noctis::before { inset:-8%; background:radial-gradient(ellipse at 35% 30%,#b2a3de33,transparent 50%); animation:noctis-mist 18s ease-in-out infinite alternate; }
+.mc-backdrop--noctis::after { bottom:0; height:25%; background:linear-gradient(transparent,#08060ee6); }
+@keyframes noctis-mist { from { transform:translateX(-3%);opacity:.35; } to { transform:translateX(3%);opacity:.8; } }
+@media(prefers-reduced-motion:reduce) { .mc-backdrop--noctis::before { animation:none; } }
