@@ -122,10 +122,6 @@ onMounted(async () => {
          HERO
     ========================================================== -->
     <section class="hero">
-      <img class="hero__art" src="/images/home/misty-mountains-1600.webp"
-           srcset="/images/home/misty-mountains-640.webp 640w, /images/home/misty-mountains-960.webp 960w, /images/home/misty-mountains-1600.webp 1600w"
-           sizes="(max-width: 700px) calc(100vw - 32px), 1200px" width="1600" height="900"
-           alt="" aria-hidden="true" fetchpriority="high" decoding="async" />
       <div class="hero__main">
         <p v-if="hero.hero_badge" class="hero__badge">
           <span class="hero__badge-dot" />

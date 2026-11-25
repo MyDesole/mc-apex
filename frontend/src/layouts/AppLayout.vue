@@ -245,6 +245,10 @@ watch(mobileMenuOpen, (open) => {
 <template>
   <div class="app" :class="{ 'app--home': route.name === 'home' }">
 
+    <img v-if="route.name === 'home'" class="app__home-art" src="/images/home/misty-mountains-1600.webp"
+         srcset="/images/home/misty-mountains-640.webp 640w, /images/home/misty-mountains-960.webp 960w, /images/home/misty-mountains-1600.webp 1600w"
+         sizes="100vw" width="1600" height="900" alt="" aria-hidden="true" fetchpriority="high" decoding="async" />
+
     <VerifyEmailBanner v-if="auth.isAuthenticated" />
 
     <!-- =========================
