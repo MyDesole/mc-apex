@@ -9,6 +9,7 @@ import { casesApi } from '@/services/shop/cases.js'
 
 import UserName from '@/components/players/UserName.vue'
 import VerifyEmailBanner from '@/components/notifications/VerifyEmailBanner.vue'
+import { canAccessRoles } from '@/utils/routeAccess.js'
 import CoinBadge from '@/components/shop/CoinBadge.vue'
 import TierTestBanner from '@/components/tiers/TierTestBanner.vue'
 import GuideCoach from '@/components/guide/GuideCoach.vue'
@@ -45,7 +46,8 @@ function openGuide() {
 }
 const mobileMenuOpen = ref(false)
 
-const { open: openPalette } = useCommandPalette()
+const { open: openPalette, isOpen: paletteOpen } = useCommandPalette()
+watch(paletteOpen, (open) => { if (open) { menuOpen.value=false; mobileMenuOpen.value=false } })
 
 /*
  * Присутствие на всём сайте, а не только в чате: собеседник видит
@@ -120,7 +122,7 @@ const STAFF_LINKS = [
   { to: '/admin', label: 'Админка', roles: ['moderator', 'admin', 'curator', 'server_admin'], icon: 'M12 2 3 6v6c0 5 3.8 9.3 9 10 5.2-.7 9-5 9-10V6l-9-4Z' },
 ]
 
-const staffLinks = computed(() => STAFF_LINKS.filter((link) => link.roles.includes(auth.user?.role)))
+const staffLinks = computed(() => STAFF_LINKS.filter((link) => canAccessRoles(auth.user?.role, link.roles)))
 
 async function logout() {
   menuOpen.value = false
@@ -155,13 +157,13 @@ async function loadChatUnread() {
   }
 }
 
-watch(() => route.path, () => {
+watch(() => route.fullPath, () => {
   mobileMenuOpen.value = false
   menuOpen.value = false
 })
 
 function onResize() {
-  if (window.innerWidth > 800) {
+  if (window.innerWidth > (auth.isAuthenticated ? 1280 : 960)) {
     mobileMenuOpen.value = false
   }
 }
@@ -195,22 +197,21 @@ watch(() => route.path, (path, previous) => {
   }
 })
 
+watch(() => auth.user?.id, (id) => {
+  if (id) { loadUnreadNotifications(); loadChatUnread() }
+  else { unreadCount.value = 0; setChatUnread(0) }
+}, { immediate:true })
+
 let notifInterval = null
 let chatInterval = null
 
 onMounted(() => {
-  loadUnreadNotifications()
-  loadChatUnread()
-
   notifInterval = setInterval(loadUnreadNotifications, 60000)
   chatInterval = setInterval(loadChatUnread, 60000)
 
-  if (!auth.initialized) {
-    auth.fetchMe()
-  }
-
   window.addEventListener('resize', onResize)
   document.addEventListener('click', onClickOutside)
+  document.addEventListener('keydown', closeMenusOnEscape)
 })
 
 onUnmounted(() => {
@@ -219,9 +220,18 @@ onUnmounted(() => {
 
   window.removeEventListener('resize', onResize)
   document.removeEventListener('click', onClickOutside)
+  document.removeEventListener('keydown', closeMenusOnEscape)
 
   document.body.style.overflow = ''
 })
+
+function closeMenusOnEscape(event) {
+  if (event.key !== 'Escape' || (!menuOpen.value && !mobileMenuOpen.value)) return
+  const accountWasOpen = menuOpen.value
+  menuOpen.value = false
+  mobileMenuOpen.value = false
+  document.querySelector(accountWasOpen ? '.user-button' : '.burger')?.focus()
+}
 
 function toggleMobile() {
   mobileMenuOpen.value = !mobileMenuOpen.value
@@ -240,7 +250,7 @@ watch(mobileMenuOpen, (open) => {
     <!-- =========================
          ШАПКА
     ========================== -->
-    <header class="site-header">
+    <header class="site-header" :class="{ 'site-header--signed-in': auth.isAuthenticated }">
       <div class="header-inner">
 
         <!-- Мобильная кнопка -->
@@ -248,7 +258,7 @@ watch(mobileMenuOpen, (open) => {
             class="burger"
             :class="{ open: mobileMenuOpen }"
             @click="toggleMobile"
-            aria-label="Меню"
+            :aria-expanded="mobileMenuOpen" aria-controls="site-mobile-menu" aria-label="Меню"
         >
           <span></span>
           <span></span>
@@ -321,7 +331,8 @@ watch(mobileMenuOpen, (open) => {
             <kbd class="search-trigger__kbd">{{ paletteShortcut }}</kbd>
           </button>
 
-          <template v-if="!auth.isAuthenticated">
+          <template v-if="!auth.initialized"><span class="header-auth-loading" role="status" aria-label="Загружается аккаунт"></span></template>
+          <template v-else-if="!auth.isAuthenticated">
 
             <RouterLink to="/login" class="auth-link">
               Войти
@@ -408,6 +419,7 @@ watch(mobileMenuOpen, (open) => {
 
               <button
                   class="user-button"
+                  :aria-expanded="menuOpen" aria-controls="site-user-menu" aria-label="Меню аккаунта"
                   @click.stop="menuOpen = !menuOpen"
               >
 
@@ -465,7 +477,7 @@ watch(mobileMenuOpen, (open) => {
 
               <!-- ВЫПАДАЮЩЕЕ МЕНЮ -->
               <Transition name="dropdown">
-                <div v-if="menuOpen" class="dropdown">
+                <div v-if="menuOpen" id="site-user-menu" class="dropdown">
 
                   <RouterLink to="/profile" class="dropdown-head" @click="menuOpen = false">
                     <span class="dropdown-avatar">
@@ -661,7 +673,7 @@ watch(mobileMenuOpen, (open) => {
     <Transition name="mobile-menu">
       <div
           v-if="mobileMenuOpen"
-          class="mobile-menu"
+          id="site-mobile-menu" class="mobile-menu"
       >
         <!-- Игрок: аватар, ник, баланс — ведёт в профиль -->
         <RouterLink v-if="auth.isAuthenticated" to="/profile" class="mobile-user">
@@ -684,6 +696,10 @@ watch(mobileMenuOpen, (open) => {
           </RouterLink>
         </div>
 
+        <button class="mobile-search" type="button" @click="openPalette">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <span>Поиск по сайту</span>
+        </button>
         <!-- Разделы сайта плитками -->
         <div class="mobile-label">Разделы</div>
         <nav class="mobile-tiles">

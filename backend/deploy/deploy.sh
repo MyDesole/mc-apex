@@ -110,10 +110,17 @@ cd "$APP_DIR/frontend"
 rm -rf dist.old
 if [ -d dist ]; then mv dist dist.old; fi
 mv dist.next dist
+# Already-open tabs can still request chunks from the previous build.
+if [ -d dist.old/assets ]; then cp -an dist.old/assets/. dist/assets/; fi
 rm -rf dist.old
 
 log "Права"
 chown -R "$WEB_USER":"$WEB_USER" "$APP_DIR/backend/storage" "$APP_DIR/backend/bootstrap/cache"
+
+# The scheduled sitemap generator runs as the web user.
+touch "$APP_DIR/frontend/dist/sitemap.xml"
+chown "$WEB_USER":"$WEB_USER" "$APP_DIR/frontend/dist/sitemap.xml"
+chmod 644 "$APP_DIR/frontend/dist/sitemap.xml"
 
 log "Перезапуск сервисов"
 cd "$APP_DIR/backend"

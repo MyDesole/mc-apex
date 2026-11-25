@@ -3,11 +3,18 @@
 namespace App\Domains\Players\Controllers;
 
 use App\Domains\Clan\Models\Clan;
-use App\Domains\Users\Models\User;
 use App\Domains\Clan\Resources\ClanCardResource;
+use App\Domains\Core\Models\SiteSetting;
+use App\Domains\News\Models\News;
 use App\Domains\Players\Resources\UserCardResource;
-use Illuminate\Http\JsonResponse;
+use App\Domains\Players\Services\HomeDashboardService;
+use App\Domains\Tournaments\Models\Tournament;
+use App\Domains\Tournaments\Models\TournamentMatch;
+use App\Domains\Users\Models\User;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
 {
@@ -64,7 +71,7 @@ class HomeController extends Controller
     }
 
     /** Панель вошедшего игрока: кулдауны, питомцы, надетое. */
-    public function dashboard(\Illuminate\Http\Request $request, \App\Domains\Players\Services\HomeDashboardService $dashboard): JsonResponse
+    public function dashboard(Request $request, HomeDashboardService $dashboard): JsonResponse
     {
         return response()->json($dashboard->for($request->user()));
     }
@@ -72,15 +79,15 @@ class HomeController extends Controller
     public function index(): JsonResponse
     {
         // настройки главной
-        $hero = \App\Domains\Core\Models\SiteSetting::group('hero');
-        $socials = \App\Domains\Core\Models\SiteSetting::group('socials');
-        $footer = \App\Domains\Core\Models\SiteSetting::group('footer');
-        $stats = \App\Domains\Core\Models\SiteSetting::group('stats');
+        $hero = SiteSetting::group('hero');
+        $socials = SiteSetting::group('socials');
+        $footer = SiteSetting::group('footer');
+        $stats = SiteSetting::group('stats');
 
         // Топ игроков. Отдаём через ресурс: ручной map терял поля
         // (рамку, эффект профиля, статус), которые читает фронтенд.
-        $players = \App\Domains\Players\Resources\UserCardResource::collection(
-            \App\Domains\Users\Models\User::query()
+        $players = UserCardResource::collection(
+            User::query()
                 ->excludeStaff()   // персонал в топ не попадает, медийка участвует
                 ->with('clanMember.clan:id,tag,banner_color')
                 ->orderByDesc('rating_points')
@@ -90,8 +97,8 @@ class HomeController extends Controller
 
         // Топ кланов. Через ресурс — он считает подсветку с учётом срока
         // и отдаёт цвет с эффектом; members_count берётся одним запросом.
-        $clans = \App\Domains\Clan\Resources\ClanCardResource::collection(
-            \App\Domains\Clan\Models\Clan::query()
+        $clans = ClanCardResource::collection(
+            Clan::query()
                 ->where('is_banned', false)
                 ->with('leader:id,username,avatar')
                 ->withCount('members')
@@ -101,21 +108,20 @@ class HomeController extends Controller
         )->resolve();
 
         // новости
-        $news = \App\Domains\News\Models\News::where('is_published', true)
+        $news = News::where('is_published', true)
             ->where(fn ($q) => $q->whereNull('published_at')->orWhere('published_at', '<=', now()))
-            ->with('author:id,username,avatar')
             ->orderByDesc('is_pinned')
             ->orderByDesc('published_at')
             ->limit(6)
-            ->get();
+            ->get(['id', 'title', 'slug', 'excerpt', 'cover', 'type', 'is_pinned', 'published_at', 'created_at']);
 
         // Общая статистика: четыре count(*) по большим таблицам на каждый
         // заход на главную не нужны — счётчики живут в кэше пять минут
-        $statsData = \Illuminate\Support\Facades\Cache::remember('home:stats', 300, fn () => [
-            'players' => \App\Domains\Users\Models\User::count(),
-            'clans' => \App\Domains\Clan\Models\Clan::where('is_banned', false)->count(),
-            'tournaments' => \App\Domains\Tournaments\Models\Tournament::whereIn('status', ['ongoing', 'registration'])->count(),
-            'matches' => \App\Domains\Tournaments\Models\TournamentMatch::where('status', 'completed')->count(),
+        $statsData = Cache::remember('home:stats', 300, fn () => [
+            'players' => User::count(),
+            'clans' => Clan::where('is_banned', false)->count(),
+            'tournaments' => Tournament::whereIn('status', ['ongoing', 'registration'])->count(),
+            'matches' => TournamentMatch::where('status', 'completed')->count(),
         ]);
 
         return response()->json([

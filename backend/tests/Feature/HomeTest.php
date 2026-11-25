@@ -7,7 +7,6 @@ use App\Domains\Clan\Models\ClanMember;
 use App\Domains\News\Models\News;
 use App\Domains\Tournaments\Models\Tournament;
 use App\Domains\Tournaments\Models\TournamentMatch;
-use App\Domains\Tournaments\Models\TournamentParticipant;
 use App\Domains\Users\Models\User;
 use Database\Seeders\SiteSettingsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -280,5 +279,21 @@ class HomeTest extends TestCase
 
         $this->assertCount(10, $response->json('players'));
         $this->assertCount(10, $response->json('clans'));
+    }
+
+    public function test_home_news_cards_omit_full_article_bodies_and_unused_authors(): void
+    {
+        $author = User::factory()->create();
+        News::create([
+            'title' => 'Карточка новости', 'slug' => 'compact-home', 'excerpt' => 'Короткий анонс',
+            'body' => str_repeat('Полный текст статьи. ', 1000), 'cover' => 'news/test.webp',
+            'type' => 'news', 'is_pinned' => true, 'is_published' => true, 'author_id' => $author->id, 'published_at' => now(),
+        ]);
+        $card = $this->getJson('/api/home')->assertOk()->json('news.0');
+        $this->assertSame('Карточка новости', $card['title']);
+        $this->assertSame('Короткий анонс', $card['excerpt']);
+        $this->assertStringEndsWith('/storage/news/test.webp', $card['cover_url']);
+        $this->assertArrayNotHasKey('body', $card);
+        $this->assertArrayNotHasKey('author', $card);
     }
 }

@@ -23,6 +23,7 @@ import './assets/content-page.css'
 import './echo'
 
 import { useAuthStore } from '@/stores/core/auth.js'
+import { createAuthGuard } from '@/utils/routeAccess.js'
 import { initSentry, setSentryUser } from '@/sentry.js'
 import { unlockSoundOnFirstGesture } from '@/utils/sound.js'
 import { watch } from 'vue'
@@ -68,29 +69,10 @@ const authReady = auth.fetchMe()
  * fetchMe и первый переход пропускала: по прямой ссылке гость открывал
  * /admin и /profile (пустые страницы с ошибками), а вошедший — /register.
  */
-router.beforeEach(async (to) => {
-    await authReady
-
-    if (to.meta.auth && !auth.isAuthenticated) {
-        return { name: 'login', query: { redirect: to.fullPath } }
-    }
-
-    // куратор выше всех: проходит везде, где пускают администратора
-    const role = auth.user?.role
-    const roleOk = !to.meta.role || to.meta.role.includes(role) || (role === 'curator' && to.meta.role.includes('admin'))
-
-    if (!roleOk) {
-        return { name: 'home' }
-    }
-
-    if (to.meta.guest && auth.isAuthenticated) {
-        return { name: 'home' }
-    }
-})
+router.beforeEach(createAuthGuard(auth, authReady))
 
 app.use(router)
 
-await authReady
 
 watch(() => auth.user?.id, () => setSentryUser(auth.user), { immediate: true })
 

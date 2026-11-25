@@ -17,19 +17,27 @@ const when = value => value ? new Date(value).toLocaleString('ru-RU', { timeZone
 const states = { waiting: 'Ожидание', starting: 'Начинается', playing: 'Идёт игра', restarting: 'Перезапуск' }
 const numbers = computed(() => fb.value ? [ ['Игроков',data.value?.summary.players], ['Рекордов',data.value?.summary.records], ['Попыток за 24 ч',data.value?.summary.attempts24], ['Финишей за 24 ч',data.value?.summary.finishes24] ] : [ ['Игроков',data.value?.summary.players], ['Кроватей разрушено',data.value?.summary.beds], ['Финальных убийств',data.value?.summary.final_kills], ['Арен',data.value?.summary.arenas] ])
 let version = 0
+let controller = null
 async function load() {
-  const request = ++version; loading.value = true; error.value = ''
+  const request = ++version; controller?.abort(); controller = new AbortController(); loading.value = true; error.value = ''
   try {
-    const fresh = await api.get(`/minecraft/modes/${props.mode}`, { params: { distance: distance.value, table: table.value, metric: metric.value, page: page.value, user: target.value } })
+    const fresh = await api.get(`/minecraft/modes/${props.mode}`, { signal: controller.signal, params: { distance: distance.value, table: table.value, metric: metric.value, page: page.value, user: target.value } })
     if (request === version) data.value = fresh
-  } catch(e) { if (request === version) error.value = e.message || 'Не удалось загрузить статистику.' }
+  } catch(e) { if (request === version && e?.name !== 'AbortError') error.value = e.message || 'Не удалось загрузить статистику.' }
   finally { if (request === version) loading.value = false }
 }
-watch([() => props.mode,distance,table,metric,target],() => { data.value=null;page.value=1;load() },{immediate:true})
-watch(page,() => { data.value=null;load() })
-let refresh = 0
-const timer = setInterval(() => { if (!data.value?.configured || ++refresh%6===0) load() },5000)
-onBeforeUnmount(() => { version++; clearInterval(timer) })
+const filters = [() => props.mode, distance, table, metric, target]
+watch(filters, () => { page.value = 1 })
+watch([...filters, page], () => { data.value = null; load() }, { immediate:true })
+function refreshVisible() {
+  if (!document.hidden && !loading.value) load()
+}
+const timer = setInterval(refreshVisible, 30000)
+document.addEventListener('visibilitychange', refreshVisible)
+onBeforeUnmount(() => {
+  version++; controller?.abort(); clearInterval(timer)
+  document.removeEventListener('visibilitychange', refreshVisible)
+})
 </script>
 
 <template>
