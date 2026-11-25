@@ -1348,4 +1348,4 @@ body .profile-layout--desole_signature .profile-header__pet { opacity:.9; }
   body .profile-layout--desole_signature .profile-header__avatar-wrap { zoom:.9; }
 }
 
-body .profile-layout--desole_signature .profile-header__tier-watermark, body .profile-layout--desole_signature .profile-header > .pet-zone { display:none; }
+body .profile-layout--desole_signature .profile-header__tier-watermark { display:none; }
