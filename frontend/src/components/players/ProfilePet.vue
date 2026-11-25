@@ -15,6 +15,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { profilePet } from '@/data/players/flair.js'
+import StarlitFox from '@/components/pets/StarlitFox.vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
 import { api } from '@/services/core/api.js'
 import { useAuthStore } from '@/stores/core/auth.js'
@@ -229,7 +230,7 @@ const mood = computed(() => MOODS[stats.value?.mood] ?? MOODS.calm)
 const traits = computed(() => stats.value?.traits ?? props.traits ?? null)
 
 // Питомец растёт с уровнем: +3 % за уровень, максимум в 1,6 раза
-const grownSize = computed(() => Math.round(props.size * (1 + Math.min(20, (stats.value?.level ?? 1) - 1) * 0.03)))
+const grownSize = computed(() => Math.round(props.size * (data.value?.art ? 1.3 : 1) * (1 + Math.min(20, (stats.value?.level ?? 1) - 1) * 0.03)))
 const skinStyle = computed(() => petModelStyle(traits.value))
 const aura = computed(() => petBackdrop(traits.value))
 const accessory = computed(() => petAccessory(traits.value))
@@ -515,7 +516,8 @@ onUnmounted(() => {
         <!-- Фон экземпляра: сияние позади -->
         <span v-if="aura" class="pet__aura" :style="{ background: aura }"></span>
         <span class="pet__skin" :style="skinStyle">
-          <PixelSprite :sprite="data.sprite" :size="grownSize" />
+          <StarlitFox v-if="data.art === 'starlit-fox'" :size="grownSize" :state="state" />
+          <PixelSprite v-else :sprite="data.sprite" :size="grownSize" />
         </span>
         <!-- Аксессуар поверх головы -->
         <span
@@ -546,7 +548,7 @@ onUnmounted(() => {
           <header class="pet-panel__head">
             <span class="pet-panel__avatar" :style="aura ? { background: aura } : null">
               <span class="pet-panel__sprite">
-              <span :style="skinStyle"><PixelSprite :sprite="data.sprite" :size="36" /></span>
+              <span :style="skinStyle"><StarlitFox v-if="data.art === 'starlit-fox'" :size="36" /><PixelSprite v-else :sprite="data.sprite" :size="36" /></span>
               <span v-if="panelAcc" class="pet-panel__acc" :style="{ left: `${panelAcc.left}px`, top: `${panelAcc.top}px` }"><PetAccessory :id="panelAcc.art" :width="panelAcc.width" /></span>
               </span>
             </span>
@@ -566,7 +568,8 @@ onUnmounted(() => {
           </header>
 
           <!-- Черты экземпляра с шансами — как у подарков -->
-          <div v-if="traits" class="pet-panel__traits" :style="{ '--rarity': rarity.color }">
+          <div v-if="data.art === 'starlit-fox'" class="pet-panel__traits" style="--rarity:#b7c9fa"><span class="pet-panel__rarity">Персональный питомец MyDesole · 1/1</span><div class="pet-panel__trait"><span>Вид</span><b>Звёздный лис</b></div></div>
+          <div v-else-if="traits" class="pet-panel__traits" :style="{ '--rarity': rarity.color }">
             <span class="pet-panel__rarity">{{ rarity.label }} экземпляр</span>
             <div v-for="row in TRAIT_ROWS" :key="row.key" class="pet-panel__trait">
               <span>{{ row.label }}</span>
