@@ -23,13 +23,13 @@ class NoctisCollectionSeeder extends Seeder
                     'name' => $name, 'description' => $description, 'type' => $type,
                     'effect_value' => 'noctis', 'rarity' => $rarity, 'price' => $price,
                     'is_active' => true, 'is_consumable' => false, 'is_repeatable' => false,
-                    'sort_order' => -80 + $i, 'metadata' => ['collection' => 'noctis', 'icon' => 'sparkles', 'color' => '#c3acd9'],
+                    'sort_order' => $i, 'metadata' => ['collection' => 'noctis', 'icon' => 'sparkles', 'color' => '#c3acd9'],
                 ]);
             }
             ShopItem::firstOrCreate(['slug' => 'bundle-noctis'], [
                 'name' => 'Набор «Затмение»', 'description' => 'Пять предметов NOCTIS: детализированное серебро, аметист и лунная обсерватория. Без пиксель-арта. Плавные анимации, только оформление.',
                 'type' => ShopItem::TYPE_BUNDLE, 'effect_value' => 'noctis', 'rarity' => 'legendary', 'price' => 149900,
-                'is_active' => true, 'is_consumable' => false, 'is_repeatable' => false, 'sort_order' => -90,
+                'is_active' => true, 'is_consumable' => false, 'is_repeatable' => false, 'sort_order' => 0,
                 'metadata' => ['theme' => 'noctis', 'mood' => 'Коллекция', 'icon' => 'sparkles', 'color' => '#c3acd9', 'items' => array_map(fn ($p) => 'noctis-'.$p[0], $parts)],
             ]);
         });
