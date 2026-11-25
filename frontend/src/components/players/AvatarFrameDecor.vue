@@ -129,6 +129,13 @@ const PLANETS = [
       <span class="decor__reactor-orbit decor__reactor-orbit--reverse"><i></i></span>
       <span class="decor__reactor-charge"></span>
     </template>
+    <template v-if="kind === 'cloud-kitten'">
+      <img class="decor__kitten" :src="decor.image" alt="" loading="lazy" decoding="async" />
+      <span v-for="n in 4" :key="n" class="decor__kitten-heart" :style="{ '--n': n }">
+        <svg viewBox="0 0 24 24"><path d="M12 21C8 18 2 14 2 8a5 5 0 0 1 10-1A5 5 0 0 1 22 8c0 6-6 10-10 13Z" /></svg>
+      </span>
+      <span class="decor__kitten-shimmer"></span>
+    </template>
     <!-- Россыпь -->
     <template v-if="kind === 'scatter'">
       <span v-for="(item, i) in scatter" :key="i" class="decor__item" :style="item.style">
@@ -977,4 +984,15 @@ const PLANETS = [
 @keyframes singularity-spin { to { transform:rotate(360deg); } }
 @keyframes singularity-charge { 0% { transform:scale(.97); opacity:0; } 25% { opacity:.65; } 85%,100% { transform:scale(1.16); opacity:0; } }
 @media(prefers-reduced-motion:reduce) { .decor--singularity * { animation:none !important; } .decor__reactor-charge { opacity:.25; } }
+
+.decor__kitten { position:absolute; width:146%; height:146%; left:-23%; top:-23%; max-width:none; object-fit:contain; image-rendering:auto; }
+.decor__kitten-heart { position:absolute; width:13%; height:13%; left:-13%; top:25%; animation:kitten-float 6s ease-in-out infinite; animation-delay:calc(var(--n) * -1.4s); }
+.decor__kitten-heart:nth-of-type(2) { left:auto; right:-14%; top:52%; }
+.decor__kitten-heart:nth-of-type(3) { left:16%; top:auto; bottom:-18%; width:10%; height:10%; }
+.decor__kitten-heart:nth-of-type(4) { left:auto; right:12%; top:-17%; width:9%; height:9%; }
+.decor__kitten-heart svg { display:block; width:100%; height:100%; fill:#f5b4d0; stroke:#fff2f9; stroke-width:1; filter:drop-shadow(0 1px 2px #a2648c66); }
+.decor__kitten-shimmer { position:absolute; inset:-10%; border:1px solid #fff2e5; border-radius:50%; mask-image:conic-gradient(transparent 0deg 240deg,#000 265deg,transparent 290deg); animation:kitten-shimmer 12s linear infinite; opacity:.8; }
+@keyframes kitten-float { 0%,100% { transform:translateY(3px) rotate(-9deg) scale(.85); opacity:.55; } 50% { transform:translateY(-4px) rotate(9deg) scale(1); opacity:1; } }
+@keyframes kitten-shimmer { to { transform:rotate(360deg); } }
+@media(prefers-reduced-motion:reduce) { .decor--cloud-kitten * { animation:none !important; } }
 </style>

@@ -4,7 +4,7 @@
  * поверх профиля, когда его открывают. Играет один раз и исчезает,
  * клики не ловит. В превью магазина — по кругу (loop).
  */
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, useId } from 'vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
 
 const props = defineProps({
@@ -12,6 +12,8 @@ const props = defineProps({
   // Превью в магазине: повторять бесконечно
   loop: { type: Boolean, default: false },
 })
+
+const hugGradientId = useId()
 
 const DURATION = 2200
 
@@ -81,6 +83,17 @@ onUnmounted(() => {
       </span>
       <span class="entrance__rift-wave"></span>
       <span v-for="n in 18" :key="n" class="entrance__rift-spark" :style="{ '--angle': `${n * 20}deg`, '--delay': `${(n % 4) * 0.035}s` }"></span>
+    </template>
+    <template v-else-if="entrance === 'cloud_hug'">
+      <span v-for="n in 4" :key="`cloud-${n}`" class="entrance__hug-cloud" :style="{ '--side': n % 2 ? -1 : 1, '--row': n > 2 ? 1 : 0 }"></span>
+      <svg class="entrance__hug-heart" viewBox="0 0 120 120">
+        <defs><radialGradient :id="hugGradientId" cx="35%" cy="25%" r="90%"><stop stop-color="#fff4f8" /><stop offset=".5" stop-color="#f5bbd2" /><stop offset="1" stop-color="#c487b4" /></radialGradient></defs>
+        <path :fill="`url(#${hugGradientId})`" stroke="#ffe6f0" stroke-width="1.5" d="M60 107C42 94 12 74 12 45a24 24 0 0 1 48-3 24 24 0 0 1 48 3c0 29-30 49-48 62Z" />
+        <g fill="#fff5ef"><ellipse cx="44" cy="50" rx="6" ry="8" transform="rotate(-20 44 50)" /><ellipse cx="58" cy="43" rx="6" ry="8" /><ellipse cx="73" cy="48" rx="6" ry="8" transform="rotate(20 73 48)" /><path d="M43 73c0-8 10-18 17-18s17 10 17 18c0 11-12 6-17 6s-17 5-17-6Z" /></g>
+      </svg>
+      <span v-for="n in 14" :key="`heart-${n}`" class="entrance__hug-petal" :style="{ '--x': `${(n * 37) % 100}%`, '--drift': `${(n % 2 ? -1 : 1) * (20 + n * 3)}px`, '--delay': `${(n % 5) * .055}s` }">
+        <svg viewBox="0 0 24 24"><path d="M12 21C8 18 2 14 2 8a5 5 0 0 1 10-1A5 5 0 0 1 22 8c0 6-6 10-10 13Z" /></svg>
+      </span>
     </template>
     <!-- Удар молнии -->
     <template v-else-if="entrance === 'lightning'">
@@ -418,4 +431,14 @@ onUnmounted(() => {
 @keyframes rift-wave { 0%,36% { opacity:0; transform:translate(-50%,-50%) scale(.7); } 44% { opacity:.8; } 100% { opacity:0; transform:translate(-50%,-50%) scale(5); } }
 @keyframes rift-spark { 0% { opacity:0; transform:rotate(var(--angle)) scaleX(.12); } 18% { opacity:.85; } 100% { opacity:0; transform:rotate(var(--angle)) scaleX(1.8); } }
 @media(prefers-reduced-motion:reduce) { .entrance--rift { display:none; } }
+
+.entrance--cloud_hug { max-height:min(75vh,700px); }
+.entrance__hug-cloud { left:calc(var(--side) * 25%); right:calc(var(--side) * -25%); top:calc(var(--row) * 48% - 20%); height:85%; border-radius:45%; filter:blur(8px); background:radial-gradient(ellipse at 45% 55%,#fff1f9e8 15%,#f0d8efcc 40%,#e6dcf380 60%,transparent 72%); animation:hug-cloud 2.2s ease-in-out both; }
+.entrance__hug-heart { left:50%; top:48%; width:min(30%,180px); height:auto; filter:drop-shadow(0 8px 18px #c67caa55); animation:hug-heart 2.2s ease-out both; }
+.entrance__hug-petal { left:var(--x); top:60%; width:clamp(8px,2.8%,22px); height:auto; animation:hug-petal 1.6s ease-out both; animation-delay:calc(.3s + var(--delay)); }
+.entrance__hug-petal svg { display:block; width:100%; fill:#f1a5c8; stroke:#fff3f8; stroke-width:1; }
+@keyframes hug-cloud { 0% { opacity:0; transform:scale(.8); } 18% { opacity:.75; } 100% { opacity:0; transform:translateX(calc(var(--side) * 55%)) scale(1.25); } }
+@keyframes hug-heart { 0%,12% { opacity:0; transform:translate(-50%,-50%) scale(.5) rotate(-8deg); } 38% { opacity:1; transform:translate(-50%,-50%) scale(1.05) rotate(3deg); } 57% { opacity:1; transform:translate(-50%,-50%) scale(1) rotate(0); } 100% { opacity:0; transform:translate(-50%,-65%) scale(1.1); } }
+@keyframes hug-petal { 0% { opacity:0; transform:translate(0,30px) scale(.4) rotate(-12deg); } 25% { opacity:.9; } 100% { opacity:0; transform:translate(var(--drift),-150px) scale(1) rotate(18deg); } }
+@media(prefers-reduced-motion:reduce) { .entrance--cloud_hug { display:none; } }
 </style>

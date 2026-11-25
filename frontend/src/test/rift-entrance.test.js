@@ -4,12 +4,12 @@ import { nextTick } from 'vue'
 import ProfileEntrance from '@/components/players/ProfileEntrance.vue'
 
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals() })
-describe('Rift entrance lifecycle', () => {
+describe.each([['rift', '.entrance__rift-aperture'], ['cloud_hug', '.entrance__hug-heart']])('%s entrance lifecycle', (entrance, selector) => {
   it('disappears after its short intro and clears timers on unmount', async () => {
     vi.useFakeTimers()
-    const wrapper = mount(ProfileEntrance, { props: { entrance: 'rift' } })
+    const wrapper = mount(ProfileEntrance, { props: { entrance } })
     await nextTick()
-    expect(wrapper.find('.entrance__rift-aperture').exists()).toBe(true)
+    expect(wrapper.find(selector).exists()).toBe(true)
     await vi.advanceTimersByTimeAsync(2200)
     expect(wrapper.find('.entrance').exists()).toBe(false)
     wrapper.unmount()
@@ -17,7 +17,7 @@ describe('Rift entrance lifecycle', () => {
   })
   it('does not show an intro when the visitor requests reduced motion', async () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }))
-    const wrapper = mount(ProfileEntrance, { props: { entrance: 'rift' } })
+    const wrapper = mount(ProfileEntrance, { props: { entrance } })
     await nextTick()
     expect(wrapper.find('.entrance').exists()).toBe(false)
     wrapper.unmount()
