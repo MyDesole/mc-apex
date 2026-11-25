@@ -1608,3 +1608,12 @@
 @media(max-width:380px) { .brand-text { display:none; } }
 
 @media(max-width:960px) { .burger { display:flex; } .main-nav { display:none; } }
+
+.app.app--home { position:relative; isolation:isolate; background:transparent; }
+.app--home::before {
+  content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:linear-gradient(180deg,#0b0c16ad,#0b0c16df),url('/images/home/misty-mountains-1600.webp') center/cover no-repeat;
+}
+@media(max-width:700px) {
+  .app--home::before { background-image:linear-gradient(180deg,#0b0c16b3,#0b0c16e0),url('/images/home/misty-mountains-640.webp'); background-position:center,65% center; }
+}

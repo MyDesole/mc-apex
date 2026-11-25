@@ -919,3 +919,7 @@ a.leader:hover {
 .hero__subtitle { color:#d3d5e3; text-shadow:0 1px 8px #0007; }
 @media(max-width:960px) { .hero { padding:32px; gap:28px; } .hero__art { object-position:65% center; } }
 @media(max-width:700px) { .hero { padding:26px 22px; border-radius:12px; } .hero::before { background:linear-gradient(90deg,#0c0b19dc,#11102080),linear-gradient(0deg,#0b101bcc,transparent); } }
+
+.hero { background:transparent; }
+.hero__art { visibility:hidden; }
+.hero::before { opacity:.45; }

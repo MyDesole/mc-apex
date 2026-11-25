@@ -243,7 +243,7 @@ watch(mobileMenuOpen, (open) => {
 </script>
 
 <template>
-  <div class="app">
+  <div class="app" :class="{ 'app--home': route.name === 'home' }">
 
     <VerifyEmailBanner v-if="auth.isAuthenticated" />
 
