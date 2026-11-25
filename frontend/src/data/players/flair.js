@@ -8,7 +8,8 @@
  * fly — летает, а не ходит по нижнему краю шапки.
  */
 export const PROFILE_PETS = {
-    desole_fox: { name:'Астер', sprite:'fox', art:'starlit-fox', phrases:['Фыр! Я с MyDesole.', 'Звёздочки в хвосте :3', 'Погладишь?', '*шевелит ушами*', 'Я охраняю уют'] },
+    kllivv_koala: { name:'Моти', sprite:'panda', art:'cozy-koala', personalOwner:'kllivv', phrases:['Эвкалипт будешь?', '*сонно шевелит ушами*', 'Обнимашки?', 'Я никуда не спешу :3'] },
+    desole_fox: { name:'Астер', sprite:'fox', art:'starlit-fox', personalOwner:'MyDesole', phrases:['Фыр! Я с MyDesole.', 'Звёздочки в хвосте :3', 'Погладишь?', '*шевелит ушами*', 'Я охраняю уют'] },
     cat: { name: 'Котик', sprite: 'cat', phrases: ['Мяу!', 'Мурр…', 'Покорми меня', '*игнорирует тебя*', 'Это моё место'] },
     dog: { name: 'Пёсик', sprite: 'dog', phrases: ['Гав!', 'Кто хороший мальчик?', 'Пойдём гулять!', '*виляет хвостом*'] },
     fox: { name: 'Лисёнок', sprite: 'fox', phrases: ['Что говорит лиса?', 'Фыр!', 'Хвост пушистый!', '*хитро смотрит*'] },

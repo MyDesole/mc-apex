@@ -15,6 +15,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { profilePet } from '@/data/players/flair.js'
+import CozyKoala from '@/components/pets/CozyKoala.vue'
 import StarlitFox from '@/components/pets/StarlitFox.vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
 import { api } from '@/services/core/api.js'
@@ -517,6 +518,7 @@ onUnmounted(() => {
         <span v-if="aura" class="pet__aura" :style="{ background: aura }"></span>
         <span class="pet__skin" :style="skinStyle">
           <StarlitFox v-if="data.art === 'starlit-fox'" :size="grownSize" :state="state" />
+          <CozyKoala v-else-if="data.art === 'cozy-koala'" :size="grownSize" :state="state" />
           <PixelSprite v-else :sprite="data.sprite" :size="grownSize" />
         </span>
         <!-- Аксессуар поверх головы -->
@@ -548,7 +550,7 @@ onUnmounted(() => {
           <header class="pet-panel__head">
             <span class="pet-panel__avatar" :style="aura ? { background: aura } : null">
               <span class="pet-panel__sprite">
-              <span :style="skinStyle"><StarlitFox v-if="data.art === 'starlit-fox'" :size="36" /><PixelSprite v-else :sprite="data.sprite" :size="36" /></span>
+              <span :style="skinStyle"><StarlitFox v-if="data.art === 'starlit-fox'" :size="36" /><CozyKoala v-else-if="data.art === 'cozy-koala'" :size="36" /><PixelSprite v-else :sprite="data.sprite" :size="36" /></span>
               <span v-if="panelAcc" class="pet-panel__acc" :style="{ left: `${panelAcc.left}px`, top: `${panelAcc.top}px` }"><PetAccessory :id="panelAcc.art" :width="panelAcc.width" /></span>
               </span>
             </span>
@@ -568,7 +570,7 @@ onUnmounted(() => {
           </header>
 
           <!-- Черты экземпляра с шансами — как у подарков -->
-          <div v-if="data.art === 'starlit-fox'" class="pet-panel__traits" style="--rarity:#b7c9fa"><span class="pet-panel__rarity">Персональный питомец MyDesole · 1/1</span><div class="pet-panel__trait"><span>Вид</span><b>Звёздный лис</b></div></div>
+          <div v-if="data.personalOwner" class="pet-panel__traits" style="--rarity:#b7c9fa"><span class="pet-panel__rarity">Персональный питомец {{ data.personalOwner }} · 1/1</span><div class="pet-panel__trait"><span>Вид</span><b>{{ data.art === 'cozy-koala' ? 'Коала' : 'Звёздный лис' }}</b></div></div>
           <div v-else-if="traits" class="pet-panel__traits" :style="{ '--rarity': rarity.color }">
             <span class="pet-panel__rarity">{{ rarity.label }} экземпляр</span>
             <div v-for="row in TRAIT_ROWS" :key="row.key" class="pet-panel__trait">

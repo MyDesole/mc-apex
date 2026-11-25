@@ -6,6 +6,7 @@
  * trick — показать трюк (имя анимации из petTricks.css).
  */
 import { computed } from 'vue'
+import CozyKoala from '@/components/pets/CozyKoala.vue'
 import StarlitFox from '@/components/pets/StarlitFox.vue'
 import PixelSprite from '@/components/shop/PixelSprite.vue'
 import PetAccessory from '@/components/players/PetAccessory.vue'
@@ -22,7 +23,7 @@ const props = defineProps({
 })
 
 const sprite = computed(() => (PIXEL_SPRITES[props.species] ? props.species : 'paw'))
-const width = computed(() => Math.round(props.size * (props.species === 'desole_fox' ? 1.3 : Math.min(1.4, spriteRatio(sprite.value)))))
+const width = computed(() => Math.round(props.size * (props.species === 'desole_fox' ? 1.3 : props.species === 'kllivv_koala' ? 1.15 : Math.min(1.4, spriteRatio(sprite.value)))))
 const aura = computed(() => (props.backdrop ? petBackdrop(props.traits) : null))
 const acc = computed(() => {
   const id = props.traits?.accessory?.id
@@ -38,7 +39,7 @@ const acc = computed(() => {
   >
     <span v-if="aura" class="pf__aura" :style="{ background: aura, width: `${size * 1.5}px`, height: `${size * 1.5}px` }"></span>
     <span class="pf__body">
-      <span class="pf__skin" :style="petModelStyle(traits)"><StarlitFox v-if="species === 'desole_fox'" :size="size" /><PixelSprite v-else :sprite="sprite" :size="size" /></span>
+      <span class="pf__skin" :style="petModelStyle(traits)"><StarlitFox v-if="species === 'desole_fox'" :size="size" /><CozyKoala v-else-if="species === 'kllivv_koala'" :size="size" /><PixelSprite v-else :sprite="sprite" :size="size" /></span>
       <span v-if="acc" class="pf__acc" :style="{ left: `${acc.left}px`, top: `${acc.top}px` }">
         <PetAccessory :id="acc.art" :width="acc.width" />
       </span>
