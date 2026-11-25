@@ -9,6 +9,7 @@
  *   preview     — цвета мини-макета в карточке товара.
  */
 export const PROFILE_LAYOUTS = {
+    desole_signature: { name: 'MyDesole · Signature', arrangement: 'right', preview: { page: '#090b13', card: '#111520', side: '#121925', accent: '#c1b8ed', line: '#d7deea' } },
     noctis: { name: 'Лунная обсерватория', arrangement: 'right', preview: { page: '#0a0811', card: '#17131f', side: '#201a2b', accent: '#c3acd9', line: '#ded5eb' } },
     nether_forge: {
         name: 'Адская кузня',

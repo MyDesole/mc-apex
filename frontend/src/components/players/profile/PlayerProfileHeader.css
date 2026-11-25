@@ -3570,3 +3570,15 @@
   max-width: 100%;
   margin-left: 0;
 }
+.profile-header__avatar-frame.profile-header__avatar-frame--artwork {
+  padding:0;
+  background:transparent !important;
+  box-shadow:none;
+}
+.profile-header__avatar-frame--artwork .profile-header__avatar-frame-inner {
+  padding:0;
+  background:transparent;
+}
+.profile-header__avatar-frame--artwork .profile-header__avatar {
+  border-radius:50% !important;
+}

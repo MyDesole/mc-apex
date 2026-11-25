@@ -87,7 +87,7 @@ onMounted(async () => {
 <template>
   <div class="preview" :class="`preview--${item.type}`">
     <!-- Рамка аватара -->
-    <div v-if="item.type === 'avatar_frame'" class="preview__frame" :style="frameStyle">
+    <div v-if="item.type === 'avatar_frame'" class="preview__frame" :class="{ 'preview__frame--artwork': frame?.decor?.image }" :style="frameStyle">
       <AvatarFrameDecor :frame="value" :size="80" />
       <span class="preview__avatar">
         <img v-if="head" :src="head" alt="" />
@@ -1201,4 +1201,7 @@ onMounted(async () => {
 
 .preview__collection-art { width:100%; height:100%; object-fit:cover; image-rendering:auto; }
 .preview__page--noctis { background:linear-gradient(#100b1988,#100b19aa),url('/images/cosmetics/noctis/scene.webp') center/cover !important; }
+
+.preview__frame--artwork { width:80px; height:80px; padding:0; background:transparent; border-radius:50%; }
+.preview__frame--artwork .preview__avatar { width:100%; height:100%; border-radius:50%; }
 </style>

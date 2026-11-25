@@ -4,7 +4,7 @@ import { nextTick } from 'vue'
 import ProfileEntrance from '@/components/players/ProfileEntrance.vue'
 
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals() })
-describe.each([['rift', '.entrance__rift-aperture'], ['cloud_hug', '.entrance__hug-heart']])('%s entrance lifecycle', (entrance, selector) => {
+describe.each([['desole_signature', '.entrance__rift-aperture'], ['rift', '.entrance__rift-aperture'], ['cloud_hug', '.entrance__hug-heart']])('%s entrance lifecycle', (entrance, selector) => {
   it('disappears after its short intro and clears timers on unmount', async () => {
     vi.useFakeTimers()
     const wrapper = mount(ProfileEntrance, { props: { entrance } })

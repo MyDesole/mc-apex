@@ -3,6 +3,7 @@ export const AVATAR_FRAMES = [
     { id: 'noctis', name: 'Затмение', color: '#b9a0e4', gradient: 'linear-gradient(135deg, #cbd0dc, #39294d, #b9a0e4)', rarity: 'legendary', decor: { kind: 'artwork', image: '/images/cosmetics/noctis/frame.webp' } },
   { id:'singularity', name:'Сингулярность', color:'#80e9f4', gradient:'linear-gradient(135deg,#374453,#9df6ff,#16202e)', rarity:'legendary', decor:{kind:'singularity',image:'/images/cosmetics/singularity/frame.webp'} },
   { id:'cloud_kitten', name:'Облачный котёнок', color:'#f2b8d0', gradient:'linear-gradient(135deg,#fff7ed,#e9b2cb,#fff2f9)', rarity:'legendary', decor:{kind:'cloud-kitten',image:'/images/cosmetics/cloud-kitten/frame.webp'} },
+  { id:'desole_signature', name:'MyDesole · Signature', color:'#c1b8ed', rarity:'legendary', decor:{kind:'artwork',image:'/images/cosmetics/desole-signature/frame.webp'} },
     { id: 'purple', name: 'Фиолетовая', color: '#7c3aed', rarity: 'common' },
     { id: 'cyan', name: 'Голубая', color: '#06b6d4', rarity: 'common' },
     { id: 'green', name: 'Зелёная', color: '#22c55e', rarity: 'common' },

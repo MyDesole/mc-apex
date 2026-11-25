@@ -416,3 +416,5 @@
 .mc-backdrop--noctis::after { bottom:0; height:25%; background:linear-gradient(transparent,#08060ee6); }
 @keyframes noctis-mist { from { transform:translateX(-3%);opacity:.35; } to { transform:translateX(3%);opacity:.8; } }
 @media(prefers-reduced-motion:reduce) { .mc-backdrop--noctis::before { animation:none; } }
+
+.mc-backdrop--desole_signature { background:#090d16 url('/images/cosmetics/desole-signature/cover.webp') center/cover no-repeat; image-rendering:auto; }

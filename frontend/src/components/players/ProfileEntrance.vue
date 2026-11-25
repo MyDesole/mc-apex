@@ -73,12 +73,12 @@ onUnmounted(() => {
       :class="`entrance--${entrance}`"
       aria-hidden="true"
   >
-    <template v-if="entrance === 'rift'">
+    <template v-if="['rift', 'desole_signature'].includes(entrance)">
       <span class="entrance__rift-shade"></span>
       <span class="entrance__rift-seam"></span>
       <span class="entrance__rift-aperture">
         <span class="entrance__rift-core"></span>
-        <img src="/images/cosmetics/singularity/frame.webp" alt="" decoding="async" />
+        <img :src="entrance === 'desole_signature' ? '/images/cosmetics/desole-signature/frame.webp' : '/images/cosmetics/singularity/frame.webp'" alt="" decoding="async" />
         <span class="entrance__rift-corona"></span>
       </span>
       <span class="entrance__rift-wave"></span>
@@ -414,7 +414,7 @@ onUnmounted(() => {
   100% { opacity: 0; transform: translate(-50%, -50%) scale(40); }
 }
 
-.entrance--rift { max-height:min(75vh,700px); }
+.entrance--rift, .entrance--desole_signature { max-height:min(75vh,700px); }
 .entrance__rift-shade { inset:0; background:radial-gradient(ellipse at center,#08121be8,#05080eb0); animation:rift-shade 2.2s ease-out both; }
 .entrance__rift-seam { left:50%; top:12%; width:2px; height:76%; background:linear-gradient(transparent,#b9fbff 35%,#fff 50%,#99eaff 65%,transparent); box-shadow:0 0 16px #3cdbff; transform-origin:center; animation:rift-seam 2.2s ease-in-out both; }
 .entrance__rift-aperture { left:50%; top:50%; width:min(48%,280px); aspect-ratio:1; border-radius:50%; animation:rift-open 2.2s cubic-bezier(.22,.7,.3,1) both; }
@@ -430,7 +430,7 @@ onUnmounted(() => {
 @keyframes rift-corona { from { transform:rotate(0); } to { transform:rotate(460deg); } }
 @keyframes rift-wave { 0%,36% { opacity:0; transform:translate(-50%,-50%) scale(.7); } 44% { opacity:.8; } 100% { opacity:0; transform:translate(-50%,-50%) scale(5); } }
 @keyframes rift-spark { 0% { opacity:0; transform:rotate(var(--angle)) scaleX(.12); } 18% { opacity:.85; } 100% { opacity:0; transform:rotate(var(--angle)) scaleX(1.8); } }
-@media(prefers-reduced-motion:reduce) { .entrance--rift { display:none; } }
+@media(prefers-reduced-motion:reduce) { .entrance--rift, .entrance--desole_signature { display:none; } }
 
 .entrance--cloud_hug { max-height:min(75vh,700px); }
 .entrance__hug-cloud { left:calc(var(--side) * 25%); right:calc(var(--side) * -25%); top:calc(var(--row) * 48% - 20%); height:85%; border-radius:45%; filter:blur(8px); background:radial-gradient(ellipse at 45% 55%,#fff1f9e8 15%,#f0d8efcc 40%,#e6dcf380 60%,transparent 72%); animation:hug-cloud 2.2s ease-in-out both; }

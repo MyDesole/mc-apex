@@ -272,12 +272,16 @@ const hasAvatarFrame = computed(() =>
     avatarFrame.value?.id !== 'default'
 )
 
+const hasArtworkFrame = computed(() => Boolean(avatarFrame.value?.decor?.image))
+
 const avatarFrameStyle = computed(() => {
   const frame = avatarFrame.value
 
   if (!frame || frame.id === 'default') {
     return {}
   }
+
+  if (hasArtworkFrame.value) return { background: 'transparent' }
 
   if (frame.gradient) {
     return {
@@ -705,6 +709,7 @@ const partEmpty = computed(() => {
         <div
             class="profile-header__avatar-frame profile-header__avatar-frame--compact"
             :class="{
+              'profile-header__avatar-frame--artwork': hasArtworkFrame,
               'profile-header__avatar-frame--custom':
                   hasAvatarFrame,
 
@@ -873,6 +878,7 @@ const partEmpty = computed(() => {
         <div
             class="profile-header__avatar-frame"
             :class="{
+              'profile-header__avatar-frame--artwork': hasArtworkFrame,
               'profile-header__avatar-frame--custom':
                   hasAvatarFrame,
 

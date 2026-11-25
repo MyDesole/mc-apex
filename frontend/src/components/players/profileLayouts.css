@@ -1317,3 +1317,35 @@
 .profile-layout--noctis .profile-header { background:linear-gradient(110deg,#181122e6,#22192d99) !important; border-bottom:1px solid #a88abe66; }
 .profile-layout--noctis .side-panel { background:#14101df2; }
 .profile-layout--noctis .section-heading h3 { letter-spacing:.025em; }
+
+.profile-layout.profile-layout--desole_signature {
+  --layout-page:#090b13; --layout-accent:#c1b8ed; --layout-edge:#8da3c329; --layout-radius:18px;
+  --bg-card:#10141f; --bg:#090b13; --text:#e9edf6; --text-muted:#9ba8c0; --text-dim:#b4bed2;
+  --border:#839bbd29; --accent-light:#c1b8ed; --layout-heading-font:var(--font-body);
+  background:radial-gradient(ellipse at 0 0,#9b72cf15,transparent 45%),radial-gradient(ellipse at 100% 20%,#51b8d20e,transparent 40%),#090b13;
+  padding:18px;
+}
+body .profile-layout--desole_signature .profile-header {
+  min-height:430px; padding:40px 44px; border-radius:16px; border:1px solid #a8bad52b;
+  background:#0d111c; box-shadow:0 16px 48px #0004;
+}
+body .profile-layout--desole_signature .profile-header__cover { opacity:1; background-position:center top; mask-image:none; -webkit-mask-image:none; }
+body .profile-layout--desole_signature .profile-header__cover::after { background:linear-gradient(180deg,#080c1410 0%,#090d1440 30%,#090d14e8 100%); }
+body .profile-layout--desole_signature .profile-header__content { gap:42px; align-items:center; padding-top:190px; }
+body .profile-layout--desole_signature .profile-header__avatar-wrap { margin:0 10px; }
+body .profile-layout--desole_signature .profile-header__name { font-size:clamp(28px,3.6vw,48px); letter-spacing:-.035em; font-weight:800; }
+body .profile-layout--desole_signature .profile-header__avatar-glow { opacity:.2; }
+body .profile-layout--desole_signature .profile-header__peak { display:none; }
+body .profile-layout--desole_signature .profile-header__accent-line { opacity:.5; }
+body .profile-layout--desole_signature .pb-block { background:#111622ee; border:1px solid #839bbd29; box-shadow:0 8px 24px #0002; }
+body .profile-layout--desole_signature .pb-block__title { color:#dce4f4; font-size:13px; letter-spacing:.05em; }
+body .profile-layout--desole_signature .profile-stat { background:#171d2a; border:1px solid #839bbd20; border-radius:12px; }
+body .profile-layout--desole_signature .profile-header__pet { opacity:.9; }
+@media(max-width:700px) {
+  .profile-layout.profile-layout--desole_signature { padding:10px; border-radius:14px; }
+  body .profile-layout--desole_signature .profile-header { padding:24px 22px; min-height:420px; }
+  body .profile-layout--desole_signature .profile-header__content { padding-top:170px; gap:30px; }
+  body .profile-layout--desole_signature .profile-header__avatar-wrap { zoom:.9; }
+}
+
+body .profile-layout--desole_signature .profile-header__tier-watermark, body .profile-layout--desole_signature .profile-header > .pet-zone { display:none; }

@@ -184,3 +184,7 @@
 .name-fx--noctis { background:linear-gradient(110deg,#ded6e9 15%,#b796d3 35%,#fff5e1 48%,#b796d3 61%,#ded6e9 80%); background-size:240% 100%; -webkit-background-clip:text; background-clip:text; color:transparent !important; -webkit-text-fill-color:transparent; animation:noctis-name 9s ease-in-out infinite; }
 @keyframes noctis-name { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
 @media(prefers-reduced-motion:reduce) { .name-fx--noctis { animation:none; } }
+
+.name-fx--desole_signature { background:linear-gradient(110deg,#f1f4ff 15%,#b7a9ec 40%,#e6f7ff 58%,#92cbdc 72%,#f1f4ff 90%); background-size:220% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; animation:desole-silver 12s ease-in-out infinite alternate; }
+@keyframes desole-silver { to { background-position:100% 50%; } }
+@media(prefers-reduced-motion:reduce) { .name-fx--desole_signature { animation:none; } }
