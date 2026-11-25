@@ -121,6 +121,14 @@ const PLANETS = [
       <img class="decor__artwork" :src="decor.image" alt="" loading="lazy" decoding="async" />
       <span class="decor__artwork-glint"></span>
     </template>
+    <template v-if="kind === 'singularity'">
+      <img class="decor__reactor" :src="decor.image" alt="" loading="lazy" decoding="async" />
+      <span class="decor__reactor-track decor__reactor-track--outer"></span>
+      <span class="decor__reactor-track decor__reactor-track--inner"></span>
+      <span class="decor__reactor-orbit"><i></i></span>
+      <span class="decor__reactor-orbit decor__reactor-orbit--reverse"><i></i></span>
+      <span class="decor__reactor-charge"></span>
+    </template>
     <!-- Россыпь -->
     <template v-if="kind === 'scatter'">
       <span v-for="(item, i) in scatter" :key="i" class="decor__item" :style="item.style">
@@ -956,4 +964,17 @@ const PLANETS = [
 .decor__artwork-glint { position:absolute; inset:-12%; border:1px solid #dac6f4; border-radius:50%; mask-image:conic-gradient(transparent 0deg 290deg,#000 310deg,transparent 330deg); animation:noctis-orbit 14s linear infinite; opacity:.7; }
 @keyframes noctis-orbit { to { transform:rotate(360deg); } }
 @media(prefers-reduced-motion:reduce) { .decor__artwork-glint { animation:none; } }
+
+.decor__reactor { position:absolute; width:146%; height:146%; left:-23%; top:-23%; max-width:none; object-fit:contain; image-rendering:auto; }
+.decor__reactor-track { position:absolute; border-radius:50%; pointer-events:none; }
+.decor__reactor-track--outer { inset:-14%; border:2px solid #89f4ff; mask-image:conic-gradient(#000 0deg 65deg,transparent 70deg 155deg,#000 160deg 215deg,transparent 220deg); animation:singularity-spin 5s linear infinite; filter:drop-shadow(0 0 3px #2bcfe4); }
+.decor__reactor-track--inner { inset:-3%; border:1px solid #e4ffff; mask-image:conic-gradient(transparent 0deg 80deg,#000 85deg 150deg,transparent 155deg 290deg,#000 295deg 330deg,transparent 335deg); animation:singularity-spin 8s linear infinite reverse; }
+.decor__reactor-orbit { position:absolute; inset:-17%; border-radius:50%; animation:singularity-spin 6s linear infinite; }
+.decor__reactor-orbit i { position:absolute; left:50%; top:0; width:5%; height:5%; min-width:2px; min-height:2px; border-radius:50%; background:#e9ffff; box-shadow:0 0 4px #fff,0 0 8px #2bd9ff; transform:translate(-50%,-50%); }
+.decor__reactor-orbit--reverse { inset:-9%; animation-duration:9s; animation-direction:reverse; animation-delay:-3s; }
+.decor__reactor-orbit--reverse i { width:3%; height:3%; background:#b4a8ff; box-shadow:0 0 6px #8d7aff; }
+.decor__reactor-charge { position:absolute; inset:-8%; border:1px solid #83edff; border-radius:50%; animation:singularity-charge 4s ease-out infinite; }
+@keyframes singularity-spin { to { transform:rotate(360deg); } }
+@keyframes singularity-charge { 0% { transform:scale(.97); opacity:0; } 25% { opacity:.65; } 85%,100% { transform:scale(1.16); opacity:0; } }
+@media(prefers-reduced-motion:reduce) { .decor--singularity * { animation:none !important; } .decor__reactor-charge { opacity:.25; } }
 </style>

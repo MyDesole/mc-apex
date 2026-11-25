@@ -71,8 +71,19 @@ onUnmounted(() => {
       :class="`entrance--${entrance}`"
       aria-hidden="true"
   >
+    <template v-if="entrance === 'rift'">
+      <span class="entrance__rift-shade"></span>
+      <span class="entrance__rift-seam"></span>
+      <span class="entrance__rift-aperture">
+        <span class="entrance__rift-core"></span>
+        <img src="/images/cosmetics/singularity/frame.webp" alt="" decoding="async" />
+        <span class="entrance__rift-corona"></span>
+      </span>
+      <span class="entrance__rift-wave"></span>
+      <span v-for="n in 18" :key="n" class="entrance__rift-spark" :style="{ '--angle': `${n * 20}deg`, '--delay': `${(n % 4) * 0.035}s` }"></span>
+    </template>
     <!-- Удар молнии -->
-    <template v-if="entrance === 'lightning'">
+    <template v-else-if="entrance === 'lightning'">
       <span class="entrance__dark"></span>
       <svg class="entrance__bolt" viewBox="0 0 60 200" preserveAspectRatio="none">
         <polyline points="34,0 22,62 36,66 14,130 30,134 6,200" />
@@ -389,4 +400,22 @@ onUnmounted(() => {
   60% { opacity: 1; }
   100% { opacity: 0; transform: translate(-50%, -50%) scale(40); }
 }
+
+.entrance--rift { max-height:min(75vh,700px); }
+.entrance__rift-shade { inset:0; background:radial-gradient(ellipse at center,#08121be8,#05080eb0); animation:rift-shade 2.2s ease-out both; }
+.entrance__rift-seam { left:50%; top:12%; width:2px; height:76%; background:linear-gradient(transparent,#b9fbff 35%,#fff 50%,#99eaff 65%,transparent); box-shadow:0 0 16px #3cdbff; transform-origin:center; animation:rift-seam 2.2s ease-in-out both; }
+.entrance__rift-aperture { left:50%; top:50%; width:min(48%,280px); aspect-ratio:1; border-radius:50%; animation:rift-open 2.2s cubic-bezier(.22,.7,.3,1) both; }
+.entrance__rift-aperture img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; image-rendering:auto; }
+.entrance__rift-core { position:absolute; inset:15%; border-radius:50%; background:radial-gradient(ellipse at 35% 30%,#8deaffaa,transparent 35%),conic-gradient(from 30deg,#040a18,#334568,#100a26,#3b9bb2,#060b17); box-shadow:inset 0 0 28px #0a031f,0 0 22px #43dafa55; animation:rift-core 2.2s ease-out both; }
+.entrance__rift-corona { position:absolute; inset:5%; border:2px solid #9af5ff; border-radius:50%; mask-image:conic-gradient(transparent 0deg 35deg,#000 60deg 135deg,transparent 160deg 210deg,#000 240deg 300deg,transparent 330deg); animation:rift-corona 2.2s ease-out both; box-shadow:0 0 12px #4fd5ff; }
+.entrance__rift-wave { left:50%; top:50%; width:min(48%,280px); aspect-ratio:1; border-radius:50%; border:2px solid #b7faff; box-shadow:0 0 14px #80dcff,inset 0 0 12px #b096ff; animation:rift-wave 2.2s ease-out both; }
+.entrance__rift-spark { left:50%; top:50%; width:min(35%,250px); height:2px; transform-origin:left center; background:linear-gradient(90deg,transparent 65%,#7ce6ffcc 93%,#efffff); border-radius:50%; animation:rift-spark 1.25s ease-out both; animation-delay:calc(.7s + var(--delay)); }
+@keyframes rift-shade { 0% { opacity:0; } 15%,42% { opacity:1; } 100% { opacity:0; } }
+@keyframes rift-seam { 0% { opacity:0; transform:scaleY(0); } 14%,23% { opacity:1; transform:scaleY(1); } 42%,100% { opacity:0; transform:scaleY(.1) scaleX(12); } }
+@keyframes rift-open { 0%,12% { opacity:0; transform:translate(-50%,-50%) scale(.02) rotate(-85deg); } 35% { opacity:1; transform:translate(-50%,-50%) scale(1) rotate(0); } 56% { opacity:1; transform:translate(-50%,-50%) scale(1.06) rotate(15deg); } 100% { opacity:0; transform:translate(-50%,-50%) scale(3.8) rotate(55deg); } }
+@keyframes rift-core { 0%,20% { opacity:0; transform:rotate(0); } 35% { opacity:1; } 100% { opacity:0; transform:rotate(160deg); } }
+@keyframes rift-corona { from { transform:rotate(0); } to { transform:rotate(460deg); } }
+@keyframes rift-wave { 0%,36% { opacity:0; transform:translate(-50%,-50%) scale(.7); } 44% { opacity:.8; } 100% { opacity:0; transform:translate(-50%,-50%) scale(5); } }
+@keyframes rift-spark { 0% { opacity:0; transform:rotate(var(--angle)) scaleX(.12); } 18% { opacity:.85; } 100% { opacity:0; transform:rotate(var(--angle)) scaleX(1.8); } }
+@media(prefers-reduced-motion:reduce) { .entrance--rift { display:none; } }
 </style>
